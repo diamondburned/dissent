@@ -61,6 +61,9 @@ var inputCSS = cssutil.Applier("composer-input", `
 		padding-bottom: 0;
 		margin-top: 0px;
 	}
+	.composer-input .autocomplete-row label {
+		margin: 0;
+	}
 `)
 
 // NewInput creates a new Input widget.
@@ -144,6 +147,9 @@ func (i *Input) onAutocompleted(row autocomplete.SelectedData) bool {
 	switch data := row.Data.(type) {
 	case EmojiData:
 		i.Buffer.Insert(row.Bounds[1], data.Content)
+		return true
+	case MemberData:
+		i.Buffer.Insert(row.Bounds[1], discord.Member(data).Mention())
 		return true
 	}
 
