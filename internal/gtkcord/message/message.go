@@ -227,7 +227,7 @@ func (m *cozyMessage) Update(message *gateway.MessageCreateEvent) {
 	)
 
 	m.Avatar.SetTooltipMarkup(tooltip)
-	m.TopLabel.SetTooltipText(tooltip)
+	m.TopLabel.SetTooltipMarkup(tooltip)
 }
 
 func (m *cozyMessage) UpdateMember(member *discord.Member) {
