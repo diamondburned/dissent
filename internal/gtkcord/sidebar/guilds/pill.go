@@ -77,11 +77,11 @@ var stripCSS = cssutil.Applier("guilds-pill", `
 	.guilds-pill.guilds-pill-unread:not(.guilds-pill-opened) {
 		padding: 6px 3px;
 	}
-	.guilds-pill.guilds-pill-mentioned {
-		background-color: @mentioned;
-	}
 	.guilds-pill.guilds-pill-active {
 		padding: 20px 3px;
+	}
+	.guilds-pill.guilds-pill-mentioned {
+		background-color: @mentioned;
 	}
 `)
 
