@@ -205,6 +205,7 @@ func NewView(ctx context.Context, ctrl Controller, guildID discord.GuildID) *Vie
 
 	v.Child.Tree.ConnectRowExpanded(func(iter *gtk.TreeIter, path *gtk.TreePath) {
 		// TODO: handle
+		v.Child.Tree.QueueResize()
 	})
 
 	selection := v.Child.Tree.Selection()

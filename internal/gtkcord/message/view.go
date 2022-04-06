@@ -109,7 +109,7 @@ var viewCSS = cssutil.Applier("message-view", `
 // NewView creates a new View widget associated with the given channel ID. All
 // methods call on it will act on that channel.
 func NewView(ctx context.Context, chID discord.ChannelID) *View {
-	v := View{
+	v := &View{
 		msgs: make(map[messageKey]messageRow),
 		chID: chID,
 	}
@@ -130,7 +130,7 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 
 	v.List.SetAdjustment(v.Scroll.VAdjustment())
 
-	v.Composer = composer.NewView(ctx, &v, chID)
+	v.Composer = composer.NewView(ctx, v, chID)
 
 	v.Box = gtk.NewBox(gtk.OrientationVertical, 0)
 	v.Box.Append(v.Scroll)
@@ -170,14 +170,14 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 
 					msg.ListBoxRow.SetName(string(key))
 					msg.message.Update(ev)
-					msg.message.BindMenu(&v)
+					msg.message.BindMenu(v)
 					return
 				}
 			}
 
 			msg := v.upsertMessage(ev.ID, newMessageInfo(&ev.Message))
 			msg.Update(ev)
-			msg.BindMenu(&v)
+			msg.BindMenu(v)
 
 		case *gateway.MessageUpdateEvent:
 			if ev.ChannelID != v.chID {
@@ -246,7 +246,7 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 	})
 
 	viewCSS(v)
-	return &v
+	return v
 }
 
 func (v *View) GuildID() discord.GuildID {
@@ -348,10 +348,8 @@ func (v *View) shouldBeCollapsed(info messageInfo) bool {
 }
 
 func (v *View) lastMessage() (messageRow, bool) {
-	w := v.List.LastChild()
-	if w != nil {
-		row := w.(*gtk.ListBoxRow)
-
+	row, _ := v.List.LastChild().(*gtk.ListBoxRow)
+	if row != nil {
 		msg, ok := v.msgs[messageKeyRow(row)]
 		return msg, ok
 	}
@@ -376,7 +374,7 @@ func (v *View) lastUserMessage() Message {
 }
 
 func (v *View) eachMessage(f func(messageRow) bool) {
-	row := v.List.LastChild().(*gtk.ListBoxRow)
+	row, _ := v.List.LastChild().(*gtk.ListBoxRow)
 	for row != nil {
 		key := messageKey(row.Name())
 

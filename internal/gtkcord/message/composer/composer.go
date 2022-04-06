@@ -85,13 +85,13 @@ const (
 )
 
 func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View {
-	v := View{
+	v := &View{
 		ctx:  ctx,
 		ctrl: ctrl,
 		chID: chID,
 	}
 
-	v.Input = NewInput(ctx, inputControllerView{&v}, chID)
+	v.Input = NewInput(ctx, inputControllerView{v}, chID)
 	v.Input.SetVExpand(true)
 
 	v.UploadTray = NewUploadTray()
@@ -131,7 +131,7 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 	v.Box.Append(v.Send)
 
 	viewCSS(v)
-	return &v
+	return v
 }
 
 // actionData is the data that the action button in the composer bar is
@@ -229,6 +229,10 @@ func (v *View) send() {
 	}
 
 	text, files := v.commit()
+	if text == "" && len(files) == 0 {
+		return
+	}
+
 	v.ctrl.SendMessage(SendingMessage{
 		Content:    text,
 		Files:      files,

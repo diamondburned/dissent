@@ -2,16 +2,13 @@ package gtkcord
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"math"
 	"net/http"
 	"net/url"
 	"os"
-	"path/filepath"
 	"runtime"
 	"strconv"
-	"sync/atomic"
 
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -73,31 +70,33 @@ func Wrap(state *state.State) *State {
 		return nil
 	})
 
-	dir := filepath.Join(os.TempDir(), "gtkcord4-events")
-	os.RemoveAll(dir)
+	/*
+		dir := filepath.Join(os.TempDir(), "gtkcord4-events")
+		os.RemoveAll(dir)
 
-	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-		log.Println("cannot mkdir -p for ev logginf:", err)
-	}
-
-	var atom uint64
-	state.AddHandler(func(ev *ws.RawEvent) {
-		id := atomic.AddUint64(&atom, 1)
-
-		f, err := os.Create(filepath.Join(
-			dir,
-			fmt.Sprintf("%05d-%d-%s.json", id, ev.OriginalCode, ev.OriginalType),
-		))
-		if err != nil {
-			log.Println("cannot log op:", err)
-			return
+		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+			log.Println("cannot mkdir -p for ev logginf:", err)
 		}
-		defer f.Close()
 
-		if _, err := f.Write(ev.Raw); err != nil {
-			log.Println("event json error:", err)
-		}
-	})
+		var atom uint64
+		state.AddHandler(func(ev *ws.RawEvent) {
+			id := atomic.AddUint64(&atom, 1)
+
+			f, err := os.Create(filepath.Join(
+				dir,
+				fmt.Sprintf("%05d-%d-%s.json", id, ev.OriginalCode, ev.OriginalType),
+			))
+			if err != nil {
+				log.Println("cannot log op:", err)
+				return
+			}
+			defer f.Close()
+
+			if _, err := f.Write(ev.Raw); err != nil {
+				log.Println("event json error:", err)
+			}
+		})
+	*/
 
 	return &State{
 		State: ningen.FromState(state),
@@ -145,11 +144,9 @@ func (s *State) AuthorMarkup(m *gateway.MessageCreateEvent, mods ...author.Marku
 	if m.GuildID.IsValid() {
 		member := m.Member
 		if member == nil {
-			log.Println(m.Author.Username, "missing from message")
 			member, _ = s.Cabinet.Member(m.GuildID, m.Author.ID)
 		}
 		if member == nil {
-			log.Println(m.Author.Username, "missing from state, requesting...")
 			s.MemberState.RequestMember(m.GuildID, m.Author.ID)
 		}
 
