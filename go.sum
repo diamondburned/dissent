@@ -37,10 +37,15 @@ github.com/diamondburned/adaptive v0.0.2-0.20220328111603-4f867d7948b2/go.mod h1
 github.com/diamondburned/arikawa/v3 v3.0.0-rc.6/go.mod h1:5jBSNnp82Z/EhsKa6Wk9FsOqSxfVkNZDTDBPOj47LpY=
 github.com/diamondburned/arikawa/v3 v3.0.0-rc.6.0.20220405043632-34db90a16d13 h1:wKQUK0TH4tTzwsOEP4fMm5IE94eNIo/iKblsd4801EE=
 github.com/diamondburned/arikawa/v3 v3.0.0-rc.6.0.20220405043632-34db90a16d13/go.mod h1:5jBSNnp82Z/EhsKa6Wk9FsOqSxfVkNZDTDBPOj47LpY=
+github.com/diamondburned/chatkit v0.0.0-20220406201709-c5fc840f6867 h1:EJUPbm4ZBiXGPln7XFmLj+Y31YwsjWuOtsFi1qcccSc=
+github.com/diamondburned/chatkit v0.0.0-20220406201709-c5fc840f6867/go.mod h1:K1W+GijlFlx7xjiuVKJuh/c9cnnxmbOhEdZH2Inkgao=
 github.com/diamondburned/gotk4/pkg v0.0.0-20220225135826-2bb7260a63bb/go.mod h1:dJ2gfR0gvBsGg4IteP8aMBq/U5Q9boDw0DP7kAjXTwM=
 github.com/diamondburned/gotk4/pkg v0.0.0-20220228011804-2178059e90d8/go.mod h1:dJ2gfR0gvBsGg4IteP8aMBq/U5Q9boDw0DP7kAjXTwM=
 github.com/diamondburned/gotk4/pkg v0.0.0-20220406050731-cd155f5456cb h1:1hCseXjtHqtWu1pVTPRk8ngtKWRPX49wk5KL280Puek=
 github.com/diamondburned/gotk4/pkg v0.0.0-20220406050731-cd155f5456cb/go.mod h1:rLH6FHos690jFgAM/GYEpMykuE/9NmN6zOvFlr8JTvE=
+github.com/diamondburned/gotkit v0.0.0-20220328080741-6815a6dcb191/go.mod h1:nuSiLYlASFCkAYVmzfzv5jj36cJuELVREaS7W2Bqet4=
+github.com/diamondburned/gotkit v0.0.0-20220406201635-8dedacfab144 h1:CYBhQAKkeOTdi2qtrJrVSn/I5psx9OgI0LQGCstuTLU=
+github.com/diamondburned/gotkit v0.0.0-20220406201635-8dedacfab144/go.mod h1:nuSiLYlASFCkAYVmzfzv5jj36cJuELVREaS7W2Bqet4=
 github.com/diamondburned/ningen/v3 v3.0.0-20220403055423-a7c9ced48403 h1:AkOW2alRfcPRbfqwca4IczAnjBPYxc1Iiy6y/xZjuk8=
 github.com/diamondburned/ningen/v3 v3.0.0-20220403055423-a7c9ced48403/go.mod h1:WLSUx3megnWk5I6rYLE+yPHN3iPJf4Nag2B5Y7l+Vmc=
 github.com/dlclark/regexp2 v1.4.0 h1:F1rxgk7p4uKjwIQxBs9oAXe5CqrXlCduYEJvrF4u93E=
