@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=gtkcord4
+GenericName=Discord Chat
+Comment=A Discord client in Go and GTK4
+Exec=gtkcord4
+Icon=gtkcord4
+Terminal=false
+Type=Application
+Categories=GNOME;GTK;Network;Chat;
+StartupNotify=true
+DBusActivatable=true
+X-GNOME-UsesNotifications=true

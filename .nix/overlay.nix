@@ -54,33 +54,4 @@ in {
 	# See https://sourceware.org/glibc/wiki/ABIList.
 	patchelf-x86_64  = patchelfer "x86_64"  "/lib64/ld-linux-x86-64.so.2";
 	patchelf-aarch64 = patchelfer "aarch64" "/lib/ld-linux-aarch64.so.1";
-
-	# CAUTION, for when I return: uncommenting these will trigger rebuilding a lot of Rust
-	# dependencies, which will take forever! Don't do it!
-
-	# gtk4 = (super.gtk4.override {
-	# 	meson = super.meson_0_60;
-	# }).overrideAttrs (old: {
-	# 	version = "4.5.1";
-	# 	src = super.fetchFromGitLab {
-	# 		domain = "gitlab.gnome.org";
-	# 		owner  = "GNOME";
-	# 		repo   = "gtk";
-	# 		rev    = "28f0e2eb";
-	# 		sha256 = "1l7a8mdnfn54n30y2ii3x8c5zs0nm5n1c90wbdz1iv8d5hqx0f16";
-	# 	};
-	# 	buildInputs = old.buildInputs ++ (with super; [ xorg.libXdamage ]);
-	# });
-	# pango = super.pango.overrideAttrs (old: {
-	# 	version = "1.49.4";
-	# 	src = super.fetchFromGitLab {
-	# 		domain = "gitlab.gnome.org";
-	# 		owner  = "GNOME";
-	# 		repo   = "pango";
-	# 		# v1.49.4
-	# 		rev    = "24ca0e22b8038eba7c558eb19f593dfc4892aa55";
-	# 		sha256 = "1z8bdy5p1v5vl4kn0rkl80cyw916vxxf7r405jrfkm6zlarc4338";
-	# 	};
-	# 	buildInputs = old.buildInputs ++ (with super; [ json-glib ]);
-	# });
 }

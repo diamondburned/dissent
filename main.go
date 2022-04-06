@@ -7,6 +7,8 @@ import (
 	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord/window"
+
+	_ "github.com/diamondburned/gotkit/gtkutil/aggressivegc"
 )
 
 var _ = cssutil.WriteCSS(`

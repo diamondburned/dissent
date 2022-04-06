@@ -1,0 +1,52 @@
+image: "nixos/unstable"
+sources:
+  - https://github.com/diamondburned/gtkcord4
+packages:
+  - nixos.git
+  - nixos.go_1_17
+  - nixos.gotools
+  - nixos.curl
+  - nixos.coreutils
+  - nixos.jq
+secrets:
+  - 82568347-1c9e-406e-8de0-525ee7dd21e2
+artifacts:
+  - artifacts/gtkcord4-nixos-x86_64
+  - artifacts/gtkcord4-linux-x86_64
+  - artifacts/gtkcord4-nixos-aarch64
+  - artifacts/gtkcord4-linux-aarch64
+tasks:
+  - prepare: |-
+      mkdir artifacts
+      touch artifacts/gtkcord4-nixos-x86_64
+      touch artifacts/gtkcord4-linux-x86_64
+      touch artifacts/gtkcord4-nixos-aarch64
+      touch artifacts/gtkcord4-linux-aarch64
+
+  - github-debug: |- # REMOVEME
+      echo "$GITHUB_DELIVERY"
+      echo "$GITHUB_REF"
+
+  - gomod: |-
+      cd gtkcord4
+      go mod tidy
+
+      if [[ $(git status --porcelain) ]]; then
+        git diff | cat
+        exit 1
+      fi
+
+  - format: |-
+      cd gtkcord4
+      deps="$(for d in $(go list -f {{.Dir}} ./...); { goimports -l $d; })"
+      [[ ! "$deps" ]] || printf "Unformatted files: \n%s\n" "$deps"
+
+  - release-check: |-
+      [[ ! $GITHUB_REF || $GITHUB_REF == *"/release" || $GITHUB_REF == *"/tags/"* ]] || complete-build
+
+  - artifact: |-
+      out="$(cd gtkcord4 && nix-build -j1 .nix/cross.nix)"
+      cp $out/* ./artifacts/
+
+  - upload-artifacts: |-
+      bash ./gtkcord4/.github/upload-artifacts.sh
