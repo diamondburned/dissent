@@ -2,15 +2,18 @@ package composer
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 
 	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/chatkit/kits/mediautil"
 	"github.com/diamondburned/gotk4/pkg/core/gioutil"
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
+	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
@@ -47,9 +50,10 @@ type View struct {
 		*gtk.Button
 		current func()
 	}
-	Input      *Input
-	UploadTray *UploadTray
-	Send       *gtk.Button
+	Input       *Input
+	Placeholder *gtk.Label
+	UploadTray  *UploadTray
+	Send        *gtk.Button
 
 	ctx  context.Context
 	ctrl Controller
@@ -68,11 +72,15 @@ var viewCSS = cssutil.Applier("composer-view", `
 		padding: 6px;
 	}
 	.composer-send {
-		margin:   0px;
-		padding: 10px;
+		margin:  0px;
+		padding: 0px 10px;
 		border-radius: 0;
 		min-height: 0;
 		min-width:  0;
+	}
+	.composer-placeholder {
+		padding: 16px 2px;
+		color: alpha(@theme_fg_color, 0.65);
 	}
 `)
 
@@ -91,25 +99,50 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 		chID: chID,
 	}
 
-	v.Input = NewInput(ctx, inputControllerView{v}, chID)
-	v.Input.SetVExpand(true)
-
-	v.UploadTray = NewUploadTray()
-
-	middle := gtk.NewBox(gtk.OrientationVertical, 0)
-	middle.Append(v.Input)
-	middle.Append(v.UploadTray)
-
 	scroll := gtk.NewScrolledWindow()
 	scroll.SetPolicy(gtk.PolicyNever, gtk.PolicyAutomatic)
 	scroll.SetMaxContentHeight(450)
 	scroll.SetMinContentHeight(50)
 	scroll.SetPropagateNaturalWidth(true)
 	scroll.SetPropagateNaturalHeight(true)
-	scroll.SetChild(middle)
 
+	v.Input = NewInput(ctx, inputControllerView{v}, chID)
+	v.Input.SetVExpand(true)
 	v.Input.SetVAdjustment(scroll.VAdjustment())
 	v.Input.SetHAdjustment(scroll.HAdjustment())
+
+	v.Placeholder = gtk.NewLabel("")
+	v.Placeholder.AddCSSClass("composer-placeholder")
+	v.Placeholder.SetVAlign(gtk.AlignStart)
+	v.Placeholder.SetHAlign(gtk.AlignStart)
+	v.Placeholder.SetEllipsize(pango.EllipsizeEnd)
+
+	revealer := gtk.NewRevealer()
+	revealer.SetChild(v.Placeholder)
+	revealer.SetCanTarget(false)
+	revealer.SetRevealChild(true)
+	revealer.SetTransitionType(gtk.RevealerTransitionTypeCrossfade)
+	revealer.SetTransitionDuration(75)
+
+	overlay := gtk.NewOverlay()
+	overlay.SetChild(v.Input)
+	overlay.AddOverlay(revealer)
+	overlay.SetClipOverlay(revealer, true)
+
+	// Show or hide the placeholder when the buffer is empty or not.
+	v.Input.Buffer.ConnectChanged(func() {
+		start, end := v.Input.Buffer.Bounds()
+		// Reveal if the buffer has 0 length.
+		revealer.SetRevealChild(start.Offset() == end.Offset())
+	})
+
+	v.UploadTray = NewUploadTray()
+
+	middle := gtk.NewBox(gtk.OrientationVertical, 0)
+	middle.Append(overlay)
+	middle.Append(v.UploadTray)
+
+	scroll.SetChild(middle)
 
 	v.Action.Button = gtk.NewButton()
 	v.Action.AddCSSClass("composer-action")
@@ -130,8 +163,25 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 	v.Box.Append(scroll)
 	v.Box.Append(v.Send)
 
+	v.SetPlaceholderMarkup("")
+
 	viewCSS(v)
 	return v
+}
+
+// SetPlaceholder sets the composer's placeholder. The default is used if an
+// empty string is given.
+func (v *View) SetPlaceholderMarkup(markup string) {
+	if markup == "" {
+		state := gtkcord.FromContext(v.ctx)
+		ch, _ := state.Cabinet.Channel(v.chID)
+		if ch != nil {
+			v.Placeholder.SetText("Message #" + ch.Name)
+			return
+		}
+	}
+
+	v.Placeholder.SetMarkup(markup)
 }
 
 // actionData is the data that the action button in the composer bar is
@@ -270,6 +320,7 @@ func (v *View) StartEditing(msg *discord.Message) {
 
 	v.Input.Buffer.SetText(msg.Content)
 	v.Send.SetIconName(editIcon)
+	v.SetPlaceholderMarkup("Editing message")
 	v.AddCSSClass("composer-editing")
 	v.setAction(actionData{
 		Name: "Stop Editing",
@@ -288,6 +339,7 @@ func (v *View) StopEditing() {
 	v.state.editing = false
 
 	v.Send.SetIconName(sendIcon)
+	v.SetPlaceholderMarkup("")
 	v.RemoveCSSClass("composer-editing")
 	v.resetAction()
 }
@@ -302,6 +354,12 @@ func (v *View) StartReplyingTo(msg *discord.Message) {
 
 	v.Send.SetIconName(replyIcon)
 	v.AddCSSClass("composer-replying")
+
+	state := gtkcord.FromContext(v.ctx)
+	v.SetPlaceholderMarkup(fmt.Sprintf(
+		"Replying to %s",
+		state.AuthorMarkup(&gateway.MessageCreateEvent{Message: *msg}),
+	))
 }
 
 // StopReplying undoes the start call.
@@ -314,6 +372,7 @@ func (v *View) StopReplying() {
 	v.state.replying = false
 
 	v.Send.SetIconName(sendIcon)
+	v.SetPlaceholderMarkup("")
 	v.RemoveCSSClass("composer-replying")
 }
 
