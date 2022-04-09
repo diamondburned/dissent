@@ -34,9 +34,16 @@ var contentCSS = cssutil.Applier("message-content-box", `
 	.message-content-box {
 		margin-right: 4px;
 	}
+	.message-reply-content,
 	.message-reply-header {
-		color: alpha(@theme_fg_color, 0.75);
-		font-style: italic;
+		color: alpha(@theme_fg_color, 0.85);
+	}
+	.message-reply-header,
+	.message-reply-box .mauthor-chip {
+		font-size: 0.9em;
+	}
+	.message-reply-content {
+		font-size: 0.95em;
 	}
 `)
 

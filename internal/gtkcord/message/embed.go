@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"html"
+	"net/url"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -22,40 +24,65 @@ import (
 	"github.com/dustin/go-humanize"
 )
 
+// TODO: allow disable fetching videos.
+
+func resizeURL(urlstr string, image *thumbnail.Embed) string {
+	w, h := image.Size()
+	if w == 0 && h == 0 {
+		return urlstr
+	}
+
+	u, err := url.Parse(urlstr)
+	if err != nil {
+		return urlstr
+	}
+
+	q := u.Query()
+	q.Set("width", strconv.Itoa(w))
+	q.Set("height", strconv.Itoa(h))
+	u.RawQuery = q.Encode()
+
+	return u.String()
+}
+
 func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widgetter {
 	if attachment.ContentType != "" {
 		typ := strings.SplitN(attachment.ContentType, "/", 2)[0]
 		if typ == "image" || typ == "video" {
 			// Make this attachment like an image embed.
-			var embedType thumbnail.EmbedType
+			opts := thumbnail.EmbedOpts{}
 
 			switch {
 			case attachment.ContentType == "image/gif":
-				embedType = thumbnail.EmbedTypeGIF
+				opts.Type = thumbnail.EmbedTypeGIF
 			case typ == "image":
-				embedType = thumbnail.EmbedTypeImage
+				opts.Type = thumbnail.EmbedTypeImage
 			case typ == "video":
-				embedType = thumbnail.EmbedTypeVideo
+				opts.Type = thumbnail.EmbedTypeVideo
+				// Use FFmpeg for video so we can get the thumbnail.
+				opts.Provider = imgutil.FFmpegProvider
 			}
 
-			w := gtkcord.EmbedMaxWidth
-			h := gtkcord.EmbedImgHeight
+			name := fmt.Sprintf(
+				"%s (%s)",
+				attachment.Filename,
+				humanize.Bytes(attachment.Size),
+			)
+
+			image := thumbnail.NewEmbed(gtkcord.EmbedMaxWidth, gtkcord.EmbedImgHeight, opts)
+			image.SetName(name)
+			image.SetOpenURL(func() { app.OpenURI(ctx, attachment.URL) })
 
 			if attachment.Width > 0 && attachment.Height > 0 {
-				w, h = imgutil.MaxSize(
-					int(attachment.Width),
-					int(attachment.Height),
-					w, h,
-				)
+				image.SetSize(int(attachment.Width), int(attachment.Height))
+				if typ == "image" {
+					image.SetFromURL(ctx, resizeURL(attachment.Proxy, image))
+				} else {
+					image.SetFromURL(ctx, attachment.Proxy)
+				}
+			} else {
+				image.SetFromURL(ctx, attachment.Proxy)
 			}
-
-			image := thumbnail.NewEmbed(embedType, w, h)
-			image.SetName(fmt.Sprintf(
-				"%s (%s)",
-				attachment.Filename, humanize.Bytes(attachment.Size),
-			))
-			image.SetFromURL(ctx, attachment.Proxy)
-			image.SetOpenURL(func() { app.OpenURI(ctx, attachment.URL) })
 
 			return image
 		}
@@ -97,16 +124,10 @@ func newImageEmbed(ctx context.Context, msg *discord.Message, embed *discord.Emb
 		typ = thumbnail.EmbedTypeGIF
 	}
 
-	w, h := imgutil.MaxSize(
-		int(img.Width),
-		int(img.Height),
-		gtkcord.EmbedMaxWidth,
-		gtkcord.EmbedImgHeight,
-	)
-
-	image := thumbnail.NewEmbed(typ, w, h)
+	image := thumbnail.NewEmbed(gtkcord.EmbedMaxWidth, gtkcord.EmbedImgHeight, thumbnail.EmbedOpts{Type: typ})
 	image.SetName(path.Base(img.URL))
-	image.SetFromURL(ctx, img.Proxy)
+	image.SetSize(int(img.Width), int(img.Height))
+	image.SetFromURL(ctx, resizeURL(img.Proxy, image))
 	image.SetOpenURL(func() { app.OpenURI(ctx, img.URL) })
 
 	return image
@@ -276,39 +297,32 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, embed *discord.Em
 	}
 
 	if embed.Image != nil || embed.Video != nil {
-		w := gtkcord.EmbedMaxWidth
-		h := gtkcord.EmbedImgHeight
-
-		// set width hint to resize embeds accordingly
-		// widthHint = w
-
-		var typ thumbnail.EmbedType
-		var url discord.URL
+		var opts thumbnail.EmbedOpts
+		var img discord.EmbedImage
 
 		switch {
 		case embed.Image != nil:
-			w, h = imgutil.MaxSize(
-				int(embed.Image.Width),
-				int(embed.Image.Height),
-				w, h,
-			)
-			typ = thumbnail.TypeFromURL(embed.Image.URL)
-			url = embed.Image.Proxy
+			img = *embed.Image
+			opts.Type = thumbnail.TypeFromURL(embed.Image.URL)
+
 		case embed.Video != nil:
-			w, h = imgutil.MaxSize(
-				int(embed.Video.Width),
-				int(embed.Video.Height),
-				w, h,
-			)
-			typ = thumbnail.EmbedTypeVideo
-			url = "" // TODO
+			img = (discord.EmbedImage)(*embed.Video)
+			opts.Type = thumbnail.EmbedTypeVideo
+			opts.Provider = imgutil.FFmpegProvider
 		}
 
-		img := thumbnail.NewEmbed(typ, w, h)
-		img.SetFromURL(ctx, url)
-		img.SetOpenURL(func() { app.OpenURI(ctx, embed.Image.URL) })
+		image := thumbnail.NewEmbed(gtkcord.EmbedMaxWidth, gtkcord.EmbedImgHeight, opts)
+		image.SetSize(int(img.Width), int(img.Height))
+		image.SetOpenURL(func() { app.OpenURI(ctx, embed.Image.URL) })
 
-		content.Append(img)
+		if embed.Image != nil {
+			// The server can only resize images.
+			image.SetFromURL(ctx, resizeURL(img.Proxy, image))
+		} else {
+			image.SetFromURL(ctx, img.Proxy)
+		}
+
+		content.Append(image)
 	}
 
 	box := gtk.NewBox(gtk.OrientationHorizontal, 0)
@@ -322,25 +336,15 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, embed *discord.Em
 	}
 
 	if embed.Thumbnail != nil {
-		w, h := imgutil.MaxSize(
-			int(embed.Thumbnail.Width),
-			int(embed.Thumbnail.Height),
-			80, 80,
-		)
+		image := thumbnail.NewEmbed(80, 80, thumbnail.EmbedOpts{})
+		image.SetHAlign(gtk.AlignEnd)
+		image.SetVAlign(gtk.AlignStart)
+		image.SetSize(int(embed.Thumbnail.Width), int(embed.Thumbnail.Height))
+		image.SetFromURL(ctx, resizeURL(embed.Thumbnail.Proxy, image))
+		image.SetOpenURL(func() { app.OpenURI(ctx, embed.Thumbnail.URL) })
 
-		img := thumbnail.NewEmbed(thumbnail.EmbedTypeImage, w, h)
-		img.SetHAlign(gtk.AlignEnd)
-		img.SetFromURL(ctx, embed.Thumbnail.Proxy)
-		img.SetOpenURL(func() { app.OpenURI(ctx, embed.Thumbnail.URL) })
-
-		box.Append(img)
+		box.Append(image)
 	}
-
-	// Calculate the embed width without padding:
-	// var w = clampWidth(variables.EmbedMaxWidth)
-	// if widthHint > 0 && w > widthHint {
-	// 	w = widthHint
-	// }
 
 	return box
 }

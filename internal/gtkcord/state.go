@@ -141,13 +141,22 @@ func (s *State) BindHandler(ctx gtkutil.Cancellable, fn func(gateway.Event), fil
 func (s *State) AuthorMarkup(m *gateway.MessageCreateEvent, mods ...author.MarkupMod) string {
 	name := m.Author.Username
 
-	if m.GuildID.IsValid() {
+	if m.GuildID.IsValid() || m.Member != nil {
+		if !m.GuildID.IsValid() {
+			ch, _ := s.Cabinet.Channel(m.ChannelID)
+			if ch == nil {
+				goto noMember
+			}
+			m.GuildID = ch.GuildID
+		}
+
 		member := m.Member
 		if member == nil {
 			member, _ = s.Cabinet.Member(m.GuildID, m.Author.ID)
 		}
 		if member == nil {
 			s.MemberState.RequestMember(m.GuildID, m.Author.ID)
+			goto noMember
 		}
 
 		if member != nil && member.Nick != "" {
@@ -163,6 +172,7 @@ func (s *State) AuthorMarkup(m *gateway.MessageCreateEvent, mods ...author.Marku
 		}
 	}
 
+noMember:
 	if m.Author.Bot {
 		bot := "bot"
 		if m.WebhookID.IsValid() {

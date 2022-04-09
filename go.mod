@@ -4,10 +4,10 @@ go 1.17
 
 require (
 	github.com/diamondburned/adaptive v0.0.2-0.20220328111603-4f867d7948b2
-	github.com/diamondburned/arikawa/v3 v3.0.0-rc.6.0.20220405043632-34db90a16d13
-	github.com/diamondburned/chatkit v0.0.0-20220406201709-c5fc840f6867
-	github.com/diamondburned/gotk4/pkg v0.0.0-20220406050731-cd155f5456cb
-	github.com/diamondburned/gotkit v0.0.0-20220406201635-8dedacfab144
+	github.com/diamondburned/arikawa/v3 v3.0.0-rc.6.0.20220408124721-4108d10b444c
+	github.com/diamondburned/chatkit v0.0.0-20220409081949-bc07817b8251
+	github.com/diamondburned/gotk4/pkg v0.0.0-20220408070453-08962439fbbc
+	github.com/diamondburned/gotkit v0.0.0-20220409081802-93f160de50f1
 	github.com/diamondburned/ningen/v3 v3.0.0-20220403055423-a7c9ced48403
 )
 
@@ -25,12 +25,9 @@ require (
 	github.com/danieljoos/wincred v1.1.0 // indirect
 	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/godbus/dbus/v5 v5.0.6 // indirect
-	github.com/google/btree v1.0.1 // indirect
 	github.com/gorilla/schema v1.2.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
-	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
-	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/twmb/murmur3 v1.1.3 // indirect
 	github.com/zalando/go-keyring v0.2.1 // indirect
 	go4.org v0.0.0-20200411211856-f5505b9728dd // indirect

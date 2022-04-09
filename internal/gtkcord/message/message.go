@@ -179,6 +179,7 @@ var cozyCSS = cssutil.Applier("message-cozy", `
 	}
 	.message-cozy-header {
 		margin-top: 2px;
+		font-size: 0.95em;
 	}
 	.message-cozy-avatar {
 		padding: 0 8px;

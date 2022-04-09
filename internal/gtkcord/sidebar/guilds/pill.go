@@ -74,11 +74,11 @@ var stripCSS = cssutil.Applier("guilds-pill", `
 		border-radius: 0 99px 99px 0;
 		background-color: @theme_fg_color;
 	}
-	.guilds-pill.guilds-pill-unread:not(.guilds-pill-opened) {
-		padding: 6px 3px;
-	}
 	.guilds-pill.guilds-pill-active {
 		padding: 20px 3px;
+	}
+	.guilds-pill.guilds-pill-unread:not(.guilds-pill-opened):not(.guilds-pill-active) {
+		padding: 6px 3px;
 	}
 	.guilds-pill.guilds-pill-mentioned {
 		background-color: @mentioned;
