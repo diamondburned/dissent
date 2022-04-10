@@ -90,6 +90,7 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 	i.TextView.ConnectPasteClipboard(i.readClipboard)
 
 	i.ac = autocomplete.New(ctx, i.TextView, i.onAutocompleted)
+	i.ac.SetCancelOnChange(false)
 	i.ac.SetTimeout(time.Second)
 
 	state := gtkcord.FromContext(ctx)

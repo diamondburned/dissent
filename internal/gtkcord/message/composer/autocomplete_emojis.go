@@ -126,9 +126,7 @@ func (d EmojiData) Row(ctx context.Context) *gtk.ListBoxRow {
 
 		b.Append(l)
 	} else {
-		// Use a background context so we don't constantly thrash the server
-		// with cancelled requests every time we time.
-		i := onlineimage.NewImage(context.Background(), imgutil.HTTPProvider)
+		i := onlineimage.NewImage(ctx, imgutil.HTTPProvider)
 		i.AddCSSClass("autocompleter-customemoji")
 		i.SetSizeRequest(emojiSize, emojiSize)
 		i.SetFromURL(gtkcord.EmojiURL(d.ID.String(), false))

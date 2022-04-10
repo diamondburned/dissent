@@ -80,9 +80,7 @@ func (c *memberCompleter) search(str string) []autocomplete.Data {
 type MemberData discord.Member
 
 func (d MemberData) Row(ctx context.Context) *gtk.ListBoxRow {
-	// Use a background context so we don't constantly thrash the server
-	// with cancelled requests every time we time.
-	i := onlineimage.NewAvatar(context.Background(), imgutil.HTTPProvider, emojiSize)
+	i := onlineimage.NewAvatar(ctx, imgutil.HTTPProvider, emojiSize)
 	i.AddCSSClass("autocompleter-customemoji")
 	i.SetFromURL(gtkcord.InjectAvatarSize(d.User.AvatarURLWithType(discord.PNGImage)))
 
