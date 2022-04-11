@@ -17,7 +17,7 @@ const (
 	HeaderHeight      = 42
 	HeaderPadding     = 16
 	GuildIconSize     = 48
-	ChannelIconSize   = 20
+	ChannelIconSize   = 32
 	MessageAvatarSize = 42
 	EmbedMaxWidth     = 300
 	EmbedImgHeight    = 300

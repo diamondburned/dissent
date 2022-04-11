@@ -155,7 +155,9 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 			}
 
 			// Use this to update existing messages' members as well.
-			v.updateMember(ev.Member)
+			if ev.Member != nil {
+				v.updateMember(ev.Member)
+			}
 
 			if ev.Nonce != "" {
 				// Try and look up the nonce.

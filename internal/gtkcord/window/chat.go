@@ -8,7 +8,9 @@ import (
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/app"
+	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
+	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord/message"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar"
 	"github.com/diamondburned/gtkcord4/internal/icons"
@@ -20,7 +22,7 @@ type ChatPage struct {
 	RightLabel *gtk.Label
 	RightChild *gtk.Stack
 
-	prevView *message.View
+	prevView gtk.Widgetter
 
 	ctx         context.Context
 	placeholder gtk.Widgetter
@@ -107,12 +109,34 @@ func newEmptyMessagePlaceholer() gtk.Widgetter {
 
 // SwitchToPlaceholder switches to the empty placeholder view.
 func (p *ChatPage) SwitchToPlaceholder() {
-	p.RightChild.SetVisibleChild(p.placeholder)
+	win := app.WindowFromContext(p.ctx)
+	win.SetTitle("")
 
-	if p.prevView != nil {
-		p.RightChild.Remove(p.prevView)
-		p.prevView = nil
+	p.switchTo(nil)
+	p.RightChild.SetVisibleChild(p.placeholder)
+}
+
+func (p *ChatPage) switchTo(w gtk.Widgetter) {
+	old := p.prevView
+	p.prevView = w
+
+	if w != nil {
+		p.RightChild.AddChild(w)
+		p.RightChild.SetVisibleChild(w)
 	}
+
+	if old == nil {
+		return
+	}
+
+	gtkutil.NotifyProperty(p.RightChild, "transition-running", func() bool {
+		// Remove the widget when the transition is done.
+		if !p.RightChild.TransitionRunning() {
+			p.RightChild.Remove(old)
+			return true
+		}
+		return false
+	})
 }
 
 // sidebarChatPage implements SidebarController.
@@ -124,24 +148,14 @@ func (p *sidebarChatPage) OpenChannel(chID discord.ChannelID) {
 	view := message.NewView(p.ctx, chID)
 	view.Load()
 
-	p.RightChild.AddChild(view)
-	p.RightChild.SetVisibleChild(view)
-
 	p.RightLabel.SetText("#" + view.ChannelName())
 
 	win := app.WindowFromContext(p.ctx)
-	win.SetTitle("#" + view.ChannelName())
+	win.SetTitle(gtkcord.ChannelNameFromID(p.ctx, chID))
 
-	// Keep track of this.
-	if p.prevView != nil {
-		p.RightChild.Remove(p.prevView)
-	}
-	p.prevView = view
+	(*ChatPage)(p).switchTo(view)
 }
 
 func (p *sidebarChatPage) CloseGuild(permanent bool) {
-	win := app.WindowFromContext(p.ctx)
-	win.SetTitle("")
-
 	(*ChatPage)(p).SwitchToPlaceholder()
 }

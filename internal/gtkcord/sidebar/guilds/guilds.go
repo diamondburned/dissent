@@ -246,21 +246,33 @@ func (v *View) Guild(id discord.GuildID) *Guild {
 	return nil
 }
 
+// Unselect unselects any guilds inside this guild view. Use this when the
+// window is showing a channel that's not from any guild.
+func (v *View) Unselect() {
+	if v.current.folder != nil {
+		v.current.folder.Unselect()
+		v.current.folder = nil
+	}
+
+	if v.current.guild != nil {
+		v.current.guild.Unselect()
+		v.current.guild = nil
+	}
+}
+
 type guildOpenerView View
 
 func (v *guildOpenerView) OpenGuild(id discord.GuildID) {
-	if v.current.folder != nil {
-		v.current.folder.Unselect()
-	}
-	if v.current.guild != nil {
-		v.current.guild.Unselect()
-	}
-
 	guild := (*View)(v).Guild(id)
 
-	v.current = currentGuild{
+	current := currentGuild{
 		guild:  guild,
 		folder: guild.ParentFolder(),
+	}
+
+	if current != v.current {
+		(*View)(v).Unselect()
+		v.current = current
 	}
 
 	v.ctrl.OpenGuild(id)

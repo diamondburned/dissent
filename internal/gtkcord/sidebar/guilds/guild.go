@@ -153,16 +153,7 @@ func (g *Guild) InvalidateUnread() {
 	state := gtkcord.FromContext(g.ctx)
 	g.unread = state.GuildIsUnread(g.id, channelUnreadTypes)
 
-	g.Pill.Attrs = 0
-
-	switch g.unread {
-	case ningen.ChannelMentioned:
-		g.Pill.Attrs |= PillMentioned
-		fallthrough
-	case ningen.ChannelUnread:
-		g.Pill.Attrs |= PillUnread
-	}
-
+	g.Pill.Attrs = PillAttrsFromUnread(g.unread)
 	g.Pill.Invalidate()
 
 	if g.parent != nil {

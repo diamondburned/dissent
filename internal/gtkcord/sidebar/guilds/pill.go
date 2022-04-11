@@ -3,6 +3,7 @@ package guilds
 import (
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
+	"github.com/diamondburned/ningen/v3"
 )
 
 type PillState uint8
@@ -36,6 +37,21 @@ const (
 	PillUnread PillAttributes = 1 << iota
 	PillMentioned
 )
+
+// PillAttrsFromUnread creates a new PillAttributes reflecting the correct
+// unread indication state.
+func PillAttrsFromUnread(state ningen.UnreadIndication) PillAttributes {
+	var attrs PillAttributes
+
+	switch state {
+	case ningen.ChannelUnread:
+		attrs |= PillUnread
+	case ningen.ChannelMentioned:
+		attrs |= PillUnread | PillMentioned
+	}
+
+	return attrs
+}
 
 // CSSClasses returns the CSS classes that corresponds to the current state of
 // the pill.

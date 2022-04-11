@@ -6,8 +6,10 @@ import (
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
+	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar/channels"
+	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar/direct"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar/guilds"
 )
 
@@ -21,14 +23,15 @@ type Controller interface {
 type Sidebar struct {
 	*gtk.Box // horizontal
 
-	Left   *gtk.Box
-	Guilds *guilds.View
-	Right  *gtk.Stack
+	Left     *gtk.Box
+	DMButton *DMButton
+	Guilds   *guilds.View
+	Right    *gtk.Stack
 
 	// Keep track of the last child to remove.
 	current struct {
-		w  gtk.Widgetter
-		id discord.GuildID
+		w gtk.Widgetter
+		// id discord.GuildID
 	}
 
 	ctx  context.Context
@@ -58,9 +61,17 @@ func NewSidebar(ctx context.Context, ctrl Controller) *Sidebar {
 	s.Guilds = guilds.NewView(ctx, (*guildsSidebar)(&s))
 	s.Guilds.Invalidate()
 
+	s.DMButton = NewDMButton(ctx, s.openDMs)
+	s.DMButton.Invalidate()
+
+	dmSeparator := gtk.NewSeparator(gtk.OrientationHorizontal)
+	dmSeparator.AddCSSClass("sidebar-dm-separator")
+
 	// leftBox holds just the DM button and the guild view, as opposed to s.Left
 	// which holds the scrolled window and the window controls.
 	leftBox := gtk.NewBox(gtk.OrientationVertical, 0)
+	leftBox.Append(s.DMButton)
+	leftBox.Append(dmSeparator)
 	leftBox.Append(s.Guilds)
 
 	leftScroll := gtk.NewScrolledWindow()
@@ -94,10 +105,54 @@ func NewSidebar(ctx context.Context, ctrl Controller) *Sidebar {
 	return &s
 }
 
+func (s *Sidebar) removeCurrent() {
+	if s.current.w == nil {
+		return
+	}
+
+	w := s.current.w
+	s.current.w = nil
+
+	if w == nil {
+		return
+	}
+
+	gtkutil.NotifyProperty(s.Right, "transition-running", func() bool {
+		// Remove the widget when the transition is done.
+		if !s.Right.TransitionRunning() {
+			s.Right.Remove(w)
+			return true
+		}
+		return false
+	})
+}
+
+func (s *Sidebar) openDMs() {
+	s.ctrl.CloseGuild(true)
+	s.Guilds.Unselect()
+
+	direct := direct.NewChannelView(s.ctx, s.ctrl)
+	direct.Invalidate()
+
+	s.Right.AddChild(direct)
+	s.Right.SetVisibleChild(direct)
+
+	s.removeCurrent()
+	s.current.w = direct
+}
+
 // guildsSidebar implements guilds.Controller.
 type guildsSidebar Sidebar
 
 func (s *guildsSidebar) OpenGuild(guildID discord.GuildID) {
+	s.DMButton.Pill.State = 0
+	s.DMButton.Pill.Invalidate()
+
+	if chs, ok := s.current.w.(*channels.View); ok && chs.GuildID() == guildID {
+		// We're already there.
+		return
+	}
+
 	s.ctrl.CloseGuild(true)
 
 	ch := channels.NewView(s.ctx, s.ctrl, guildID)
@@ -109,7 +164,6 @@ func (s *guildsSidebar) OpenGuild(guildID discord.GuildID) {
 
 	s.removeCurrent()
 	s.current.w = ch
-	s.current.id = guildID
 }
 
 // CloseGuild implements guilds.Controller.
@@ -119,8 +173,5 @@ func (s *guildsSidebar) CloseGuild(permanent bool) {
 }
 
 func (s *guildsSidebar) removeCurrent() {
-	s.Right.Remove(s.current.w)
-
-	s.current.w = nil
-	s.current.id = 0
+	(*Sidebar)(s).removeCurrent()
 }

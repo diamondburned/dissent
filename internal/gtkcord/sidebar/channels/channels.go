@@ -179,6 +179,7 @@ func NewView(ctx context.Context, ctrl Controller, guildID discord.GuildID) *Vie
 	v.Child.Tree.SetHeadersVisible(false)
 	v.Child.Tree.SetLevelIndentation(4)
 	v.Child.Tree.SetActivateOnSingleClick(true)
+	v.Child.Tree.SetEnableSearch(false)
 	// v.Child.Tree.SetVAdjustment(v.Scroll.VAdjustment())
 	// v.Child.Tree.SetHAdjustment(v.Scroll.HAdjustment())
 
@@ -290,6 +291,11 @@ func NewView(ctx context.Context, ctrl Controller, guildID discord.GuildID) *Vie
 	return &v
 }
 
+// GuildID returns the view's guild ID.
+func (v *View) GuildID() discord.GuildID {
+	return v.guildID
+}
+
 func (v *View) setDone() {
 	v.LoadablePage.SetChild(v.Overlay)
 }
@@ -348,7 +354,7 @@ func newTreeColumns() []*gtk.TreeViewColumn {
 	return []*gtk.TreeViewColumn{
 		func() *gtk.TreeViewColumn {
 			ren := gtk.NewCellRendererText()
-			ren.SetPadding(0, 6)
+			ren.SetPadding(0, 4)
 			ren.SetObjectProperty("sensitive", true)
 			ren.SetObjectProperty("ellipsize", pango.EllipsizeEnd)
 			ren.SetObjectProperty("ellipsize-set", true)

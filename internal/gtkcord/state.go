@@ -9,6 +9,7 @@ import (
 	"os"
 	"runtime"
 	"strconv"
+	"strings"
 
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -223,4 +224,59 @@ func InjectSize(urlstr string, size int) string {
 // EmojiURL returns a sized emoji URL.
 func EmojiURL(emojiID string, gif bool) string {
 	return InjectSize(discordmd.EmojiURL(emojiID, gif), 64)
+}
+
+// ChannelNameFromID returns the channel's name in plain text from the channel
+// with the given ID.
+func ChannelNameFromID(ctx context.Context, id discord.ChannelID) string {
+	state := FromContext(ctx)
+	ch, _ := state.Cabinet.Channel(id)
+	if ch != nil {
+		return ChannelName(ctx, ch)
+	}
+	return "Unknown channel"
+}
+
+// ChannelName returns the channel's name in plain text.
+func ChannelName(ctx context.Context, ch *discord.Channel) string {
+	switch ch.Type {
+	case discord.DirectMessage:
+		if len(ch.DMRecipients) == 0 {
+			return recipientNames(ctx, ch)
+		}
+		return ch.DMRecipients[0].Username
+	case discord.GroupDM:
+		if ch.Name != "" {
+			return ch.Name
+		}
+		return recipientNames(ctx, ch)
+	default:
+		return "#" + ch.Name
+	}
+}
+
+func recipientNames(ctx context.Context, ch *discord.Channel) string {
+	name := func(ix int) string {
+		return ch.DMRecipients[ix].Username
+	}
+
+	// TODO: localize
+
+	switch len(ch.DMRecipients) {
+	case 0:
+		return "Empty channel"
+	case 1:
+		return name(0)
+	case 2:
+		return name(0) + " and " + name(1)
+	default:
+		var str strings.Builder
+		for _, u := range ch.DMRecipients[:len(ch.DMRecipients)-1] {
+			str.WriteString(u.Username)
+			str.WriteString(", ")
+		}
+		str.WriteString(" and ")
+		str.WriteString(ch.DMRecipients[len(ch.DMRecipients)-1].Username)
+		return str.String()
+	}
 }
