@@ -159,6 +159,7 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 	v.Send.ConnectClicked(v.send)
 
 	v.Box = gtk.NewBox(gtk.OrientationHorizontal, 0)
+	v.Box.SetVAlign(gtk.AlignEnd)
 	v.Box.Append(v.Action)
 	v.Box.Append(scroll)
 	v.Box.Append(v.Send)
