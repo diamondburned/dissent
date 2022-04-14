@@ -2,17 +2,16 @@ package message
 
 import (
 	"context"
-	"strings"
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/chatkit/components/author"
 	"github.com/diamondburned/chatkit/md"
-	"github.com/diamondburned/chatkit/md/block"
 	"github.com/diamondburned/chatkit/md/mdrender"
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/components/onlineimage"
+	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/imgutil"
 	"github.com/diamondburned/gotkit/gtkutil/textutil"
@@ -68,13 +67,10 @@ func (c *Content) SetExtraMenu(menu gio.MenuModeller) {
 }
 
 func (c *Content) setMenu() {
-	// TODO: this doesn't cover embeds. Maybe just walking the widget tree is a
-	// far better choice.
-	state := c.view.State()
-	state.Walk(func(w block.WidgetBlock) bool {
-		if text, ok := w.(block.TextBlock); ok {
-			text := text.TextBlock()
-			text.SetExtraMenu(c.menu)
+	gtkutil.WalkWidget(c, func(w gtk.Widgetter) bool {
+		s, ok := w.(interface{ SetExtraWidget(gio.MenuModeller) })
+		if ok {
+			s.SetExtraWidget(c.menu)
 		}
 		return false
 	})
@@ -112,17 +108,12 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 			chip.Unpad()
 			topBox.Append(chip)
 
-			b := strings.Builder{}
-			s := []byte(msg.Content)
-			n := discordmd.ParseWithMessage(s, *state.Cabinet, msg, true)
-			discordmd.DefaultRenderer.Render(&b, s, n)
-
 			reply := gtk.NewLabel("")
 			reply.AddCSSClass("message-reply-content")
 			reply.SetEllipsize(pango.EllipsizeEnd)
 			reply.SetXAlign(0)
 			reply.SetSingleLineMode(true)
-			reply.SetText(b.String())
+			reply.SetText(state.MessagePreview(msg))
 
 			replyBox.Append(reply)
 		}
@@ -137,9 +128,6 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 
 	c.append(v)
 
-	c.view = v
-	c.setMenu()
-
 	for i := range m.Attachments {
 		v := newAttachment(c.ctx, &m.Attachments[i])
 		c.append(v)
@@ -153,6 +141,9 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 	for _, custom := range customs {
 		c.append(custom)
 	}
+
+	c.view = v
+	c.setMenu()
 }
 
 func (c *Content) append(w gtk.Widgetter) {

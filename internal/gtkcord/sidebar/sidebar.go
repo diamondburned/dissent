@@ -8,6 +8,7 @@ import (
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
+	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar/channels"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar/direct"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar/guilds"
@@ -61,7 +62,10 @@ func NewSidebar(ctx context.Context, ctrl Controller) *Sidebar {
 	s.Guilds = guilds.NewView(ctx, (*guildsSidebar)(&s))
 	s.Guilds.Invalidate()
 
-	s.DMButton = NewDMButton(ctx, s.openDMs)
+	s.DMButton = NewDMButton(ctx, func() {
+		direct := s.openDMs()
+		direct.Invalidate()
+	})
 	s.DMButton.Invalidate()
 
 	dmSeparator := gtk.NewSeparator(gtk.OrientationHorizontal)
@@ -105,6 +109,16 @@ func NewSidebar(ctx context.Context, ctrl Controller) *Sidebar {
 	return &s
 }
 
+// GuildID returns the guild ID that the channel list is showing for, if any.
+// If not, 0 is returned.
+func (s *Sidebar) GuildID() discord.GuildID {
+	ch, ok := s.current.w.(*channels.View)
+	if !ok {
+		return 0
+	}
+	return ch.GuildID()
+}
+
 func (s *Sidebar) removeCurrent() {
 	if s.current.w == nil {
 		return
@@ -127,43 +141,75 @@ func (s *Sidebar) removeCurrent() {
 	})
 }
 
-func (s *Sidebar) openDMs() {
+func (s *Sidebar) openDMs() *direct.ChannelView {
+	if direct, ok := s.current.w.(*direct.ChannelView); ok {
+		// we're already there
+		return direct
+	}
+
 	s.ctrl.CloseGuild(true)
 	s.Guilds.Unselect()
 
 	direct := direct.NewChannelView(s.ctx, s.ctrl)
-	direct.Invalidate()
 
 	s.Right.AddChild(direct)
 	s.Right.SetVisibleChild(direct)
 
 	s.removeCurrent()
 	s.current.w = direct
+
+	return direct
 }
 
-// guildsSidebar implements guilds.Controller.
-type guildsSidebar Sidebar
-
-func (s *guildsSidebar) OpenGuild(guildID discord.GuildID) {
+func (s *Sidebar) openGuild(guildID discord.GuildID) *channels.View {
 	s.DMButton.Pill.State = 0
 	s.DMButton.Pill.Invalidate()
 
-	if chs, ok := s.current.w.(*channels.View); ok && chs.GuildID() == guildID {
+	if ch, ok := s.current.w.(*channels.View); ok && ch.GuildID() == guildID {
 		// We're already there.
-		return
+		return ch
 	}
 
 	s.ctrl.CloseGuild(true)
 
 	ch := channels.NewView(s.ctx, s.ctrl, guildID)
 	ch.InvalidateHeader()
-	ch.InvalidateChannels()
 
 	s.Right.AddChild(ch)
 	s.Right.SetVisibleChild(ch)
 
 	s.removeCurrent()
 	s.current.w = ch
+
+	return ch
+}
+
+// SelectChannel selects and activates the channel with the given ID. It ensures
+// that the sidebar is at the right place then activates the controller.
+func (s *Sidebar) SelectChannel(chID discord.ChannelID) {
+	state := gtkcord.FromContext(s.ctx)
+	ch, _ := state.Cabinet.Channel(chID)
+	if ch == nil {
+		return
+	}
+
+	if ch.GuildID.IsValid() {
+		guild := s.openGuild(ch.GuildID)
+		guild.SelectChannel(chID)
+		guild.InvalidateChannels()
+	} else {
+		direct := s.openDMs()
+		direct.SelectChannel(chID)
+		direct.Invalidate()
+	}
+}
+
+// guildsSidebar implements guilds.Controller.
+type guildsSidebar Sidebar
+
+func (s *guildsSidebar) OpenGuild(guildID discord.GuildID) {
+	ch := (*Sidebar)(s).openGuild(guildID)
+	ch.InvalidateChannels()
 }
 
 // CloseGuild implements guilds.Controller.

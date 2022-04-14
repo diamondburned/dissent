@@ -207,6 +207,12 @@ func (t *GuildTree) state() *gtkcord.State {
 	return gtkcord.FromContext(t.ctx)
 }
 
+// NodeFromPath quickly looks up the channel tree for a node from the given tree
+// path.
+func (t *GuildTree) NodeFromPath(path *gtk.TreePath) Node {
+	return t.paths[path.String()]
+}
+
 // Has returns true if the guild tree has the given channel.
 func (t *GuildTree) Has(id discord.ChannelID) bool {
 	_, ok := t.nodes[id]

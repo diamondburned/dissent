@@ -28,6 +28,7 @@ type ChannelView struct {
 
 	ctx      context.Context
 	channels map[discord.ChannelID]*Channel
+	selectID discord.ChannelID // delegate to be selected later
 }
 
 // Controller is the parent controller that ChannelView controls.
@@ -53,8 +54,11 @@ func NewChannelView(ctx context.Context, ctrl Controller) *ChannelView {
 	v.list.SetHExpand(true)
 	v.list.SetSortFunc(v.sort)
 	v.list.SetFilterFunc(v.filter)
-	v.list.SetActivateOnSingleClick(true)
-	v.list.ConnectRowActivated(func(r *gtk.ListBoxRow) {
+	v.list.SetSelectionMode(gtk.SelectionBrowse)
+	v.list.ConnectRowSelected(func(r *gtk.ListBoxRow) {
+		// Invalidate our selection state.
+		v.selectID = 0
+
 		ch := v.rowChannel(r)
 		ctrl.OpenChannel(ch.id)
 	})
@@ -96,6 +100,10 @@ func NewChannelView(ctx context.Context, ctrl Controller) *ChannelView {
 		// TODO: Channel events
 
 		switch ev := ev.(type) {
+		case *gateway.ChannelCreateEvent:
+			if !ev.GuildID.IsValid() {
+				v.Invalidate() // recreate everything
+			}
 		case *gateway.ChannelDeleteEvent:
 			v.deleteCh(ev.ID)
 		case *gateway.MessageCreateEvent:
@@ -108,6 +116,19 @@ func NewChannelView(ctx context.Context, ctrl Controller) *ChannelView {
 	// TODO: search
 
 	return &v
+}
+
+// SelectChannel selects a known channel. If none is known, then it is selected
+// later when the list is changed or never selected if the user selects
+// something else.
+func (v *ChannelView) SelectChannel(chID discord.ChannelID) {
+	ch, ok := v.channels[chID]
+	if !ok {
+		v.selectID = chID
+		return
+	}
+
+	v.list.SelectRow(ch.ListBoxRow)
 }
 
 // Invalidate invalidates the whole channel view.
@@ -141,10 +162,11 @@ func (v *ChannelView) Invalidate() {
 		ch.Update(&chs[i])
 
 		v.channels[channel.ID] = ch
-		v.list.Append(ch)
 
 		if _, ok := keep[channel.ID]; ok {
 			keep[channel.ID] = true
+		} else {
+			v.list.Append(ch)
 		}
 	}
 
@@ -156,6 +178,14 @@ func (v *ChannelView) Invalidate() {
 	}
 
 	v.SetChild(v.box)
+
+	// If we have a channel to be selectedd, then select it.
+	if v.selectID.IsValid() {
+		if ch, ok := v.channels[v.selectID]; ok {
+			v.list.SelectRow(ch.ListBoxRow)
+			v.selectID = 0
+		}
+	}
 }
 
 func (v *ChannelView) deleteCh(id discord.ChannelID) {

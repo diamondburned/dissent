@@ -2,13 +2,17 @@ module github.com/diamondburned/gtkcord4
 
 go 1.17
 
+// replace github.com/diamondburned/ningen/v3 => ../../ningen
+// replace github.com/diamondburned/arikawa/v3 => ../../arikawa
+// replace github.com/diamondburned/gotkit => ../gotkit
+
 require (
 	github.com/diamondburned/adaptive v0.0.2-0.20220328111603-4f867d7948b2
-	github.com/diamondburned/arikawa/v3 v3.0.0-rc.6.0.20220408124721-4108d10b444c
-	github.com/diamondburned/chatkit v0.0.0-20220410003350-362494224d02
+	github.com/diamondburned/arikawa/v3 v3.0.0-rc.6.0.20220412174302-bd0369136f51
+	github.com/diamondburned/chatkit v0.0.0-20220412205050-65f5794df56f
 	github.com/diamondburned/gotk4/pkg v0.0.0-20220408070453-08962439fbbc
-	github.com/diamondburned/gotkit v0.0.0-20220411012151-ec16933b1564
-	github.com/diamondburned/ningen/v3 v3.0.0-20220411010635-498c8aa4f724
+	github.com/diamondburned/gotkit v0.0.0-20220411230819-e3907853ff4e
+	github.com/diamondburned/ningen/v3 v3.0.0-20220412001139-82f55294365b
 )
 
 require (

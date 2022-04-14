@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"reflect"
 	"runtime"
 	"strconv"
 	"strings"
@@ -119,15 +120,22 @@ func (s *State) WithContext(ctx context.Context) *State {
 // BindHandler is similar to BindWidgetHandler, except the lifetime of the
 // handler is bound to the context.
 func (s *State) BindHandler(ctx gtkutil.Cancellable, fn func(gateway.Event), filters ...gateway.Event) {
+	eventTypes := make([]reflect.Type, len(filters))
+	for i, filter := range filters {
+		eventTypes[i] = reflect.TypeOf(filter)
+	}
 	ctx.OnRenew(func(context.Context) func() {
 		return s.AddSyncHandler(func(ev gateway.Event) {
 			// Optionally filter out events.
-			if len(filters) > 0 {
-				for _, filter := range filters {
-					if filter.Op() == ev.Op() && filter.EventType() == ev.EventType() {
+			if len(eventTypes) > 0 {
+				evType := reflect.TypeOf(ev)
+
+				for _, typ := range eventTypes {
+					if typ == evType {
 						goto filtered
 					}
 				}
+
 				return
 			}
 
@@ -186,6 +194,18 @@ noMember:
 	}
 
 	return author.Markup(name, mods...)
+}
+
+// MessagePreview renders the message into a short content string.
+func (s *State) MessagePreview(msg *discord.Message) string {
+	b := strings.Builder{}
+	b.Grow(len(msg.Content))
+
+	src := []byte(msg.Content)
+	node := discordmd.ParseWithMessage(src, *s.Cabinet, msg, true)
+	discordmd.DefaultRenderer.Render(&b, src, node)
+
+	return b.String()
 }
 
 // InjectAvatarSize calls InjectSize with size being 64px.

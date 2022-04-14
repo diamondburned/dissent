@@ -246,6 +246,28 @@ func (v *View) Guild(id discord.GuildID) *Guild {
 	return nil
 }
 
+// SelectGuild selects the guild with the given ID. If the guild is not known,
+// then the sidebar's guild view is closed.
+func (v *View) SelectGuild(id discord.GuildID) {
+	guild := (*View)(v).Guild(id)
+	if guild == nil {
+		v.ctrl.CloseGuild(true)
+		return
+	}
+
+	current := currentGuild{
+		guild:  guild,
+		folder: guild.ParentFolder(),
+	}
+
+	if current != v.current {
+		(*View)(v).Unselect()
+		v.current = current
+	}
+
+	v.ctrl.OpenGuild(id)
+}
+
 // Unselect unselects any guilds inside this guild view. Use this when the
 // window is showing a channel that's not from any guild.
 func (v *View) Unselect() {
@@ -263,17 +285,5 @@ func (v *View) Unselect() {
 type guildOpenerView View
 
 func (v *guildOpenerView) OpenGuild(id discord.GuildID) {
-	guild := (*View)(v).Guild(id)
-
-	current := currentGuild{
-		guild:  guild,
-		folder: guild.ParentFolder(),
-	}
-
-	if current != v.current {
-		(*View)(v).Unselect()
-		v.current = current
-	}
-
-	v.ctrl.OpenGuild(id)
+	(*View)(v).SelectGuild(id)
 }

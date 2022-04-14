@@ -251,10 +251,19 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 	return v
 }
 
+// GuildID returns the guild ID of the channel that the message view is
+// displaying for.
 func (v *View) GuildID() discord.GuildID {
 	return v.guildID
 }
 
+// ChannelID returns the channel ID of the message view.
+func (v *View) ChannelID() discord.ChannelID {
+	return v.chID
+}
+
+// ChannelName returns the name of the channel that the message view is
+// displaying for.
 func (v *View) ChannelName() string {
 	return v.chName
 }
@@ -586,11 +595,9 @@ func (v *View) Delete(id discord.MessageID) {
 }
 
 func (v *View) onScrollBottomed() {
-	win := app.GTKWindowFromContext(v.ctx.Take())
-	if !win.IsActive() {
+	if !v.IsActive() {
 		return
 	}
-
 	v.MarkRead()
 }
 
@@ -605,4 +612,11 @@ func (v *View) MarkRead() {
 
 	state := gtkcord.FromContext(v.ctx.Take())
 	state.ReadState.MarkRead(v.chID, msg.ID)
+}
+
+// IsActive returns true if View is active and visible. This implies that the
+// window is focused.
+func (v *View) IsActive() bool {
+	win := app.GTKWindowFromContext(v.ctx.Take())
+	return win.IsActive() && v.Mapped()
 }

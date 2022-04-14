@@ -48,7 +48,8 @@ type View struct {
 	tree *GuildTree
 	cols []*gtk.TreeViewColumn
 
-	guildID discord.GuildID
+	guildID  discord.GuildID
+	selectID discord.ChannelID // delegate to select later
 }
 
 var viewCSS = cssutil.Applier("channels-view", `
@@ -291,6 +292,22 @@ func NewView(ctx context.Context, ctrl Controller, guildID discord.GuildID) *Vie
 	return &v
 }
 
+// SelectChannel selects a known channel. If none is known, then it is selected
+// later when the list is changed or never selected if the user selects
+// something else.
+func (v *View) SelectChannel(chID discord.ChannelID) {
+	if v.tree != nil {
+		node := v.tree.Node(chID)
+		if node != nil {
+			selection := v.Child.Tree.Selection()
+			selection.SelectPath(node.TreePath())
+			return
+		}
+	}
+
+	v.selectID = chID
+}
+
 // GuildID returns the view's guild ID.
 func (v *View) GuildID() discord.GuildID {
 	return v.guildID
@@ -327,7 +344,24 @@ func (v *View) InvalidateChannels() {
 	}
 
 	v.tree = NewGuildTree(v.ctx.Take())
+	v.tree.ConnectRowInserted(func(path *gtk.TreePath, iter *gtk.TreeIter) {
+		if v.selectID.IsValid() {
+			node := v.tree.NodeFromPath(path)
+			if node == nil {
+				return
+			}
+
+			if node.ID() == v.selectID {
+				// Found the channel that we want to select.
+				selection := v.Child.Tree.Selection()
+				selection.SelectPath(path)
+
+				v.selectID = 0
+			}
+		}
+	})
 	v.tree.Add(chs)
+
 	v.Child.Tree.SetModel(v.tree)
 	v.setDone()
 

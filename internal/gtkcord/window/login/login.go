@@ -15,14 +15,13 @@ import (
 
 // LoginController is the parent controller that Page controls.
 type LoginController interface {
+	// Hook is called before the state is opened and before Ready is called. It
+	// is meant to be called for hooking the handlers.
+	Hook(*gtkcord.State)
 	// Ready is called once the user has fully logged in. The session given to
 	// the controller will have already been opened and have received the Ready
 	// event.
-	Ready(state *gtkcord.State)
-	// Reconnecting is called by the login page to indicate that the session is
-	// currently not working. The parent controller should drop itself into the
-	// LoadingPage.
-	Reconnecting()
+	Ready(*gtkcord.State)
 	// PromptLogin is called by the login page if the user needs to log in
 	// again, either because their credentials are wrong or Discord returns a
 	// server error.
@@ -95,11 +94,10 @@ func (p *Page) asyncLoadFromSecrets(driver secret.Driver) {
 // asyncUseToken connects with the given token. If driver != nil, then the token
 // is stored.
 func (p *Page) asyncUseToken(token string) {
-	p.ctrl.Reconnecting()
+	state := gtkcord.Wrap(state.New(token))
+	p.ctrl.Hook(state)
 
 	gtkutil.Async(p.ctx, func() func() {
-		state := gtkcord.Wrap(state.New(token))
-
 		if err := state.Open(p.ctx); err != nil {
 			return func() {
 				p.ctrl.PromptLogin()

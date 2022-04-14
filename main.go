@@ -6,6 +6,7 @@ import (
 	"github.com/diamondburned/adaptive"
 	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
+	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord/window"
 
 	_ "github.com/diamondburned/gotkit/gtkutil/aggressivegc"
@@ -24,6 +25,9 @@ func main() {
 	m := manager{}
 
 	app := app.New("com.github.diamondburned.gtkcord4", "gtkcord4")
+	app.AddJSONActions(map[string]interface{}{
+		"app.open-channel": m.openChannel,
+	})
 	app.ConnectActivate(func() { m.activate(app.Context()) })
 	app.RunMain(context.Background())
 }
@@ -31,6 +35,15 @@ func main() {
 type manager struct {
 	*window.Window
 	ctx context.Context
+}
+
+func (m *manager) openChannel(cmd gtkcord.OpenChannelCommand) {
+	if m.Chat == nil {
+		return
+	}
+
+	// TODO: highlight message.
+	m.Chat.OpenChannel(cmd.ChannelID)
 }
 
 func (m *manager) activate(ctx context.Context) {

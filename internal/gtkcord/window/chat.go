@@ -116,6 +116,23 @@ func (p *ChatPage) SwitchToPlaceholder() {
 	p.RightChild.SetVisibleChild(p.placeholder)
 }
 
+// SwitchToMessages reopens a new message page of the same channel ID if the
+// user is opening one. Otherwise, the placeholder is seen.
+func (p *ChatPage) SwitchToMessages() {
+	view, ok := p.prevView.(*message.View)
+	if ok {
+		p.OpenChannel(view.ChannelID())
+	} else {
+		p.SwitchToPlaceholder()
+	}
+}
+
+// OpenChannel opens the channel with the given ID. Use this method to direct
+// the user to a new channel when they request to, e.g. through a notification.
+func (p *ChatPage) OpenChannel(chID discord.ChannelID) {
+	p.Left.SelectChannel(chID)
+}
+
 func (p *ChatPage) switchTo(w gtk.Widgetter) {
 	old := p.prevView
 	p.prevView = w
