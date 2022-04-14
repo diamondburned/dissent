@@ -2,6 +2,7 @@ package guilds
 
 import (
 	"context"
+	"sort"
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
@@ -73,6 +74,10 @@ func NewView(ctx context.Context, ctrl Controller) *View {
 	state := gtkcord.FromContext(ctx)
 	state.BindHandler(cancellable, func(ev gateway.Event) {
 		switch ev := ev.(type) {
+		case *gateway.ReadyEvent:
+			// Recreate the whole list in case we have some new info.
+			v.Invalidate()
+
 		case *read.UpdateEvent:
 			if guild := v.Guild(ev.GuildID); guild != nil {
 				guild.InvalidateUnread()
@@ -102,6 +107,15 @@ func NewView(ctx context.Context, ctrl Controller) *View {
 	return &v
 }
 
+// InvalidateUnreads invalidates the unread states of all guilds.
+func (v *View) InvalidateUnreads() {
+	for _, child := range v.Children {
+		if child, ok := child.(*Guild); ok {
+			child.InvalidateUnread()
+		}
+	}
+}
+
 // Invalidate invalidates the view and recreates everything. Use with care.
 func (v *View) Invalidate() {
 	// TODO: reselect.
@@ -109,39 +123,47 @@ func (v *View) Invalidate() {
 	state := gtkcord.FromContext(v.ctx)
 	ready := state.Ready()
 
-	switch {
-	case ready.UserSettings != nil && ready.UserSettings.GuildFolders != nil:
+	if ready.UserSettings != nil && ready.UserSettings.GuildFolders != nil {
 		v.SetFolders(ready.UserSettings.GuildFolders)
-
-	case ready.UserSettings != nil && ready.UserSettings.GuildPositions != nil:
-		v.SetGuildIDs(ready.UserSettings.GuildPositions)
-
-	default:
-		gtkutil.Async(v.ctx, func() func() {
-			guilds, err := state.Guilds()
-			if err != nil {
-				app.Error(v.ctx, errors.Wrap(err, "cannot get guilds"))
-				return nil
-			}
-
-			// We don't actually store GuildCreateEvents, which turned out to be
-			// what we need for the Joined timestamp. We can't sort this list
-			// correctly.
-
-			guildIDs := make([]discord.GuildID, len(guilds))
-			for i, g := range guilds {
-				guildIDs[i] = g.ID
-			}
-
-			return func() {
-				v.SetGuildIDs(guildIDs)
-			}
-		})
+		return
 	}
+
+	gtkutil.Async(v.ctx, func() func() {
+		guilds, err := state.Guilds()
+		if err != nil {
+			app.Error(v.ctx, errors.Wrap(err, "cannot get guilds"))
+			return nil
+		}
+
+		// We don't actually store GuildCreateEvents, which turned out to be
+		// what we need for the Joined timestamp. We can't sort the rest of this
+		// list correctly.
+
+		if ready.UserSettings != nil && len(ready.UserSettings.GuildPositions) > 0 {
+			// Ported from gtkcord3.
+			sort.SliceStable(guilds, func(a, b int) bool {
+				var found bool
+				for _, guild := range ready.UserSettings.GuildPositions {
+					if found && guild == guilds[b].ID {
+						return true
+					}
+					if !found && guild == guilds[a].ID {
+						found = true
+					}
+				}
+				return false
+			})
+		}
+
+		return func() { v.SetGuilds(guilds) }
+	})
 }
 
 // SetFolders sets the guild folders to use.
 func (v *View) SetFolders(folders []gateway.GuildFolder) {
+	restore := v.saveSelection()
+	defer restore()
+
 	v.clear()
 
 	for i, folder := range folders {
@@ -191,14 +213,16 @@ func (v *View) RemoveGuild(id discord.GuildID) {
 	}
 }
 
-// SetGuildIDs sets the guilds by a list of IDs. If sort is true, then the
-// guilds will be sorted according to the order that the user joins them.
-func (v *View) SetGuildIDs(guildIDs []discord.GuildID) {
+// SetGuilds sets the guilds shown.
+func (v *View) SetGuilds(guilds []discord.Guild) {
+	restore := v.saveSelection()
+	defer restore()
+
 	v.clear()
 
-	for _, id := range guildIDs {
-		g := NewGuild(v.ctx, (*guildOpenerView)(v), id)
-		g.Invalidate()
+	for i, guild := range guilds {
+		g := NewGuild(v.ctx, (*guildOpenerView)(v), guild.ID)
+		g.Update(&guilds[i])
 
 		v.append(g)
 	}
@@ -280,6 +304,18 @@ func (v *View) Unselect() {
 		v.current.guild.Unselect()
 		v.current.guild = nil
 	}
+}
+
+// saveSelection saves the current guild selection to be restored later using
+// the returned callback.
+func (v *View) saveSelection() (restore func()) {
+	if v.current.guild == nil {
+		// Nothing to restore.
+		return func() {}
+	}
+
+	guildID := v.current.guild.id
+	return func() { v.SelectGuild(guildID) }
 }
 
 type guildOpenerView View

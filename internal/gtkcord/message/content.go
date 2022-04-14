@@ -24,7 +24,7 @@ import (
 type Content struct {
 	*gtk.Box
 	ctx   context.Context
-	menu  gio.MenuModeller
+	menu  *gio.Menu
 	view  *mdrender.MarkdownViewer
 	child []gtk.Widgetter
 }
@@ -60,17 +60,31 @@ func NewContent(ctx context.Context) *Content {
 
 // SetExtraMenu implements ExtraMenuSetter.
 func (c *Content) SetExtraMenu(menu gio.MenuModeller) {
-	c.menu = menu
+	c.menu = gio.NewMenu()
+	c.menu.InsertSection(0, "Message", menu)
+
 	if c.view != nil {
 		c.setMenu()
 	}
 }
 
+type extraMenuSetter interface{ SetExtraMenu(gio.MenuModeller) }
+
+var (
+	_ extraMenuSetter = (*gtk.TextView)(nil)
+	_ extraMenuSetter = (*gtk.Label)(nil)
+)
+
 func (c *Content) setMenu() {
-	gtkutil.WalkWidget(c, func(w gtk.Widgetter) bool {
-		s, ok := w.(interface{ SetExtraWidget(gio.MenuModeller) })
+	var menu gio.MenuModeller
+	if c.menu != nil {
+		menu = c.menu // because a nil interface{} != nil *T
+	}
+
+	gtkutil.WalkWidget(c.Box, func(w gtk.Widgetter) bool {
+		s, ok := w.(extraMenuSetter)
 		if ok {
-			s.SetExtraWidget(c.menu)
+			s.SetExtraMenu(menu)
 		}
 		return false
 	})
