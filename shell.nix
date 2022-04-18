@@ -1,1 +1,1 @@
-.nix/shell.nix
+{}: import ./.nix { action = "shell"; }
