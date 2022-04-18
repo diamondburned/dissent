@@ -35,14 +35,14 @@ func NewBanner(ctx context.Context, guildID discord.GuildID) *Banner {
 	}
 
 	b.Picture = onlineimage.NewPicture(ctx, imgutil.HTTPProvider)
+	b.Picture.SetLayoutManager(gtk.NewBinLayout()) // magically force min size
 	b.Picture.SetSizeRequest(bannerWidth, bannerHeight)
 
 	b.Shadows = gtk.NewBox(gtk.OrientationVertical, 0)
 	b.Shadows.AddCSSClass("channels-banner-shadow")
-	b.Shadows.SetHExpand(true)
-	b.Shadows.SetVExpand(true)
 
 	b.Overlay = gtk.NewOverlay()
+	b.Overlay.SetHAlign(gtk.AlignStart)
 	b.Overlay.SetChild(b.Picture)
 	b.Overlay.AddOverlay(b.Shadows)
 	b.Hide()
