@@ -57,7 +57,6 @@ var columnTypes = []glib.Type{
 type GuildTree struct {
 	*gtk.TreeStore
 	nodes map[discord.ChannelID]Node
-	paths map[string]Node
 	ctx   context.Context
 }
 
@@ -66,7 +65,6 @@ func NewGuildTree(ctx context.Context) *GuildTree {
 	return &GuildTree{
 		TreeStore: gtk.NewTreeStore(columnTypes),
 		nodes:     make(map[discord.ChannelID]Node),
-		paths:     make(map[string]Node),
 		ctx:       ctx,
 	}
 }
@@ -172,7 +170,6 @@ func (t *GuildTree) Add(channels []discord.Channel) {
 // keep saves n into the internal registry.
 func (t *GuildTree) keep(n Node) {
 	t.nodes[n.ID()] = n
-	t.paths[n.TreePath().String()] = n
 	t.UpdateUnread(n.ID())
 }
 
@@ -199,7 +196,6 @@ func (t *GuildTree) Remove(id discord.ChannelID) {
 		}
 
 		delete(t.nodes, id)
-		delete(t.paths, n.TreePath().String())
 	}
 }
 
@@ -207,10 +203,21 @@ func (t *GuildTree) state() *gtkcord.State {
 	return gtkcord.FromContext(t.ctx)
 }
 
+// NodeFromIter returns the channel from the given TreeIter.
+func (t *GuildTree) NodeFromIter(iter *gtk.TreeIter) Node {
+	gv := t.TreeStore.Value(iter, columnID)
+	id := gv.GoValue().(int64)
+	return t.nodes[discord.ChannelID(id)]
+}
+
 // NodeFromPath quickly looks up the channel tree for a node from the given tree
 // path.
 func (t *GuildTree) NodeFromPath(path *gtk.TreePath) Node {
-	return t.paths[path.String()]
+	it, ok := t.TreeStore.Iter(path)
+	if !ok {
+		return nil
+	}
+	return t.NodeFromIter(it)
 }
 
 // Has returns true if the guild tree has the given channel.

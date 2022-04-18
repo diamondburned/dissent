@@ -69,19 +69,19 @@ func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widg
 				humanize.Bytes(attachment.Size),
 			)
 
-			image := thumbnail.NewEmbed(gtkcord.EmbedMaxWidth, gtkcord.EmbedImgHeight, opts)
+			image := thumbnail.NewEmbed(ctx, gtkcord.EmbedMaxWidth, gtkcord.EmbedImgHeight, opts)
 			image.SetName(name)
 			image.SetOpenURL(func() { app.OpenURI(ctx, attachment.URL) })
 
 			if attachment.Width > 0 && attachment.Height > 0 {
 				image.SetSize(int(attachment.Width), int(attachment.Height))
 				if typ == "image" {
-					image.SetFromURL(ctx, resizeURL(attachment.Proxy, image))
+					image.SetFromURL(resizeURL(attachment.Proxy, image))
 				} else {
-					image.SetFromURL(ctx, attachment.Proxy)
+					image.SetFromURL(attachment.Proxy)
 				}
 			} else {
-				image.SetFromURL(ctx, attachment.Proxy)
+				image.SetFromURL(attachment.Proxy)
 			}
 
 			return image
@@ -103,7 +103,7 @@ func newEmbed(ctx context.Context, msg *discord.Message, embed *discord.Embed) g
 }
 
 func newImageEmbed(ctx context.Context, msg *discord.Message, embed *discord.Embed) gtk.Widgetter {
-	var typ thumbnail.EmbedType
+	var typ thumbnail.EmbedOpts
 	var img discord.EmbedImage
 
 	switch {
@@ -117,17 +117,15 @@ func newImageEmbed(ctx context.Context, msg *discord.Message, embed *discord.Emb
 
 	switch embed.Type {
 	case discord.ImageEmbed:
-		typ = thumbnail.TypeFromURL(img.URL)
-	case discord.VideoEmbed:
-		typ = thumbnail.EmbedTypeVideo
-	case discord.GIFVEmbed:
-		typ = thumbnail.EmbedTypeGIF
+		typ.Type = thumbnail.TypeFromURL(img.URL)
+	case discord.VideoEmbed, discord.GIFVEmbed:
+		typ.Type = thumbnail.EmbedTypeVideo
 	}
 
-	image := thumbnail.NewEmbed(gtkcord.EmbedMaxWidth, gtkcord.EmbedImgHeight, thumbnail.EmbedOpts{Type: typ})
+	image := thumbnail.NewEmbed(ctx, gtkcord.EmbedMaxWidth, gtkcord.EmbedImgHeight, typ)
 	image.SetName(path.Base(img.URL))
 	image.SetSize(int(img.Width), int(img.Height))
-	image.SetFromURL(ctx, resizeURL(img.Proxy, image))
+	image.SetFromURL(resizeURL(img.Proxy, image))
 	image.SetOpenURL(func() { app.OpenURI(ctx, img.URL) })
 
 	return image
@@ -137,6 +135,7 @@ var normalEmbedCSS = cssutil.Applier("message-normalembed", `
 	.message-normalembed {
 		border-left: 3px solid;
 		padding: 5px 10px;
+		background-color: @theme_base_color;
 	}
 `)
 
@@ -311,15 +310,15 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, embed *discord.Em
 			opts.Provider = imgutil.FFmpegProvider
 		}
 
-		image := thumbnail.NewEmbed(gtkcord.EmbedMaxWidth, gtkcord.EmbedImgHeight, opts)
+		image := thumbnail.NewEmbed(ctx, gtkcord.EmbedMaxWidth, gtkcord.EmbedImgHeight, opts)
 		image.SetSize(int(img.Width), int(img.Height))
 		image.SetOpenURL(func() { app.OpenURI(ctx, embed.Image.URL) })
 
 		if embed.Image != nil {
 			// The server can only resize images.
-			image.SetFromURL(ctx, resizeURL(img.Proxy, image))
+			image.SetFromURL(resizeURL(img.Proxy, image))
 		} else {
-			image.SetFromURL(ctx, img.Proxy)
+			image.SetFromURL(img.Proxy)
 		}
 
 		content.Append(image)
@@ -336,11 +335,11 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, embed *discord.Em
 	}
 
 	if embed.Thumbnail != nil {
-		image := thumbnail.NewEmbed(80, 80, thumbnail.EmbedOpts{})
+		image := thumbnail.NewEmbed(ctx, 80, 80, thumbnail.EmbedOpts{})
 		image.SetHAlign(gtk.AlignEnd)
 		image.SetVAlign(gtk.AlignStart)
 		image.SetSize(int(embed.Thumbnail.Width), int(embed.Thumbnail.Height))
-		image.SetFromURL(ctx, resizeURL(embed.Thumbnail.Proxy, image))
+		image.SetFromURL(resizeURL(embed.Thumbnail.Proxy, image))
 		image.SetOpenURL(func() { app.OpenURI(ctx, embed.Thumbnail.URL) })
 
 		box.Append(image)

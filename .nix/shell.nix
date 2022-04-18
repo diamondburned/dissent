@@ -18,7 +18,7 @@ in shell.overrideAttrs (old: {
 		glib.debug
 		graphene
 		gdk-pixbuf
-		gobjectIntrospection
+		gobject-introspection
 		libcanberra-gtk3
 
 		pkgconfig

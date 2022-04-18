@@ -29,19 +29,35 @@ type Guild struct {
 var guildCSS = cssutil.Applier("guild-guild", `
 	.guild-guild > button {
 		padding: 4px 12px;
+		border: none;
 		border-radius: 0;
+		background: none;
 	}
 	.guild-guild image {
 		background-color: @theme_bg_color;
 	}
+	.guild-guild > button .adaptive-avatar > image,
+	.guild-guild > button .adaptive-avatar > label {
+		outline: 0px solid transparent;
+	}
+	.guild-guild > button:hover .adaptive-avatar > image,
+	.guild-guild > button:hover .adaptive-avatar > label {
+		outline: 2px solid @theme_selected_bg_color;
+		background-color: alpha(@theme_selected_bg_color, 0.35);
+	}
 	.guild-guild > button > .adaptive-avatar > image,
 	.guild-guild > button > .adaptive-avatar > label {
-		transition: border-radius 200ms ease;
 		border-radius: calc({$guild_icon_size} / 2);
 	}
 	.guild-guild > button:hover > .adaptive-avatar > image,
 	.guild-guild > button:hover > .adaptive-avatar > label {
 		border-radius: calc({$guild_icon_size} / 4);
+	}
+	.guild-guild > button image,
+	.guild-guild > button > .adaptive-avatar > image,
+	.guild-guild > button > .adaptive-avatar > label {
+		transition: 200ms ease;
+		transition-property: all;
 	}
 `)
 
@@ -63,6 +79,9 @@ func NewGuild(ctx context.Context, ctrl GuildOpener, id discord.GuildID) *Guild 
 
 		ctrl.OpenGuild(id)
 	})
+
+	anim := g.Icon.EnableAnimation()
+	anim.ConnectMotion(g.Button)
 
 	g.Pill = NewPill()
 

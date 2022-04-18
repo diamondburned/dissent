@@ -38,9 +38,11 @@ var folderButtonCSS = cssutil.Applier("guild-folderbutton", `
 	.guild-folderbutton {
 		padding:  0 12px; /* reset styling */
 		padding-top: 8px;
+		border: none;
 		border-radius: 0;
 		min-width:  0;
 		min-height: 0;
+		background: none;
 	}
 	.guild-foldericons {
 		transition: 200ms ease;
@@ -62,9 +64,6 @@ var folderButtonCSS = cssutil.Applier("guild-folderbutton", `
 			calc({$guild_icon_size} / 4)
 			0 0;
 	}
-	.guild-folderbutton:hover > .guild-foldericons:not(.guild-foldericons-collapsed) {
-		background-color: mix(@borders, @theme_bg_color, 0.5);
-	}
 	.guild-foldericons > image {
 		color: rgb(88, 101, 242);
 	}
@@ -73,6 +72,13 @@ var folderButtonCSS = cssutil.Applier("guild-folderbutton", `
 	}
 	.guild-foldericons image {
 		background: none;
+	}
+	.guild-folderbutton .guild-foldericons {
+		transition-property: all;
+		outline: 0px solid transparent;
+	}
+	.guild-folderbutton:hover .guild-foldericons.guild-foldericons-collapsed {
+		outline: 2px solid @theme_selected_bg_color;
 	}
 `)
 

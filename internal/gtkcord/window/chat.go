@@ -85,8 +85,8 @@ func NewChatPage(ctx context.Context) *ChatPage {
 	rightBox.Append(p.RightChild)
 
 	p.Fold = adaptive.NewFold(gtk.PosLeft)
-	p.Fold.SetFoldThreshold(680)
-	p.Fold.SetFoldWidth(250)
+	p.Fold.SetFoldThreshold(700)
+	p.Fold.SetFoldWidth(225)
 	p.Fold.SetChild(rightBox)
 	p.Fold.SetSideChild(p.Left)
 	p.Fold.SetRevealSide(true)
@@ -165,7 +165,7 @@ func (p *sidebarChatPage) OpenChannel(chID discord.ChannelID) {
 	view := message.NewView(p.ctx, chID)
 	view.Load()
 
-	p.RightLabel.SetText("#" + view.ChannelName())
+	p.RightLabel.SetText(gtkcord.ChannelNameFromID(p.ctx, chID))
 
 	win := app.WindowFromContext(p.ctx)
 	win.SetTitle(gtkcord.ChannelNameFromID(p.ctx, chID))

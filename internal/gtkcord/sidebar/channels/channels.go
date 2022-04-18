@@ -72,6 +72,7 @@ var viewCSS = cssutil.Applier("channels-view", `
 	.channels-has-banner .channels-header {
 		transition: none;
 		box-shadow: 0 0 6px 0px @theme_bg_color;
+		border: none;
 	}
 	.channels-has-banner:not(.channels-scrolled) .channels-header {
 		background: none;
@@ -81,15 +82,24 @@ var viewCSS = cssutil.Applier("channels-view", `
 		transition: none;
 		background: none;
 	}
+	.channels-has-banner .channels-header * {
+		color: white;
+		text-shadow: 0px 0px 2px alpha(black, 0.5);
+	}
+	.channels-has-banner .channels-header *:backdrop {
+		color: alpha(white, 0.75);
+		text-shadow: 0px 0px 2px alpha(black, 0.35);
+	}
 	.channels-has-banner:not(.channels-scrolled) .channels-banner-shadow {
+		/* go run ./cmd/ease-in-out-gradient/ -max 0.6 -min 0 -steps 7 */
 		background: linear-gradient(to bottom,
-			alpha(@theme_bg_color, 0.49),
-			alpha(@theme_bg_color, 0.45),
-			alpha(@theme_bg_color, 0.34),
-			alpha(@theme_bg_color, 0.16),
-			alpha(@theme_bg_color, 0.05),
-			alpha(@theme_bg_color, 0.01),
-			alpha(@theme_bg_color, 0.00) 50%
+			alpha(black, 0.44),
+			alpha(black, 0.41),
+			alpha(black, 0.31),
+			alpha(black, 0.14),
+			alpha(black, 0.04),
+			alpha(black, 0.01),
+			alpha(black, 0.00) 55%
 		);
 	}
 	.channels-name {
@@ -189,7 +199,7 @@ func NewView(ctx context.Context, ctrl Controller, guildID discord.GuildID) *Vie
 	}
 
 	v.Child.Tree.ConnectRowActivated(func(path *gtk.TreePath, column *gtk.TreeViewColumn) {
-		node := v.tree.paths[path.String()]
+		node := v.tree.NodeFromPath(path)
 		if node == nil {
 			log.Println("weird, activated unknown path", path)
 			return
@@ -215,15 +225,19 @@ func NewView(ctx context.Context, ctrl Controller, guildID discord.GuildID) *Vie
 	selection.ConnectChanged(func() {
 		_, iter, ok := selection.Selected()
 		if !ok || v.tree == nil {
+			v.selectID = 0
 			return
 		}
 
-		path := v.tree.Path(iter)
-		node := v.tree.paths[path.String()]
+		node := v.tree.NodeFromIter(iter)
 		if node == nil {
-			log.Println("weird, selected unknown path", path)
+			log.Println("weird, selected unknown path", v.tree.Path(iter))
+			v.selectID = 0
 			return
 		}
+
+		// Update the selectID in case we recreate the tree model.
+		v.selectID = node.ID()
 
 		switch node.(type) {
 		case *ChannelNode, *ThreadNode:
@@ -345,19 +359,19 @@ func (v *View) InvalidateChannels() {
 
 	v.tree = NewGuildTree(v.ctx.Take())
 	v.tree.ConnectRowInserted(func(path *gtk.TreePath, iter *gtk.TreeIter) {
-		if v.selectID.IsValid() {
-			node := v.tree.NodeFromPath(path)
-			if node == nil {
-				return
-			}
+		node := v.tree.NodeFromIter(iter)
+		if node == nil {
+			return
+		}
 
-			if node.ID() == v.selectID {
-				// Found the channel that we want to select.
-				selection := v.Child.Tree.Selection()
-				selection.SelectPath(path)
+		if !v.selectID.IsValid() {
+			return
+		}
 
-				v.selectID = 0
-			}
+		if node.ID() == v.selectID {
+			// Found the channel that we want to select.
+			selection := v.Child.Tree.Selection()
+			selection.SelectPath(path)
 		}
 	})
 	v.tree.Add(chs)

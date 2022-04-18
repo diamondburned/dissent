@@ -206,6 +206,7 @@ func NewCozyMessage(ctx context.Context) Message {
 	m.Avatar = onlineimage.NewAvatar(ctx, imgutil.HTTPProvider, gtkcord.MessageAvatarSize)
 	m.Avatar.AddCSSClass("message-cozy-avatar")
 	m.Avatar.SetVAlign(gtk.AlignStart)
+	m.Avatar.EnableAnimation().OnHover()
 
 	m.Box = gtk.NewBox(gtk.OrientationHorizontal, 0)
 	m.Box.Append(m.Avatar)
@@ -217,8 +218,6 @@ func NewCozyMessage(ctx context.Context) Message {
 
 func (m *cozyMessage) Update(message *gateway.MessageCreateEvent) {
 	m.message.Update(message)
-	m.Avatar.SetFromURL(gtkcord.InjectAvatarSize(message.Author.AvatarURL()))
-
 	m.updateAuthor(message)
 
 	tooltip := fmt.Sprintf(
@@ -243,6 +242,8 @@ func (m *cozyMessage) UpdateMember(member *discord.Member) {
 }
 
 func (m *cozyMessage) updateAuthor(message *gateway.MessageCreateEvent) {
+	m.Avatar.SetFromURL(gtkcord.InjectAvatarSize(message.Author.AvatarURL()))
+
 	state := gtkcord.FromContext(m.ctx())
 
 	markup := "<b>" + state.AuthorMarkup(message) + "</b>"

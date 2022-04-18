@@ -12,6 +12,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/diamondburned/gotk4/pkg/gdk/v4"
 	"github.com/diamondburned/gotk4/pkg/gdkpixbuf/v2"
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
@@ -98,7 +99,14 @@ var Provider imgutil.Provider = provider{}
 func (p provider) Schemes() []string { return []string{"icon"} }
 
 // Do implements imgutil.Provider.
-func (p provider) Do(ctx context.Context, url *url.URL, f func(*gdkpixbuf.Pixbuf)) {
+func (p provider) Do(ctx context.Context, url *url.URL, img imgutil.ImageSetter) {
 	// Combine Host and Path since url.Parse splits the path into Host.
-	f(Pixbuf(url.Host + url.Path))
+	pixbuf := Pixbuf(url.Host + url.Path)
+
+	switch {
+	case img.SetFromPixbuf != nil:
+		img.SetFromPixbuf(pixbuf)
+	case img.SetFromPaintable != nil:
+		img.SetFromPaintable(gdk.NewTextureForPixbuf(pixbuf))
+	}
 }

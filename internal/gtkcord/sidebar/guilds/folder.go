@@ -43,22 +43,22 @@ var folderCSS = cssutil.Applier("guild-folder", `
 	.guild-folder .guild-guild > button {
 		padding: 0 12px;
 	}
-	.guild-folder .guild-guild > button > .adaptive-avatar {
+	.guild-folder .guild-guild > button .adaptive-avatar {
 		padding: 4px 0;
 		transition: 200ms ease;
+		background-color: @theme_bg_color;
+	}
+	.guild-folder .guild-guild > button       .adaptive-avatar,
+	.guild-folder .guild-guild > button:hover .adaptive-avatar  {
 		background-color: @theme_bg_color;
 	}
 	.guild-folder .guild-guild:last-child > button {
 		padding-bottom: 4px;
 	}
-	.guild-folder .guild-guild:last-child > button > .adaptive-avatar {
+	.guild-folder .guild-guild:last-child > button .adaptive-avatar {
 		padding: 0;
 		padding-top: 4px;
 		border-radius: 0 0 99px 99px;
-		background-color: @theme_bg_color;
-	}
-	.guild-folder .guild-guild > button:hover > .adaptive-avatar {
-		background-color: mix(@borders, @theme_bg_color, 0.5);
 	}
 `)
 

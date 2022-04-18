@@ -201,8 +201,9 @@ func renderEmoji(r *mdrender.Renderer, n ast.Node) ast.WalkStatus {
 	text := r.State.TextBlock()
 
 	image := onlineimage.NewImage(r.State.Context(), imgutil.HTTPProvider)
-	image.SetFromURL(gtkcord.EmojiURL(emoji.ID, false))
+	image.EnableAnimation().OnHover()
 	image.SetTooltipText(emoji.Name)
+	image.SetFromURL(gtkcord.EmojiURL(emoji.ID, emoji.GIF))
 
 	v := md.InsertCustomImageWidget(text.TextView, text.Buffer.CreateChildAnchor(text.Iter), image)
 	if emoji.Large {

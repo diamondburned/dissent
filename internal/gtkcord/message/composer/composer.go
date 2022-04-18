@@ -68,6 +68,7 @@ type View struct {
 
 var viewCSS = cssutil.Applier("composer-view", `
 	.composer-action {
+		border:  none;
 		margin:  0 11px;
 		padding: 6px;
 	}
@@ -174,12 +175,8 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 // empty string is given.
 func (v *View) SetPlaceholderMarkup(markup string) {
 	if markup == "" {
-		state := gtkcord.FromContext(v.ctx)
-		ch, _ := state.Cabinet.Channel(v.chID)
-		if ch != nil {
-			v.Placeholder.SetText("Message #" + ch.Name)
-			return
-		}
+		v.Placeholder.SetText("Message " + gtkcord.ChannelNameFromID(v.ctx, v.chID))
+		return
 	}
 
 	v.Placeholder.SetMarkup(markup)

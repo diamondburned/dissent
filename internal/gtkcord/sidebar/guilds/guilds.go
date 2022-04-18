@@ -82,6 +82,12 @@ func NewView(ctx context.Context, ctrl Controller) *View {
 			if guild := v.Guild(ev.GuildID); guild != nil {
 				guild.InvalidateUnread()
 			}
+		case *gateway.ChannelCreateEvent:
+			if ev.GuildID.IsValid() {
+				if guild := v.Guild(ev.GuildID); guild != nil {
+					guild.InvalidateUnread()
+				}
+			}
 		case *gateway.GuildCreateEvent:
 			if guild := v.Guild(ev.ID); guild != nil {
 				guild.Update(&ev.Guild)
