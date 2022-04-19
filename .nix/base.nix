@@ -13,7 +13,13 @@
 	];
 
 	files = {
-		desktop = ./com.github.diamondburned.gtkcord4.desktop;
-		logo = ../internal/icons/png/logo.png;
+		desktop = {
+			name = "com.github.diamondburned.gtkcord4.desktop";
+			path = ./com.github.diamondburned.gtkcord4.desktop;
+		};
+		logo = {
+			name = "gtkcord4.png";
+			path = ../internal/icons/png/logo.png;
+		};
 	};
 }
