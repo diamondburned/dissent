@@ -5,7 +5,7 @@ in {
 	gotk4-nix = systemPkgs.fetchFromGitHub {
 		owner = "diamondburned";
 		repo  = "gotk4-nix";
-		rev   = "fd5b734f0914b560c1bfaa0b6bf24458648ef6b3";
-		hash  = "sha256:16axmj5wks0dxdvm9xwij1sm5s0y6c4pi329n4zndbw4l24p841h";
+		rev   = "22608efd555010180920c5b3bc3c5f7fdfe5ef86";
+		hash  = "sha256:1bav8f33n0qc288k0j4f83g210fv64vrdk1zlpavw4fqb7d8j4d3";
 	};
 }
