@@ -12,6 +12,7 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/imgutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
+	"github.com/diamondburned/ningen/v3/states/emoji"
 	"github.com/sahilm/fuzzy"
 
 	unicodeemoji "github.com/enescakir/emoji"
@@ -70,15 +71,37 @@ func (c *emojiCompleter) Search(ctx context.Context, str string) []autocomplete.
 	}
 
 	state := gtkcord.FromContext(ctx)
-	emojis, _ := state.EmojiState.Get(c.guildID)
+
+	var emojis []emoji.Guild
+	if showAllEmojis.Value() {
+		emojis, _ = state.EmojiState.AllEmojis()
+	} else {
+		emojis, _ = state.EmojiState.ForGuild(c.guildID)
+	}
+
+	hasNitro := state.EmojiState.HasNitro()
 
 	for _, guild := range emojis {
 		for _, emoji := range guild.Emojis {
+			var content string
+			// Check if the user can use the emoji if they have Nitro or if the
+			// emoji is not animated and comes from the same guild thay they're
+			// sending it to.
+			if hasNitro || (guild.ID == c.guildID && !emoji.Animated) {
+				// Use the default emoji format. This string is subject to
+				// server-side validation.
+				content = emoji.String()
+			} else {
+				// Use the emoji URL instead of the emoji code to allow
+				// non-Nitro users to send emojis by sending the image URL.
+				content = gtkcord.InjectSizeUnscaled(emoji.EmojiURL(), gtkcord.LargeEmojiSize)
+			}
+
 			c.emojis = append(c.emojis, EmojiData{
 				ID:      emoji.ID,
 				GuildID: guild.ID,
 				Name:    emoji.Name,
-				Content: emoji.String(),
+				Content: content,
 			})
 		}
 	}

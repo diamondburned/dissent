@@ -14,11 +14,18 @@ import (
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/app"
+	"github.com/diamondburned/gotkit/app/prefs"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/mediautil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/pkg/errors"
 )
+
+var showAllEmojis = prefs.NewBool(true, prefs.PropMeta{
+	Name:        "Show All Emojis",
+	Section:     "Discord",
+	Description: "Show (and autocomplete) all emojis even if the user doesn't have Nitro.",
+})
 
 // File contains the filename and a callback to open the file that's called
 // asynchronously.

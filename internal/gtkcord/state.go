@@ -3,7 +3,6 @@ package gtkcord
 import (
 	"context"
 	"log"
-	"math"
 	"net/http"
 	"net/url"
 	"os"
@@ -205,7 +204,7 @@ func (s *State) MessagePreview(msg *discord.Message) string {
 	node := discordmd.ParseWithMessage(src, *s.Cabinet, msg, true)
 	discordmd.DefaultRenderer.Render(&b, src, node)
 
-	return b.String()
+	return strings.TrimRight(b.String(), "\n")
 }
 
 // InjectAvatarSize calls InjectSize with size being 64px.
@@ -220,25 +219,37 @@ func InjectSize(urlstr string, size int) string {
 		return ""
 	}
 
-	u, err := url.Parse(urlstr)
-	if err != nil {
-		return urlstr
-	}
-
 	if scale := gtkutil.ScaleFactor(); scale > 2 {
 		size *= scale
 	} else {
 		size *= 2
 	}
 
+	return InjectSizeUnscaled(urlstr, size)
+}
+
+// InjectSizeUnscaled is like InjectSize, except the size is not scaled
+// according to the scale factor.
+func InjectSizeUnscaled(urlstr string, size int) string {
 	// Round size up to the nearest power of 2.
-	size = int(math.Exp2(math.Ceil(math.Log2(float64(size)))))
+	size = roundSize(size)
+
+	u, err := url.Parse(urlstr)
+	if err != nil {
+		return urlstr
+	}
 
 	q := u.Query()
 	q.Set("size", strconv.Itoa(size))
 	u.RawQuery = q.Encode()
 
 	return u.String()
+}
+
+// https://math.stackexchange.com/a/291494/963524
+func roundSize(size int) int {
+	const mult = 16
+	return ((size - 1) | (mult - 1)) + 1
 }
 
 // EmojiURL returns a sized emoji URL.

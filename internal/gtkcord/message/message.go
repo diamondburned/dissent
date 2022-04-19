@@ -178,6 +178,7 @@ var cozyCSS = cssutil.Applier("message-cozy", `
 		margin-top: 2px;
 	}
 	.message-cozy-header {
+		min-height: 1.75em;
 		margin-top: 2px;
 		font-size: 0.95em;
 	}
