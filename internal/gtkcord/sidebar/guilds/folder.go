@@ -7,7 +7,6 @@ import (
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
-	"github.com/diamondburned/ningen/v3"
 )
 
 const (
@@ -176,20 +175,9 @@ func (f *Folder) viewChild() {}
 
 // InvalidateUnread invalidates the folder's unread state.
 func (f *Folder) InvalidateUnread() {
-	var unread ningen.UnreadIndication
+	f.ButtonPill.Attrs = 0
 	for _, guild := range f.Guilds {
-		if guild.unread > unread {
-			unread = guild.unread
-		}
-	}
-
-	switch unread {
-	case ningen.ChannelRead:
-		f.ButtonPill.Attrs = 0
-	case ningen.ChannelUnread:
-		f.ButtonPill.Attrs = PillUnread
-	case ningen.ChannelMentioned:
-		f.ButtonPill.Attrs = PillMentioned
+		f.ButtonPill.Attrs |= guild.Pill.Attrs
 	}
 
 	f.ButtonPill.Invalidate()

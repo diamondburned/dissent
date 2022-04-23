@@ -125,16 +125,23 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 	v.Scroll.SetPolicy(gtk.PolicyNever, gtk.PolicyAutomatic)
 	v.Scroll.SetPropagateNaturalWidth(true)
 	v.Scroll.SetPropagateNaturalHeight(true)
-	v.Scroll.SetChild(v.List)
 	v.Scroll.OnBottomed(v.onScrollBottomed)
 
+	vp := v.Scroll.Viewport()
+	vp.SetChild(v.List)
+	vp.SetFocusChild(v.List)
+	vp.SetScrollToFocus(true)
+
+	v.Scroll.SetFocusChild(vp)
 	v.List.SetAdjustment(v.Scroll.VAdjustment())
 
 	v.Composer = composer.NewView(ctx, v, chID)
+	gtkutil.ForwardTyping(v.List, v.Composer.Input)
 
 	v.Box = gtk.NewBox(gtk.OrientationVertical, 0)
 	v.Box.Append(v.Scroll)
 	v.Box.Append(v.Composer)
+	v.Box.SetFocusChild(v.Composer)
 
 	v.LoadablePage = adaptive.NewLoadablePage()
 	v.LoadablePage.SetChild(v.Box)
@@ -172,14 +179,12 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 
 					msg.ListBoxRow.SetName(string(key))
 					msg.message.Update(ev)
-					msg.message.BindMenu(v)
 					return
 				}
 			}
 
 			msg := v.upsertMessage(ev.ID, newMessageInfo(&ev.Message))
 			msg.Update(ev)
-			msg.BindMenu(v)
 
 		case *gateway.MessageUpdateEvent:
 			if ev.ChannelID != v.chID {
@@ -298,7 +303,6 @@ func (v *View) Load() {
 			for i := len(widgets) - 1; i >= 0; i-- {
 				m := widgets[i]
 				m.Update(&gateway.MessageCreateEvent{Message: msgs[i]})
-				m.BindMenu(v)
 			}
 		}
 	})
@@ -317,9 +321,9 @@ func (v *View) upsertMessageKeyed(key messageKey, info messageInfo, collapsed bo
 
 	var message Message
 	if collapsed {
-		message = NewCollapsedMessage(v.ctx.Take())
+		message = NewCollapsedMessage(v.ctx.Take(), v)
 	} else {
-		message = NewCozyMessage(v.ctx.Take())
+		message = NewCozyMessage(v.ctx.Take(), v)
 	}
 
 	row := gtk.NewListBoxRow()
@@ -328,6 +332,8 @@ func (v *View) upsertMessageKeyed(key messageKey, info messageInfo, collapsed bo
 	row.SetChild(message)
 
 	v.List.Append(row)
+	v.List.SetFocusChild(row)
+
 	v.msgs[key] = messageRow{
 		ListBoxRow: row,
 		message:    message,
@@ -505,6 +511,20 @@ func (v *View) SendMessage(msg composer.SendingMessage) {
 			uploading.SetVisible(uploading.HasErrored())
 		}
 	})
+}
+
+// ScrollToMessage scrolls to the message with the given ID. If the ID is
+// unknown, then false is returned.
+func (v *View) ScrollToMessage(id discord.MessageID) bool {
+	v.Scroll.GrabFocus()
+
+	msg, ok := v.msgs[messageKeyID(id)]
+	if !ok {
+		return false
+	}
+
+	msg.ListBoxRow.GrabFocus()
+	return true
 }
 
 // ReplyTo starts replying to the message with the given ID.

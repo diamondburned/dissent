@@ -140,6 +140,9 @@ func (p *ChatPage) switchTo(w gtk.Widgetter) {
 	if w != nil {
 		p.RightChild.AddChild(w)
 		p.RightChild.SetVisibleChild(w)
+
+		base := gtk.BaseWidget(w)
+		base.GrabFocus()
 	}
 
 	if old == nil {

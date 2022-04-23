@@ -2,6 +2,7 @@ package message
 
 import (
 	"context"
+	"strings"
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/chatkit/components/author"
@@ -23,10 +24,11 @@ import (
 // Content is the message content widget.
 type Content struct {
 	*gtk.Box
-	ctx   context.Context
-	menu  *gio.Menu
-	view  *mdrender.MarkdownViewer
-	child []gtk.Widgetter
+	ctx    context.Context
+	parent *View
+	menu   *gio.Menu
+	view   *mdrender.MarkdownViewer
+	child  []gtk.Widgetter
 }
 
 var contentCSS = cssutil.Applier("message-content-box", `
@@ -47,10 +49,11 @@ var contentCSS = cssutil.Applier("message-content-box", `
 `)
 
 // NewContent creates a new Content widget.
-func NewContent(ctx context.Context) *Content {
+func NewContent(ctx context.Context, v *View) *Content {
 	c := Content{
-		ctx:   ctx,
-		child: make([]gtk.Widgetter, 0, 2),
+		ctx:    ctx,
+		parent: v,
+		child:  make([]gtk.Widgetter, 0, 2),
 	}
 	c.Box = gtk.NewBox(gtk.OrientationVertical, 0)
 	contentCSS(c.Box)
@@ -97,8 +100,13 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 	state := gtkcord.FromContext(c.ctx)
 
 	if m.Reference != nil {
-		header := gtk.NewLabel("Replying to ")
+		header := gtk.NewLabel("<a href=\"#\">Replying to</a> ")
 		header.AddCSSClass("message-reply-header")
+		header.SetUseMarkup(true)
+		header.ConnectActivateLink(func(string) bool {
+			c.parent.ScrollToMessage(m.ID)
+			return true
+		})
 
 		topBox := gtk.NewBox(gtk.OrientationHorizontal, 0)
 		topBox.SetHAlign(gtk.AlignStart)
@@ -122,14 +130,17 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 			chip.Unpad()
 			topBox.Append(chip)
 
-			reply := gtk.NewLabel("")
-			reply.AddCSSClass("message-reply-content")
-			reply.SetEllipsize(pango.EllipsizeEnd)
-			reply.SetXAlign(0)
-			reply.SetSingleLineMode(true)
-			reply.SetText(state.MessagePreview(msg))
+			if preview := state.MessagePreview(msg); preview != "" {
+				// Force single line.
+				reply := gtk.NewLabel(strings.ReplaceAll(preview, "\n", "  "))
+				reply.AddCSSClass("message-reply-content")
+				reply.SetTooltipText(preview)
+				reply.SetEllipsize(pango.EllipsizeEnd)
+				reply.SetLines(1)
+				reply.SetXAlign(0)
 
-			replyBox.Append(reply)
+				replyBox.Append(reply)
+			}
 		}
 
 		c.append(replyBox)

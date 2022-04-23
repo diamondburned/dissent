@@ -2,6 +2,8 @@ package gtkcord
 
 import (
 	"context"
+	"fmt"
+	"html"
 	"log"
 	"net/http"
 	"net/url"
@@ -148,6 +150,7 @@ func (s *State) BindHandler(ctx gtkutil.Cancellable, fn func(gateway.Event), fil
 // API calls.
 func (s *State) AuthorMarkup(m *gateway.MessageCreateEvent, mods ...author.MarkupMod) string {
 	name := m.Author.Username
+	var suffix string
 
 	if m.GuildID.IsValid() || m.Member != nil {
 		if !m.GuildID.IsValid() {
@@ -169,6 +172,10 @@ func (s *State) AuthorMarkup(m *gateway.MessageCreateEvent, mods ...author.Marku
 
 		if member != nil && member.Nick != "" {
 			name = member.Nick
+			suffix += fmt.Sprintf(
+				` <span weight="normal">(%s)</span>`,
+				html.EscapeString(member.User.Tag()),
+			)
 		}
 
 		c, ok := state.MemberColor(member, func(id discord.RoleID) *discord.Role {
@@ -186,10 +193,12 @@ noMember:
 		if m.WebhookID.IsValid() {
 			bot = "webhook"
 		}
+		suffix += ` <span color="#6f78db" weight="normal">(` + bot + `)</span>`
+	}
 
-		mods = append(mods, author.WithSuffixMarkup(
-			`<span color="#6f78db" weight="normal">(`+bot+`)</span>`,
-		))
+	if suffix != "" {
+		suffix = strings.TrimSpace(suffix)
+		mods = append(mods, author.WithSuffixMarkup(suffix))
 	}
 
 	return author.Markup(name, mods...)
@@ -204,7 +213,24 @@ func (s *State) MessagePreview(msg *discord.Message) string {
 	node := discordmd.ParseWithMessage(src, *s.Cabinet, msg, true)
 	discordmd.DefaultRenderer.Render(&b, src, node)
 
-	return strings.TrimRight(b.String(), "\n")
+	preview := strings.TrimRight(b.String(), "\n")
+	if preview != "" {
+		return preview
+	}
+
+	if len(msg.Attachments) > 0 {
+		for _, attachment := range msg.Attachments {
+			preview += fmt.Sprintf("%s, ", attachment.Filename)
+		}
+		preview = strings.TrimSuffix(preview, ", ")
+		return preview
+	}
+
+	if len(msg.Embeds) > 0 {
+		return "[embed]"
+	}
+
+	return ""
 }
 
 // InjectAvatarSize calls InjectSize with size being 64px.

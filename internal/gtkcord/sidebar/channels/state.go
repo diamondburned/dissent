@@ -69,6 +69,13 @@ func NewGuildTree(ctx context.Context) *GuildTree {
 	}
 }
 
+var allowedChannelTypes = []discord.ChannelType{
+	discord.GuildText,
+	discord.GuildCategory,
+	discord.GuildPublicThread,
+	discord.GuildPrivateThread,
+}
+
 // Add adds the given list of channels into the guild tree.
 func (t *GuildTree) Add(channels []discord.Channel) {
 	chs := drainer(channels)

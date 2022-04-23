@@ -34,7 +34,6 @@ type Message interface {
 	Redact()
 	Content() *Content
 	Message() *discord.Message
-	BindMenu(*View)
 }
 
 // MessageWithUser extends Message for types that also show user information.
@@ -47,12 +46,12 @@ type MessageWithUser interface {
 type message struct {
 	content *Content
 	message *discord.Message
+	menu    *gio.Menu
 }
 
-func newMessage(ctx context.Context) message {
+func newMessage(ctx context.Context, v *View) message {
 	return message{
-		content: NewContent(ctx),
-		message: nil,
+		content: NewContent(ctx, v),
 	}
 }
 
@@ -61,42 +60,50 @@ func (m *message) ctx() context.Context {
 }
 
 // Message implements Message.
-func (m *message) Message() *discord.Message { return m.message }
+func (m *message) Message() *discord.Message {
+	return m.message
+}
 
 // Content implements Message.
-func (m *message) Content() *Content { return m.content }
+func (m *message) Content() *Content {
+	return m.content
+}
 
-// Update implements Message.
-func (m *message) Update(message *gateway.MessageCreateEvent) {
-	m.message = &message.Message
-	m.content.Update(&message.Message)
+func (m *message) update(parent gtk.Widgetter, message *discord.Message) {
+	m.message = message
+	m.bind(parent)
+	m.content.Update(message)
 }
 
 // Redact implements Message.
 func (m *message) Redact() {
-	m.message = nil
 	m.content.Redact()
 }
 
-func (m *message) bindMenu(view *View, parent gtk.Widgetter) *gio.Menu {
-	actions := map[string]func(){
-		"message.show-source": m.ShowSource,
+func (m *message) parent() *View {
+	return m.content.parent
+}
+
+func (m *message) bind(parent gtk.Widgetter) *gio.Menu {
+	if m.menu != nil {
+		return m.menu
 	}
 
-	if m.message != nil {
-		actions["message.reply"] = func() { view.ReplyTo(m.message.ID) }
+	actions := map[string]func(){
+		"message.show-source": func() { m.ShowSource() },
+		"message.reply":       func() { m.parent().ReplyTo(m.message.ID) },
+	}
 
-		state := gtkcord.FromContext(m.ctx())
-		me, _ := state.Cabinet.Me()
+	state := gtkcord.FromContext(m.ctx())
+	me, _ := state.Cabinet.Me()
 
-		if me != nil && m.message.Author.ID == me.ID {
-			actions["message.edit"] = func() { view.Edit(m.message.ID) }
-			actions["message.delete"] = func() { view.Delete(m.message.ID) }
-		}
+	if me != nil && m.message.Author.ID == me.ID {
+		actions["message.edit"] = func() { m.parent().Edit(m.message.ID) }
+		actions["message.delete"] = func() { m.parent().Delete(m.message.ID) }
+	}
 
-		if state.HasPermissions(m.message.ChannelID, discord.PermissionManageMessages) {
-			actions["message.delete"] = func() { view.Delete(m.message.ID) }
-		}
+	if state.HasPermissions(m.message.ChannelID, discord.PermissionManageMessages) {
+		actions["message.delete"] = func() { m.parent().Delete(m.message.ID) }
 	}
 
 	menuItems := []gtkutil.PopoverMenuItem{
@@ -107,11 +114,12 @@ func (m *message) bindMenu(view *View, parent gtk.Widgetter) *gio.Menu {
 	}
 
 	gtkutil.BindActionMap(parent, actions)
-	gtkutil.BindPopoverMenuCustom(parent, gtk.PosBottom, menuItems)
+	gtkutil.BindPopoverMenuCustom(parent, gtk.PosTop, menuItems)
 
-	menu := gtkutil.CustomMenu(menuItems)
-	m.content.SetExtraMenu(menu)
-	return menu
+	m.menu = gtkutil.CustomMenu(menuItems)
+	m.content.SetExtraMenu(m.menu)
+
+	return m.menu
 }
 
 func menuItemIfOK(actions map[string]func(), label, action string) gtkutil.PopoverMenuItem {
@@ -188,9 +196,9 @@ var cozyCSS = cssutil.Applier("message-cozy", `
 `)
 
 // NewCozyMessage creates a new cozy message.
-func NewCozyMessage(ctx context.Context) Message {
+func NewCozyMessage(ctx context.Context, v *View) Message {
 	m := cozyMessage{
-		message: newMessage(ctx),
+		message: newMessage(ctx, v),
 	}
 
 	m.TopLabel = gtk.NewLabel("")
@@ -218,7 +226,7 @@ func NewCozyMessage(ctx context.Context) Message {
 }
 
 func (m *cozyMessage) Update(message *gateway.MessageCreateEvent) {
-	m.message.Update(message)
+	m.message.update(m, &message.Message)
 	m.updateAuthor(message)
 
 	tooltip := fmt.Sprintf(
@@ -243,7 +251,13 @@ func (m *cozyMessage) UpdateMember(member *discord.Member) {
 }
 
 func (m *cozyMessage) updateAuthor(message *gateway.MessageCreateEvent) {
-	m.Avatar.SetFromURL(gtkcord.InjectAvatarSize(message.Author.AvatarURL()))
+	var avatarURL string
+	if message.Member != nil && message.Member.Avatar != "" {
+		avatarURL = message.Member.AvatarURL(message.GuildID)
+	} else {
+		avatarURL = message.Author.AvatarURL()
+	}
+	m.Avatar.SetFromURL(gtkcord.InjectAvatarSize(avatarURL))
 
 	state := gtkcord.FromContext(m.ctx())
 
@@ -253,11 +267,6 @@ func (m *cozyMessage) updateAuthor(message *gateway.MessageCreateEvent) {
 		"</span>"
 
 	m.TopLabel.SetMarkup(markup)
-}
-
-// BindMenu implements Message.
-func (m *cozyMessage) BindMenu(view *View) {
-	m.bindMenu(view, m)
 }
 
 // collapsedMessage is a collapsed cozy message.
@@ -286,9 +295,9 @@ var collapsedCSS = cssutil.Applier("message-collapsed", `
 `)
 
 // NewCollapsedMessage creates a new collapsed cozy message.
-func NewCollapsedMessage(ctx context.Context) Message {
+func NewCollapsedMessage(ctx context.Context, v *View) Message {
 	m := collapsedMessage{
-		message: newMessage(ctx),
+		message: newMessage(ctx, v),
 	}
 
 	m.Timestamp = gtk.NewLabel("")
@@ -304,12 +313,7 @@ func NewCollapsedMessage(ctx context.Context) Message {
 }
 
 func (m *collapsedMessage) Update(message *gateway.MessageCreateEvent) {
-	m.message.Update(message)
+	m.message.update(m, &message.Message)
 	m.Timestamp.SetLabel(locale.Time(message.Timestamp.Time(), false))
 	m.Timestamp.SetTooltipText(locale.Time(message.Timestamp.Time(), true))
-}
-
-// BindMenu implements Message.
-func (m *collapsedMessage) BindMenu(view *View) {
-	m.bindMenu(view, m)
 }

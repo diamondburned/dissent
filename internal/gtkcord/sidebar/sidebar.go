@@ -181,6 +181,7 @@ func (s *Sidebar) openGuild(guildID discord.GuildID) *channels.View {
 	s.removeCurrent()
 	s.current.w = ch
 
+	ch.Child.Tree.GrabFocus()
 	return ch
 }
 

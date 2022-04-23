@@ -45,6 +45,8 @@ func NewBanner(ctx context.Context, guildID discord.GuildID) *Banner {
 	b.Overlay.SetHAlign(gtk.AlignStart)
 	b.Overlay.SetChild(b.Picture)
 	b.Overlay.AddOverlay(b.Shadows)
+	b.Overlay.SetCanTarget(false)
+	b.Overlay.SetCanFocus(false)
 	b.Hide()
 	bannerCSS(b)
 

@@ -7,7 +7,6 @@ import (
 	"github.com/diamondburned/adaptive"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
-	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/gtkutil"
@@ -152,12 +151,15 @@ func NewView(ctx context.Context, ctrl Controller, guildID discord.GuildID) *Vie
 	v.Header.WindowHandle.SetVAlign(gtk.AlignStart)
 	v.Header.WindowHandle.SetChild(v.Header.Box)
 
+	viewport := gtk.NewViewport(nil, nil)
+
 	v.Scroll = gtk.NewScrolledWindow()
 	v.Scroll.AddCSSClass("channels-view-scroll")
 	v.Scroll.SetVExpand(true)
 	v.Scroll.SetPolicy(gtk.PolicyNever, gtk.PolicyAutomatic)
-	v.Scroll.SetPropagateNaturalWidth(true)
-	v.Scroll.SetPropagateNaturalHeight(true)
+	v.Scroll.SetChild(viewport)
+	// v.Scroll.SetPropagateNaturalWidth(true)
+	// v.Scroll.SetPropagateNaturalHeight(true)
 
 	var headerScrolled bool
 
@@ -185,14 +187,10 @@ func NewView(ctx context.Context, ctrl Controller, guildID discord.GuildID) *Vie
 	v.Child.Tree.SetSizeRequest(bannerWidth, -1)
 	v.Child.Tree.SetVExpand(true)
 	v.Child.Tree.SetHExpand(true)
-	// v.Child.Tree.SetVAlign(gtk.AlignStart)
-	// v.Child.Tree.SetEnableTreeLines(true)
 	v.Child.Tree.SetHeadersVisible(false)
 	v.Child.Tree.SetLevelIndentation(4)
 	v.Child.Tree.SetActivateOnSingleClick(true)
 	v.Child.Tree.SetEnableSearch(false)
-	// v.Child.Tree.SetVAdjustment(v.Scroll.VAdjustment())
-	// v.Child.Tree.SetHAdjustment(v.Scroll.HAdjustment())
 
 	for i, col := range v.cols {
 		v.Child.Tree.InsertColumn(col, i)
@@ -206,18 +204,16 @@ func NewView(ctx context.Context, ctrl Controller, guildID discord.GuildID) *Vie
 		}
 
 		switch node.(type) {
+		case *ChannelNode:
+			v.Child.Tree.ExpandToPath(path)
 		case *CategoryNode:
+			// Toggle.
 			if v.Child.Tree.RowExpanded(path) {
 				v.Child.Tree.CollapseRow(path)
 			} else {
 				v.Child.Tree.ExpandRow(path, false)
 			}
 		}
-	})
-
-	v.Child.Tree.ConnectRowExpanded(func(iter *gtk.TreeIter, path *gtk.TreePath) {
-		// TODO: handle
-		v.Child.Tree.QueueResize()
 	})
 
 	selection := v.Child.Tree.Selection()
@@ -251,12 +247,15 @@ func NewView(ctx context.Context, ctrl Controller, guildID discord.GuildID) *Vie
 	v.Child.Box.SetVAlign(gtk.AlignStart)
 	v.Child.Box.Append(v.Child.Banner)
 	v.Child.Box.Append(v.Child.Tree)
+	v.Child.Box.SetFocusChild(v.Child.Tree)
 
-	v.Scroll.SetChild(v.Child)
+	viewport.SetChild(v.Child)
+	viewport.SetFocusChild(v.Child)
 
 	v.Overlay = gtk.NewOverlay()
 	v.Overlay.SetChild(v.Scroll)
 	v.Overlay.AddOverlay(v.Header)
+	v.Overlay.SetFocusChild(v.Scroll)
 
 	state := gtkcord.FromContext(ctx)
 	state.BindHandler(v.ctx, func(ev gateway.Event) {
@@ -351,7 +350,7 @@ func (v *View) InvalidateChannels() {
 	state := gtkcord.FromContext(v.ctx.Take())
 	state.MemberState.Subscribe(v.guildID)
 
-	chs, err := state.Offline().Channels(v.guildID)
+	chs, err := state.Offline().Channels(v.guildID, allowedChannelTypes)
 	if err != nil {
 		v.SetError(errors.Wrap(err, "cannot fetch channels"))
 		return
@@ -374,18 +373,19 @@ func (v *View) InvalidateChannels() {
 			selection.SelectPath(path)
 		}
 	})
+
 	v.tree.Add(chs)
 
 	v.Child.Tree.SetModel(v.tree)
 	v.setDone()
 
-	// Legacy and unmaintained code, they said. This is a workaround for the
-	// tree not taking any space if we don't HExpand it. If we do, then it shows
-	// some background artifact.
-	glib.IdleAdd(func() {
-		v.Child.Tree.QueueResize()
-		v.Child.Box.QueueResize()
-	})
+	// Expand all categories by default.
+	// TODO: add state.
+	for _, node := range v.tree.nodes {
+		if _, isCategory := node.(*CategoryNode); isCategory {
+			v.Child.Tree.ExpandToPath(node.TreePath())
+		}
+	}
 }
 
 func (v *View) invalidateBanner() {
@@ -418,6 +418,7 @@ func newTreeColumns() []*gtk.TreeViewColumn {
 		}(),
 		func() *gtk.TreeViewColumn {
 			ren := gtk.NewCellRendererText()
+			ren.SetAlignment(1, 0.5)
 			ren.SetPadding(4, 0)
 
 			col := gtk.NewTreeViewColumn()

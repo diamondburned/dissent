@@ -165,6 +165,8 @@ func (g *Guild) viewChild() {}
 
 var channelUnreadTypes = []discord.ChannelType{
 	discord.GuildText,
+	discord.GuildPublicThread,
+	discord.GuildPrivateThread,
 }
 
 // InvalidateUnread invalidates the guild's unread state.
