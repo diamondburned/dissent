@@ -74,32 +74,27 @@ var viewCSS = cssutil.Applier("channels-view", `
 		border: none;
 	}
 	.channels-has-banner:not(.channels-scrolled) .channels-header {
-		background: none;
+		/* go run ./cmd/ease-in-out-gradient/ -max 0.25 -min 0 -steps 5 */
+		background: linear-gradient(to bottom,
+			alpha(black, 0.24),
+			alpha(black, 0.19),
+			alpha(black, 0.06),
+			alpha(black, 0.01),
+			alpha(black, 0.00) 100%
+		);
 		box-shadow: none;
 	}
 	.channels-has-banner .channels-banner-shadow {
 		transition: none;
-		background: none;
+		background: alpha(black, 0.75);
 	}
 	.channels-has-banner .channels-header * {
 		color: white;
-		text-shadow: 0px 0px 2px alpha(black, 0.5);
+		text-shadow: 0px 0px 5px alpha(black, 0.75);
 	}
 	.channels-has-banner .channels-header *:backdrop {
 		color: alpha(white, 0.75);
 		text-shadow: 0px 0px 2px alpha(black, 0.35);
-	}
-	.channels-has-banner:not(.channels-scrolled) .channels-banner-shadow {
-		/* go run ./cmd/ease-in-out-gradient/ -max 0.6 -min 0 -steps 7 */
-		background: linear-gradient(to bottom,
-			alpha(black, 0.44),
-			alpha(black, 0.41),
-			alpha(black, 0.31),
-			alpha(black, 0.14),
-			alpha(black, 0.04),
-			alpha(black, 0.01),
-			alpha(black, 0.00) 55%
-		);
 	}
 	.channels-name {
 		font-weight: 600;
@@ -165,8 +160,7 @@ func NewView(ctx context.Context, ctrl Controller, guildID discord.GuildID) *Vie
 
 	vadj := v.Scroll.VAdjustment()
 	vadj.ConnectValueChanged(func() {
-		if vadj.Value() > 0 {
-			// If the user has scrolled, then revert to a solid background.
+		if scrolled := v.Child.Banner.SetScrollOpacity(vadj.Value()); scrolled {
 			if !headerScrolled {
 				headerScrolled = true
 				v.Overlay.AddCSSClass("channels-scrolled")
@@ -219,6 +213,10 @@ func NewView(ctx context.Context, ctrl Controller, guildID discord.GuildID) *Vie
 	selection := v.Child.Tree.Selection()
 	selection.SetMode(gtk.SelectionBrowse)
 	selection.ConnectChanged(func() {
+		if v.tree == nil {
+			return
+		}
+
 		_, iter, ok := selection.Selected()
 		if !ok || v.tree == nil {
 			v.selectID = 0
@@ -227,7 +225,6 @@ func NewView(ctx context.Context, ctrl Controller, guildID discord.GuildID) *Vie
 
 		node := v.tree.NodeFromIter(iter)
 		if node == nil {
-			log.Println("weird, selected unknown path", v.tree.Path(iter))
 			v.selectID = 0
 			return
 		}
@@ -357,22 +354,22 @@ func (v *View) InvalidateChannels() {
 	}
 
 	v.tree = NewGuildTree(v.ctx.Take())
-	v.tree.ConnectRowInserted(func(path *gtk.TreePath, iter *gtk.TreeIter) {
-		node := v.tree.NodeFromIter(iter)
-		if node == nil {
-			return
-		}
+	// v.tree.ConnectRowInserted(func(path *gtk.TreePath, iter *gtk.TreeIter) {
+	// 	node := v.tree.NodeFromIter(iter)
+	// 	if node == nil {
+	// 		return
+	// 	}
 
-		if !v.selectID.IsValid() {
-			return
-		}
+	// 	if !v.selectID.IsValid() {
+	// 		return
+	// 	}
 
-		if node.ID() == v.selectID {
-			// Found the channel that we want to select.
-			selection := v.Child.Tree.Selection()
-			selection.SelectPath(path)
-		}
-	})
+	// 	if node.ID() == v.selectID {
+	// 		// Found the channel that we want to select.
+	// 		selection := v.Child.Tree.Selection()
+	// 		selection.SelectPath(path)
+	// 	}
+	// })
 
 	v.tree.Add(chs)
 
@@ -385,6 +382,11 @@ func (v *View) InvalidateChannels() {
 		if _, isCategory := node.(*CategoryNode); isCategory {
 			v.Child.Tree.ExpandToPath(node.TreePath())
 		}
+	}
+
+	if selectedNode, ok := v.tree.nodes[v.selectID]; ok {
+		selection := v.Child.Tree.Selection()
+		selection.SelectPath(selectedNode.TreePath())
 	}
 }
 

@@ -2,6 +2,7 @@ package channels
 
 import (
 	"context"
+	"math"
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
@@ -23,6 +24,8 @@ type Banner struct {
 	Picture *onlineimage.Picture
 	ctx     context.Context
 	gID     discord.GuildID
+
+	stepClass string
 }
 
 var bannerCSS = cssutil.Applier("channels-banner", ``)
@@ -40,6 +43,7 @@ func NewBanner(ctx context.Context, guildID discord.GuildID) *Banner {
 
 	b.Shadows = gtk.NewBox(gtk.OrientationVertical, 0)
 	b.Shadows.AddCSSClass("channels-banner-shadow")
+	b.Shadows.SetOpacity(0)
 
 	b.Overlay = gtk.NewOverlay()
 	b.Overlay.SetHAlign(gtk.AlignStart)
@@ -79,3 +83,31 @@ func (b *Banner) HasBanner() bool {
 }
 
 func (b *Banner) SetURL(url string) { b.Picture.SetURL(url) }
+
+// SetScrollOpacity sets the opacity of the shadow depending on the scroll
+// level. If the scroll goes past the banner, then scrolled is true.
+func (b *Banner) SetScrollOpacity(scrollY float64) (scrolled bool) {
+	// Calculate the height of the banner but account for the height of the
+	// header bar.
+	height := float64(b.AllocatedHeight()) - (gtkcord.HeaderHeight)
+	opacity := clamp(scrollY/height, 0, 1)
+
+	b.Shadows.SetOpacity(opacity)
+	return opacity >= 0.995
+}
+
+func clamp(f, min, max float64) float64 {
+	return math.Max(math.Min(f, max), min)
+}
+
+func strsEq(strs1, strs2 []string) bool {
+	if len(strs1) != len(strs2) {
+		return false
+	}
+	for i := range strs1 {
+		if strs1[i] != strs2[i] {
+			return false
+		}
+	}
+	return true
+}

@@ -312,7 +312,7 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, embed *discord.Em
 
 		image := thumbnail.NewEmbed(ctx, gtkcord.EmbedMaxWidth, gtkcord.EmbedImgHeight, opts)
 		image.SetSize(int(img.Width), int(img.Height))
-		image.SetOpenURL(func() { app.OpenURI(ctx, embed.Image.URL) })
+		image.SetOpenURL(func() { app.OpenURI(ctx, embed.URL) })
 
 		if embed.Image != nil {
 			// The server can only resize images.
