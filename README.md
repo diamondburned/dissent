@@ -6,7 +6,7 @@
 
 ### Dependencies
 
-gtkcord4 needs GTK4 and optionally libcanberra. If compiling, then the library
+gtkcord4 needs GTK4, gobject-introspection, and optionally libcanberra. If compiling, then the library
 headers are also required.
 
 ### Pre-built Binary
