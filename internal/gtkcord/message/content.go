@@ -146,12 +146,19 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 		c.append(replyBox)
 	}
 
-	src := []byte(m.Content)
+	// We don't render the message content if all it is is the URL to the
+	// embedded image, because that's what the official client does.
+	noContent := len(m.Embeds) == 1 && m.Content == m.Embeds[0].URL
 
-	n := discordmd.ParseWithMessage(src, *state.Cabinet, m, true)
-	v := mdrender.NewMarkdownViewer(c.ctx, src, n, renderers...)
+	c.view = nil
 
-	c.append(v)
+	if !noContent {
+		src := []byte(m.Content)
+		node := discordmd.ParseWithMessage(src, *state.Cabinet, m, true)
+
+		c.view = mdrender.NewMarkdownViewer(c.ctx, src, node, renderers...)
+		c.append(c.view)
+	}
 
 	for i := range m.Attachments {
 		v := newAttachment(c.ctx, &m.Attachments[i])
@@ -167,7 +174,6 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 		c.append(custom)
 	}
 
-	c.view = v
 	c.setMenu()
 }
 
