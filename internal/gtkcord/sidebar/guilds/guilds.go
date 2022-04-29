@@ -129,9 +129,13 @@ func (v *View) Invalidate() {
 	state := gtkcord.FromContext(v.ctx)
 	ready := state.Ready()
 
-	if ready.UserSettings != nil && ready.UserSettings.GuildFolders != nil {
-		v.SetFolders(ready.UserSettings.GuildFolders)
-		return
+	if ready.UserSettings != nil {
+		switch {
+		case ready.UserSettings.GuildFolders != nil:
+			v.SetFolders(ready.UserSettings.GuildFolders)
+		case ready.UserSettings.GuildPositions != nil:
+			v.SetGuildsFromIDs(ready.UserSettings.GuildPositions)
+		}
 	}
 
 	gtkutil.Async(v.ctx, func() func() {
@@ -141,27 +145,43 @@ func (v *View) Invalidate() {
 			return nil
 		}
 
-		// We don't actually store GuildCreateEvents, which turned out to be
-		// what we need for the Joined timestamp. We can't sort the rest of this
-		// list correctly.
+		// Sort so that the guilds that we've joined last are at the bottom.
+		// This means we can prepend guilds as we go, and the latest one will be
+		// prepended to the top.
+		sort.Slice(guilds, func(i, j int) bool {
+			ti, ok := state.GuildState.JoinedAt(guilds[i].ID)
+			if !ok {
+				return false // put last
+			}
+			tj, ok := state.GuildState.JoinedAt(guilds[j].ID)
+			if !ok {
+				return true
+			}
+			return ti.Before(tj)
+		})
 
-		if ready.UserSettings != nil && len(ready.UserSettings.GuildPositions) > 0 {
-			// Ported from gtkcord3.
-			sort.SliceStable(guilds, func(a, b int) bool {
-				var found bool
-				for _, guild := range ready.UserSettings.GuildPositions {
-					if found && guild == guilds[b].ID {
-						return true
-					}
-					if !found && guild == guilds[a].ID {
-						found = true
-					}
-				}
+		return func() {
+			// Construct a map of shownGuilds guilds, so we know to not create a
+			// guild if it's already shown.
+			shownGuilds := make(map[discord.GuildID]struct{}, 200)
+			v.eachGuild(func(g *Guild) bool {
+				shownGuilds[g.ID()] = struct{}{}
 				return false
 			})
-		}
 
-		return func() { v.SetGuilds(guilds) }
+			for i, guild := range guilds {
+				_, shown := shownGuilds[guild.ID]
+				if shown {
+					continue
+				}
+
+				g := NewGuild(v.ctx, (*guildOpenerView)(v), guild.ID)
+				g.Update(&guilds[i])
+
+				// Prepend the guild.
+				v.prepend(g)
+			}
+		}
 	})
 }
 
@@ -219,6 +239,22 @@ func (v *View) RemoveGuild(id discord.GuildID) {
 	}
 }
 
+// SetGuildsFromIDs calls SetGuilds with guilds fetched from the state by the
+// given ID list.
+func (v *View) SetGuildsFromIDs(guildIDs []discord.GuildID) {
+	restore := v.saveSelection()
+	defer restore()
+
+	v.clear()
+
+	for _, id := range guildIDs {
+		g := NewGuild(v.ctx, (*guildOpenerView)(v), id)
+		g.Invalidate()
+
+		v.append(g)
+	}
+}
+
 // SetGuilds sets the guilds shown.
 func (v *View) SetGuilds(guilds []discord.Guild) {
 	restore := v.saveSelection()
@@ -237,6 +273,14 @@ func (v *View) SetGuilds(guilds []discord.Guild) {
 func (v *View) append(this ViewChild) {
 	v.Children = append(v.Children, this)
 	v.Box.Append(this)
+}
+
+func (v *View) prepend(this ViewChild) {
+	v.Children = append(v.Children, nil)
+	copy(v.Children[1:], v.Children)
+	v.Children[0] = this
+
+	v.Box.Prepend(this)
 }
 
 func (v *View) remove(this ViewChild) {
@@ -258,22 +302,32 @@ func (v *View) clear() {
 
 // Guild finds a guild inside View by its ID.
 func (v *View) Guild(id discord.GuildID) *Guild {
+	var guild *Guild
+	v.eachGuild(func(g *Guild) bool {
+		if g.ID() == id {
+			guild = g
+			return true
+		}
+		return false
+	})
+	return guild
+}
+
+func (v *View) eachGuild(f func(*Guild) (stop bool)) {
 	for _, child := range v.Children {
 		switch child := child.(type) {
 		case *Guild:
-			if child.ID() == id {
-				return child
+			if f(child) {
+				return
 			}
 		case *Folder:
 			for _, guild := range child.Guilds {
-				if guild.ID() == id {
-					return guild
+				if f(guild) {
+					return
 				}
 			}
 		}
 	}
-
-	return nil
 }
 
 // SelectGuild selects the guild with the given ID. If the guild is not known,
