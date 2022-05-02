@@ -2,6 +2,8 @@ package composer
 
 import (
 	"context"
+	"fmt"
+	"html"
 	"time"
 
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -25,8 +27,16 @@ const (
 
 type emojis []EmojiData
 
-func (e emojis) String(i int) string { return e[i].Name }
-func (e emojis) Len() int            { return len(e) }
+func (e emojis) Len() int { return len(e) }
+
+func (e emojis) String(i int) string {
+	name := e[i].Name
+	if e[i].Guild != nil {
+		// Allow suffixing the guild name to search.
+		name += " " + e[i].Guild.Name
+	}
+	return name
+}
 
 type emojiCompleter struct {
 	emojis  emojis
@@ -81,7 +91,7 @@ func (c *emojiCompleter) Search(ctx context.Context, str string) []autocomplete.
 
 	hasNitro := state.EmojiState.HasNitro()
 
-	for _, guild := range emojis {
+	for i, guild := range emojis {
 		for _, emoji := range guild.Emojis {
 			var content string
 			// Check if the user can use the emoji if they have Nitro or if the
@@ -98,8 +108,8 @@ func (c *emojiCompleter) Search(ctx context.Context, str string) []autocomplete.
 			}
 
 			c.emojis = append(c.emojis, EmojiData{
+				Guild:   &emojis[i],
 				ID:      emoji.ID,
-				GuildID: guild.ID,
 				Name:    emoji.Name,
 				Content: content,
 			})
@@ -125,8 +135,8 @@ func (c *emojiCompleter) search(str string) []autocomplete.Data {
 
 // EmojiData is the Data structure for each emoji.
 type EmojiData struct {
+	Guild   *emoji.Guild
 	ID      discord.EmojiID
-	GuildID discord.GuildID
 	Name    string
 	Content string
 }
@@ -142,6 +152,7 @@ var _ = cssutil.WriteCSS(`
 // Row satisfies autocomplete.Data.
 func (d EmojiData) Row(ctx context.Context) *gtk.ListBoxRow {
 	b := gtk.NewBox(gtk.OrientationHorizontal, 4)
+	markup := html.EscapeString(d.Name)
 
 	if !d.ID.IsValid() {
 		l := gtk.NewLabel(d.Content)
@@ -155,11 +166,17 @@ func (d EmojiData) Row(ctx context.Context) *gtk.ListBoxRow {
 		i.SetFromURL(gtkcord.EmojiURL(d.ID.String(), false))
 
 		b.Append(i)
+
+		markup += "\n" + fmt.Sprintf(
+			`<span size="smaller" fgalpha="75%%" rise="-1200">%s</span>`,
+			d.Guild.Name,
+		)
 	}
 
-	l := gtk.NewLabel(d.Name)
+	l := gtk.NewLabel("")
 	l.SetMaxWidthChars(35)
 	l.SetEllipsize(pango.EllipsizeEnd)
+	l.SetMarkup(markup)
 	b.Append(l)
 
 	r := gtk.NewListBoxRow()

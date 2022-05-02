@@ -145,7 +145,7 @@ func (w *loginWindow) Hook(state *gtkcord.State) {
 				ID:    notify.HashID(ev.ChannelID),
 				Title: gtkcord.ChannelNameFromID(w.ctx, ev.ChannelID),
 				Body:  state.MessagePreview(&ev.Message),
-				Icon:  notify.IconURL(w.ctx, avatarURL, "avatar-default-symbolic"),
+				Icon:  notify.IconURL(w.ctx, avatarURL, notify.IconName("avatar-default-symbolic")),
 				Sound: notify.MessageSound,
 				Action: notify.ActionJSONData("app.open-channel", gtkcord.OpenChannelCommand{
 					ChannelID: ev.ChannelID,

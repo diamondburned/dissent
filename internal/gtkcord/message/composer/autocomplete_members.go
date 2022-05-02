@@ -54,7 +54,7 @@ func (c *memberCompleter) Search(ctx context.Context, str string) []autocomplete
 	mems, _ := state.Cabinet.Members(c.guildID)
 	c.members = members(mems)
 
-	if data := c.search(str); data != nil {
+	if data := c.search(str); len(data) > 0 {
 		return data
 	}
 
@@ -94,7 +94,7 @@ func (d MemberData) Row(ctx context.Context) *gtk.ListBoxRow {
 	if d.Nick != "" {
 		l.SetLines(2)
 		l.SetMarkup(fmt.Sprintf(
-			`%s`+"\n"+`<span size="smaller" fgalpha="75%%">%s</span>`,
+			`%s`+"\n"+`<span size="smaller" fgalpha="75%%" rise="-1200">%s</span>`,
 			d.Nick, d.User.Tag(),
 		))
 	} else {

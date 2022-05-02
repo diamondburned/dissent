@@ -418,8 +418,8 @@ func newChannelNode(base BaseChannelNode) *ChannelNode {
 }
 
 const (
-	chHash     = `<span face="monospace"><b><span size="large" rise="-1200">#</span><span size="x-small" rise="-2000"> </span></b></span>`
-	chNSFWHash = `<span face="monospace"><b><span size="large" rise="-1200">#</span><span size="x-small" rise="-2000">!</span></b></span>`
+	chHash     = `<span face="monospace"><b><span size="large" rise="-600">#</span><span size="x-small" rise="-2000"> </span></b></span>`
+	chNSFWHash = `<span face="monospace"><b><span size="large" rise="-600">#</span><span size="x-small" rise="-2000">!</span></b></span>`
 )
 
 func (n *ChannelNode) Update(ch *discord.Channel) {

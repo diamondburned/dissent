@@ -91,6 +91,7 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 
 	i.ac = autocomplete.New(ctx, i.TextView, i.onAutocompleted)
 	i.ac.SetCancelOnChange(false)
+	i.ac.SetMinLength(2)
 	i.ac.SetTimeout(time.Second)
 
 	state := gtkcord.FromContext(ctx)
