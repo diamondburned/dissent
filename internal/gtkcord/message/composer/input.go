@@ -58,7 +58,6 @@ var inputCSS = cssutil.Applier("composer-input", `
 	}
 	.composer-input {
 		padding: 16px 2px;
-		padding-bottom: 0;
 		margin-top: 0px;
 	}
 	.composer-input .autocomplete-row label {
@@ -97,8 +96,8 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 	state := gtkcord.FromContext(ctx)
 	if ch, err := state.Cabinet.Channel(chID); err == nil {
 		i.ac.Use(
-			NewEmojiCompleter(ch.GuildID),  // :
-			NewMemberCompleter(ch.GuildID), // @
+			NewEmojiCompleter(ch.GuildID), // :
+			NewMemberCompleter(chID),      // @
 		)
 	}
 

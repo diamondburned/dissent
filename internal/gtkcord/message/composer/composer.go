@@ -107,17 +107,13 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 		chID: chID,
 	}
 
+	v.Input = NewInput(ctx, inputControllerView{v}, chID)
+
 	scroll := gtk.NewScrolledWindow()
 	scroll.SetPolicy(gtk.PolicyNever, gtk.PolicyAutomatic)
-	scroll.SetMaxContentHeight(450)
-	scroll.SetMinContentHeight(50)
-	scroll.SetPropagateNaturalWidth(true)
 	scroll.SetPropagateNaturalHeight(true)
-
-	v.Input = NewInput(ctx, inputControllerView{v}, chID)
-	v.Input.SetVExpand(true)
-	v.Input.SetVAdjustment(scroll.VAdjustment())
-	v.Input.SetHAdjustment(scroll.HAdjustment())
+	scroll.SetMaxContentHeight(500)
+	scroll.SetChild(v.Input)
 
 	v.Placeholder = gtk.NewLabel("")
 	v.Placeholder.AddCSSClass("composer-placeholder")
@@ -133,7 +129,8 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 	revealer.SetTransitionDuration(75)
 
 	overlay := gtk.NewOverlay()
-	overlay.SetChild(v.Input)
+	overlay.AddCSSClass("composer-placeholder-overlay")
+	overlay.SetChild(scroll)
 	overlay.AddOverlay(revealer)
 	overlay.SetClipOverlay(revealer, true)
 
@@ -149,8 +146,6 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 	middle := gtk.NewBox(gtk.OrientationVertical, 0)
 	middle.Append(overlay)
 	middle.Append(v.UploadTray)
-
-	scroll.SetChild(middle)
 
 	v.Action.Button = gtk.NewButton()
 	v.Action.AddCSSClass("composer-action")
@@ -169,7 +164,7 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 	v.Box = gtk.NewBox(gtk.OrientationHorizontal, 0)
 	v.Box.SetVAlign(gtk.AlignEnd)
 	v.Box.Append(v.Action)
-	v.Box.Append(scroll)
+	v.Box.Append(middle)
 	v.Box.Append(v.Send)
 
 	v.SetPlaceholderMarkup("")

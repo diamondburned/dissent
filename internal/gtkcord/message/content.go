@@ -2,9 +2,12 @@ package message
 
 import (
 	"context"
+	"fmt"
+	"html"
 	"strings"
 
 	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/diamondburned/arikawa/v3/state"
 	"github.com/diamondburned/chatkit/components/author"
 	"github.com/diamondburned/chatkit/md"
 	"github.com/diamondburned/chatkit/md/mdrender"
@@ -93,6 +96,13 @@ func (c *Content) setMenu() {
 	})
 }
 
+var systemContentCSS = cssutil.Applier("message-system-content", `
+	.message-system-content {
+		font-style: italic;
+		color: alpha(@theme_fg_color, 0.9);
+	}
+`)
+
 // Update replaces Content with the message.
 func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 	c.clear()
@@ -123,7 +133,7 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 		}
 		if msg != nil {
 			member, _ := state.Cabinet.Member(m.Reference.GuildID, msg.Author.ID)
-			chip := newAuthorChip(c.ctx, &discord.GuildUser{
+			chip := newAuthorChip(c.ctx, m.GuildID, &discord.GuildUser{
 				User:   msg.Author,
 				Member: member,
 			})
@@ -146,18 +156,86 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 		c.append(replyBox)
 	}
 
-	// We don't render the message content if all it is is the URL to the
-	// embedded image, because that's what the official client does.
-	noContent := len(m.Embeds) == 1 && m.Content == m.Embeds[0].URL
+	var messageMarkup string
+	switch m.Type {
+	case discord.GuildMemberJoinMessage:
+		messageMarkup = "Joined the server."
+	case discord.CallMessage:
+		messageMarkup = "Calling you."
+	case discord.ChannelIconChangeMessage:
+		messageMarkup = "Changed the channel icon."
+	case discord.ChannelNameChangeMessage:
+		messageMarkup = "Changed the channel name to #" + html.EscapeString(m.Content) + "."
+	case discord.ChannelPinnedMessage:
+		messageMarkup = fmt.Sprintf(`Pinned <a href="#message/%d">a message.</a>`, m.ID)
+	case discord.RecipientAddMessage, discord.RecipientRemoveMessage:
+		mentioned := state.MemberMarkup(m.GuildID, &m.Mentions[0], author.WithMinimal())
+		switch m.Type {
+		case discord.RecipientAddMessage:
+			messageMarkup = "Added " + mentioned + " to the group."
+		case discord.RecipientRemoveMessage:
+			messageMarkup = "Removed " + mentioned + " from the group."
+		}
+	case discord.NitroBoostMessage:
+		messageMarkup = "Boosted the server!"
+	case discord.NitroTier1Message:
+		messageMarkup = "The server is now Nitro Boosted to Tier 1."
+	case discord.NitroTier2Message:
+		messageMarkup = "The server is now Nitro Boosted to Tier 2."
+	case discord.NitroTier3Message:
+		messageMarkup = "The server is now Nitro Boosted to Tier 3."
+	}
 
 	c.view = nil
 
-	if !noContent {
-		src := []byte(m.Content)
-		node := discordmd.ParseWithMessage(src, *state.Cabinet, m, true)
+	if messageMarkup != "" {
+		msg := gtk.NewLabel("")
+		msg.SetMarkup(messageMarkup)
+		msg.SetHExpand(true)
+		msg.SetXAlign(0)
+		msg.SetWrap(true)
+		msg.SetWrapMode(pango.WrapWordChar)
+		msg.ConnectActivateLink(func(uri string) bool {
+			if !strings.HasPrefix(uri, "#") {
+				return false // not our link
+			}
 
-		c.view = mdrender.NewMarkdownViewer(c.ctx, src, node, renderers...)
-		c.append(c.view)
+			parts := strings.SplitN(uri, "/", 2)
+			if len(parts) != 2 {
+				return true // pretend we've handled this because of #
+			}
+
+			switch strings.TrimPrefix(parts[0], "#") {
+			case "message":
+				if id, _ := discord.ParseSnowflake(parts[1]); id.IsValid() {
+					c.parent.ScrollToMessage(discord.MessageID(id))
+				}
+			}
+
+			return true
+		})
+		systemContentCSS(msg)
+		fixNatWrap(msg)
+		c.append(msg)
+	} else {
+		// We don't render the message content if all it is is the URL to the
+		// embedded image, because that's what the official client does.
+		noContent := len(m.Embeds) == 1 &&
+			m.Embeds[0].Type == discord.ImageEmbed &&
+			m.Embeds[0].URL == m.Content
+
+		if !noContent {
+			src := []byte(m.Content)
+			node := discordmd.ParseWithMessage(src, *state.Cabinet, m, true)
+
+			c.view = mdrender.NewMarkdownViewer(c.ctx, src, node, renderers...)
+			c.append(c.view)
+		}
+	}
+
+	for i := range m.Stickers {
+		v := newSticker(c.ctx, &m.Stickers[i])
+		c.append(v)
 	}
 
 	for i := range m.Attachments {
@@ -280,27 +358,47 @@ func renderMention(r *mdrender.Renderer, n ast.Node) ast.WalkStatus {
 			text.Insert(" #" + mention.Channel.Name + " ")
 		})
 
+	case mention.GuildRole != nil:
+		roleColor := defaultMentionColor
+		if mention.GuildRole.Color != discord.NullColor {
+			roleColor = mention.GuildRole.Color.String()
+		}
+
+		text.TagBounded(mentionTag(r, roleColor), func() {
+			text.Insert(" @" + mention.GuildRole.Name + " ")
+		})
+
 	case mention.GuildUser != nil:
-		chip := newAuthorChip(r.State.Context(), mention.GuildUser)
+		chip := newAuthorChip(r.State.Context(), mention.Message.GuildID, mention.GuildUser)
 		chip.InsertText(text.TextView, text.Iter)
 	}
 
 	return ast.WalkContinue
 }
 
-func newAuthorChip(ctx context.Context, guildUser *discord.GuildUser) *author.Chip {
-	name := guildUser.Username
-	// TODO: colors
-	if guildUser.Member != nil {
-		if guildUser.Member.Nick != "" {
-			name = guildUser.Member.Nick
+func newAuthorChip(ctx context.Context, guildID discord.GuildID, user *discord.GuildUser) *author.Chip {
+	name := user.Username
+	color := defaultMentionColor
+
+	if user.Member != nil {
+		if user.Member.Nick != "" {
+			name = user.Member.Nick
+		}
+
+		s := gtkcord.FromContext(ctx)
+		c, ok := state.MemberColor(user.Member, func(id discord.RoleID) *discord.Role {
+			r, _ := s.Cabinet.Role(guildID, id)
+			return r
+		})
+		if ok {
+			color = c.String()
 		}
 	}
 
 	chip := author.NewChip(ctx, imgutil.HTTPProvider)
 	chip.SetName(name)
-	chip.SetColor(defaultMentionColor)
-	chip.SetAvatar(gtkcord.InjectAvatarSize(guildUser.AvatarURL()))
+	chip.SetColor(color)
+	chip.SetAvatar(gtkcord.InjectAvatarSize(user.AvatarURL()))
 
 	return chip
 }

@@ -23,6 +23,7 @@ const (
 	EmbedImgHeight    = 300
 	InlineEmojiSize   = 22
 	LargeEmojiSize    = 48
+	StickerSize       = 92
 )
 
 func init() {

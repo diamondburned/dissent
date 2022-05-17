@@ -520,10 +520,12 @@ func (v *View) ScrollToMessage(id discord.MessageID) bool {
 
 	msg, ok := v.msgs[messageKeyID(id)]
 	if !ok {
+		log.Println("cannot scroll to message", messageKeyID(id))
 		return false
 	}
 
 	msg.ListBoxRow.GrabFocus()
+	log.Println("scrolled to message", id)
 	return true
 }
 

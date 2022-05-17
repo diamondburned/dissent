@@ -27,13 +27,15 @@ type memberCompleter struct {
 	matched []autocomplete.Data
 	updated time.Time
 	guildID discord.GuildID
+	chID    discord.ChannelID
 }
 
 // NewMemberCompleter creates a new autocomplete searcher that searches for
 // members.
-func NewMemberCompleter(gID discord.GuildID) autocomplete.Searcher {
+func NewMemberCompleter(chID discord.ChannelID) autocomplete.Searcher {
 	return &memberCompleter{
-		guildID: gID,
+		chID:    chID,
+		guildID: discord.NullGuildID,
 		matched: make([]autocomplete.Data, 0, maxAutocompletion),
 	}
 }
@@ -50,9 +52,34 @@ func (c *memberCompleter) Search(ctx context.Context, str string) []autocomplete
 	c.updated = now
 
 	state := gtkcord.FromContext(ctx)
+	if c.guildID.IsNull() {
+		ch, _ := state.Cabinet.Channel(c.chID)
+		if ch != nil {
+			// Set to 0 (not null) so we don't have to refetch.
+			c.guildID = 0
+			if ch.GuildID.IsValid() {
+				c.guildID = ch.GuildID
+			}
+		} else {
+			return nil
+		}
+	}
 
-	mems, _ := state.Cabinet.Members(c.guildID)
-	c.members = members(mems)
+	if !c.guildID.IsValid() {
+		ch, _ := state.Cabinet.Channel(c.chID)
+		if ch == nil || len(ch.DMRecipients) == 0 {
+			return nil
+		}
+
+		c.members = make([]discord.Member, len(ch.DMRecipients))
+		for i, recipient := range ch.DMRecipients {
+			// This hack works. Whatever.
+			c.members[i] = discord.Member{User: recipient}
+		}
+	} else {
+		mems, _ := state.Cabinet.Members(c.guildID)
+		c.members = members(mems)
+	}
 
 	if data := c.search(str); len(data) > 0 {
 		return data

@@ -149,37 +149,41 @@ func (s *State) BindHandler(ctx gtkutil.Cancellable, fn func(gateway.Event), fil
 // AuthorMarkup renders the markup for the message author's name. It makes no
 // API calls.
 func (s *State) AuthorMarkup(m *gateway.MessageCreateEvent, mods ...author.MarkupMod) string {
-	name := m.Author.Username
+	user := &discord.GuildUser{User: m.Author, Member: m.Member}
+	return s.MemberMarkup(m.GuildID, user, mods...)
+}
+
+// UserMarkup is like AuthorMarkup but for any user optionally inside a guild.
+func (s *State) UserMarkup(gID discord.GuildID, u *discord.User, mods ...author.MarkupMod) string {
+	user := &discord.GuildUser{User: *u}
+	return s.MemberMarkup(gID, user, mods...)
+}
+
+// MemberMarkup is like AuthorMarkup but for any member inside a guild.
+func (s *State) MemberMarkup(gID discord.GuildID, u *discord.GuildUser, mods ...author.MarkupMod) string {
+	name := u.Username
 	var suffix string
 
-	if m.GuildID.IsValid() || m.Member != nil {
-		if !m.GuildID.IsValid() {
-			ch, _ := s.Cabinet.Channel(m.ChannelID)
-			if ch == nil {
-				goto noMember
-			}
-			m.GuildID = ch.GuildID
+	if gID.IsValid() {
+		if u.Member == nil {
+			u.Member, _ = s.Cabinet.Member(gID, u.ID)
 		}
 
-		member := m.Member
-		if member == nil {
-			member, _ = s.Cabinet.Member(m.GuildID, m.Author.ID)
-		}
-		if member == nil {
-			s.MemberState.RequestMember(m.GuildID, m.Author.ID)
+		if u.Member == nil {
+			s.MemberState.RequestMember(gID, u.ID)
 			goto noMember
 		}
 
-		if member != nil && member.Nick != "" {
-			name = member.Nick
+		if u.Member != nil && u.Member.Nick != "" {
+			name = u.Member.Nick
 			suffix += fmt.Sprintf(
 				` <span weight="normal">(%s)</span>`,
-				html.EscapeString(member.User.Tag()),
+				html.EscapeString(u.Member.User.Tag()),
 			)
 		}
 
-		c, ok := state.MemberColor(member, func(id discord.RoleID) *discord.Role {
-			role, _ := s.Cabinet.Role(m.GuildID, id)
+		c, ok := state.MemberColor(u.Member, func(id discord.RoleID) *discord.Role {
+			role, _ := s.Cabinet.Role(gID, id)
 			return role
 		})
 		if ok {
@@ -188,9 +192,9 @@ func (s *State) AuthorMarkup(m *gateway.MessageCreateEvent, mods ...author.Marku
 	}
 
 noMember:
-	if m.Author.Bot {
+	if u.Bot {
 		bot := "bot"
-		if m.WebhookID.IsValid() {
+		if u.Discriminator == "0000" {
 			bot = "webhook"
 		}
 		suffix += ` <span color="#6f78db" weight="normal">(` + bot + `)</span>`

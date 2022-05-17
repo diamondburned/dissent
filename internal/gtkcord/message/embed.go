@@ -17,6 +17,7 @@ import (
 	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/components/onlineimage"
+	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/imgutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
@@ -26,16 +27,35 @@ import (
 
 // TODO: allow disable fetching videos.
 
-func resizeURL(urlstr string, image *thumbnail.Embed) string {
-	w, h := image.Size()
-	if w == 0 && h == 0 {
-		return urlstr
+func resizeURL(image *thumbnail.Embed, proxyURL string, w, h int) string {
+	imgW, imgH := image.Size()
+	if imgW == 0 || imgH == 0 {
+		return proxyURL
 	}
 
-	u, err := url.Parse(urlstr)
-	if err != nil {
-		return urlstr
+	// Grab the maximum scale factor that we've ever seen. Plugging in another
+	// monitor while we've already rendered will not update this, but it's good
+	// enough. We just don't want to abuse bandwidth for 1x or 2x people.
+	scale := gtkutil.ScaleFactor()
+	if scale == 1 {
+		// Fetching 2x shouldn't be too bad, though.
+		scale = 2
 	}
+
+	imgW *= scale
+	imgH *= scale
+
+	if imgW > w || imgH > h {
+		return proxyURL
+	}
+
+	u, err := url.Parse(proxyURL)
+	if err != nil {
+		return proxyURL
+	}
+
+	w = imgW
+	h = imgH
 
 	q := u.Query()
 	q.Set("width", strconv.Itoa(w))
@@ -43,6 +63,37 @@ func resizeURL(urlstr string, image *thumbnail.Embed) string {
 	u.RawQuery = q.Encode()
 
 	return u.String()
+}
+
+var stickerCSS = cssutil.Applier("message-sticker", `
+	.message-sticker {
+		border-radius: 0;
+	}
+	.message-sticker picture.thumbnail-embed-image {
+		background-color: transparent;
+	}
+`)
+
+func newSticker(ctx context.Context, sticker *discord.StickerItem) gtk.Widgetter {
+	switch sticker.FormatType {
+	case discord.StickerFormatAPNG, discord.StickerFormatPNG:
+		url := sticker.StickerURLWithType(discord.PNGImage)
+
+		image := thumbnail.NewEmbed(ctx, gtkcord.StickerSize, gtkcord.StickerSize, thumbnail.EmbedOpts{})
+		image.SetName(sticker.Name)
+		image.SetSize(gtkcord.StickerSize, gtkcord.StickerSize)
+		image.SetFromURL(url)
+		image.SetOpenURL(func() { app.OpenURI(ctx, url) })
+		stickerCSS(image)
+		return image
+	default:
+		// Fuck Lottie, whatever the fuck that is.
+		msg := gtk.NewLabel(fmt.Sprintf("[Lottie sticker: %s]", sticker.Name))
+		msg.SetXAlign(0)
+		systemContentCSS(msg)
+		fixNatWrap(msg)
+		return msg
+	}
 }
 
 func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widgetter {
@@ -76,7 +127,12 @@ func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widg
 			if attachment.Width > 0 && attachment.Height > 0 {
 				image.SetSize(int(attachment.Width), int(attachment.Height))
 				if typ == "image" {
-					image.SetFromURL(resizeURL(attachment.Proxy, image))
+					image.SetFromURL(resizeURL(
+						image,
+						attachment.Proxy,
+						int(attachment.Width),
+						int(attachment.Height),
+					))
 				} else {
 					image.SetFromURL(attachment.Proxy)
 				}
@@ -91,51 +147,19 @@ func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widg
 	return gtk.NewBox(gtk.OrientationVertical, 0)
 }
 
-func newEmbed(ctx context.Context, msg *discord.Message, embed *discord.Embed) gtk.Widgetter {
-	switch embed.Type {
-	case discord.ImageEmbed, discord.VideoEmbed, discord.GIFVEmbed:
-		return newImageEmbed(ctx, msg, embed)
-	case discord.NormalEmbed, discord.ArticleEmbed, discord.LinkEmbed:
-		fallthrough
-	default:
-		return newNormalEmbed(ctx, msg, embed)
-	}
-}
-
-func newImageEmbed(ctx context.Context, msg *discord.Message, embed *discord.Embed) gtk.Widgetter {
-	var typ thumbnail.EmbedOpts
-	var img discord.EmbedImage
-
-	switch {
-	case embed.Image != nil:
-		img = *embed.Image
-	case embed.Thumbnail != nil:
-		img = discord.EmbedImage(*embed.Thumbnail)
-	default:
-		return newNormalEmbed(ctx, msg, embed)
-	}
-
-	switch embed.Type {
-	case discord.ImageEmbed:
-		typ.Type = thumbnail.TypeFromURL(img.URL)
-	case discord.VideoEmbed, discord.GIFVEmbed:
-		typ.Type = thumbnail.EmbedTypeVideo
-	}
-
-	image := thumbnail.NewEmbed(ctx, gtkcord.EmbedMaxWidth, gtkcord.EmbedImgHeight, typ)
-	image.SetName(path.Base(img.URL))
-	image.SetSize(int(img.Width), int(img.Height))
-	image.SetFromURL(resizeURL(img.Proxy, image))
-	image.SetOpenURL(func() { app.OpenURI(ctx, img.URL) })
-
-	return image
-}
-
 var normalEmbedCSS = cssutil.Applier("message-normalembed", `
 	.message-normalembed {
 		border-left: 3px solid;
 		padding: 5px 10px;
-		background-color: @theme_base_color;
+		margin-top: 4px;
+		background-color: mix(@theme_bg_color, @theme_fg_color, 0.10);
+	}
+	.message-normalembed-body > *:not(:last-child) {
+		margin-bottom: 4px;
+	}
+	.message-embed-author,
+	.message-embed-description {
+		font-size: 0.9em;
 	}
 `)
 
@@ -145,13 +169,19 @@ const embedColorCSSf = `
 	}
 `
 
-func newNormalEmbed(ctx context.Context, msg *discord.Message, embed *discord.Embed) gtk.Widgetter {
-	content := gtk.NewBox(gtk.OrientationVertical, 0)
-	content.AddCSSClass("message-normalembed-body")
-	content.SetHExpand(true)
+func newEmbed(ctx context.Context, msg *discord.Message, embed *discord.Embed) gtk.Widgetter {
+	return newNormalEmbed(ctx, msg, embed)
+}
 
-	// used for calculating requested embed width
-	// widthHint := 0
+func newNormalEmbed(ctx context.Context, msg *discord.Message, embed *discord.Embed) gtk.Widgetter {
+	bodyBox := gtk.NewBox(gtk.OrientationVertical, 0)
+	bodyBox.SetHAlign(gtk.AlignStart)
+	bodyBox.AddCSSClass("message-normalembed-body")
+
+	// Track whether or not we have an embed body. An embed body should have any
+	// kind of text in it. If we don't have a body but do have a thumbnail, then
+	// the thumbnail should be big and on its own.
+	hasBody := false
 
 	if embed.Author != nil {
 		box := gtk.NewBox(gtk.OrientationHorizontal, 0)
@@ -183,7 +213,8 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, embed *discord.Em
 			box.Append(author)
 		}
 
-		content.Append(box)
+		bodyBox.Append(box)
+		hasBody = true
 	}
 
 	if embed.Title != "" {
@@ -198,8 +229,10 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, embed *discord.Em
 		label.SetWrapMode(pango.WrapWordChar)
 		label.SetXAlign(0)
 		label.SetMarkup(title)
+		fixNatWrap(label)
 
-		content.Append(label)
+		bodyBox.Append(label)
+		hasBody = true
 	}
 
 	if embed.Description != "" {
@@ -210,7 +243,8 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, embed *discord.Em
 		v := mdrender.NewMarkdownViewer(ctx, edesc, mnode)
 		v.AddCSSClass("message-embed-description")
 
-		content.Append(v)
+		bodyBox.Append(v)
+		hasBody = true
 	}
 
 	if len(embed.Fields) > 0 {
@@ -219,7 +253,8 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, embed *discord.Em
 		fields.SetRowSpacing(uint(7))
 		fields.SetColumnSpacing(uint(14))
 
-		content.Append(fields)
+		bodyBox.Append(fields)
+		hasBody = true
 
 		col, row := 0, 0
 
@@ -292,10 +327,70 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, embed *discord.Em
 			footer.Append(text)
 		}
 
-		content.Append(footer)
+		bodyBox.Append(footer)
+		hasBody = true
 	}
 
-	if embed.Image != nil || embed.Video != nil {
+	embedBox := bodyBox
+	if hasBody {
+		bodyBox.SetHAlign(gtk.AlignFill)
+		bodyBox.SetHExpand(true)
+
+		embedBox = gtk.NewBox(gtk.OrientationHorizontal, 0)
+		embedBox.SetHExpand(true)
+		embedBox.SetHAlign(gtk.AlignStart)
+		embedBox.Append(bodyBox)
+		normalEmbedCSS(embedBox)
+
+		if embed.Color != discord.NullColor {
+			cssutil.Applyf(embedBox, embedColorCSSf, embed.Color.String())
+		}
+	}
+
+	if embed.Thumbnail != nil {
+		big := !hasBody ||
+			embed.Type == discord.GIFVEmbed ||
+			embed.Type == discord.ImageEmbed ||
+			embed.Type == discord.VideoEmbed ||
+			embed.Type == discord.ArticleEmbed
+
+		maxW := 80
+		maxH := 80
+		if big {
+			maxW = gtkcord.EmbedMaxWidth
+			maxH = gtkcord.EmbedImgHeight
+		}
+
+		var opts thumbnail.EmbedOpts
+		switch embed.Type {
+		case discord.NormalEmbed, discord.ImageEmbed:
+			opts.Type = thumbnail.TypeFromURL(embed.Thumbnail.Proxy)
+		case discord.VideoEmbed, discord.GIFVEmbed:
+			opts.Type = thumbnail.EmbedTypeVideo
+		}
+
+		image := thumbnail.NewEmbed(ctx, maxW, maxH, opts)
+		image.SetVAlign(gtk.AlignStart)
+		image.SetName(path.Base(embed.Thumbnail.URL))
+		image.SetSize(int(embed.Thumbnail.Width), int(embed.Thumbnail.Height))
+		image.SetFromURL(resizeURL(
+			image,
+			embed.Thumbnail.Proxy,
+			int(embed.Thumbnail.Width),
+			int(embed.Thumbnail.Height),
+		))
+		image.SetOpenURL(func() { app.OpenURI(ctx, embed.Thumbnail.URL) })
+
+		if big {
+			image.SetHAlign(gtk.AlignStart)
+			bodyBox.Append(image)
+		} else {
+			image.SetHAlign(gtk.AlignEnd)
+			embedBox.Append(image)
+		}
+	}
+
+	if embed.Thumbnail == nil && (embed.Image != nil || embed.Video != nil) {
 		var opts thumbnail.EmbedOpts
 		var img discord.EmbedImage
 
@@ -316,34 +411,24 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, embed *discord.Em
 
 		if embed.Image != nil {
 			// The server can only resize images.
-			image.SetFromURL(resizeURL(img.Proxy, image))
+			image.SetFromURL(resizeURL(
+				image,
+				img.Proxy,
+				int(img.Width),
+				int(img.Height),
+			))
 		} else {
 			image.SetFromURL(img.Proxy)
 		}
 
-		content.Append(image)
+		bodyBox.Append(image)
 	}
 
-	box := gtk.NewBox(gtk.OrientationHorizontal, 0)
-	box.SetHAlign(gtk.AlignStart)
-	box.SetSizeRequest(gtkcord.EmbedMaxWidth, -1)
-	box.Append(content)
-	normalEmbedCSS(box)
+	return embedBox
+}
 
-	if embed.Color != discord.NullColor {
-		cssutil.Applyf(box, embedColorCSSf, embed.Color.String())
+func fixNatWrap(label *gtk.Label) {
+	if err := gtk.CheckVersion(4, 6, 0); err == "" {
+		label.SetObjectProperty("natural-wrap-mode", 1) // NaturalWrapNone
 	}
-
-	if embed.Thumbnail != nil {
-		image := thumbnail.NewEmbed(ctx, 80, 80, thumbnail.EmbedOpts{})
-		image.SetHAlign(gtk.AlignEnd)
-		image.SetVAlign(gtk.AlignStart)
-		image.SetSize(int(embed.Thumbnail.Width), int(embed.Thumbnail.Height))
-		image.SetFromURL(resizeURL(embed.Thumbnail.Proxy, image))
-		image.SetOpenURL(func() { app.OpenURI(ctx, embed.Thumbnail.URL) })
-
-		box.Append(image)
-	}
-
-	return box
 }
