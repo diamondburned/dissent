@@ -2,7 +2,7 @@
 	pname = "gtkcord4";
 	version = "0.0.1-tip";
 	# 0000000000000000000000000000000000000000000000000000000000000000
-	vendorSha256 = "sIhgdP33ADxFW/p4ghWms+uZqHhaTqZXm8IPyLIaZ54=";
+	vendorSha256 = "WcFXmEwOzRRrAPM/KquKZNNcx31wCHnLpmN2BsYrbGs=";
 
 	src = ../.;
 
