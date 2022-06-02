@@ -159,20 +159,21 @@ func (f *Folder) Set(folder *gateway.GuildFolder) {
 	}
 
 	// After guilds are loaded, read their labels and set the folder name if unset.
-	if len(folder.Name) == 0 {
+	folderName := folder.Name
+	if folderName == "" {
 		for i, g := range f.Guilds {
-			folder.Name += g.Name.Label.Text()
+			folderName += g.Name.Label.Text()
 			if (i + 1) < len(f.Guilds) {
-				folder.Name += ", "
+				folderName += ", "
 			}
-			if len(folder.Name) > 40 {
-				folder.Name += "..."
+			if len(folderName) > 40 {
+				folderName += "..."
 				break
 			}
 		}
 	}
 
-	f.Name.SetName(folder.Name)
+	f.Name.SetName(folderName)
 }
 
 // Remove removes the given guild by its ID.
