@@ -133,7 +133,6 @@ func (f *Folder) toggle() {
 
 // Set sets a fresh list of guilds.
 func (f *Folder) Set(folder *gateway.GuildFolder) {
-	f.Name.SetName(folder.Name)
 	f.Button.SetIcons(folder.GuildIDs)
 
 	if folder.Color != discord.NullColor {
@@ -158,6 +157,23 @@ func (f *Folder) Set(folder *gateway.GuildFolder) {
 	for _, g := range f.Guilds {
 		g.Invalidate()
 	}
+
+	// After guilds are loaded, read their labels and set the folder name if unset.
+	folderName := folder.Name
+	if folderName == "" {
+		for i, g := range f.Guilds {
+			folderName += g.Name.Label.Text()
+			if (i + 1) < len(f.Guilds) {
+				folderName += ", "
+			}
+			if len(folderName) > 40 {
+				folderName += "..."
+				break
+			}
+		}
+	}
+
+	f.Name.SetName(folderName)
 }
 
 // Remove removes the given guild by its ID.
