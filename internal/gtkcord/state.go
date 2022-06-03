@@ -205,7 +205,7 @@ noMember:
 		mods = append(mods, author.WithSuffixMarkup(suffix))
 	}
 
-	return author.Markup(name, mods...)
+	return author.Markup(html.EscapeString(name), mods...)
 }
 
 // MessagePreview renders the message into a short content string.
