@@ -311,6 +311,8 @@ func ChannelName(ctx context.Context, ch *discord.Channel) string {
 			return ch.Name
 		}
 		return recipientNames(ctx, ch)
+	case discord.GuildPublicThread, discord.GuildPrivateThread:
+		return ch.Name
 	default:
 		return "#" + ch.Name
 	}
