@@ -1,6 +1,6 @@
 # gtkcord4
 
-![Screenshot](./.github/screenshot1.png)
+![Screenshot](./.github/screenshot2.png)
 
 ## Installation
 
