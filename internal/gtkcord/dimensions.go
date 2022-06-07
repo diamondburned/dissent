@@ -24,6 +24,7 @@ const (
 	InlineEmojiSize   = 22
 	LargeEmojiSize    = 48
 	StickerSize       = 92
+	UserBarAvatarSize = 32
 )
 
 func init() {

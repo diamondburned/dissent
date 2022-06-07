@@ -95,14 +95,25 @@ func NewSidebar(ctx context.Context, ctrl Controller) *Sidebar {
 
 	s.Right = gtk.NewStack()
 	s.Right.SetSizeRequest(channels.ChannelsWidth, -1)
+	s.Right.SetVExpand(true)
 	s.Right.SetHExpand(true)
 	s.Right.AddChild(s.current.w)
 	s.Right.SetVisibleChild(s.current.w)
 	s.Right.SetTransitionType(gtk.StackTransitionTypeCrossfade)
 
+	userBar := newUserBar(ctx, [][2]string{
+		{"_Preferences", "app.preferences"},
+		{"_About", "app.about"},
+		{"_Quit", "app.quit"},
+	})
+
+	rightWrap := gtk.NewBox(gtk.OrientationVertical, 0)
+	rightWrap.Append(s.Right)
+	rightWrap.Append(userBar)
+
 	s.Box = gtk.NewBox(gtk.OrientationHorizontal, 0)
 	s.Box.Append(s.Left)
-	s.Box.Append(s.Right)
+	s.Box.Append(rightWrap)
 	s.Box.Append(gtk.NewSeparator(gtk.OrientationVertical))
 	sidebarCSS(s)
 
@@ -151,6 +162,7 @@ func (s *Sidebar) openDMs() *direct.ChannelView {
 	s.Guilds.Unselect()
 
 	direct := direct.NewChannelView(s.ctx, s.ctrl)
+	direct.SetVExpand(true)
 
 	s.Right.AddChild(direct)
 	s.Right.SetVisibleChild(direct)
@@ -173,6 +185,7 @@ func (s *Sidebar) openGuild(guildID discord.GuildID) *channels.View {
 	s.ctrl.CloseGuild(true)
 
 	ch := channels.NewView(s.ctx, s.ctrl, guildID)
+	ch.SetVExpand(true)
 	ch.InvalidateHeader()
 
 	s.Right.AddChild(ch)
