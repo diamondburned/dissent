@@ -5,9 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
+	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/textutil"
 )
@@ -31,6 +33,8 @@ func newUploadingLabel(ctx context.Context, count int) *uploadingLabel {
 	l := uploadingLabel{max: count}
 	l.Label = gtk.NewLabel("")
 	l.Label.SetXAlign(0)
+	l.Label.SetWrap(true)
+	l.Label.SetWrapMode(pango.WrapWordChar)
 	uploadingLabelCSS(l.Label)
 
 	l.invalidate()
@@ -53,11 +57,14 @@ func (l *uploadingLabel) AppendError(err error) {
 }
 
 func (l *uploadingLabel) invalidate() {
-	m := fmt.Sprintf("<i>Uploaded %d/%d...</i>", l.cur, l.max)
+	var m string
+	if l.max > 0 {
+		m += fmt.Sprintf("<i>Uploaded %d/%d...</i>", l.cur, l.max)
+	}
 	for _, err := range l.err {
 		m += "\n" + textutil.ErrorMarkup(err.Error())
 	}
-	l.Label.SetMarkup(m)
+	l.Label.SetMarkup(strings.TrimPrefix(m, "\n"))
 }
 
 type wrappedReader struct {
