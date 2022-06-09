@@ -16,6 +16,7 @@ import (
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/app"
+	"github.com/diamondburned/gotkit/app/prefs"
 	"github.com/diamondburned/gotkit/app/prefs/kvstate"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
@@ -65,6 +66,12 @@ var inputCSS = cssutil.Applier("composer-input", `
 	}
 `)
 
+var inputWYSIWYG = prefs.NewBool(true, prefs.PropMeta{
+	Name:        "Rich Preview",
+	Section:     "Composer",
+	Description: "Enable a semi-WYSIWYG feature that decorates the input Markdown text.",
+})
+
 // NewInput creates a new Input widget.
 func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID) *Input {
 	i := Input{
@@ -103,7 +110,10 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 
 	i.Buffer = i.TextView.Buffer()
 	i.Buffer.ConnectChanged(func() {
-		mdrender.RenderWYSIWYG(ctx, i.Buffer)
+		if inputWYSIWYG.Value() {
+			mdrender.RenderWYSIWYG(ctx, i.Buffer)
+		}
+
 		i.ac.Autocomplete()
 
 		start, end := i.Buffer.Bounds()
@@ -157,6 +167,12 @@ func (i *Input) onAutocompleted(row autocomplete.SelectedData) bool {
 	return false
 }
 
+var sendOnEnter = prefs.NewBool(true, prefs.PropMeta{
+	Name:        "Send Message on Enter",
+	Section:     "Composer",
+	Description: "Send the message when the user hits the Enter key. Disable this for mobile.",
+})
+
 func (i *Input) onKey(val, _ uint, state gdk.ModifierType) bool {
 	switch val {
 	case gdk.KEY_Return:
@@ -179,7 +195,7 @@ func (i *Input) onKey(val, _ uint, state gdk.ModifierType) bool {
 		withinCodeblock := strings.Count(uinput, "```")%2 != 0
 
 		// Enter (without holding Shift) sends the message.
-		if !state.Has(gdk.ShiftMask) && !withinCodeblock {
+		if sendOnEnter.Value() && !state.Has(gdk.ShiftMask) && !withinCodeblock {
 			i.ctrl.Send()
 			return true
 		}
