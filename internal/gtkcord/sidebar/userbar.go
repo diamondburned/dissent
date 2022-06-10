@@ -20,6 +20,7 @@ type userBar struct {
 	*gtk.Box
 	avatar *onlineimage.Avatar
 	name   *gtk.Label
+	status *gtk.Image
 	menu   *gtk.ToggleButton
 
 	ctx context.Context
@@ -50,6 +51,10 @@ func newUserBar(ctx context.Context, menuActions [][2]string) *userBar {
 	b.name.SetWrap(false)
 	b.name.SetEllipsize(pango.EllipsizeEnd)
 
+	b.status = gtk.NewImage()
+	b.status.AddCSSClass("user-bar-status")
+	b.updatePresence(nil)
+
 	b.menu = gtk.NewToggleButton()
 	b.menu.AddCSSClass("user-bar-menu")
 	b.menu.SetIconName("open-menu-symbolic")
@@ -63,6 +68,7 @@ func newUserBar(ctx context.Context, menuActions [][2]string) *userBar {
 	b.Box = gtk.NewBox(gtk.OrientationHorizontal, 0)
 	b.Box.Append(b.avatar)
 	b.Box.Append(b.name)
+	b.Box.Append(b.status)
 	b.Box.Append(b.menu)
 	userBarCSS(b)
 
@@ -77,14 +83,43 @@ func newUserBar(ctx context.Context, menuActions [][2]string) *userBar {
 			switch ev := ev.(type) {
 			case *gateway.UserUpdateEvent:
 				b.updateUser(&ev.User)
+			case *gateway.PresenceUpdateEvent:
+				me, _ := client.Me()
+				if me.ID == ev.User.ID {
+					b.updatePresence(&ev.Presence)
+				}
+			case *gateway.PresencesReplaceEvent:
+				me, _ := client.Me()
+				for _, update := range *ev {
+					if update.User.ID == me.ID {
+						b.updatePresence(&update.Presence)
+						break
+					}
+				}
+			case *gateway.ReadyEvent:
+				me, _ := client.Me()
+				for _, p := range ev.Presences {
+					if p.User.ID == me.ID {
+						b.updatePresence(&p)
+						break
+					}
+				}
 			}
 		},
 		(*gateway.UserUpdateEvent)(nil),
+		(*gateway.PresenceUpdateEvent)(nil),
+		(*gateway.PresencesReplaceEvent)(nil),
+		(*gateway.ReadyEvent)(nil),
 	)
 
 	me, _ := client.Me()
 	if me != nil {
 		b.updateUser(me)
+
+		presence, _ := client.Presence(0, me.ID)
+		if presence != nil {
+			b.updatePresence(presence)
+		}
 	}
 
 	return &b
@@ -97,4 +132,57 @@ func (b *userBar) updateUser(me *discord.User) {
 		`%s`+"\n"+`<span size="smaller">#%s</span>`,
 		me.Username, me.Discriminator,
 	))
+}
+
+func (b *userBar) updatePresence(presence *discord.Presence) {
+	if presence == nil {
+		b.status.SetTooltipText(statusText(discord.UnknownStatus))
+		b.status.SetFromIconName(statusIcon(discord.UnknownStatus))
+		return
+	}
+
+	if presence.User.Username != "" {
+		b.updateUser(&presence.User)
+	}
+
+	b.status.SetTooltipText(statusText(presence.Status))
+	b.status.SetFromIconName(statusIcon(presence.Status))
+}
+
+func statusIcon(status discord.Status) string {
+	switch status {
+	case discord.OnlineStatus:
+		return "user-available"
+	case discord.DoNotDisturbStatus:
+		return "user-busy"
+	case discord.IdleStatus:
+		return "user-idle"
+	case discord.InvisibleStatus:
+		return "user-invisible"
+	case discord.OfflineStatus:
+		return "user-offline"
+	case discord.UnknownStatus:
+		fallthrough
+	default:
+		return "user-status-pending"
+	}
+}
+
+func statusText(status discord.Status) string {
+	switch status {
+	case discord.OnlineStatus:
+		return "Online"
+	case discord.DoNotDisturbStatus:
+		return "Busy"
+	case discord.IdleStatus:
+		return "Idle"
+	case discord.InvisibleStatus:
+		return "Invisible"
+	case discord.OfflineStatus:
+		return "Offline"
+	case discord.UnknownStatus:
+		fallthrough
+	default:
+		return "Unknown"
+	}
 }
