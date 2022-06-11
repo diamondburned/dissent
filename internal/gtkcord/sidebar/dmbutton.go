@@ -51,8 +51,15 @@ func NewDMButton(ctx context.Context, open func()) *DMButton {
 	b.Pill = guilds.NewPill()
 
 	b.Name = guilds.NewNamePopover()
-	b.Name.Bind(b.Button)
 	b.Name.SetName("Direct Messages")
+	b.Name.SetParent(b.Button)
+
+	// TODO: guilds should share an upper-level MotionGroup.
+	motion := gtk.NewEventControllerMotion()
+	motion.ConnectEnter(func(_, _ float64) { b.Name.Popup() })
+	motion.ConnectLeave(func() { b.Name.Popdown() })
+
+	b.Button.AddController(motion)
 
 	b.Overlay = gtk.NewOverlay()
 	b.Overlay.SetChild(b.Button)

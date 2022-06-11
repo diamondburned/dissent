@@ -44,8 +44,9 @@ type View struct {
 
 	current currentGuild
 
-	ctx  context.Context
-	ctrl Controller
+	ctx    context.Context
+	ctrl   Controller
+	motion MotionGroup
 }
 
 type currentGuild struct {
@@ -175,7 +176,7 @@ func (v *View) Invalidate() {
 					continue
 				}
 
-				g := NewGuild(v.ctx, (*guildOpenerView)(v), guild.ID)
+				g := NewGuild(v.ctx, (*guildController)(v), guild.ID)
 				g.Update(&guilds[i])
 
 				// Prepend the guild.
@@ -195,14 +196,14 @@ func (v *View) SetFolders(folders []gateway.GuildFolder) {
 	for i, folder := range folders {
 		if len(folder.GuildIDs) == 1 {
 			// Contains a single guild, so we just unbox it.
-			g := NewGuild(v.ctx, (*guildOpenerView)(v), folder.GuildIDs[0])
+			g := NewGuild(v.ctx, (*guildController)(v), folder.GuildIDs[0])
 			g.Invalidate()
 
 			v.append(g)
 			continue
 		}
 
-		f := NewFolder(v.ctx, (*guildOpenerView)(v))
+		f := NewFolder(v.ctx, (*guildController)(v))
 		f.Set(&folders[i])
 
 		v.append(f)
@@ -211,7 +212,7 @@ func (v *View) SetFolders(folders []gateway.GuildFolder) {
 
 // AddGuild prepends a single guild into the view.
 func (v *View) AddGuild(guild *discord.Guild) {
-	g := NewGuild(v.ctx, (*guildOpenerView)(v), guild.ID)
+	g := NewGuild(v.ctx, (*guildController)(v), guild.ID)
 	g.Update(guild)
 
 	v.Box.Prepend(g)
@@ -248,7 +249,7 @@ func (v *View) SetGuildsFromIDs(guildIDs []discord.GuildID) {
 	v.clear()
 
 	for _, id := range guildIDs {
-		g := NewGuild(v.ctx, (*guildOpenerView)(v), id)
+		g := NewGuild(v.ctx, (*guildController)(v), id)
 		g.Invalidate()
 
 		v.append(g)
@@ -263,7 +264,7 @@ func (v *View) SetGuilds(guilds []discord.Guild) {
 	v.clear()
 
 	for i, guild := range guilds {
-		g := NewGuild(v.ctx, (*guildOpenerView)(v), guild.ID)
+		g := NewGuild(v.ctx, (*guildController)(v), guild.ID)
 		g.Update(&guilds[i])
 
 		v.append(g)
@@ -378,8 +379,12 @@ func (v *View) saveSelection() (restore func()) {
 	return func() { v.SelectGuild(guildID) }
 }
 
-type guildOpenerView View
+type guildController View
 
-func (v *guildOpenerView) OpenGuild(id discord.GuildID) {
+func (v *guildController) MotionGroup() *MotionGroup {
+	return &v.motion
+}
+
+func (v *guildController) OpenGuild(id discord.GuildID) {
 	(*View)(v).SelectGuild(id)
 }

@@ -12,6 +12,11 @@ import (
 	"github.com/diamondburned/ningen/v3"
 )
 
+type GuildController interface {
+	GuildOpener
+	MotionGrouped
+}
+
 // Guild is a widget showing a single guild icon.
 type Guild struct {
 	*gtk.Overlay
@@ -61,13 +66,14 @@ var guildCSS = cssutil.Applier("guild-guild", `
 	}
 `)
 
-func NewGuild(ctx context.Context, ctrl GuildOpener, id discord.GuildID) *Guild {
+func NewGuild(ctx context.Context, ctrl GuildController, id discord.GuildID) *Guild {
 	g := Guild{
 		ctx: ctx,
 		id:  id,
 	}
 
 	g.Icon = onlineimage.NewAvatar(ctx, imgutil.HTTPProvider, gtkcord.GuildIconSize)
+	iconAnimation := g.Icon.EnableAnimation()
 
 	g.Button = gtk.NewButton()
 	g.Button.SetHasFrame(false)
@@ -80,13 +86,22 @@ func NewGuild(ctx context.Context, ctrl GuildOpener, id discord.GuildID) *Guild 
 		ctrl.OpenGuild(id)
 	})
 
-	anim := g.Icon.EnableAnimation()
-	anim.ConnectMotion(g.Button)
-
 	g.Pill = NewPill()
 
 	g.Name = NewNamePopover()
-	g.Name.Bind(g.Button)
+	g.Name.SetParent(g.Button)
+
+	ctrl.MotionGroup().ConnectEventControllerMotion(
+		g.Button,
+		func() {
+			g.Name.Popup()
+			iconAnimation.Start()
+		},
+		func() {
+			g.Name.Popdown()
+			iconAnimation.Stop()
+		},
+	)
 
 	g.Overlay = gtk.NewOverlay()
 	g.Overlay.SetChild(g.Button)

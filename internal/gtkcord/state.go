@@ -101,6 +101,10 @@ func Wrap(state *state.State) *State {
 		})
 	*/
 
+	state.AddHandler(func(re *gateway.RelationshipAddEvent) {
+		log.Println("added relationship for", re.User.Username)
+	})
+
 	return &State{
 		State: ningen.FromState(state),
 	}

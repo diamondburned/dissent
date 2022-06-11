@@ -30,7 +30,7 @@ type Folder struct {
 	Guilds   []*Guild
 
 	ctx  context.Context
-	ctrl GuildOpener
+	ctrl GuildController
 	open bool
 
 	// TODO: if we ever track the unread indicator, then our unread container
@@ -62,7 +62,7 @@ var folderCSS = cssutil.Applier("guild-folder", `
 `)
 
 // NewFolder creates a new Folder.
-func NewFolder(ctx context.Context, ctrl GuildOpener) *Folder {
+func NewFolder(ctx context.Context, ctrl GuildController) *Folder {
 	f := Folder{
 		ctx:  ctx,
 		ctrl: ctrl,
@@ -79,7 +79,13 @@ func NewFolder(ctx context.Context, ctrl GuildOpener) *Folder {
 	f.ButtonOverlay.AddOverlay(f.ButtonPill)
 
 	f.Name = NewNamePopover()
-	f.Name.Bind(f.Button)
+	f.Name.SetParent(f.Button)
+
+	ctrl.MotionGroup().ConnectEventControllerMotion(
+		f.Button,
+		f.Name.Popup,
+		f.Name.Popdown,
+	)
 
 	f.GuildBox = gtk.NewBox(gtk.OrientationVertical, 0)
 
@@ -146,7 +152,7 @@ func (f *Folder) Set(folder *gateway.GuildFolder) {
 	f.Guilds = make([]*Guild, len(folder.GuildIDs))
 
 	for i, id := range folder.GuildIDs {
-		g := NewGuild(f.ctx, (*guildOpenerFolder)(f), id)
+		g := NewGuild(f.ctx, (*guildControllerFolder)(f), id)
 		g.SetParentFolder(f)
 
 		f.Guilds[i] = g
@@ -199,9 +205,13 @@ func (f *Folder) InvalidateUnread() {
 	f.ButtonPill.Invalidate()
 }
 
-type guildOpenerFolder Folder
+type guildControllerFolder Folder
 
-func (f *guildOpenerFolder) OpenGuild(id discord.GuildID) {
+func (f *guildControllerFolder) MotionGroup() *MotionGroup {
+	return f.ctrl.MotionGroup()
+}
+
+func (f *guildControllerFolder) OpenGuild(id discord.GuildID) {
 	(*Folder)(f).setGuildOpen(true)
 	f.ctrl.OpenGuild(id)
 }
