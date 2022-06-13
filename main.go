@@ -5,6 +5,7 @@ import (
 
 	"github.com/diamondburned/adaptive"
 	"github.com/diamondburned/gotkit/app"
+	"github.com/diamondburned/gotkit/components/logui"
 	"github.com/diamondburned/gotkit/components/prefui"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
@@ -30,6 +31,7 @@ func main() {
 		"app.open-channel": m.openChannel,
 		"app.preferences":  func() { prefui.ShowDialog(app.Context()) },
 		"app.about":        func() { /* TODO */ },
+		"app.logs":         func() { logui.ShowDefaultViewer(app.Context()) },
 		"app.quit":         func() { app.Quit() },
 	})
 	app.ConnectActivate(func() { m.activate(app.Context()) })

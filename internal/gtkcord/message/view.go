@@ -183,6 +183,13 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 				}
 			}
 
+			// See if this message belongs to a blocked user. If it is, then
+			// don't add it.
+			if state.RelationshipState.IsBlocked(ev.Author.ID) {
+				log.Println("ignoring message from blocked user", ev.Author.Tag())
+				return
+			}
+
 			msg := v.upsertMessage(ev.ID, newMessageInfo(&ev.Message))
 			msg.Update(ev)
 

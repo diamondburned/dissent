@@ -344,7 +344,7 @@ const defaultMentionColor = "#6F78DB"
 
 func mentionTag(r *mdrender.Renderer, color string) *gtk.TextTag {
 	tag := textutil.TextTag{"background": color + "76"}
-	return tag.FromTable(r.State.TagTable(), "")
+	return tag.FromTable(r.State.TagTable(), tag.Hash())
 }
 
 func renderMention(r *mdrender.Renderer, n ast.Node) ast.WalkStatus {
