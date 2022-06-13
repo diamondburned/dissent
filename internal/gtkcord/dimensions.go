@@ -3,7 +3,9 @@ package gtkcord
 import (
 	"fmt"
 
+	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
+	"github.com/diamondburned/gotkit/gtkutil/textutil"
 )
 
 var _ = cssutil.WriteCSS(`
@@ -25,6 +27,10 @@ const (
 	LargeEmojiSize    = 48
 	StickerSize       = 92
 	UserBarAvatarSize = 32
+)
+
+var EmojiAttrs = textutil.Attrs(
+	pango.NewAttrSize(32 * pango.SCALE),
 )
 
 func init() {

@@ -188,7 +188,8 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 
 	c.view = nil
 
-	if messageMarkup != "" {
+	switch {
+	case messageMarkup != "":
 		msg := gtk.NewLabel("")
 		msg.SetMarkup(messageMarkup)
 		msg.SetHExpand(true)
@@ -217,20 +218,27 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 		systemContentCSS(msg)
 		fixNatWrap(msg)
 		c.append(msg)
-	} else {
-		// We don't render the message content if all it is is the URL to the
-		// embedded image, because that's what the official client does.
-		noContent := len(m.Embeds) == 1 &&
-			m.Embeds[0].Type == discord.ImageEmbed &&
-			m.Embeds[0].URL == m.Content
 
-		if !noContent {
-			src := []byte(m.Content)
-			node := discordmd.ParseWithMessage(src, *state.Cabinet, m, true)
+	// We render a big content if the content itself is literally a Unicode
+	// emoji.
+	case m.Content != "" && md.IsUnicodeEmoji(m.Content):
+		l := gtk.NewLabel(m.Content)
+		l.SetAttributes(gtkcord.EmojiAttrs)
+		l.SetXAlign(0)
+		l.SetSelectable(true)
+		c.append(l)
 
-			c.view = mdrender.NewMarkdownViewer(c.ctx, src, node, renderers...)
-			c.append(c.view)
-		}
+	// We don't render the message content if all it is is the URL to the
+	// embedded image, because that's what the official client does.
+	case len(m.Embeds) != 1 ||
+		m.Embeds[0].Type != discord.ImageEmbed ||
+		m.Embeds[0].URL != m.Content:
+
+		src := []byte(m.Content)
+		node := discordmd.ParseWithMessage(src, *state.Cabinet, m, true)
+
+		c.view = mdrender.NewMarkdownViewer(c.ctx, src, node, renderers...)
+		c.append(c.view)
 	}
 
 	for i := range m.Stickers {
