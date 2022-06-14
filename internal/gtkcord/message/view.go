@@ -185,7 +185,8 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 
 			// See if this message belongs to a blocked user. If it is, then
 			// don't add it.
-			if state.RelationshipState.IsBlocked(ev.Author.ID) {
+			isBlocked := state.RelationshipState.IsBlocked(ev.Author.ID)
+			if !showBlockedMessages.Value() && isBlocked {
 				log.Println("ignoring message from blocked user", ev.Author.Tag())
 				return
 			}
@@ -303,13 +304,18 @@ func (v *View) Load() {
 
 			widgets := make([]Message, len(msgs))
 			for i, msg := range msgs {
+				if !showBlockedMessages.Value() && state.RelationshipState.IsBlocked(msg.Author.ID) {
+					log.Println("ignoring message from blocked user", msg.Author.Tag())
+					continue
+				}
 				widgets[i] = v.upsertMessage(msg.ID, newMessageInfo(&msgs[i]))
 			}
 
 			// Render the messages from latest to oldest.
 			for i := len(widgets) - 1; i >= 0; i-- {
-				m := widgets[i]
-				m.Update(&gateway.MessageCreateEvent{Message: msgs[i]})
+				if widgets[i] != nil {
+					widgets[i].Update(&gateway.MessageCreateEvent{Message: msgs[i]})
+				}
 			}
 		}
 	})

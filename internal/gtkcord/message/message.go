@@ -42,6 +42,16 @@ type MessageWithUser interface {
 	UpdateMember(*discord.Member)
 }
 
+var blockedCSS = cssutil.Applier("message-blocked", `
+	.message-blocked {
+		transition-property: all;
+		transition-duration: 100ms;
+	}
+	.message-blocked:not(:hover) {
+		opacity: 0.35;
+	}
+`)
+
 // message is a base that implements Message.
 type message struct {
 	content *Content
@@ -73,6 +83,11 @@ func (m *message) update(parent gtk.Widgetter, message *discord.Message) {
 	m.message = message
 	m.bind(parent)
 	m.content.Update(message)
+
+	state := gtkcord.FromContext(m.ctx())
+	if state.RelationshipState.IsBlocked(message.Author.ID) {
+		blockedCSS(parent)
+	}
 }
 
 // Redact implements Message.

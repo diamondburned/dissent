@@ -58,6 +58,10 @@ func NewWindow(ctx context.Context) *Window {
 	return &w
 }
 
+func (w *Window) Context() context.Context {
+	return w.ctx
+}
+
 func (w *Window) SwitchToChatPage() {
 	if w.Chat == nil {
 		w.Chat = NewChatPage(w.ctx)

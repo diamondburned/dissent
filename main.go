@@ -25,42 +25,40 @@ var _ = cssutil.WriteCSS(`
 
 func main() {
 	m := manager{}
-
-	app := app.New("com.github.diamondburned.gtkcord4", "gtkcord4")
-	app.AddJSONActions(map[string]interface{}{
+	m.app = app.New("com.github.diamondburned.gtkcord4", "gtkcord4")
+	m.app.AddJSONActions(map[string]interface{}{
 		"app.open-channel": m.openChannel,
-		"app.preferences":  func() { prefui.ShowDialog(app.Context()) },
+		"app.preferences":  func() { prefui.ShowDialog(m.win.Context()) },
 		"app.about":        func() { /* TODO */ },
-		"app.logs":         func() { logui.ShowDefaultViewer(app.Context()) },
-		"app.quit":         func() { app.Quit() },
+		"app.logs":         func() { logui.ShowDefaultViewer(m.win.Context()) },
+		"app.quit":         func() { m.app.Quit() },
 	})
-	app.ConnectActivate(func() { m.activate(app.Context()) })
-	app.RunMain(context.Background())
+	m.app.ConnectActivate(func() { m.activate(m.app.Context()) })
+	m.app.RunMain(context.Background())
 }
 
 type manager struct {
-	*window.Window
-	ctx context.Context
+	app *app.Application
+	win *window.Window
 }
 
 func (m *manager) openChannel(cmd gtkcord.OpenChannelCommand) {
-	if m.Chat == nil {
+	if m.win == nil || m.win.Chat == nil {
 		return
 	}
 
 	// TODO: highlight message.
-	m.Chat.OpenChannel(cmd.ChannelID)
+	m.win.Chat.OpenChannel(cmd.ChannelID)
 }
 
 func (m *manager) activate(ctx context.Context) {
 	adaptive.Init()
-	m.ctx = ctx
 
-	if m.Window != nil {
-		m.Window.Present()
+	if m.win != nil {
+		m.win.Present()
 		return
 	}
 
-	m.Window = window.NewWindow(ctx)
-	m.Window.Show()
+	m.win = window.NewWindow(ctx)
+	m.win.Show()
 }
