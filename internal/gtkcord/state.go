@@ -18,7 +18,6 @@ import (
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/state"
 	"github.com/diamondburned/arikawa/v3/utils/httputil/httpdriver"
-	"github.com/diamondburned/arikawa/v3/utils/ws"
 	"github.com/diamondburned/chatkit/components/author"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotkit/gtkutil"
@@ -62,7 +61,7 @@ func FromContext(ctx context.Context) *State {
 }
 
 func init() {
-	ws.EnableRawEvents = true
+	// ws.EnableRawEvents = true
 }
 
 // Wrap wraps the given state.
@@ -100,10 +99,6 @@ func Wrap(state *state.State) *State {
 			}
 		})
 	*/
-
-	state.AddHandler(func(re *gateway.RelationshipAddEvent) {
-		log.Println("added relationship for", re.User.Username)
-	})
 
 	return &State{
 		State: ningen.FromState(state),

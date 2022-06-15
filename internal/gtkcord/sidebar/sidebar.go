@@ -101,10 +101,18 @@ func NewSidebar(ctx context.Context, ctrl Controller) *Sidebar {
 	s.Right.SetVisibleChild(s.current.w)
 	s.Right.SetTransitionType(gtk.StackTransitionTypeCrossfade)
 
-	userBar := newUserBar(ctx, [][2]string{
-		{"_Preferences", "app.preferences"},
-		{"_About", "app.about"},
-		{"_Quit", "app.quit"},
+	userBar := newUserBar(ctx, []gtkutil.PopoverMenuItem{
+		gtkutil.MenuSeparator("User Settings"),
+		gtkutil.Submenu("Set _Status", []gtkutil.PopoverMenuItem{
+			gtkutil.MenuItem("_Online", "discord.set-online"),
+			gtkutil.MenuItem("_Idle", "discord.set-idle"),
+			gtkutil.MenuItem("_Do Not Disturb", "discord.set-dnd"),
+			gtkutil.MenuItem("In_visible", "discord.set-invisible"),
+		}),
+		gtkutil.MenuSeparator(""),
+		gtkutil.MenuItem("_Preferences", "app.preferences"),
+		gtkutil.MenuItem("_About", "app.about"),
+		gtkutil.MenuItem("_Quit", "app.quit"),
 	})
 
 	rightWrap := gtk.NewBox(gtk.OrientationVertical, 0)

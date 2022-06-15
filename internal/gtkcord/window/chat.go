@@ -14,6 +14,7 @@ import (
 	"github.com/diamondburned/gtkcord4/internal/gtkcord/message"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar"
 	"github.com/diamondburned/gtkcord4/internal/icons"
+	"github.com/pkg/errors"
 )
 
 type ChatPage struct {
@@ -92,6 +93,20 @@ func NewChatPage(ctx context.Context) *ChatPage {
 	p.Fold.SetRevealSide(true)
 
 	back.ConnectFold(p.Fold)
+
+	setStatus := func(status discord.Status) {
+		state := gtkcord.FromContext(ctx)
+		if err := state.SetStatus(status, nil); err != nil {
+			app.Error(ctx, errors.Wrap(err, "invalid status"))
+		}
+	}
+
+	gtkutil.BindActionMap(p, map[string]func(){
+		"discord.set-online":    func() { setStatus(discord.OnlineStatus) },
+		"discord.set-idle":      func() { setStatus(discord.IdleStatus) },
+		"discord.set-dnd":       func() { setStatus(discord.DoNotDisturbStatus) },
+		"discord.set-invisible": func() { setStatus(discord.InvisibleStatus) },
+	})
 
 	chatPageCSS(p)
 	return &p

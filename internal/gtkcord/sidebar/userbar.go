@@ -38,7 +38,7 @@ var userBarCSS = cssutil.Applier("user-bar", `
 	}
 `)
 
-func newUserBar(ctx context.Context, menuActions [][2]string) *userBar {
+func newUserBar(ctx context.Context, menuActions []gtkutil.PopoverMenuItem) *userBar {
 	b := userBar{ctx: ctx}
 	b.avatar = onlineimage.NewAvatar(ctx, imgutil.HTTPProvider, gtkcord.UserBarAvatarSize)
 	b.avatar.AddCSSClass("user-bar-avatar")
@@ -61,8 +61,9 @@ func newUserBar(ctx context.Context, menuActions [][2]string) *userBar {
 	b.menu.SetHasFrame(false)
 	b.menu.SetVAlign(gtk.AlignCenter)
 	b.menu.ConnectClicked(func() {
-		p := gtkutil.ShowPopoverMenu(b.menu, gtk.PosTop, menuActions)
+		p := gtkutil.NewPopoverMenuCustom(b.menu, gtk.PosTop, menuActions)
 		p.ConnectHide(func() { b.menu.SetActive(false) })
+		gtkutil.PopupFinally(p)
 	})
 
 	b.Box = gtk.NewBox(gtk.OrientationHorizontal, 0)
@@ -83,32 +84,20 @@ func newUserBar(ctx context.Context, menuActions [][2]string) *userBar {
 			switch ev := ev.(type) {
 			case *gateway.UserUpdateEvent:
 				b.updateUser(&ev.User)
-			case *gateway.PresenceUpdateEvent:
-				me, _ := client.Me()
-				if me.ID == ev.User.ID {
-					b.updatePresence(&ev.Presence)
-				}
-			case *gateway.PresencesReplaceEvent:
-				me, _ := client.Me()
-				for _, update := range *ev {
-					if update.User.ID == me.ID {
-						b.updatePresence(&update.Presence)
-						break
-					}
-				}
-			case *gateway.ReadyEvent:
-				me, _ := client.Me()
-				for _, p := range ev.Presences {
-					if p.User.ID == me.ID {
-						b.updatePresence(&p)
-						break
-					}
-				}
+			case
+				*gateway.PresenceUpdateEvent,
+				*gateway.PresencesReplaceEvent,
+				*gateway.SessionsReplaceEvent,
+				*gateway.UserSettingsUpdateEvent,
+				*gateway.ReadyEvent:
+				b.invalidatePresence()
 			}
 		},
 		(*gateway.UserUpdateEvent)(nil),
 		(*gateway.PresenceUpdateEvent)(nil),
 		(*gateway.PresencesReplaceEvent)(nil),
+		(*gateway.SessionsReplaceEvent)(nil),
+		(*gateway.UserSettingsUpdateEvent)(nil),
 		(*gateway.ReadyEvent)(nil),
 	)
 
@@ -116,10 +105,6 @@ func newUserBar(ctx context.Context, menuActions [][2]string) *userBar {
 	if me != nil {
 		b.updateUser(me)
 
-		presence, _ := client.Presence(0, me.ID)
-		if presence != nil {
-			b.updatePresence(presence)
-		}
 	}
 
 	return &b
@@ -147,6 +132,16 @@ func (b *userBar) updatePresence(presence *discord.Presence) {
 
 	b.status.SetTooltipText(statusText(presence.Status))
 	b.status.SetFromIconName(statusIcon(presence.Status))
+}
+
+func (b *userBar) invalidatePresence() {
+	state := gtkcord.FromContext(b.ctx)
+	me, _ := state.Me()
+
+	presence, _ := state.PresenceStore.Presence(0, me.ID)
+	if presence != nil {
+		b.updatePresence(presence)
+	}
 }
 
 func statusIcon(status discord.Status) string {
