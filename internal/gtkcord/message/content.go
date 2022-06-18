@@ -132,28 +132,33 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 			msg, _ = state.Cabinet.Message(m.Reference.ChannelID, m.Reference.MessageID)
 		}
 		if msg != nil {
-			member, _ := state.Cabinet.Member(m.Reference.GuildID, msg.Author.ID)
-			chip := newAuthorChip(c.ctx, m.GuildID, &discord.GuildUser{
-				User:   msg.Author,
-				Member: member,
-			})
-			chip.Unpad()
-			topBox.Append(chip)
+			if state.UserIsBlocked(msg.Author.ID) {
+				header.SetLabel(header.Label() + "blocked user.")
+			} else {
+				member, _ := state.Cabinet.Member(m.Reference.GuildID, msg.Author.ID)
+				chip := newAuthorChip(c.ctx, m.GuildID, &discord.GuildUser{
+					User:   msg.Author,
+					Member: member,
+				})
+				chip.Unpad()
+				topBox.Append(chip)
 
-			if preview := state.MessagePreview(msg); preview != "" {
-				// Force single line.
-				reply := gtk.NewLabel(strings.ReplaceAll(preview, "\n", "  "))
-				reply.AddCSSClass("message-reply-content")
-				reply.SetTooltipText(preview)
-				reply.SetEllipsize(pango.EllipsizeEnd)
-				reply.SetLines(1)
-				reply.SetXAlign(0)
+				if preview := state.MessagePreview(msg); preview != "" {
+					// Force single line.
+					reply := gtk.NewLabel(strings.ReplaceAll(preview, "\n", "  "))
+					reply.AddCSSClass("message-reply-content")
+					reply.SetTooltipText(preview)
+					reply.SetEllipsize(pango.EllipsizeEnd)
+					reply.SetLines(1)
+					reply.SetXAlign(0)
 
-				replyBox.Append(reply)
+					replyBox.Append(reply)
+					c.append(replyBox)
+				}
 			}
+		} else {
+			header.SetLabel(header.Label() + " unknown message.")
 		}
-
-		c.append(replyBox)
 	}
 
 	var messageMarkup string

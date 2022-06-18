@@ -2,6 +2,7 @@ package window
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -146,8 +147,12 @@ func (w *loginWindow) Hook(state *gtkcord.State) {
 			avatarURL := gtkcord.InjectAvatarSize(ev.Author.AvatarURL())
 
 			notify.Send(w.ctx, notify.Notification{
-				ID:    notify.HashID(ev.ChannelID),
-				Title: gtkcord.ChannelNameFromID(w.ctx, ev.ChannelID),
+				ID: notify.HashID(ev.ChannelID),
+				Title: fmt.Sprintf(
+					"%s (%s)",
+					state.AuthorDisplayName(ev),
+					gtkcord.ChannelNameFromID(w.ctx, ev.ChannelID),
+				),
 				Body:  state.MessagePreview(&ev.Message),
 				Icon:  notify.IconURL(w.ctx, avatarURL, notify.IconName("avatar-default-symbolic")),
 				Sound: notify.MessageSound,

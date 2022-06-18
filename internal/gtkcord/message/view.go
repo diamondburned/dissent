@@ -185,8 +185,7 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 
 			// See if this message belongs to a blocked user. If it is, then
 			// don't add it.
-			isBlocked := state.RelationshipState.IsBlocked(ev.Author.ID)
-			if !showBlockedMessages.Value() && isBlocked {
+			if !showBlockedMessages.Value() && state.UserIsBlocked(ev.Author.ID) {
 				log.Println("ignoring message from blocked user", ev.Author.Tag())
 				return
 			}
@@ -304,7 +303,7 @@ func (v *View) Load() {
 
 			widgets := make([]Message, len(msgs))
 			for i, msg := range msgs {
-				if !showBlockedMessages.Value() && state.RelationshipState.IsBlocked(msg.Author.ID) {
+				if !showBlockedMessages.Value() && state.UserIsBlocked(msg.Author.ID) {
 					log.Println("ignoring message from blocked user", msg.Author.Tag())
 					continue
 				}
