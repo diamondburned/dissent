@@ -2,12 +2,14 @@ package channels
 
 import (
 	"context"
+	"fmt"
 	"html"
 	"log"
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
+	"github.com/diamondburned/gotkit/gtkutil/textutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/diamondburned/ningen/v3"
 )
@@ -34,7 +36,7 @@ const (
 	columnName treeColumn = iota
 	columnID
 	columnUnread
-	columnSensitive
+	columnTextColor
 
 	maxTreeColumn
 )
@@ -43,14 +45,14 @@ var allTreeColumns = []treeColumn{
 	columnName,
 	columnID,
 	columnUnread,
-	columnSensitive,
+	columnTextColor,
 }
 
 var columnTypes = []glib.Type{
 	glib.TypeString,
 	glib.TypeInt64,
 	glib.TypeString,
-	glib.TypeBoolean,
+	glib.TypeString,
 }
 
 // GuildTree is the channel tree that holds the state of all channels.
@@ -336,11 +338,13 @@ func (n *BaseChannelNode) treeIter() (*gtk.TreeIter, bool) {
 
 // zeroInit initializes the row with a nil icon and a channel name.
 func (n *BaseChannelNode) zeroInit(ch *discord.Channel) {
+	muted := n.head.state().ChannelIsMuted(n.id, true)
+
 	n.head.set(n.path, [...]any{
 		html.EscapeString(ch.Name),
 		int64(ch.ID),
 		"",
-		!n.head.state().MutedState.Channel(n.id),
+		foregroundColor(muted),
 	})
 }
 
@@ -355,8 +359,11 @@ func (n *BaseChannelNode) setUnread(unread ningen.UnreadIndication) {
 		col = valueMentioned
 	}
 
+	muted := n.head.state().ChannelIsMuted(n.id, true)
+
 	n.head.setValues(n.path, map[treeColumn]any{
-		columnUnread: col,
+		columnUnread:    col,
+		columnTextColor: foregroundColor(muted),
 	})
 }
 
@@ -467,4 +474,23 @@ func (n *ThreadNode) Update(ch *discord.Channel) {
 
 func (n *ThreadNode) SetUnread(unread ningen.UnreadIndication) {
 	n.setUnread(unread)
+}
+
+func foregroundColor(dimmed bool) string {
+	c, ok := textutil.LookupColor(textutil.ThemeForegroundColor)
+	if ok {
+		opacity := 1.0
+		if dimmed {
+			opacity = 0.5
+		}
+		return fmt.Sprintf(
+			`rgba(%.0f, %.0f, %.0f, %.2f)`,
+			0xFF*c.Red(),
+			0xFF*c.Green(),
+			0xFF*c.Blue(),
+			opacity,
+		)
+	}
+	log.Println("no @theme_fg_color")
+	return ""
 }

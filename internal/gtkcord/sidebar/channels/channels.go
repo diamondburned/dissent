@@ -405,14 +405,14 @@ func newTreeColumns() []*gtk.TreeViewColumn {
 		func() *gtk.TreeViewColumn {
 			ren := gtk.NewCellRendererText()
 			ren.SetPadding(0, 4)
-			ren.SetObjectProperty("sensitive", true)
 			ren.SetObjectProperty("ellipsize", pango.EllipsizeEnd)
 			ren.SetObjectProperty("ellipsize-set", true)
+			ren.SetObjectProperty("foreground-set", true)
 
 			col := gtk.NewTreeViewColumn()
 			col.PackStart(ren, true)
 			col.AddAttribute(ren, "markup", columnName)
-			col.AddAttribute(ren, "sensitive", columnSensitive)
+			col.AddAttribute(ren, "foreground", columnTextColor)
 			col.SetSizing(gtk.TreeViewColumnAutosize)
 			col.SetExpand(true)
 
@@ -422,10 +422,12 @@ func newTreeColumns() []*gtk.TreeViewColumn {
 			ren := gtk.NewCellRendererText()
 			ren.SetAlignment(1, 0.5)
 			ren.SetPadding(4, 0)
+			ren.SetObjectProperty("foreground-set", true)
 
 			col := gtk.NewTreeViewColumn()
 			col.PackStart(ren, false)
 			col.AddAttribute(ren, "text", columnUnread)
+			col.AddAttribute(ren, "foreground", columnTextColor)
 			col.SetSizing(gtk.TreeViewColumnAutosize)
 
 			return col
