@@ -94,7 +94,7 @@ var viewCSS = cssutil.Applier("message-view", `
 		background-color: alpha(@theme_fg_color, 0.125);
 	}
 	.message-list > row:hover {
-		background-color: alpha(@theme_fg_color, 0.075);
+		background-color: alpha(@theme_fg_color, 0.05);
 	}
 	.message-list > row.message-editing,
 	.message-list > row.message-replying {
