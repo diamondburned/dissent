@@ -179,6 +179,7 @@ func NewView(ctx context.Context, ctrl Controller, guildID discord.GuildID) *Vie
 	v.Child.Tree = gtk.NewTreeView()
 	v.Child.Tree.AddCSSClass("channels-viewtree")
 	v.Child.Tree.SetSizeRequest(bannerWidth, -1)
+	v.Child.Tree.SetTooltipColumn(columnName)
 	v.Child.Tree.SetVExpand(true)
 	v.Child.Tree.SetHExpand(true)
 	v.Child.Tree.SetHeadersVisible(false)
@@ -200,7 +201,7 @@ func NewView(ctx context.Context, ctrl Controller, guildID discord.GuildID) *Vie
 		switch node.(type) {
 		case *ChannelNode:
 			v.Child.Tree.ExpandToPath(path)
-		case *CategoryNode:
+		case *CategoryNode, *VoiceChannelNode:
 			// Toggle.
 			if v.Child.Tree.RowExpanded(path) {
 				v.Child.Tree.CollapseRow(path)
@@ -295,6 +296,10 @@ func NewView(ctx context.Context, ctrl Controller, guildID discord.GuildID) *Vie
 			if ev.GuildID == v.guildID {
 				v.InvalidateChannels()
 			}
+		case *gateway.VoiceStateUpdateEvent:
+			if ev.GuildID == v.guildID {
+				v.tree.UpdateChannel(ev.ChannelID)
+			}
 		}
 	}, channelsViewEvents...)
 
@@ -379,7 +384,8 @@ func (v *View) InvalidateChannels() {
 	// Expand all categories by default.
 	// TODO: add state.
 	for _, node := range v.tree.nodes {
-		if _, isCategory := node.(*CategoryNode); isCategory {
+		switch node.(type) {
+		case *CategoryNode:
 			v.Child.Tree.ExpandToPath(node.TreePath())
 		}
 	}
@@ -407,12 +413,12 @@ func newTreeColumns() []*gtk.TreeViewColumn {
 			ren.SetPadding(0, 4)
 			ren.SetObjectProperty("ellipsize", pango.EllipsizeEnd)
 			ren.SetObjectProperty("ellipsize-set", true)
-			ren.SetObjectProperty("foreground-set", true)
 
 			col := gtk.NewTreeViewColumn()
 			col.PackStart(ren, true)
 			col.AddAttribute(ren, "markup", columnName)
-			col.AddAttribute(ren, "foreground", columnTextColor)
+			// col.AddAttribute(ren, "foreground", columnTextColor)
+			// col.AddAttribute(ren, "foreground-set", columnTextColorSet)
 			col.SetSizing(gtk.TreeViewColumnAutosize)
 			col.SetExpand(true)
 
@@ -422,12 +428,12 @@ func newTreeColumns() []*gtk.TreeViewColumn {
 			ren := gtk.NewCellRendererText()
 			ren.SetAlignment(1, 0.5)
 			ren.SetPadding(4, 0)
-			ren.SetObjectProperty("foreground-set", true)
 
 			col := gtk.NewTreeViewColumn()
 			col.PackStart(ren, false)
 			col.AddAttribute(ren, "text", columnUnread)
-			col.AddAttribute(ren, "foreground", columnTextColor)
+			// col.AddAttribute(ren, "foreground", columnTextColor)
+			// col.AddAttribute(ren, "foreground-set", columnTextColorSet)
 			col.SetSizing(gtk.TreeViewColumnAutosize)
 
 			return col

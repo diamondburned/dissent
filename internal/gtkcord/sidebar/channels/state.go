@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"html"
 	"log"
+	"sort"
 
 	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/diamondburned/chatkit/components/author"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
-	"github.com/diamondburned/gotkit/gtkutil/textutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/diamondburned/ningen/v3"
 )
@@ -36,7 +37,6 @@ const (
 	columnName treeColumn = iota
 	columnID
 	columnUnread
-	columnTextColor
 
 	maxTreeColumn
 )
@@ -45,13 +45,11 @@ var allTreeColumns = []treeColumn{
 	columnName,
 	columnID,
 	columnUnread,
-	columnTextColor,
 }
 
 var columnTypes = []glib.Type{
 	glib.TypeString,
-	glib.TypeInt64,
-	glib.TypeString,
+	glib.TypeUint64,
 	glib.TypeString,
 }
 
@@ -76,6 +74,8 @@ var allowedChannelTypes = []discord.ChannelType{
 	discord.GuildCategory,
 	discord.GuildPublicThread,
 	discord.GuildPrivateThread,
+	discord.GuildVoice,
+	discord.GuildStageVoice,
 }
 
 // Add adds the given list of channels into the guild tree.
@@ -163,6 +163,9 @@ func (t *GuildTree) Add(channels []discord.Channel) {
 		case discord.GuildPublicThread:
 			node = newThreadNode(base)
 			node.Update(&ch)
+		case discord.GuildVoice, discord.GuildStageVoice:
+			node = newVoiceChannelNode(base)
+			node.Update(&ch)
 		default:
 			// Remove the iterator that we've just appended in.
 			if iter, ok := t.Iter(base.path); ok {
@@ -215,7 +218,7 @@ func (t *GuildTree) state() *gtkcord.State {
 // NodeFromIter returns the channel from the given TreeIter.
 func (t *GuildTree) NodeFromIter(iter *gtk.TreeIter) Node {
 	gv := t.TreeStore.Value(iter, columnID)
-	id := gv.GoValue().(int64)
+	id := gv.GoValue().(uint64)
 	return t.nodes[discord.ChannelID(id)]
 }
 
@@ -286,19 +289,25 @@ func (t *GuildTree) set(path *gtk.TreePath, v [maxTreeColumn]any) {
 
 	values := make([]glib.Value, len(v))
 	for i, value := range v {
+		if value == nil {
+			panic("unexpected nil value given to set [maxTreeColumn]any")
+		}
 		values[i] = *glib.NewValue(value)
 	}
 
 	t.TreeStore.Set(it, allTreeColumns, values)
 }
 
-func (t *GuildTree) setValues(path *gtk.TreePath, values map[treeColumn]any) {
+func (t *GuildTree) setValues(path *gtk.TreePath, values [maxTreeColumn]any) {
 	it, ok := t.Iter(path)
 	if !ok {
 		return
 	}
 
 	for col, val := range values {
+		if val == nil {
+			continue
+		}
 		t.TreeStore.SetValue(it, col, glib.NewValue(val))
 	}
 }
@@ -341,10 +350,9 @@ func (n *BaseChannelNode) zeroInit(ch *discord.Channel) {
 	muted := n.head.state().ChannelIsMuted(n.id, true)
 
 	n.head.set(n.path, [...]any{
-		html.EscapeString(ch.Name),
-		int64(ch.ID),
+		dimText(ch.Name, muted),
+		uint64(n.id),
 		"",
-		foregroundColor(muted),
 	})
 }
 
@@ -359,11 +367,8 @@ func (n *BaseChannelNode) setUnread(unread ningen.UnreadIndication) {
 		col = valueMentioned
 	}
 
-	muted := n.head.state().ChannelIsMuted(n.id, true)
-
-	n.head.setValues(n.path, map[treeColumn]any{
-		columnUnread:    col,
-		columnTextColor: foregroundColor(muted),
+	n.head.setValues(n.path, [maxTreeColumn]any{
+		columnUnread: col,
 	})
 }
 
@@ -381,8 +386,10 @@ func newCategoryNode(base BaseChannelNode, ch *discord.Channel) *CategoryNode {
 }
 
 func (n *CategoryNode) Update(ch *discord.Channel) {
-	n.head.setValues(n.path, map[treeColumn]any{
-		columnName: html.EscapeString(ch.Name),
+	muted := n.head.state().ChannelIsMuted(n.id, true)
+
+	n.head.setValues(n.path, [maxTreeColumn]any{
+		columnName: dimText(ch.Name, muted),
 	})
 }
 
@@ -437,10 +444,12 @@ func (n *ChannelNode) Update(ch *discord.Channel) {
 		hash = chNSFWHash
 	}
 
-	n.head.setValues(n.path, map[treeColumn]any{
+	muted := n.head.state().ChannelIsMuted(n.id, true)
+
+	n.head.setValues(n.path, [maxTreeColumn]any{
 		// Add a space at the end because the channel's height is otherwise a
 		// bit shorter.
-		columnName: hash + html.EscapeString(ch.Name) + " ",
+		columnName: dimMarkup(hash+html.EscapeString(ch.Name)+" ", muted),
 	})
 }
 
@@ -467,7 +476,7 @@ func newThreadNode(base BaseChannelNode) *ThreadNode {
 }
 
 func (n *ThreadNode) Update(ch *discord.Channel) {
-	n.head.setValues(n.path, map[treeColumn]any{
+	n.head.setValues(n.path, [maxTreeColumn]any{
 		columnName: ch.Name,
 	})
 }
@@ -476,21 +485,112 @@ func (n *ThreadNode) SetUnread(unread ningen.UnreadIndication) {
 	n.setUnread(unread)
 }
 
-func foregroundColor(dimmed bool) string {
-	c, ok := textutil.LookupColor(textutil.ThemeForegroundColor)
-	if ok {
-		opacity := 1.0
-		if dimmed {
-			opacity = 0.5
-		}
-		return fmt.Sprintf(
-			`rgba(%.0f, %.0f, %.0f, %.2f)`,
-			0xFF*c.Red(),
-			0xFF*c.Green(),
-			0xFF*c.Blue(),
-			opacity,
-		)
+type VoiceChannelNode struct {
+	BaseChannelNode
+	guildID discord.GuildID
+}
+
+func newVoiceChannelNode(base BaseChannelNode) *VoiceChannelNode {
+	return &VoiceChannelNode{
+		BaseChannelNode: base,
 	}
-	log.Println("no @theme_fg_color")
-	return ""
+}
+
+const vcIcon = `🔊 `
+
+func (n *VoiceChannelNode) Update(ch *discord.Channel) {
+	n.guildID = ch.GuildID
+	n.head.setValues(n.path, [maxTreeColumn]any{
+		columnName: vcIcon + ch.Name,
+	})
+
+	states, _ := n.head.state().VoiceStates(ch.GuildID)
+	if states == nil {
+		n.setVoiceUsers(nil)
+		return
+	}
+
+	members := make([]discord.Member, 0, len(states))
+	for _, state := range states {
+		if state.ChannelID != ch.ID {
+			continue
+		}
+
+		member := state.Member
+		if member == nil {
+			member, _ = n.head.state().Member(ch.GuildID, state.UserID)
+		}
+		if member == nil {
+			continue
+		}
+		members = append(members, *member)
+	}
+
+	n.setVoiceUsers(members)
+}
+
+func (n *VoiceChannelNode) setVoiceUsers(members []discord.Member) {
+	n.clear()
+	if len(members) == 0 {
+		return
+	}
+
+	parent, ok := n.head.TreeStore.Iter(n.path)
+	if !ok {
+		return
+	}
+
+	sort.SliceStable(members, func(i, j int) bool {
+		return memberName(&members[i]) < memberName(&members[j])
+	})
+
+	log.Println("got new member list:")
+	for _, member := range members {
+		log.Print("  ", memberName(&member))
+
+		iter := n.head.TreeStore.Append(parent)
+		path := n.head.TreeStore.Path(iter)
+
+		n.head.set(path, [...]any{
+			n.head.state().MemberMarkup(
+				n.guildID, &discord.GuildUser{
+					User:   member.User,
+					Member: &member,
+				},
+				author.WithColor(""), // no color for consistency
+			),
+			uint64(discord.NullSnowflake),
+			"",
+		})
+	}
+}
+
+func memberName(member *discord.Member) string {
+	if member.Nick != "" {
+		return member.Nick
+	}
+	return member.User.Tag()
+}
+
+func (n *VoiceChannelNode) clear() {
+	parent, ok := n.head.Iter(n.path)
+	if !ok {
+		return
+	}
+
+	it, ok := n.head.TreeStore.IterChildren(parent)
+	for ok {
+		ok = n.head.TreeStore.Remove(it)
+	}
+}
+
+func dimMarkup(str string, dimmed bool) string {
+	if dimmed {
+		str = fmt.Sprintf(`<span alpha="50%%">%s</span>`, str)
+	}
+	return str
+}
+
+func dimText(text string, dimmed bool) string {
+	return dimMarkup(html.EscapeString(text), dimmed)
 }
