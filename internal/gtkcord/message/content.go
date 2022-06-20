@@ -31,6 +31,7 @@ type Content struct {
 	parent *View
 	menu   *gio.Menu
 	view   *mdrender.MarkdownViewer
+	react  *contentReactions
 	child  []gtk.Widgetter
 }
 
@@ -265,6 +266,7 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 		c.append(custom)
 	}
 
+	c.SetReactions(m.Reactions)
 	c.setMenu()
 }
 
@@ -298,6 +300,20 @@ func (c *Content) Redact() {
 	c.append(red)
 }
 
+// SetReactions sets the reactions inside the message.
+func (c *Content) SetReactions(reactions []discord.Reaction) {
+	if c.react == nil {
+		if len(reactions) == 0 {
+			return
+		}
+		c.react = newContentReactions(c.ctx)
+		c.append(c.react)
+	}
+
+	c.react.Clear()
+	c.react.AddReactions(reactions)
+}
+
 var renderers = []mdrender.OptionFunc{
 	mdrender.WithRenderer(discordmd.KindEmoji, renderEmoji),
 	mdrender.WithRenderer(discordmd.KindInline, renderInline),
@@ -308,12 +324,13 @@ func renderEmoji(r *mdrender.Renderer, n ast.Node) ast.WalkStatus {
 	emoji := n.(*discordmd.Emoji)
 	text := r.State.TextBlock()
 
-	image := onlineimage.NewImage(r.State.Context(), imgutil.HTTPProvider)
-	image.EnableAnimation().OnHover()
-	image.SetTooltipText(emoji.Name)
-	image.SetFromURL(gtkcord.EmojiURL(emoji.ID, emoji.GIF))
+	picture := onlineimage.NewPicture(r.State.Context(), imgutil.HTTPProvider)
+	picture.EnableAnimation().OnHover()
+	picture.SetKeepAspectRatio(true)
+	picture.SetTooltipText(emoji.Name)
+	picture.SetURL(gtkcord.EmojiURL(emoji.ID, emoji.GIF))
 
-	v := md.InsertCustomImageWidget(text.TextView, text.Buffer.CreateChildAnchor(text.Iter), image)
+	v := md.InsertCustomImageWidget(text.TextView, text.Buffer.CreateChildAnchor(text.Iter), picture)
 	if emoji.Large {
 		v.SetSizeRequest(gtkcord.LargeEmojiSize, gtkcord.LargeEmojiSize)
 	} else {

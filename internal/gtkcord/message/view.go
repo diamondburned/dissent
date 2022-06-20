@@ -214,6 +214,30 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 
 			v.deleteMessage(ev.ID)
 
+		case *gateway.MessageReactionAddEvent:
+			if ev.ChannelID != v.chID {
+				return
+			}
+			v.updateMessageReactions(ev.MessageID)
+
+		case *gateway.MessageReactionRemoveEvent:
+			if ev.ChannelID != v.chID {
+				return
+			}
+			v.updateMessageReactions(ev.MessageID)
+
+		case *gateway.MessageReactionRemoveAllEvent:
+			if ev.ChannelID != v.chID {
+				return
+			}
+			v.updateMessageReactions(ev.MessageID)
+
+		case *gateway.MessageReactionRemoveEmojiEvent:
+			if ev.ChannelID != v.chID {
+				return
+			}
+			v.updateMessageReactions(ev.MessageID)
+
 		case *gateway.MessageDeleteBulkEvent:
 			if ev.ChannelID != v.chID {
 				return
@@ -436,6 +460,23 @@ func (v *View) updateMember(member *discord.Member) {
 		}
 		return false // keep looping
 	})
+}
+
+func (v *View) updateMessageReactions(id discord.MessageID) {
+	widget, ok := v.msgs[messageKeyID(id)]
+	if !ok {
+		return
+	}
+
+	state := gtkcord.FromContext(v.ctx.Take())
+
+	msg, _ := state.Cabinet.Message(v.chID, id)
+	if msg == nil {
+		return
+	}
+
+	content := widget.message.Content()
+	content.SetReactions(msg.Reactions)
 }
 
 // SendMessage implements composer.Controller.

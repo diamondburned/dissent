@@ -2,6 +2,8 @@ module github.com/diamondburned/gtkcord4
 
 go 1.17
 
+replace github.com/diamondburned/arikawa/v3 => ../../arikawa
+
 require (
 	github.com/diamondburned/adaptive v0.0.2-0.20220328111603-4f867d7948b2
 	github.com/diamondburned/arikawa/v3 v3.0.0-rc.6.0.20220511190108-4d96cdd2b1a7
