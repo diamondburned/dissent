@@ -37,6 +37,7 @@ const (
 	columnName treeColumn = iota
 	columnID
 	columnUnread
+	columnTooltip
 
 	maxTreeColumn
 )
@@ -45,11 +46,13 @@ var allTreeColumns = []treeColumn{
 	columnName,
 	columnID,
 	columnUnread,
+	columnTooltip,
 }
 
 var columnTypes = []glib.Type{
 	glib.TypeString,
 	glib.TypeUint64,
+	glib.TypeString,
 	glib.TypeString,
 }
 
@@ -353,6 +356,7 @@ func (n *BaseChannelNode) zeroInit(ch *discord.Channel) {
 		dimText(ch.Name, muted),
 		uint64(n.id),
 		"",
+		html.EscapeString(ch.Name),
 	})
 }
 
@@ -389,7 +393,8 @@ func (n *CategoryNode) Update(ch *discord.Channel) {
 	muted := n.head.state().ChannelIsMuted(n.id, true)
 
 	n.head.setValues(n.path, [maxTreeColumn]any{
-		columnName: dimText(ch.Name, muted),
+		columnName:    dimText(ch.Name, muted),
+		columnTooltip: html.EscapeString(ch.Name),
 	})
 }
 
@@ -449,7 +454,8 @@ func (n *ChannelNode) Update(ch *discord.Channel) {
 	n.head.setValues(n.path, [maxTreeColumn]any{
 		// Add a space at the end because the channel's height is otherwise a
 		// bit shorter.
-		columnName: dimMarkup(hash+html.EscapeString(ch.Name)+" ", muted),
+		columnName:    dimMarkup(hash+html.EscapeString(ch.Name)+" ", muted),
+		columnTooltip: "#" + html.EscapeString(ch.Name),
 	})
 }
 
@@ -500,9 +506,6 @@ const vcIcon = `🔊 `
 
 func (n *VoiceChannelNode) Update(ch *discord.Channel) {
 	n.guildID = ch.GuildID
-	n.head.setValues(n.path, [maxTreeColumn]any{
-		columnName: vcIcon + ch.Name,
-	})
 
 	states, _ := n.head.state().VoiceStates(ch.GuildID)
 	if states == nil {
@@ -526,11 +529,22 @@ func (n *VoiceChannelNode) Update(ch *discord.Channel) {
 		members = append(members, *member)
 	}
 
+	name := vcIcon + ch.Name
+	if len(members) > 0 {
+		name += fmt.Sprintf(" (%d)", len(members))
+	}
+
 	n.setVoiceUsers(members)
+	n.head.setValues(n.path, [maxTreeColumn]any{
+		columnName: name,
+	})
 }
 
 func (n *VoiceChannelNode) setVoiceUsers(members []discord.Member) {
-	n.clear()
+	// Defer clearing so GTK doesn't hide the node when we're replacing it.
+	clear := n.deferClear()
+	defer clear()
+
 	if len(members) == 0 {
 		return
 	}
@@ -544,23 +558,20 @@ func (n *VoiceChannelNode) setVoiceUsers(members []discord.Member) {
 		return memberName(&members[i]) < memberName(&members[j])
 	})
 
-	log.Println("got new member list:")
 	for _, member := range members {
-		log.Print("  ", memberName(&member))
-
 		iter := n.head.TreeStore.Append(parent)
 		path := n.head.TreeStore.Path(iter)
 
 		n.head.set(path, [...]any{
 			n.head.state().MemberMarkup(
-				n.guildID, &discord.GuildUser{
-					User:   member.User,
-					Member: &member,
-				},
+				n.guildID,
+				&discord.GuildUser{User: member.User, Member: &member},
+				author.WithMinimal(),
 				author.WithColor(""), // no color for consistency
 			),
 			uint64(discord.NullSnowflake),
 			"",
+			member.User.Tag(),
 		})
 	}
 }
@@ -572,15 +583,19 @@ func memberName(member *discord.Member) string {
 	return member.User.Tag()
 }
 
-func (n *VoiceChannelNode) clear() {
+func (n *VoiceChannelNode) deferClear() func() {
 	parent, ok := n.head.Iter(n.path)
 	if !ok {
-		return
+		return func() {}
 	}
 
-	it, ok := n.head.TreeStore.IterChildren(parent)
-	for ok {
-		ok = n.head.TreeStore.Remove(it)
+	len := n.head.TreeStore.IterNChildren(parent)
+
+	return func() {
+		it, ok := n.head.TreeStore.IterChildren(parent)
+		for i := 0; ok && i < len; i++ {
+			ok = n.head.TreeStore.Remove(it)
+		}
 	}
 }
 

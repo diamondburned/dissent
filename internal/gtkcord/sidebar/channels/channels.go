@@ -179,7 +179,7 @@ func NewView(ctx context.Context, ctrl Controller, guildID discord.GuildID) *Vie
 	v.Child.Tree = gtk.NewTreeView()
 	v.Child.Tree.AddCSSClass("channels-viewtree")
 	v.Child.Tree.SetSizeRequest(bannerWidth, -1)
-	v.Child.Tree.SetTooltipColumn(columnName)
+	v.Child.Tree.SetTooltipColumn(columnTooltip)
 	v.Child.Tree.SetVExpand(true)
 	v.Child.Tree.SetHExpand(true)
 	v.Child.Tree.SetHeadersVisible(false)
