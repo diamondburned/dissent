@@ -15,6 +15,11 @@ import (
 )
 
 var _ = cssutil.WriteCSS(`
+	window.background,
+	window.background.solid-csd {
+		background-color: @theme_bg_color;
+	}
+
 	.adaptive-avatar > image {
 		background: none;
 	}
