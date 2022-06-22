@@ -294,24 +294,24 @@ func ChannelNameFromID(ctx context.Context, id discord.ChannelID) string {
 	state := FromContext(ctx)
 	ch, _ := state.Cabinet.Channel(id)
 	if ch != nil {
-		return ChannelName(ctx, ch)
+		return ChannelName(ch)
 	}
 	return "Unknown channel"
 }
 
 // ChannelName returns the channel's name in plain text.
-func ChannelName(ctx context.Context, ch *discord.Channel) string {
+func ChannelName(ch *discord.Channel) string {
 	switch ch.Type {
 	case discord.DirectMessage:
 		if len(ch.DMRecipients) == 0 {
-			return recipientNames(ctx, ch)
+			return RecipientNames(ch)
 		}
 		return ch.DMRecipients[0].Username
 	case discord.GroupDM:
 		if ch.Name != "" {
 			return ch.Name
 		}
-		return recipientNames(ctx, ch)
+		return RecipientNames(ch)
 	case discord.GuildPublicThread, discord.GuildPrivateThread:
 		return ch.Name
 	default:
@@ -319,7 +319,9 @@ func ChannelName(ctx context.Context, ch *discord.Channel) string {
 	}
 }
 
-func recipientNames(ctx context.Context, ch *discord.Channel) string {
+// RecipientNames formats the string for the list of recipients inside the given
+// channel.
+func RecipientNames(ch *discord.Channel) string {
 	name := func(ix int) string {
 		return ch.DMRecipients[ix].Username
 	}

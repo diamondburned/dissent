@@ -214,19 +214,19 @@ func NewView(ctx context.Context, ctrl Controller, guildID discord.GuildID) *Vie
 	selection := v.Child.Tree.Selection()
 	selection.SetMode(gtk.SelectionBrowse)
 	selection.ConnectChanged(func() {
+		// Note: never set v.selectID to 0 here, because we're in Browse mode,
+		// so it should be impossible.
 		if v.tree == nil {
 			return
 		}
 
 		_, iter, ok := selection.Selected()
-		if !ok || v.tree == nil {
-			v.selectID = 0
+		if !ok {
 			return
 		}
 
 		node := v.tree.NodeFromIter(iter)
 		if node == nil {
-			v.selectID = 0
 			return
 		}
 
@@ -311,6 +311,9 @@ func NewView(ctx context.Context, ctrl Controller, guildID discord.GuildID) *Vie
 // later when the list is changed or never selected if the user selects
 // something else.
 func (v *View) SelectChannel(chID discord.ChannelID) {
+	log.Println("selecting channel with ID", chID)
+	v.selectID = chID
+
 	if v.tree != nil {
 		node := v.tree.Node(chID)
 		if node != nil {
@@ -319,8 +322,6 @@ func (v *View) SelectChannel(chID discord.ChannelID) {
 			return
 		}
 	}
-
-	v.selectID = chID
 }
 
 // GuildID returns the view's guild ID.
@@ -359,23 +360,6 @@ func (v *View) InvalidateChannels() {
 	}
 
 	v.tree = NewGuildTree(v.ctx.Take())
-	// v.tree.ConnectRowInserted(func(path *gtk.TreePath, iter *gtk.TreeIter) {
-	// 	node := v.tree.NodeFromIter(iter)
-	// 	if node == nil {
-	// 		return
-	// 	}
-
-	// 	if !v.selectID.IsValid() {
-	// 		return
-	// 	}
-
-	// 	if node.ID() == v.selectID {
-	// 		// Found the channel that we want to select.
-	// 		selection := v.Child.Tree.Selection()
-	// 		selection.SelectPath(path)
-	// 	}
-	// })
-
 	v.tree.Add(chs)
 
 	v.Child.Tree.SetModel(v.tree)
@@ -390,9 +374,13 @@ func (v *View) InvalidateChannels() {
 		}
 	}
 
-	if selectedNode, ok := v.tree.nodes[v.selectID]; ok {
+	log.Println("we got channel w/ ID", v.selectID, "to be selected")
+	if node := v.tree.Node(v.selectID); node != nil {
 		selection := v.Child.Tree.Selection()
-		selection.SelectPath(selectedNode.TreePath())
+		selection.SelectPath(node.TreePath())
+		log.Println("  stored channel", v.selectID, "selected")
+	} else {
+		log.Println("  channel not found")
 	}
 }
 

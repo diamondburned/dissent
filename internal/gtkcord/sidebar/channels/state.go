@@ -510,6 +510,9 @@ func (n *VoiceChannelNode) Update(ch *discord.Channel) {
 	states, _ := n.head.state().VoiceStates(ch.GuildID)
 	if states == nil {
 		n.setVoiceUsers(nil)
+		n.head.setValues(n.path, [maxTreeColumn]any{
+			columnName: vcIcon + ch.Name,
+		})
 		return
 	}
 

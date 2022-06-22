@@ -13,6 +13,7 @@ import (
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord/message"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar"
+	"github.com/diamondburned/gtkcord4/internal/gtkcord/window/quickswitcher"
 	"github.com/diamondburned/gtkcord4/internal/icons"
 	"github.com/pkg/errors"
 )
@@ -102,6 +103,7 @@ func NewChatPage(ctx context.Context) *ChatPage {
 	}
 
 	gtkutil.BindActionMap(p, map[string]func(){
+		"discord.show-qs":       func() { quickswitcher.ShowDialog(ctx, (*quickSwitcherChatPage)(&p)) },
 		"discord.set-online":    func() { setStatus(discord.OnlineStatus) },
 		"discord.set-idle":      func() { setStatus(discord.IdleStatus) },
 		"discord.set-dnd":       func() { setStatus(discord.DoNotDisturbStatus) },
@@ -146,6 +148,12 @@ func (p *ChatPage) SwitchToMessages() {
 // the user to a new channel when they request to, e.g. through a notification.
 func (p *ChatPage) OpenChannel(chID discord.ChannelID) {
 	p.Left.SelectChannel(chID)
+}
+
+// OpenGuild opens the guild with the given ID.
+func (p *ChatPage) OpenGuild(guildID discord.GuildID) {
+	p.SwitchToPlaceholder()
+	p.Left.SelectGuild(guildID)
 }
 
 func (p *ChatPage) switchTo(w gtk.Widgetter) {
@@ -193,4 +201,14 @@ func (p *sidebarChatPage) OpenChannel(chID discord.ChannelID) {
 
 func (p *sidebarChatPage) CloseGuild(permanent bool) {
 	(*ChatPage)(p).SwitchToPlaceholder()
+}
+
+type quickSwitcherChatPage ChatPage
+
+func (p *quickSwitcherChatPage) OpenChannel(chID discord.ChannelID) {
+	(*ChatPage)(p).OpenChannel(chID)
+}
+
+func (p *quickSwitcherChatPage) OpenGuild(guildID discord.GuildID) {
+	(*ChatPage)(p).OpenGuild(guildID)
 }

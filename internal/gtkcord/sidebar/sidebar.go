@@ -3,6 +3,7 @@ package sidebar
 
 import (
 	"context"
+	"log"
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
@@ -102,6 +103,7 @@ func NewSidebar(ctx context.Context, ctrl Controller) *Sidebar {
 	s.Right.SetTransitionType(gtk.StackTransitionTypeCrossfade)
 
 	userBar := newUserBar(ctx, []gtkutil.PopoverMenuItem{
+		gtkutil.MenuItem("Quick Switcher", "discord.show-qs"),
 		gtkutil.MenuSeparator("User Settings"),
 		gtkutil.Submenu("Set _Status", []gtkutil.PopoverMenuItem{
 			gtkutil.MenuItem("_Online", "discord.set-online"),
@@ -206,12 +208,18 @@ func (s *Sidebar) openGuild(guildID discord.GuildID) *channels.View {
 	return ch
 }
 
+// SelectGuild selects the guild with the given ID.
+func (s *Sidebar) SelectGuild(guildID discord.GuildID) {
+	s.Guilds.SelectGuild(guildID)
+}
+
 // SelectChannel selects and activates the channel with the given ID. It ensures
 // that the sidebar is at the right place then activates the controller.
 func (s *Sidebar) SelectChannel(chID discord.ChannelID) {
 	state := gtkcord.FromContext(s.ctx)
 	ch, _ := state.Cabinet.Channel(chID)
 	if ch == nil {
+		log.Println("sidebar: channel with ID", chID, "not found")
 		return
 	}
 

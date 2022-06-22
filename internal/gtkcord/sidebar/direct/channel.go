@@ -73,7 +73,7 @@ func (ch *Channel) Invalidate() {
 // Update updates the channel to show information from the instance given. ID is
 // not checked.
 func (ch *Channel) Update(channel *discord.Channel) {
-	name := gtkcord.ChannelName(ch.ctx, channel)
+	name := gtkcord.ChannelName(channel)
 	ch.name.SetText(name)
 	ch.avatar.SetInitials(name)
 
