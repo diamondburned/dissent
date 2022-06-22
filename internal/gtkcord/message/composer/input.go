@@ -17,7 +17,6 @@ import (
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/app/prefs"
-	"github.com/diamondburned/gotkit/app/prefs/kvstate"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/textutil"
@@ -119,8 +118,7 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 		start, end := i.Buffer.Bounds()
 
 		// Persist input.
-		cfg := kvstate.AcquireConfig(ctx, "input-state")
-
+		cfg := app.AcquireState(ctx, "input-state")
 		if end.Offset() == 0 {
 			cfg.Delete(chID.String())
 		} else {
@@ -136,7 +134,7 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 	gtkutil.Async(ctx, func() func() {
 		var oldMessage string
 
-		cfg := kvstate.AcquireConfig(ctx, "input-state")
+		cfg := app.AcquireState(ctx, "input-state")
 		if !cfg.Get(chID.String(), &oldMessage) {
 			return nil
 		}

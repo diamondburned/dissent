@@ -55,7 +55,7 @@ func NewDialog(ctx context.Context, ctrl Controller) *Dialog {
 
 	esc := gtk.NewEventControllerKey()
 	esc.SetName("dialog-escape")
-	esc.ConnectKeyPressed(func(val, code uint, state gdk.ModifierType) bool {
+	esc.ConnectKeyPressed(func(val, _ uint, state gdk.ModifierType) bool {
 		switch val {
 		case gdk.KEY_Escape:
 			d.Dialog.Close()
@@ -63,9 +63,9 @@ func NewDialog(ctx context.Context, ctrl Controller) *Dialog {
 		}
 		return false
 	})
-	d.Dialog.AddController(esc)
 
 	qs.search.SetKeyCaptureWidget(d.Dialog)
+	qs.search.AddController(esc)
 
 	return &d
 }

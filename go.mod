@@ -7,7 +7,7 @@ require (
 	github.com/diamondburned/arikawa/v3 v3.0.0-rc.6.0.20220620060309-faec1da25759
 	github.com/diamondburned/chatkit v0.0.0-20220619054806-6feb91c8972a
 	github.com/diamondburned/gotk4/pkg v0.0.0-20220417091308-856167c02355
-	github.com/diamondburned/gotkit v0.0.0-20220619213222-26e037dd11c2
+	github.com/diamondburned/gotkit v0.0.0-20220622054943-8c1f46952fc5
 	github.com/diamondburned/ningen/v3 v3.0.0-20220619214735-56004aa62571
 )
 

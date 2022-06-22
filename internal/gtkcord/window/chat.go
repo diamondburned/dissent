@@ -103,7 +103,7 @@ func NewChatPage(ctx context.Context) *ChatPage {
 	}
 
 	gtkutil.BindActionMap(p, map[string]func(){
-		"discord.show-qs":       func() { quickswitcher.ShowDialog(ctx, (*quickSwitcherChatPage)(&p)) },
+		"discord.show-qs":       p.ShowQuickSwitcher,
 		"discord.set-online":    func() { setStatus(discord.OnlineStatus) },
 		"discord.set-idle":      func() { setStatus(discord.IdleStatus) },
 		"discord.set-dnd":       func() { setStatus(discord.DoNotDisturbStatus) },
@@ -122,6 +122,11 @@ func newEmptyMessagePlaceholer() gtk.Widgetter {
 	status.Icon.Show()
 
 	return status
+}
+
+// ShowQuickSwitcher shows the Quick Switcher dialog.
+func (p *ChatPage) ShowQuickSwitcher() {
+	quickswitcher.ShowDialog(p.ctx, (*quickSwitcherChatPage)(p))
 }
 
 // SwitchToPlaceholder switches to the empty placeholder view.

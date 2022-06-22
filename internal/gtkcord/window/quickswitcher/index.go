@@ -73,6 +73,13 @@ var channelCSS = cssutil.Applier("quickswitcher-channel", `
 		padding-left: 1px; /* account for the NSFW mark */
 		margin-right: 7px;
 	}
+	.quickswitcher-channel-guildname {
+		font-size: 0.9em;
+		color: alpha(@theme_fg_color, 0.75);
+		margin: 4px;
+		margin-left: 18px;
+		margin-bottom: calc(4px - 0.1em);
+	}
 `)
 
 func (it channelItem) Row(ctx context.Context) *gtk.ListBoxRow {
@@ -128,7 +135,7 @@ func (it channelItem) Row(ctx context.Context) *gtk.ListBoxRow {
 	if it.guild != nil {
 		guildName := gtk.NewLabel(it.guild.Name)
 		guildName.AddCSSClass("quickswitcher-channel-guildname")
-		guildName.SetEllipsize(pango.EllipsizeEnd)
+		guildName.SetEllipsize(pango.EllipsizeMiddle)
 
 		box.Append(guildName)
 	}

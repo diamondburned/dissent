@@ -30,16 +30,21 @@ var _ = cssutil.WriteCSS(`
 
 func main() {
 	m := manager{}
-	m.app = app.New("com.github.diamondburned.gtkcord4", "gtkcord4")
+	m.app = app.New(context.Background(), "com.github.diamondburned.gtkcord4", "gtkcord4")
 	m.app.AddJSONActions(map[string]interface{}{
 		"app.open-channel": m.openChannel,
 		"app.preferences":  func() { prefui.ShowDialog(m.win.Context()) },
+		"app.show-qs":      m.openQuickSwitcher,
 		"app.about":        func() { /* TODO */ },
 		"app.logs":         func() { logui.ShowDefaultViewer(m.win.Context()) },
 		"app.quit":         func() { m.app.Quit() },
 	})
+	m.app.AddActionShortcuts(map[string]string{
+		"<Ctrl>K": "app.show-qs",
+		"<Ctrl>Q": "app.quit",
+	})
 	m.app.ConnectActivate(func() { m.activate(m.app.Context()) })
-	m.app.RunMain(context.Background())
+	m.app.RunMain()
 }
 
 type manager struct {
@@ -47,11 +52,21 @@ type manager struct {
 	win *window.Window
 }
 
-func (m *manager) openChannel(cmd gtkcord.OpenChannelCommand) {
-	if m.win == nil || m.win.Chat == nil {
+func (m *manager) isLoggedIn() bool {
+	return m.win != nil && m.win.Chat != nil
+}
+
+func (m *manager) openQuickSwitcher() {
+	if !m.isLoggedIn() {
 		return
 	}
+	m.win.Chat.ShowQuickSwitcher()
+}
 
+func (m *manager) openChannel(cmd gtkcord.OpenChannelCommand) {
+	if !m.isLoggedIn() {
+		return
+	}
 	// TODO: highlight message.
 	m.win.Chat.OpenChannel(cmd.ChannelID)
 }

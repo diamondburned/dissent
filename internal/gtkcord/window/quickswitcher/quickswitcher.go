@@ -62,7 +62,9 @@ var qsCSS = cssutil.Applier("quickswitcher", `
 
 // NewQuickSwitcher creates a new Quick Switcher instance.
 func NewQuickSwitcher(ctx context.Context, ctrl Controller) *QuickSwitcher {
-	qs := QuickSwitcher{ctrl: ctrl}
+	qs := QuickSwitcher{
+		ctrl: ctrl,
+	}
 
 	qs.search = gtk.NewSearchEntry()
 	qs.search.AddCSSClass("quickswitcher-search")
@@ -232,9 +234,13 @@ func (qs *QuickSwitcher) move(down bool) bool {
 
 	// Steal focus. This is a hack to scroll to the selected item without having
 	// to manually calculate the coordinates.
-	focused := gtk.BaseWidget(app.WindowFromContext(qs.ctx.Take()).Focus())
+	var target gtk.Widgetter = qs.search
+	if focused := app.WindowFromContext(qs.ctx.Take()).Focus(); focused != nil {
+		target = focused
+	}
+	targetBase := gtk.BaseWidget(target)
 	qs.entries[ix].ListBoxRow.GrabFocus()
-	focused.GrabFocus()
+	targetBase.GrabFocus()
 
 	return true
 }
