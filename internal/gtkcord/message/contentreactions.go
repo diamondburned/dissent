@@ -2,12 +2,15 @@ package message
 
 import (
 	"context"
+	"html"
+	"log"
 	"strconv"
 	"strings"
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/components/onlineimage"
+	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/imgutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
@@ -17,17 +20,20 @@ type contentReactions struct {
 	*gtk.FlowBox
 	ctx       context.Context
 	reactions map[string]*contentReaction
+	parent    *Content
 }
 
 var reactionsCSS = cssutil.Applier("message-reactions", `
 	.message-reactions {
 		padding: 0;
+		margin-top: 2px;
 	}
 `)
 
-func newContentReactions(ctx context.Context) *contentReactions {
+func newContentReactions(ctx context.Context, parent *Content) *contentReactions {
 	rs := contentReactions{
 		ctx:       ctx,
+		parent:    parent,
 		reactions: make(map[string]*contentReaction),
 	}
 
@@ -69,6 +75,9 @@ func (rs *contentReactions) AddReactions(reactions []discord.Reaction) {
 	for _, react := range reactions {
 		rs.addReaction(react)
 	}
+	for _, reaction := range rs.reactions {
+		reaction.Invalidate()
+	}
 }
 
 func (rs *contentReactions) addReaction(reaction discord.Reaction) {
@@ -78,10 +87,8 @@ func (rs *contentReactions) addReaction(reaction discord.Reaction) {
 	if ok {
 		r.count++
 		r.me = reaction.Me
-		r.Invalidate()
-		rs.InvalidateSort()
 	} else {
-		r = newContentReaction(rs.ctx, reaction)
+		r = newContentReaction(rs, reaction)
 		rs.reactions[name] = r
 		rs.Insert(r, -1)
 	}
@@ -89,8 +96,13 @@ func (rs *contentReactions) addReaction(reaction discord.Reaction) {
 
 type contentReaction struct {
 	*gtk.FlowBoxChild
+	reactions  *contentReactions
 	countLabel *gtk.Label
 
+	tooltip    string
+	hasTooltip bool
+
+	emoji discord.Emoji
 	count int
 	me    bool
 }
@@ -115,10 +127,12 @@ var reactionCSS = cssutil.Applier("message-reaction", `
 	}
 `)
 
-func newContentReaction(ctx context.Context, reaction discord.Reaction) *contentReaction {
+func newContentReaction(rs *contentReactions, reaction discord.Reaction) *contentReaction {
 	r := contentReaction{
-		count: reaction.Count,
-		me:    reaction.Me,
+		reactions: rs,
+		emoji:     reaction.Emoji,
+		count:     reaction.Count,
+		me:        reaction.Me,
 	}
 
 	box := gtk.NewBox(gtk.OrientationHorizontal, 0)
@@ -128,18 +142,34 @@ func newContentReaction(ctx context.Context, reaction discord.Reaction) *content
 	r.FlowBoxChild.SetChild(box)
 	reactionCSS(r)
 
+	var loadedUser bool
+	r.FlowBoxChild.SetHasTooltip(true)
+	r.FlowBoxChild.ConnectQueryTooltip(func(_, _ int, _ bool, tooltip *gtk.Tooltip) bool {
+		if !loadedUser {
+			loadedUser = true
+			r.InvalidateUsers()
+		}
+
+		if !r.hasTooltip {
+			tooltip.SetText("Loading...")
+			return true
+		}
+
+		tooltip.SetMarkup(r.tooltip)
+		return r.tooltip != ""
+	})
+
 	r.countLabel = gtk.NewLabel("")
 	r.countLabel.AddCSSClass("message-reaction-count")
 	r.countLabel.SetHExpand(true)
 	r.countLabel.SetXAlign(1)
 
 	if reaction.Emoji.IsCustom() {
-		emoji := onlineimage.NewPicture(ctx, imgutil.HTTPProvider)
+		emoji := onlineimage.NewPicture(rs.ctx, imgutil.HTTPProvider)
 		emoji.AddCSSClass("message-reaction-emoji")
 		emoji.AddCSSClass("message-reaction-emoji-custom")
 		emoji.SetSizeRequest(gtkcord.InlineEmojiSize, gtkcord.InlineEmojiSize)
 		emoji.SetKeepAspectRatio(true)
-		emoji.SetTooltipText(":" + reaction.Emoji.Name + ":")
 		emoji.SetURL(reaction.Emoji.EmojiURL())
 
 		anim := emoji.EnableAnimation()
@@ -156,12 +186,12 @@ func newContentReaction(ctx context.Context, reaction discord.Reaction) *content
 
 	box.Append(r.countLabel)
 
-	r.Invalidate()
 	return &r
 }
 
 // Invalidate invalidates the widget state.
 func (r *contentReaction) Invalidate() {
+	r.FlowBoxChild.Changed()
 	r.countLabel.SetLabel(strconv.Itoa(r.count))
 
 	if r.me {
@@ -171,4 +201,52 @@ func (r *contentReaction) Invalidate() {
 	} else {
 		r.RemoveCSSClass("message-reaction-me")
 	}
+}
+
+func (r *contentReaction) InvalidateUsers() {
+	if r.emoji.IsCustom() {
+		r.tooltip = ":" + html.EscapeString(r.emoji.Name) + ":\n"
+		r.hasTooltip = true
+	}
+
+	tooltip := r.tooltip
+
+	gtkutil.Async(r.reactions.ctx, func() func() {
+		client := gtkcord.FromContext(r.reactions.ctx)
+
+		u, err := client.Reactions(
+			r.reactions.parent.view.ChannelID(),
+			r.reactions.parent.MessageID(),
+			discord.NewCustomEmoji(r.emoji.ID, r.emoji.Name), 11,
+		)
+		if err != nil {
+			log.Print("cannot fetch reactions for message ", r.reactions.parent.MessageID(), ": ", err)
+			return nil
+		}
+
+		var hasMore bool
+		if len(u) > 10 {
+			hasMore = true
+			u = u[:10]
+		}
+
+		for _, user := range u {
+			tooltip += client.MemberMarkup(
+				r.reactions.parent.view.GuildID(),
+				&discord.GuildUser{User: user},
+			)
+			tooltip += "\n"
+		}
+
+		if hasMore {
+			tooltip += "..."
+		}
+
+		tooltip = strings.TrimSuffix(tooltip, "\n")
+
+		return func() {
+			r.tooltip = tooltip
+			r.hasTooltip = true
+		}
+	})
 }

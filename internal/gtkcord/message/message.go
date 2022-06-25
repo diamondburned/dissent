@@ -95,8 +95,8 @@ func (m *message) Redact() {
 	m.content.Redact()
 }
 
-func (m *message) parent() *View {
-	return m.content.parent
+func (m *message) view() *View {
+	return m.content.view
 }
 
 func (m *message) bind(parent gtk.Widgetter) *gio.Menu {
@@ -106,19 +106,19 @@ func (m *message) bind(parent gtk.Widgetter) *gio.Menu {
 
 	actions := map[string]func(){
 		"message.show-source": func() { m.ShowSource() },
-		"message.reply":       func() { m.parent().ReplyTo(m.message.ID) },
+		"message.reply":       func() { m.view().ReplyTo(m.message.ID) },
 	}
 
 	state := gtkcord.FromContext(m.ctx())
 	me, _ := state.Cabinet.Me()
 
 	if me != nil && m.message.Author.ID == me.ID {
-		actions["message.edit"] = func() { m.parent().Edit(m.message.ID) }
-		actions["message.delete"] = func() { m.parent().Delete(m.message.ID) }
+		actions["message.edit"] = func() { m.view().Edit(m.message.ID) }
+		actions["message.delete"] = func() { m.view().Delete(m.message.ID) }
 	}
 
 	if state.HasPermissions(m.message.ChannelID, discord.PermissionManageMessages) {
-		actions["message.delete"] = func() { m.parent().Delete(m.message.ID) }
+		actions["message.delete"] = func() { m.view().Delete(m.message.ID) }
 	}
 
 	menuItems := []gtkutil.PopoverMenuItem{

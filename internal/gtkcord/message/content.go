@@ -28,11 +28,12 @@ import (
 type Content struct {
 	*gtk.Box
 	ctx    context.Context
-	parent *View
+	view   *View
 	menu   *gio.Menu
-	view   *mdrender.MarkdownViewer
+	mdview *mdrender.MarkdownViewer
 	react  *contentReactions
 	child  []gtk.Widgetter
+	msgID  discord.MessageID
 }
 
 var contentCSS = cssutil.Applier("message-content-box", `
@@ -55,9 +56,9 @@ var contentCSS = cssutil.Applier("message-content-box", `
 // NewContent creates a new Content widget.
 func NewContent(ctx context.Context, v *View) *Content {
 	c := Content{
-		ctx:    ctx,
-		parent: v,
-		child:  make([]gtk.Widgetter, 0, 2),
+		ctx:   ctx,
+		view:  v,
+		child: make([]gtk.Widgetter, 0, 2),
 	}
 	c.Box = gtk.NewBox(gtk.OrientationVertical, 0)
 	contentCSS(c.Box)
@@ -65,12 +66,17 @@ func NewContent(ctx context.Context, v *View) *Content {
 	return &c
 }
 
+// MessageID returns the message ID.
+func (c *Content) MessageID() discord.MessageID {
+	return c.msgID
+}
+
 // SetExtraMenu implements ExtraMenuSetter.
 func (c *Content) SetExtraMenu(menu gio.MenuModeller) {
 	c.menu = gio.NewMenu()
 	c.menu.InsertSection(0, "Message", menu)
 
-	if c.view != nil {
+	if c.mdview != nil {
 		c.setMenu()
 	}
 }
@@ -106,6 +112,7 @@ var systemContentCSS = cssutil.Applier("message-system-content", `
 
 // Update replaces Content with the message.
 func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
+	c.msgID = m.ID
 	c.clear()
 
 	state := gtkcord.FromContext(c.ctx)
@@ -115,7 +122,7 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 		header.AddCSSClass("message-reply-header")
 		header.SetUseMarkup(true)
 		header.ConnectActivateLink(func(string) bool {
-			c.parent.ScrollToMessage(m.ID)
+			c.view.ScrollToMessage(m.ID)
 			return true
 		})
 
@@ -192,7 +199,7 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 		messageMarkup = "The server is now Nitro Boosted to Tier 3."
 	}
 
-	c.view = nil
+	c.mdview = nil
 
 	switch {
 	case messageMarkup != "":
@@ -215,7 +222,7 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 			switch strings.TrimPrefix(parts[0], "#") {
 			case "message":
 				if id, _ := discord.ParseSnowflake(parts[1]); id.IsValid() {
-					c.parent.ScrollToMessage(discord.MessageID(id))
+					c.view.ScrollToMessage(discord.MessageID(id))
 				}
 			}
 
@@ -243,8 +250,8 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 		src := []byte(m.Content)
 		node := discordmd.ParseWithMessage(src, *state.Cabinet, m, true)
 
-		c.view = mdrender.NewMarkdownViewer(c.ctx, src, node, renderers...)
-		c.append(c.view)
+		c.mdview = mdrender.NewMarkdownViewer(c.ctx, src, node, renderers...)
+		c.append(c.mdview)
 	}
 
 	for i := range m.Stickers {
@@ -306,7 +313,7 @@ func (c *Content) SetReactions(reactions []discord.Reaction) {
 		if len(reactions) == 0 {
 			return
 		}
-		c.react = newContentReactions(c.ctx)
+		c.react = newContentReactions(c.ctx, c)
 		c.append(c.react)
 	}
 
