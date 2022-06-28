@@ -2,7 +2,6 @@ package channels
 
 import (
 	"context"
-	"log"
 
 	"github.com/diamondburned/adaptive"
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -194,7 +193,6 @@ func NewView(ctx context.Context, ctrl Controller, guildID discord.GuildID) *Vie
 	v.Child.Tree.ConnectRowActivated(func(path *gtk.TreePath, column *gtk.TreeViewColumn) {
 		node := v.tree.NodeFromPath(path)
 		if node == nil {
-			log.Println("weird, activated unknown path", path)
 			return
 		}
 
@@ -311,7 +309,6 @@ func NewView(ctx context.Context, ctrl Controller, guildID discord.GuildID) *Vie
 // later when the list is changed or never selected if the user selects
 // something else.
 func (v *View) SelectChannel(chID discord.ChannelID) {
-	log.Println("selecting channel with ID", chID)
 	v.selectID = chID
 
 	if v.tree != nil {
@@ -374,13 +371,9 @@ func (v *View) InvalidateChannels() {
 		}
 	}
 
-	log.Println("we got channel w/ ID", v.selectID, "to be selected")
 	if node := v.tree.Node(v.selectID); node != nil {
 		selection := v.Child.Tree.Selection()
 		selection.SelectPath(node.TreePath())
-		log.Println("  stored channel", v.selectID, "selected")
-	} else {
-		log.Println("  channel not found")
 	}
 }
 
