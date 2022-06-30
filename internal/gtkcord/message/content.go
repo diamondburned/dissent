@@ -94,13 +94,22 @@ func (c *Content) setMenu() {
 		menu = c.menu // because a nil interface{} != nil *T
 	}
 
-	gtkutil.WalkWidget(c.Box, func(w gtk.Widgetter) bool {
-		s, ok := w.(extraMenuSetter)
+	for _, child := range c.child {
+		// Manually check on child to allow certain widgets to override the
+		// method.
+		s, ok := child.(extraMenuSetter)
 		if ok {
 			s.SetExtraMenu(menu)
 		}
-		return false
-	})
+
+		gtkutil.WalkWidget(c.Box, func(w gtk.Widgetter) bool {
+			s, ok := w.(extraMenuSetter)
+			if ok {
+				s.SetExtraMenu(menu)
+			}
+			return false
+		})
+	}
 }
 
 var systemContentCSS = cssutil.Applier("message-system-content", `

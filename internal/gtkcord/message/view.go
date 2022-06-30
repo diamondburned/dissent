@@ -334,12 +334,33 @@ func (v *View) Load() {
 				widgets[i] = v.upsertMessage(msg.ID, newMessageInfo(&msgs[i]))
 			}
 
-			// Render the messages from latest to oldest.
-			for i := len(widgets) - 1; i >= 0; i-- {
+			update := func(i int) {
 				if widgets[i] != nil {
-					widgets[i].Update(&gateway.MessageCreateEvent{Message: msgs[i]})
+					widgets[i].Update(&gateway.MessageCreateEvent{
+						Message: msgs[i],
+					})
 				}
 			}
+
+			// Render the latest 15 messages.
+			i := len(widgets) - 1
+			for i >= 0 && i >= (len(widgets)-15) {
+				update(i)
+				i--
+			}
+
+			if i < 0 {
+				return
+			}
+
+			// Render the last messages at a later time to allow animations to
+			// play back.
+			glib.TimeoutAdd(120, func() {
+				for i >= 0 {
+					update(i)
+					i--
+				}
+			})
 		}
 	})
 }
