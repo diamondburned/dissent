@@ -42,6 +42,8 @@ func newContentReactions(ctx context.Context, parent *Content) *contentReactions
 	rs.FlowBox.SetHomogeneous(true)
 	rs.FlowBox.SetMaxChildrenPerLine(100)
 	rs.FlowBox.SetSelectionMode(gtk.SelectionNone)
+	rs.FlowBox.SetRowSpacing(2)
+	rs.FlowBox.SetColumnSpacing(2)
 	reactionsCSS(rs)
 
 	rs.FlowBox.SetSortFunc(func(child1, child2 *gtk.FlowBoxChild) int {
