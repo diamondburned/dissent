@@ -144,6 +144,7 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 	v.Box.SetFocusChild(v.Composer)
 
 	v.LoadablePage = adaptive.NewLoadablePage()
+	v.LoadablePage.SetTransitionDuration(125)
 	v.LoadablePage.SetChild(v.Box)
 
 	v.ctx = gtkutil.WithVisibility(ctx, v)
@@ -342,25 +343,34 @@ func (v *View) Load() {
 				}
 			}
 
-			// Render the latest 15 messages.
-			i := len(widgets) - 1
-			for i >= 0 && i >= (len(widgets)-15) {
+			const prerender = 10
+			const batch = 5
+			const delay = 15 // 5 messages per 20ms
+
+			n := 0
+			m := len(widgets) - 1
+
+			for n < len(widgets) && n < prerender {
+				i := m - n
+
 				update(i)
-				i--
+
+				n++
 			}
 
-			if i < 0 {
-				return
-			}
+			// Render the top few messages at a later time for smoother
+			// transitions.
+			for n < (len(widgets) + batch) {
+				i := m - n + batch
 
-			// Render the last messages at a later time to allow animations to
-			// play back.
-			glib.TimeoutAdd(120, func() {
-				for i >= 0 {
-					update(i)
-					i--
-				}
-			})
+				glib.TimeoutAdd(uint(n-prerender+1)*delay, func() {
+					for j := i; j >= 0 && j >= (i-batch); j-- {
+						update(j)
+					}
+				})
+
+				n += batch
+			}
 		}
 	})
 }
