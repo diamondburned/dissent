@@ -44,6 +44,7 @@ var guildCSS = cssutil.Applier("guild-guild", `
 	.guild-guild > button .adaptive-avatar > image,
 	.guild-guild > button .adaptive-avatar > label {
 		outline: 0px solid transparent;
+		outline-offset: 0;
 	}
 	.guild-guild > button:hover .adaptive-avatar > image,
 	.guild-guild > button:hover .adaptive-avatar > label {
