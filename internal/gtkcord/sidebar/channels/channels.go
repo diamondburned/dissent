@@ -53,7 +53,6 @@ type View struct {
 var viewCSS = cssutil.Applier("channels-view", `
 	.channels-header {
 		padding: 0 {$header_padding};
-		box-shadow: none;
 		border-radius: 0;
 	}
 	.channels-view-scroll {
@@ -68,9 +67,8 @@ var viewCSS = cssutil.Applier("channels-view", `
 		margin-top: 0;
 	}
 	.channels-has-banner .channels-header {
-		transition: none;
+		transition: linear 100ms all;
 		box-shadow: 0 0 6px 0px @theme_bg_color;
-		border: none;
 	}
 	.channels-has-banner:not(.channels-scrolled) .channels-header {
 		/* go run ./cmd/ease-in-out-gradient/ -max 0.25 -min 0 -steps 5 */
@@ -82,25 +80,22 @@ var viewCSS = cssutil.Applier("channels-view", `
 			alpha(black, 0.00) 100%
 		);
 		box-shadow: none;
+		border: none;
 	}
 	.channels-has-banner .channels-banner-shadow {
-		transition: none;
 		background: alpha(black, 0.75);
 	}
-	.channels-has-banner .channels-header * {
+	.channels-has-banner:not(.channels-scrolled) .channels-header * {
 		color: white;
 		text-shadow: 0px 0px 5px alpha(black, 0.75);
 	}
-	.channels-has-banner .channels-header *:backdrop {
+	.channels-has-banner:not(.channels-scrolled) .channels-header *:backdrop {
 		color: alpha(white, 0.75);
 		text-shadow: 0px 0px 2px alpha(black, 0.35);
 	}
 	.channels-name {
 		font-weight: 600;
 		font-size: 1.1em;
-	}
-	.channels-viewtree {
-		color: alpha(@theme_fg_color, 0.9);
 	}
 `)
 
