@@ -19,6 +19,12 @@ import (
 	"github.com/diamondburned/ningen/v3"
 )
 
+// SetPreferDarkTheme sets whether or not GTK should use a dark theme.
+func SetPreferDarkTheme(prefer bool) {
+	settings := gtk.SettingsGetDefault()
+	settings.SetObjectProperty("gtk-application-prefer-dark-theme", prefer)
+}
+
 // Window is the main gtkcord window.
 type Window struct {
 	*app.Window
@@ -133,6 +139,16 @@ func (w *loginWindow) Hook(state *gtkcord.State) {
 				w.Reconnecting()
 				reconnecting = 0
 			})
+
+		case *gateway.ReadyEvent:
+			if ev.UserSettings != nil {
+				switch ev.UserSettings.Theme {
+				case "dark":
+					SetPreferDarkTheme(true)
+				case "light":
+					SetPreferDarkTheme(false)
+				}
+			}
 
 		case *gateway.MessageCreateEvent:
 			mentions := state.MessageMentions(&ev.Message)
