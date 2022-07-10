@@ -218,7 +218,7 @@ func NewCozyMessage(ctx context.Context, v *View) Message {
 
 	m.TopLabel = gtk.NewLabel("")
 	m.TopLabel.AddCSSClass("message-cozy-header")
-	m.TopLabel.SetHAlign(gtk.AlignStart)
+	m.TopLabel.SetXAlign(0)
 	m.TopLabel.SetEllipsize(pango.EllipsizeEnd)
 	m.TopLabel.SetSingleLineMode(true)
 
