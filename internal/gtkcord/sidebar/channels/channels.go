@@ -99,17 +99,6 @@ var viewCSS = cssutil.Applier("channels-view", `
 	}
 `)
 
-var channelsViewEvents = []gateway.Event{
-	// (*gateway.GuildUpdateEvent)(nil),
-	// (*gateway.ChannelCreateEvent)(nil),
-	// (*gateway.ChannelUpdateEvent)(nil),
-	// (*gateway.ChannelDeleteEvent)(nil),
-	// (*gateway.ThreadCreateEvent)(nil),
-	// (*gateway.ThreadUpdateEvent)(nil),
-	// (*gateway.ThreadDeleteEvent)(nil),
-	// (*gateway.ThreadListSyncEvent)(nil),
-}
-
 // NewView creates a new View.
 func NewView(ctx context.Context, ctrl Controller, guildID discord.GuildID) *View {
 	v := View{
@@ -294,7 +283,18 @@ func NewView(ctx context.Context, ctrl Controller, guildID discord.GuildID) *Vie
 				v.tree.UpdateChannel(ev.ChannelID)
 			}
 		}
-	}, channelsViewEvents...)
+	},
+		(*read.UpdateEvent)(nil),
+		(*gateway.GuildUpdateEvent)(nil),
+		(*gateway.ThreadListSyncEvent)(nil),
+		(*gateway.ChannelCreateEvent)(nil),
+		(*gateway.ChannelUpdateEvent)(nil),
+		(*gateway.ChannelDeleteEvent)(nil),
+		(*gateway.ThreadCreateEvent)(nil),
+		(*gateway.ThreadUpdateEvent)(nil),
+		(*gateway.ThreadDeleteEvent)(nil),
+		(*gateway.VoiceStateUpdateEvent)(nil),
+	)
 
 	viewCSS(v)
 	return &v
