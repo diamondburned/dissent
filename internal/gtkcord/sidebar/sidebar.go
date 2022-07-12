@@ -114,6 +114,7 @@ func NewSidebar(ctx context.Context, ctrl Controller) *Sidebar {
 		gtkutil.MenuSeparator(""),
 		gtkutil.MenuItem("_Preferences", "app.preferences"),
 		gtkutil.MenuItem("_About", "app.about"),
+		gtkutil.MenuItem("_Logs", "app.logs"),
 		gtkutil.MenuItem("_Quit", "app.quit"),
 	})
 
