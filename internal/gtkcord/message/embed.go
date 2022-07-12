@@ -96,6 +96,12 @@ func newSticker(ctx context.Context, sticker *discord.StickerItem) gtk.Widgetter
 	}
 }
 
+var _ = cssutil.WriteCSS(`
+	.message-richframe:not(:first-child) {
+		margin-top: 4px;
+	}
+`)
+
 func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widgetter {
 	if attachment.ContentType != "" {
 		typ := strings.SplitN(attachment.ContentType, "/", 2)[0]
@@ -121,6 +127,7 @@ func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widg
 			)
 
 			image := embed.New(ctx, gtkcord.EmbedMaxWidth, gtkcord.EmbedImgHeight, opts)
+			image.AddCSSClass("message-richframe")
 			image.SetName(name)
 
 			if attachment.Width > 0 && attachment.Height > 0 {
@@ -150,7 +157,6 @@ var normalEmbedCSS = cssutil.Applier("message-normalembed", `
 	.message-normalembed {
 		border-left: 3px solid;
 		padding: 5px 10px;
-		margin-top: 4px;
 		background-color: mix(@theme_bg_color, @theme_fg_color, 0.10);
 	}
 	.message-normalembed-body > *:not(:last-child) {
@@ -449,6 +455,7 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 		bodyBox.Append(image)
 	}
 
+	embedBox.AddCSSClass("message-richframe")
 	return embedBox
 }
 

@@ -66,8 +66,15 @@ var viewCSS = cssutil.Applier("channels-view", `
 		 */
 		margin-top: 0;
 	}
+	.channels-has-banner  windowhandle,
 	.channels-has-banner .channels-header {
-		transition: linear 100ms all;
+		transition: linear 65ms all;
+	}
+	.channels-has-banner.channels-scrolled windowhandle {
+		/* Workaround for Adwaita having weird styling. */
+		background-color: @theme_bg_color;
+	}
+	.channels-has-banner .channels-header {
 		box-shadow: 0 0 6px 0px @theme_bg_color;
 	}
 	.channels-has-banner:not(.channels-scrolled) .channels-header {
