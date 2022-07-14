@@ -188,7 +188,7 @@ func newEmbed(ctx context.Context, msg *discord.Message, embed *discord.Embed) g
 
 func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord.Embed) gtk.Widgetter {
 	bodyBox := gtk.NewBox(gtk.OrientationVertical, 0)
-	bodyBox.SetHAlign(gtk.AlignFill)
+	bodyBox.SetHAlign(gtk.AlignStart)
 	bodyBox.AddCSSClass("message-normalembed-body")
 
 	// Track whether or not we have an embed body. An embed body should have any
@@ -351,7 +351,6 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 
 		embedBox = gtk.NewBox(gtk.OrientationHorizontal, 0)
 		embedBox.SetHExpand(true)
-		embedBox.SetHAlign(gtk.AlignStart)
 		embedBox.Append(bodyBox)
 		normalEmbedCSS(embedBox)
 
