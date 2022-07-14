@@ -2,7 +2,6 @@ package window
 
 import (
 	"context"
-	"log"
 
 	"github.com/diamondburned/adaptive"
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -198,16 +197,12 @@ func (p *ChatPage) switchTo(w gtk.Widgetter) {
 type sidebarChatPage ChatPage
 
 func (p *sidebarChatPage) OpenChannel(chID discord.ChannelID) {
-	log.Println("load channel", chID)
-
-	view := message.NewView(p.ctx, chID)
-	view.Load()
-
 	p.RightLabel.SetText(gtkcord.ChannelNameFromID(p.ctx, chID))
 
 	win := app.WindowFromContext(p.ctx)
 	win.SetTitle(gtkcord.ChannelNameFromID(p.ctx, chID))
 
+	view := message.NewView(p.ctx, chID)
 	(*ChatPage)(p).switchTo(view)
 }
 

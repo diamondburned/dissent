@@ -172,10 +172,10 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 				key := messageKeyNonce(ev.Nonce)
 
 				if msg, ok := v.msgs[key]; ok {
-					key = messageKeyID(ev.ID)
-
-					// Known sent message. Update this instead.
 					delete(v.msgs, key)
+
+					key = messageKeyID(ev.ID)
+					// Known sent message. Update this instead.
 					v.msgs[key] = msg
 
 					msg.ListBoxRow.SetName(string(key))
@@ -284,6 +284,11 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 		return func() { w.HandlerDisconnect(h) }
 	})
 
+	v.ctx.OnRenew(func(ctx context.Context) func() {
+		v.load()
+		return v.unload
+	})
+
 	viewCSS(v)
 	return v
 }
@@ -305,9 +310,10 @@ func (v *View) ChannelName() string {
 	return v.chName
 }
 
-func (v *View) Load() {
+func (v *View) load() {
 	v.ctx.Renew()
 	v.LoadablePage.SetLoading()
+	v.unload()
 
 	state := gtkcord.FromContext(v.ctx.Take())
 
@@ -375,6 +381,20 @@ func (v *View) Load() {
 	})
 }
 
+func (v *View) unload() {
+	for k, msg := range v.msgs {
+		v.List.Remove(msg)
+		delete(v.msgs, k)
+
+		msg.Unparent()
+		msg.Unmap()
+
+		body := gtk.BaseWidget(msg.message)
+		body.Unparent()
+		body.Unmap()
+	}
+}
+
 // upsertMessage inserts or updates a new message row.
 func (v *View) upsertMessage(id discord.MessageID, info messageInfo) Message {
 	return v.upsertMessageKeyed(messageKeyID(id), info, v.shouldBeCollapsed(info))
@@ -416,9 +436,6 @@ func (v *View) deleteMessage(id discord.MessageID) {
 	msg, ok := v.msgs[key]
 	if ok {
 		msg.message.Redact()
-
-		// delete(v.msgs, key)
-		// v.List.Remove(msg)
 	}
 }
 
