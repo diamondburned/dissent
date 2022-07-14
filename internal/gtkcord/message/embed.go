@@ -129,6 +129,14 @@ func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widg
 			image := embed.New(ctx, gtkcord.EmbedMaxWidth, gtkcord.EmbedImgHeight, opts)
 			image.AddCSSClass("message-richframe")
 			image.SetName(name)
+			image.SetOpenURL(func() {
+				switch opts.Type {
+				case embed.EmbedTypeVideo:
+					image.ActivateDefault()
+				default:
+					app.OpenURI(ctx, attachment.URL)
+				}
+			})
 
 			if attachment.Width > 0 && attachment.Height > 0 {
 				image.SetSize(int(attachment.Width), int(attachment.Height))
