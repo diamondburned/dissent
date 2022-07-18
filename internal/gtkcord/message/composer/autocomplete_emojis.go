@@ -169,7 +169,7 @@ func (d EmojiData) Row(ctx context.Context) *gtk.ListBoxRow {
 
 		markup += "\n" + fmt.Sprintf(
 			`<span size="smaller" fgalpha="75%%" rise="-1200">%s</span>`,
-			d.Guild.Name,
+			html.EscapeString(d.Guild.Name),
 		)
 	}
 

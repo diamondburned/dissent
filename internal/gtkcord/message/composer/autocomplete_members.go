@@ -3,6 +3,7 @@ package composer
 import (
 	"context"
 	"fmt"
+	"html"
 	"time"
 
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -122,7 +123,8 @@ func (d MemberData) Row(ctx context.Context) *gtk.ListBoxRow {
 		l.SetLines(2)
 		l.SetMarkup(fmt.Sprintf(
 			`%s`+"\n"+`<span size="smaller" fgalpha="75%%" rise="-1200">%s</span>`,
-			d.Nick, d.User.Tag(),
+			html.EscapeString(d.Nick),
+			html.EscapeString(d.User.Tag()),
 		))
 	} else {
 		l.SetLines(1)
