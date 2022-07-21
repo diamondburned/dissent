@@ -16,7 +16,6 @@ import (
 
 type uploadingLabel struct {
 	*gtk.Label
-	ctx context.Context
 	err []error
 	cur int
 	max int

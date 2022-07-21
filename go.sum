@@ -37,8 +37,8 @@ github.com/diamondburned/adaptive v0.0.2-0.20220328111603-4f867d7948b2/go.mod h1
 github.com/diamondburned/arikawa/v3 v3.0.0-rc.6/go.mod h1:5jBSNnp82Z/EhsKa6Wk9FsOqSxfVkNZDTDBPOj47LpY=
 github.com/diamondburned/arikawa/v3 v3.0.0-rc.6.0.20220623071127-384a3dd4336b h1:DnbwKh25eeVRWkylg8/KQ4xE/etehlX06sjN5VcK2ic=
 github.com/diamondburned/arikawa/v3 v3.0.0-rc.6.0.20220623071127-384a3dd4336b/go.mod h1:5jBSNnp82Z/EhsKa6Wk9FsOqSxfVkNZDTDBPOj47LpY=
-github.com/diamondburned/chatkit v0.0.0-20220712054059-3028e63ba7c9 h1:jCfghI+kwUoOZfgytke2l31hqHwOe+6eaxVOGjj11Fo=
-github.com/diamondburned/chatkit v0.0.0-20220712054059-3028e63ba7c9/go.mod h1:mmNGmbpjw9hem+j29GKZ5RImGuWd4XKeQ7a9LH0f8z0=
+github.com/diamondburned/chatkit v0.0.0-20220721021352-81655ba7ac6f h1:oC8UCE7mC/JXpsJSDhPI5foyejmodsodANuQXsb8xJA=
+github.com/diamondburned/chatkit v0.0.0-20220721021352-81655ba7ac6f/go.mod h1:mmNGmbpjw9hem+j29GKZ5RImGuWd4XKeQ7a9LH0f8z0=
 github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20220417101956-dcc3707dc307 h1:7SvMQLBSty7Y+0gMBYi20JE4+rM+VbLWhZGMVKK3VQg=
 github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20220417101956-dcc3707dc307/go.mod h1:ltZ0ffX+lhfOw+HlN3pROJ1fVJwo2hbFbLsRjlUtrlg=
 github.com/diamondburned/gotk4/pkg v0.0.0-20220225135826-2bb7260a63bb/go.mod h1:dJ2gfR0gvBsGg4IteP8aMBq/U5Q9boDw0DP7kAjXTwM=
@@ -46,8 +46,8 @@ github.com/diamondburned/gotk4/pkg v0.0.0-20220417091308-856167c02355/go.mod h1:
 github.com/diamondburned/gotk4/pkg v0.0.0-20220710062157-eb4a158b054c h1:8ocvILdUCRc2RcuIFrIczA5kylcuWaEl/Phh6lX6JpU=
 github.com/diamondburned/gotk4/pkg v0.0.0-20220710062157-eb4a158b054c/go.mod h1:rLH6FHos690jFgAM/GYEpMykuE/9NmN6zOvFlr8JTvE=
 github.com/diamondburned/gotkit v0.0.0-20220701031318-510b7c374877/go.mod h1:vPfJRyjYv+hBfsnWf9Ouacp1Urltx8/qy5b0TWyeZNo=
-github.com/diamondburned/gotkit v0.0.0-20220712024258-12fa847ac40e h1:PSXQgvv4QHPy+nJXqidJ2Jp4xvBfsOs2YH84rmcc6Uc=
-github.com/diamondburned/gotkit v0.0.0-20220712024258-12fa847ac40e/go.mod h1:vPfJRyjYv+hBfsnWf9Ouacp1Urltx8/qy5b0TWyeZNo=
+github.com/diamondburned/gotkit v0.0.0-20220717180827-e197600415a5 h1:ufNbWm90H3MWBYtYoupTTVF5Dw5wspcHjRis2obK7oM=
+github.com/diamondburned/gotkit v0.0.0-20220717180827-e197600415a5/go.mod h1:vPfJRyjYv+hBfsnWf9Ouacp1Urltx8/qy5b0TWyeZNo=
 github.com/diamondburned/ningen/v3 v3.0.0-20220619214735-56004aa62571 h1:puq+HgCOAlF5EOQsTLNNGS1wB6Dv7/KwP5uT1TuUSBA=
 github.com/diamondburned/ningen/v3 v3.0.0-20220619214735-56004aa62571/go.mod h1:WLSUx3megnWk5I6rYLE+yPHN3iPJf4Nag2B5Y7l+Vmc=
 github.com/dlclark/regexp2 v1.4.0 h1:F1rxgk7p4uKjwIQxBs9oAXe5CqrXlCduYEJvrF4u93E=
@@ -93,6 +93,8 @@ github.com/gorilla/websocket v1.4.2 h1:+/TMaTYc4QFitKJxsQ7Yye35DkWvkdLcvGKqM+x0U
 github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/hashicorp/golang-lru v0.5.0/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
 github.com/hashicorp/golang-lru v0.5.1/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
+github.com/ianlancetaylor/cgosymbolizer v0.0.0-20220405231054-a1ae3e4bba26 h1:UT3hQ6+5hwqUT83cKhKlY5I0W/kqsl6lpn3iFb3Gtqs=
+github.com/ianlancetaylor/cgosymbolizer v0.0.0-20220405231054-a1ae3e4bba26/go.mod h1:DvXTE/K/RtHehxU8/GtDs4vFtfw64jJ3PaCnFri8CRg=
 github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
 github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024/go.mod h1:6v2b51hI/fHJwM22ozAgKL4VKDeJcHhJFhtBdhmNjmU=
 github.com/jstemmer/go-junit-report v0.9.1/go.mod h1:Brl9GWCQeLvo8nXZwPNNblvFj/XSXhF0NWZEnDohbsk=

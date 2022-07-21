@@ -192,6 +192,7 @@ type cozyMessage struct {
 	TopLabel *gtk.Label
 
 	message
+	tooltip string // markup
 }
 
 var _ MessageWithUser = (*cozyMessage)(nil)
@@ -250,6 +251,7 @@ func (m *cozyMessage) Update(message *gateway.MessageCreateEvent) {
 		html.EscapeString(locale.Time(message.Timestamp.Time(), true)),
 	)
 
+	// TODO: query tooltip
 	m.Avatar.SetTooltipMarkup(tooltip)
 	m.TopLabel.SetTooltipMarkup(tooltip)
 }

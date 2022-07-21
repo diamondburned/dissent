@@ -33,7 +33,6 @@ type uploadFile struct {
 
 var uploadTrayCSS = cssutil.Applier("composer-upload-tray", `
 	.composer-upload-tray {
-		margin-top: -12px;
 	}
 	.composer-upload-item > image {
 		margin-bottom: 1px;

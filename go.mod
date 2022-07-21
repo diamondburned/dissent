@@ -5,9 +5,9 @@ go 1.17
 require (
 	github.com/diamondburned/adaptive v0.0.2-0.20220328111603-4f867d7948b2
 	github.com/diamondburned/arikawa/v3 v3.0.0-rc.6.0.20220623071127-384a3dd4336b
-	github.com/diamondburned/chatkit v0.0.0-20220712054059-3028e63ba7c9
+	github.com/diamondburned/chatkit v0.0.0-20220721021352-81655ba7ac6f
 	github.com/diamondburned/gotk4/pkg v0.0.0-20220710062157-eb4a158b054c
-	github.com/diamondburned/gotkit v0.0.0-20220712024258-12fa847ac40e
+	github.com/diamondburned/gotkit v0.0.0-20220717180827-e197600415a5
 	github.com/diamondburned/ningen/v3 v3.0.0-20220619214735-56004aa62571
 )
 
@@ -15,6 +15,7 @@ require (
 	github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20220417101956-dcc3707dc307
 	github.com/dustin/go-humanize v1.0.0
 	github.com/enescakir/emoji v1.0.0
+	github.com/ianlancetaylor/cgosymbolizer v0.0.0-20220405231054-a1ae3e4bba26
 	github.com/pkg/errors v0.9.1
 	github.com/sahilm/fuzzy v0.1.0
 	github.com/yuin/goldmark v1.4.11

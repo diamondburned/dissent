@@ -81,7 +81,7 @@ func newSticker(ctx context.Context, sticker *discord.StickerItem) gtk.Widgetter
 
 		image := embed.New(ctx, gtkcord.StickerSize, gtkcord.StickerSize, embed.Opts{})
 		image.SetName(sticker.Name)
-		image.SetSize(gtkcord.StickerSize, gtkcord.StickerSize)
+		image.SetSizeRequest(gtkcord.StickerSize, gtkcord.StickerSize)
 		image.SetFromURL(url)
 		image.SetOpenURL(func() { app.OpenURI(ctx, url) })
 		stickerCSS(image)
@@ -139,7 +139,7 @@ func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widg
 			})
 
 			if attachment.Width > 0 && attachment.Height > 0 {
-				image.SetSize(int(attachment.Width), int(attachment.Height))
+				image.SetSizeRequest(int(attachment.Width), int(attachment.Height))
 				if typ == "image" {
 					image.SetFromURL(resizeURL(
 						image,
@@ -255,6 +255,7 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 
 		v := mdrender.NewMarkdownViewer(ctx, edesc, mnode)
 		v.AddCSSClass("message-embed-description")
+		v.SetHExpand(false)
 
 		bodyBox.Append(v)
 		hasBody = true
@@ -385,7 +386,7 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 
 		image := embed.New(ctx, maxW, maxH, opts)
 		image.SetVAlign(gtk.AlignStart)
-		image.SetSize(int(msgEmbed.Thumbnail.Width), int(msgEmbed.Thumbnail.Height))
+		image.SetSizeRequest(int(msgEmbed.Thumbnail.Width), int(msgEmbed.Thumbnail.Height))
 		image.SetFromURL(resizeURL(
 			image,
 			msgEmbed.Thumbnail.Proxy,
@@ -444,7 +445,7 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 		}
 
 		image := embed.New(ctx, gtkcord.EmbedMaxWidth, gtkcord.EmbedImgHeight, opts)
-		image.SetSize(int(img.Width), int(img.Height))
+		image.SetSizeRequest(int(img.Width), int(img.Height))
 		image.SetOpenURL(func() { app.OpenURI(ctx, msgEmbed.URL) })
 
 		if msgEmbed.Image != nil {
