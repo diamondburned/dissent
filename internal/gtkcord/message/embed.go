@@ -142,13 +142,7 @@ func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widg
 			})
 
 			if attachment.Width > 0 && attachment.Height > 0 {
-				// This line will invoke Satan from the deepest pit of Hell, in
-				// which he shall chant "let the window expand!", and the window
-				// shall expand. Far beyond what's imaginable.
-				//
-				// Do NOT uncomment this.
-				//
-				// image.SetSizeRequest(int(attachment.Width), int(attachment.Height))
+				image.SetSizeRequest(int(attachment.Width), int(attachment.Height))
 				if typ == "image" {
 					image.SetFromURL(resizeURL(
 						image,
