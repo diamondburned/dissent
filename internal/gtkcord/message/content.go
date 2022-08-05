@@ -252,9 +252,8 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 
 	// We don't render the message content if all it is is the URL to the
 	// embedded image, because that's what the official client does.
-	case len(m.Embeds) != 1 ||
-		m.Embeds[0].Type != discord.ImageEmbed ||
-		m.Embeds[0].URL != m.Content:
+	case m.Content != "" &&
+		(len(m.Embeds) != 1 || m.Embeds[0].Type != discord.ImageEmbed || m.Embeds[0].URL != m.Content):
 
 		src := []byte(m.Content)
 		node := discordmd.ParseWithMessage(src, *state.Cabinet, m, true)

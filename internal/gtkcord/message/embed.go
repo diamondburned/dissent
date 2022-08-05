@@ -127,7 +127,10 @@ func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widg
 			)
 
 			image := embed.New(ctx, gtkcord.EmbedMaxWidth, gtkcord.EmbedImgHeight, opts)
+			image.SetLayoutManager(gtk.NewBinLayout())
 			image.AddCSSClass("message-richframe")
+			image.SetHAlign(gtk.AlignStart)
+			image.SetHExpand(false)
 			image.SetName(name)
 			image.SetOpenURL(func() {
 				switch opts.Type {
@@ -139,7 +142,13 @@ func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widg
 			})
 
 			if attachment.Width > 0 && attachment.Height > 0 {
-				image.SetSizeRequest(int(attachment.Width), int(attachment.Height))
+				// This line will invoke Satan from the deepest pit of Hell, in
+				// which he shall chant "let the window expand!", and the window
+				// shall expand. Far beyond what's imaginable.
+				//
+				// Do NOT uncomment this.
+				//
+				// image.SetSizeRequest(int(attachment.Width), int(attachment.Height))
 				if typ == "image" {
 					image.SetFromURL(resizeURL(
 						image,
@@ -189,6 +198,7 @@ func newEmbed(ctx context.Context, msg *discord.Message, embed *discord.Embed) g
 func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord.Embed) gtk.Widgetter {
 	bodyBox := gtk.NewBox(gtk.OrientationVertical, 0)
 	bodyBox.SetHAlign(gtk.AlignStart)
+	bodyBox.SetHExpand(false)
 	bodyBox.AddCSSClass("message-normalembed-body")
 
 	// Track whether or not we have an embed body. An embed body should have any
@@ -347,11 +357,12 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 
 	embedBox := bodyBox
 	if hasBody {
-		bodyBox.SetHAlign(gtk.AlignFill)
-		bodyBox.SetHExpand(true)
+		// bodyBox.SetHAlign(gtk.AlignFill)
+		// bodyBox.SetHExpand(false)
 
 		embedBox = gtk.NewBox(gtk.OrientationHorizontal, 0)
-		embedBox.SetHExpand(true)
+		embedBox.SetHExpand(false)
+		embedBox.SetHAlign(gtk.AlignStart)
 		embedBox.Append(bodyBox)
 		normalEmbedCSS(embedBox)
 

@@ -14,7 +14,6 @@ import (
 
 type GuildController interface {
 	GuildOpener
-	MotionGrouped
 }
 
 // Guild is a widget showing a single guild icon.
@@ -22,12 +21,12 @@ type Guild struct {
 	*gtk.Overlay
 	Button *gtk.Button
 	Icon   *onlineimage.Avatar
-	Name   *NamePopover
 	Pill   *Pill
 	parent *Folder
 
 	ctx    context.Context
 	id     discord.GuildID
+	name   string
 	unread ningen.UnreadIndication
 }
 
@@ -74,7 +73,6 @@ func NewGuild(ctx context.Context, ctrl GuildController, id discord.GuildID) *Gu
 	}
 
 	g.Icon = onlineimage.NewAvatar(ctx, imgutil.HTTPProvider, gtkcord.GuildIconSize)
-	iconAnimation := g.Icon.EnableAnimation()
 
 	g.Button = gtk.NewButton()
 	g.Button.SetHasFrame(false)
@@ -87,22 +85,10 @@ func NewGuild(ctx context.Context, ctrl GuildController, id discord.GuildID) *Gu
 		ctrl.OpenGuild(id)
 	})
 
+	iconAnimation := g.Icon.EnableAnimation()
+	iconAnimation.ConnectMotion(g.Button)
+
 	g.Pill = NewPill()
-
-	g.Name = NewNamePopover()
-	g.Name.SetParent(g.Button)
-
-	ctrl.MotionGroup().ConnectEventControllerMotion(
-		g.Button,
-		func() {
-			g.Name.Popup()
-			iconAnimation.Start()
-		},
-		func() {
-			g.Name.Popdown()
-			iconAnimation.Stop()
-		},
-	)
 
 	g.Overlay = gtk.NewOverlay()
 	g.Overlay.SetChild(g.Button)
@@ -115,6 +101,9 @@ func NewGuild(ctx context.Context, ctrl GuildController, id discord.GuildID) *Gu
 
 // ID returns the guild ID.
 func (g *Guild) ID() discord.GuildID { return g.id }
+
+// Name returns the guild's name.
+func (g *Guild) Name() string { return g.name }
 
 // Invalidate invalidates and updates the state of the guild.
 func (g *Guild) Invalidate() {
@@ -132,7 +121,9 @@ func (g *Guild) Invalidate() {
 // SetUnavailable sets the guild as unavailable. It stays unavailable until
 // either Invalidate sees it or Update is called on it.
 func (g *Guild) SetUnavailable() {
-	g.Name.Label.SetMarkup(`<span color="#FF0033">Guild unavailable</span>`)
+	g.name = "(guild unavailable)"
+
+	g.Button.SetTooltipMarkup(`<span color="#FF0033">Guild unavailable</span>`)
 	g.SetSensitive(false)
 
 	if g.Icon.Initials() == "" {
@@ -142,8 +133,10 @@ func (g *Guild) SetUnavailable() {
 
 // Update updates the guild with the given Discord object.
 func (g *Guild) Update(guild *discord.Guild) {
+	g.name = guild.Name
+
 	g.SetSensitive(true)
-	g.Name.SetName(guild.Name)
+	g.Button.SetTooltipText(guild.Name)
 	g.Icon.SetInitials(guild.Name)
 	g.Icon.SetFromURL(gtkcord.InjectAvatarSize(guild.IconURL()))
 

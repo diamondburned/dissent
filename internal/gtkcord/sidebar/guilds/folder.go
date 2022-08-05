@@ -23,8 +23,6 @@ type Folder struct {
 	ButtonPill    *Pill
 	Button        *FolderButton
 
-	Name *NamePopover
-
 	Revealer *gtk.Revealer
 	GuildBox *gtk.Box
 	Guilds   []*Guild
@@ -77,15 +75,6 @@ func NewFolder(ctx context.Context, ctrl GuildController) *Folder {
 	f.ButtonOverlay = gtk.NewOverlay()
 	f.ButtonOverlay.SetChild(f.Button)
 	f.ButtonOverlay.AddOverlay(f.ButtonPill)
-
-	f.Name = NewNamePopover()
-	f.Name.SetParent(f.Button)
-
-	ctrl.MotionGroup().ConnectEventControllerMotion(
-		f.Button,
-		f.Name.Popup,
-		f.Name.Popdown,
-	)
 
 	f.GuildBox = gtk.NewBox(gtk.OrientationVertical, 0)
 
@@ -168,7 +157,7 @@ func (f *Folder) Set(folder *gateway.GuildFolder) {
 	folderName := folder.Name
 	if folderName == "" {
 		for i, g := range f.Guilds {
-			folderName += g.Name.Label.Text()
+			folderName += g.Name()
 			if (i + 1) < len(f.Guilds) {
 				folderName += ", "
 			}
@@ -179,7 +168,7 @@ func (f *Folder) Set(folder *gateway.GuildFolder) {
 		}
 	}
 
-	f.Name.SetName(folderName)
+	f.Button.SetTooltipText(folderName)
 }
 
 // Remove removes the given guild by its ID.
@@ -206,10 +195,6 @@ func (f *Folder) InvalidateUnread() {
 }
 
 type guildControllerFolder Folder
-
-func (f *guildControllerFolder) MotionGroup() *MotionGroup {
-	return f.ctrl.MotionGroup()
-}
 
 func (f *guildControllerFolder) OpenGuild(id discord.GuildID) {
 	(*Folder)(f).setGuildOpen(true)

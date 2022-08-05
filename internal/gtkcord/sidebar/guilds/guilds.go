@@ -44,9 +44,8 @@ type View struct {
 
 	current currentGuild
 
-	ctx    context.Context
-	ctrl   Controller
-	motion MotionGroup
+	ctx  context.Context
+	ctrl Controller
 }
 
 type currentGuild struct {
@@ -380,10 +379,6 @@ func (v *View) saveSelection() (restore func()) {
 }
 
 type guildController View
-
-func (v *guildController) MotionGroup() *MotionGroup {
-	return &v.motion
-}
 
 func (v *guildController) OpenGuild(id discord.GuildID) {
 	(*View)(v).SelectGuild(id)

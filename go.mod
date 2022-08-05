@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/diamondburned/adaptive v0.0.2-0.20220328111603-4f867d7948b2
 	github.com/diamondburned/arikawa/v3 v3.0.0-rc.6.0.20220623071127-384a3dd4336b
-	github.com/diamondburned/chatkit v0.0.0-20220725213556-827aa3b0d917
+	github.com/diamondburned/chatkit v0.0.0-20220802023058-e7ea396f3e46
 	github.com/diamondburned/gotk4/pkg v0.0.0-20220725071938-a40a809cc7a4
 	github.com/diamondburned/gotkit v0.0.0-20220725080531-2590d1e14ff8
 	github.com/diamondburned/ningen/v3 v3.0.0-20220619214735-56004aa62571

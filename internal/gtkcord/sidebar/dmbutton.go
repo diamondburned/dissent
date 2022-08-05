@@ -15,7 +15,6 @@ import (
 
 type DMButton struct {
 	*gtk.Overlay
-	Name   *guilds.NamePopover
 	Pill   *guilds.Pill
 	Button *gtk.Button
 
@@ -38,6 +37,7 @@ func NewDMButton(ctx context.Context, open func()) *DMButton {
 
 	b.Button = gtk.NewButton()
 	b.Button.AddCSSClass("sidebar-dm-button")
+	b.Button.SetTooltipText("Direct Messages")
 	b.Button.SetChild(icon)
 	b.Button.SetHasFrame(false)
 	b.Button.SetHAlign(gtk.AlignCenter)
@@ -49,17 +49,6 @@ func NewDMButton(ctx context.Context, open func()) *DMButton {
 	})
 
 	b.Pill = guilds.NewPill()
-
-	b.Name = guilds.NewNamePopover()
-	b.Name.SetName("Direct Messages")
-	b.Name.SetParent(b.Button)
-
-	// TODO: guilds should share an upper-level MotionGroup.
-	motion := gtk.NewEventControllerMotion()
-	motion.ConnectEnter(func(_, _ float64) { b.Name.Popup() })
-	motion.ConnectLeave(func() { b.Name.Popdown() })
-
-	b.Button.AddController(motion)
 
 	b.Overlay = gtk.NewOverlay()
 	b.Overlay.SetChild(b.Button)
