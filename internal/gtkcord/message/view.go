@@ -728,15 +728,15 @@ func (v *View) onScrollBottomed() {
 
 // MarkRead marks the view's latest messages as read.
 func (v *View) MarkRead() {
-	last, ok := v.lastMessage()
-	if !ok || last.message.Message() == nil {
+	state := gtkcord.FromContext(v.ctx.Take())
+	// Grab the last message from the state cache, since we sometimes don't even
+	// render blocked messages.
+	msgs, _ := state.Cabinet.Messages(v.ChannelID())
+	if len(msgs) == 0 {
 		return
 	}
 
-	msg := last.message.Message()
-
-	state := gtkcord.FromContext(v.ctx.Take())
-	state.ReadState.MarkRead(v.chID, msg.ID)
+	state.ReadState.MarkRead(v.ChannelID(), msgs[0].ID)
 }
 
 // IsActive returns true if View is active and visible. This implies that the
