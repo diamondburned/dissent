@@ -123,6 +123,7 @@ func NewView(ctx context.Context, ctrl Controller, guildID discord.GuildID) *Vie
 	v.Header.Name = gtk.NewLabel("")
 	v.Header.Name.AddCSSClass("channels-name")
 	v.Header.Name.SetHAlign(gtk.AlignStart)
+	v.Header.Name.SetEllipsize(pango.EllipsizeEnd)
 
 	// The header is placed on top of the overlay, kind of like the official
 	// client.

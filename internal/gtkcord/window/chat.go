@@ -6,6 +6,7 @@ import (
 	"github.com/diamondburned/adaptive"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
+	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
@@ -60,6 +61,7 @@ func NewChatPage(ctx context.Context) *ChatPage {
 	p.RightLabel.AddCSSClass("right-header-label")
 	p.RightLabel.SetXAlign(0)
 	p.RightLabel.SetHExpand(true)
+	p.RightLabel.SetEllipsize(pango.EllipsizeEnd)
 
 	rightHeader := gtk.NewBox(gtk.OrientationHorizontal, 0)
 	rightHeader.AddCSSClass("titlebar")
