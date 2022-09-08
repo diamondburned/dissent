@@ -15,6 +15,7 @@ in import "${src.gotk4-nix}/${action}.nix" {
 		useFetched = true;
 		overlays = [
 			(import ./overlay.nix)
+			(import "${src.gotk4-nix}/overlay.nix")
 		];
 	};
 }
