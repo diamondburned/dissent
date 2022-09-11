@@ -387,13 +387,6 @@ func (v *View) unload() {
 	for k, msg := range v.msgs {
 		v.List.Remove(msg)
 		delete(v.msgs, k)
-
-		msg.Unparent()
-		msg.Unmap()
-
-		body := gtk.BaseWidget(msg.message)
-		body.Unparent()
-		body.Unmap()
 	}
 }
 
