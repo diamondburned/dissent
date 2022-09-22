@@ -12,7 +12,6 @@ import (
 	"github.com/diamondburned/gtkcord4/internal/gtkcord/window"
 
 	_ "github.com/diamondburned/gotkit/gtkutil/aggressivegc"
-	_ "github.com/ianlancetaylor/cgosymbolizer"
 )
 
 var _ = cssutil.WriteCSS(`
