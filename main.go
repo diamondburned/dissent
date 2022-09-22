@@ -5,6 +5,7 @@ import (
 
 	"github.com/diamondburned/adaptive"
 	"github.com/diamondburned/gotkit/app"
+	"github.com/diamondburned/gotkit/app/prefs"
 	"github.com/diamondburned/gotkit/components/logui"
 	"github.com/diamondburned/gotkit/components/prefui"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
@@ -81,4 +82,10 @@ func (m *manager) activate(ctx context.Context) {
 
 	m.win = window.NewWindow(ctx)
 	m.win.Show()
+
+	prefs.AsyncLoadSaved(ctx, func(err error) {
+		if err != nil {
+			app.Error(ctx, err)
+		}
+	})
 }
