@@ -8,6 +8,7 @@ import (
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
+	"github.com/diamondburned/chatkit/components/author"
 	"github.com/diamondburned/chatkit/md/hl"
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
@@ -19,6 +20,7 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/imgutil"
 	"github.com/diamondburned/gotkit/gtkutil/textutil"
+	"github.com/diamondburned/gtkcord4/internal/colorhash"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 )
 
@@ -278,7 +280,12 @@ func (m *cozyMessage) updateAuthor(message *gateway.MessageCreateEvent) {
 
 	state := gtkcord.FromContext(m.ctx())
 
-	markup := "<b>" + state.AuthorMarkup(message) + "</b>"
+	var mods []author.MarkupMod
+	if overrideMemberColors.Value() {
+		mods = append(mods, author.WithColor(hashUserColor(&message.Author)))
+	}
+
+	markup := "<b>" + state.AuthorMarkup(message, mods...) + "</b>"
 	markup += ` <span alpha="75%" size="small">` +
 		locale.TimeAgo(m.ctx(), message.Timestamp.Time()) +
 		"</span>"
@@ -333,4 +340,10 @@ func (m *collapsedMessage) Update(message *gateway.MessageCreateEvent) {
 	m.message.update(m, &message.Message)
 	m.Timestamp.SetLabel(locale.Time(message.Timestamp.Time(), false))
 	m.Timestamp.SetTooltipText(locale.Time(message.Timestamp.Time(), true))
+}
+
+func hashUserColor(user *discord.User) string {
+	input := user.Tag()
+	color := colorhash.DefaultHasher().Hash(input)
+	return colorhash.RGBHex(color)
 }

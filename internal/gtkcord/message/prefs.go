@@ -13,6 +13,12 @@ import (
 	"github.com/pkg/errors"
 )
 
+var overrideMemberColors = prefs.NewBool(false, prefs.PropMeta{
+	Name:        "Override Member Colors",
+	Section:     "Discord",
+	Description: "Use generated colors instead of role colors for members.",
+})
+
 var showBlockedMessages = prefs.NewBool(false, prefs.PropMeta{
 	Name:        "Show Blocked Messages",
 	Section:     "Discord",
