@@ -74,7 +74,7 @@ func NewView(ctx context.Context, ctrl Controller) *View {
 	state := gtkcord.FromContext(ctx)
 	state.BindHandler(cancellable, func(ev gateway.Event) {
 		switch ev := ev.(type) {
-		case *gateway.ReadyEvent:
+		case *gateway.ReadyEvent, *gateway.ResumedEvent:
 			// Recreate the whole list in case we have some new info.
 			v.Invalidate()
 
