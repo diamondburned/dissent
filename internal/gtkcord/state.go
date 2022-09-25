@@ -140,7 +140,7 @@ func (s *State) BindHandler(ctx gtkutil.Cancellable, fn func(gateway.Event), fil
 			}
 
 		filtered:
-			glib.IdleAdd(func() { fn(ev) })
+			glib.IdleAddPriority(glib.PriorityDefault, func() { fn(ev) })
 		})
 	})
 }
