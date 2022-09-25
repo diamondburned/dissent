@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
+	"time"
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
+	"github.com/diamondburned/chatkit/components/author"
 	"github.com/diamondburned/gotk4/pkg/core/gioutil"
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
@@ -15,6 +18,7 @@ import (
 	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/app/prefs"
+	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/mediautil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
@@ -51,6 +55,14 @@ type Controller interface {
 	EditLastMessage() bool
 }
 
+type typer struct {
+	Markup string
+	UserID discord.UserID
+	Time   discord.UnixTimestamp
+}
+
+const typerTimeout = 10 * time.Second
+
 type View struct {
 	*gtk.Box
 	Action struct {
@@ -65,6 +77,9 @@ type View struct {
 	ctx  context.Context
 	ctrl Controller
 	chID discord.ChannelID
+
+	typers        []typer
+	typingHandler glib.SourceHandle
 
 	state struct {
 		id       discord.MessageID
@@ -169,6 +184,20 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 
 	v.SetPlaceholderMarkup("")
 
+	state := gtkcord.FromContext(ctx)
+	state.BindHandler(gtkutil.WithVisibility(ctx, v),
+		func(ev gateway.Event) {
+			switch ev := ev.(type) {
+			case *gateway.TypingStartEvent:
+				v.addTyper(ev)
+			case *gateway.MessageCreateEvent:
+				v.removeTyper(ev.Author.ID)
+			}
+		},
+		(*gateway.TypingStartEvent)(nil),
+		(*gateway.MessageCreateEvent)(nil),
+	)
+
 	viewCSS(v)
 	return v
 }
@@ -177,11 +206,34 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 // empty string is given.
 func (v *View) SetPlaceholderMarkup(markup string) {
 	if markup == "" {
-		v.Placeholder.SetText("Message " + gtkcord.ChannelNameFromID(v.ctx, v.chID))
+		v.ResetPlaceholder()
 		return
 	}
 
 	v.Placeholder.SetMarkup(markup)
+}
+
+func (v *View) ResetPlaceholder() {
+	if len(v.typers) == 0 {
+		v.Placeholder.SetText("Message " + gtkcord.ChannelNameFromID(v.ctx, v.chID))
+		return
+	}
+
+	var typers string
+	switch len(v.typers) {
+	case 1:
+		typers = v.typers[0].Markup + " is typing..."
+	case 2:
+		typers = v.typers[0].Markup + " and " +
+			v.typers[1].Markup + " are typing..."
+	case 3:
+		typers = v.typers[0].Markup + ", " +
+			v.typers[1].Markup + " and " +
+			v.typers[2].Markup + " are typing..."
+	default:
+		typers = "Several people are typing..."
+	}
+	v.Placeholder.SetMarkup(typers)
 }
 
 // actionData is the data that the action button in the composer bar is
@@ -388,6 +440,80 @@ func (v *View) restart() bool {
 	}
 
 	return state.editing || state.replying
+}
+
+func (v *View) addTyper(ev *gateway.TypingStartEvent) {
+	for i, typer := range v.typers {
+		if typer.UserID == ev.UserID {
+			v.typers[i].Time = ev.Timestamp
+			goto update
+		}
+	}
+
+	{
+		state := gtkcord.FromContext(v.ctx)
+		mods := []author.MarkupMod{author.WithMinimal()}
+		var markup string
+
+		if ev.Member != nil {
+			markup = state.MemberMarkup(ev.GuildID, &discord.GuildUser{
+				User:   ev.Member.User,
+				Member: ev.Member,
+			}, mods...)
+		} else {
+			markup = state.UserIDMarkup(ev.ChannelID, ev.UserID, mods...)
+		}
+
+		v.typers = append(v.typers, typer{
+			Markup: markup,
+			UserID: ev.UserID,
+			Time:   ev.Timestamp,
+		})
+	}
+
+update:
+	sort.Slice(v.typers, func(i, j int) bool {
+		return v.typers[i].Time < v.typers[j].Time
+	})
+
+	v.ResetPlaceholder()
+
+	if v.typingHandler == 0 {
+		v.typingHandler = glib.TimeoutSecondsAdd(1, func() bool {
+			v.cleanupTypers()
+
+			if len(v.typers) == 0 {
+				v.typingHandler = 0
+				return false
+			}
+
+			return true
+		})
+	}
+}
+
+func (v *View) removeTyper(uID discord.UserID) {
+	for i, typer := range v.typers {
+		if typer.UserID == uID {
+			v.typers = append(v.typers[:i], v.typers[i+1:]...)
+			v.ResetPlaceholder()
+			return
+		}
+	}
+}
+
+func (v *View) cleanupTypers() {
+	createdTime := discord.UnixTimestamp(time.Now().Add(-typerTimeout).Unix())
+
+	typers := v.typers[:0]
+	for _, typer := range v.typers {
+		if typer.Time > createdTime {
+			typers = append(typers, typer)
+		}
+	}
+
+	v.typers = typers
+	v.ResetPlaceholder()
 }
 
 // inputControllerView implements InputController.

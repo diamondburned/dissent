@@ -162,6 +162,34 @@ func (s *State) UserMarkup(gID discord.GuildID, u *discord.User, mods ...author.
 	return s.MemberMarkup(gID, user, mods...)
 }
 
+// UserIDMarkup gets the User markup from just the channel and user IDs.
+func (s *State) UserIDMarkup(chID discord.ChannelID, uID discord.UserID, mods ...author.MarkupMod) string {
+	chs, err := s.Cabinet.Channel(chID)
+	if err != nil {
+		return uID.Mention()
+	}
+
+	if chs.GuildID.IsValid() {
+		member, err := s.Cabinet.Member(chs.GuildID, uID)
+		if err != nil {
+			return uID.Mention()
+		}
+
+		return s.MemberMarkup(chs.GuildID, &discord.GuildUser{
+			User:   member.User,
+			Member: member,
+		}, mods...)
+	}
+
+	for _, recipient := range chs.DMRecipients {
+		if recipient.ID == uID {
+			return s.UserMarkup(0, &recipient)
+		}
+	}
+
+	return uID.Mention()
+}
+
 // MemberMarkup is like AuthorMarkup but for any member inside a guild.
 func (s *State) MemberMarkup(gID discord.GuildID, u *discord.GuildUser, mods ...author.MarkupMod) string {
 	name := u.Username
