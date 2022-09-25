@@ -20,7 +20,9 @@ import (
 	"github.com/diamondburned/arikawa/v3/utils/httputil/httpdriver"
 	"github.com/diamondburned/chatkit/components/author"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
+	"github.com/diamondburned/gotkit/app/prefs"
 	"github.com/diamondburned/gotkit/gtkutil"
+	"github.com/diamondburned/gtkcord4/internal/colorhash"
 	"github.com/diamondburned/ningen/v3"
 	"github.com/diamondburned/ningen/v3/discordmd"
 )
@@ -190,6 +192,12 @@ func (s *State) UserIDMarkup(chID discord.ChannelID, uID discord.UserID, mods ..
 	return uID.Mention()
 }
 
+var overrideMemberColors = prefs.NewBool(false, prefs.PropMeta{
+	Name:        "Override Member Colors",
+	Section:     "Discord",
+	Description: "Use generated colors instead of role colors for members.",
+})
+
 // MemberMarkup is like AuthorMarkup but for any member inside a guild.
 func (s *State) MemberMarkup(gID discord.GuildID, u *discord.GuildUser, mods ...author.MarkupMod) string {
 	name := u.Username
@@ -215,13 +223,19 @@ func (s *State) MemberMarkup(gID discord.GuildID, u *discord.GuildUser, mods ...
 			)
 		}
 
-		c, ok := state.MemberColor(u.Member, func(id discord.RoleID) *discord.Role {
-			role, _ := s.Cabinet.Role(gID, id)
-			return role
-		})
-		if ok {
-			prefixMods = append(prefixMods, author.WithColor(c.String()))
+		if !overrideMemberColors.Value() {
+			c, ok := state.MemberColor(u.Member, func(id discord.RoleID) *discord.Role {
+				role, _ := s.Cabinet.Role(gID, id)
+				return role
+			})
+			if ok {
+				prefixMods = append(prefixMods, author.WithColor(c.String()))
+			}
 		}
+	}
+
+	if overrideMemberColors.Value() {
+		prefixMods = append(prefixMods, author.WithColor(hashUserColor(&u.User)))
 	}
 
 noMember:
@@ -239,6 +253,12 @@ noMember:
 	}
 
 	return author.Markup(name, append(prefixMods, mods...)...)
+}
+
+func hashUserColor(user *discord.User) string {
+	input := user.Tag()
+	color := colorhash.DefaultHasher().Hash(input)
+	return colorhash.RGBHex(color)
 }
 
 // MessagePreview renders the message into a short content string.
