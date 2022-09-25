@@ -12,12 +12,22 @@ import (
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 )
 
+type readState uint8
+
+const (
+	stateRead readState = iota
+	stateUnread
+	stateMentioned
+)
+
 // Channel is an individual direct messaging channel.
 type Channel struct {
 	*gtk.ListBoxRow
-	box    *gtk.Box
-	avatar *onlineimage.Avatar
-	name   *gtk.Label
+	box           *gtk.Box
+	avatar        *onlineimage.Avatar
+	name          *gtk.Label
+	readIndicator *gtk.Label
+	readState     readState
 
 	ctx context.Context
 	id  discord.ChannelID
@@ -49,9 +59,13 @@ func NewChannel(ctx context.Context, id discord.ChannelID) *Channel {
 	ch.avatar = onlineimage.NewAvatar(ctx, imgutil.HTTPProvider, gtkcord.ChannelIconSize)
 	ch.avatar.AddCSSClass("direct-channel-avatar")
 
+	ch.readIndicator = gtk.NewLabel("")
+	ch.readIndicator.AddCSSClass("direct-channel-readindicator")
+
 	ch.box = gtk.NewBox(gtk.OrientationHorizontal, 0)
 	ch.box.Append(ch.avatar)
 	ch.box.Append(ch.name)
+	ch.box.Append(ch.readIndicator)
 
 	ch.ListBoxRow = gtk.NewListBoxRow()
 	ch.SetChild(ch.box)
@@ -83,6 +97,45 @@ func (ch *Channel) Update(channel *discord.Channel) {
 	} else {
 		ch.avatar.SetFromURL(gtkcord.InjectAvatarSize(channel.IconURL()))
 	}
+
+	ch.updateReadIndicator(channel)
+}
+
+func (ch *Channel) updateReadIndicator(channel *discord.Channel) {
+	state := gtkcord.FromContext(ch.ctx)
+	newReadState := stateRead
+
+	readState := state.ReadState.ReadState(ch.id)
+	if readState == nil || !readState.LastMessageID.IsValid() {
+		goto update
+	}
+
+	if readState.LastMessageID >= channel.LastMessageID {
+		goto update
+	}
+
+	if readState.MentionCount > 0 {
+		newReadState = stateMentioned
+	} else {
+		newReadState = stateUnread
+	}
+
+	return
+
+update:
+	if ch.readState != newReadState {
+		switch newReadState {
+		case stateRead:
+			ch.RemoveCSSClass("direct-channel-mentioned")
+			ch.readIndicator.SetText("")
+		case stateUnread:
+			ch.RemoveCSSClass("direct-channel-mentioned")
+			ch.readIndicator.SetText("●")
+		case stateMentioned:
+			ch.AddCSSClass("direct-channel-mentioned")
+			ch.readIndicator.SetText("! ●")
+		}
+	}
 }
 
 // LastMessageID queries the local state for the channel's last message ID.
@@ -94,6 +147,7 @@ func (ch *Channel) LastMessageID() discord.MessageID {
 		return 0
 	}
 
+	ch.updateReadIndicator(channel)
 	return channel.LastMessageID
 }
 
