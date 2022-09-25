@@ -311,6 +311,7 @@ var collapsedCSS = cssutil.Applier("message-collapsed", `
 		opacity: 0;
 		font-size: 0.7em;
 		min-width: calc((8px * 2) + {$message_avatar_size});
+		min-height: calc(1em + 0.7rem);
 	}
 	.message-row:hover .message-collapsed-timestamp {
 		opacity: 1;

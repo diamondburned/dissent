@@ -335,6 +335,11 @@ var renderers = []mdrender.OptionFunc{
 	mdrender.WithRenderer(discordmd.KindMention, renderMention),
 }
 
+var inlineEmojiTag = textutil.TextTag{
+	"rise":     -5 * pango.SCALE,
+	"rise-set": true,
+}
+
 func renderEmoji(r *mdrender.Renderer, n ast.Node) ast.WalkStatus {
 	emoji := n.(*discordmd.Emoji)
 	text := r.State.TextBlock()
@@ -345,11 +350,17 @@ func renderEmoji(r *mdrender.Renderer, n ast.Node) ast.WalkStatus {
 	picture.SetTooltipText(emoji.Name)
 	picture.SetURL(gtkcord.EmojiURL(emoji.ID, emoji.GIF))
 
-	v := md.InsertCustomImageWidget(text.TextView, text.Buffer.CreateChildAnchor(text.Iter), picture)
+	var inlineImage *md.InlineImage
+	makeInlineImage := func(size int) {
+		inlineImage = md.InsertCustomImageWidget(text.TextView, text.Buffer.CreateChildAnchor(text.Iter), picture)
+		inlineImage.SetSizeRequest(size, size)
+	}
+
 	if emoji.Large {
-		v.SetSizeRequest(gtkcord.LargeEmojiSize, gtkcord.LargeEmojiSize)
+		makeInlineImage(gtkcord.LargeEmojiSize)
 	} else {
-		v.SetSizeRequest(gtkcord.InlineEmojiSize, gtkcord.InlineEmojiSize)
+		tag := inlineEmojiTag.FromTable(text.Buffer.TagTable(), "inline-emoji")
+		text.TagBounded(tag, func() { makeInlineImage(gtkcord.InlineEmojiSize) })
 	}
 
 	return ast.WalkContinue
