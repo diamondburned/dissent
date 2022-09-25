@@ -189,9 +189,13 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 		func(ev gateway.Event) {
 			switch ev := ev.(type) {
 			case *gateway.TypingStartEvent:
-				v.addTyper(ev)
+				if ev.ChannelID == chID {
+					v.addTyper(ev)
+				}
 			case *gateway.MessageCreateEvent:
-				v.removeTyper(ev.Author.ID)
+				if ev.ChannelID == chID {
+					v.removeTyper(ev.Author.ID)
+				}
 			}
 		},
 		(*gateway.TypingStartEvent)(nil),
