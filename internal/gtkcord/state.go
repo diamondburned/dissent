@@ -72,6 +72,10 @@ func Wrap(state *state.State) *State {
 		return nil
 	})
 
+	state.StateLog = func(err error) {
+		log.Printf("state error: %v", err)
+	}
+
 	/*
 		dir := filepath.Join(os.TempDir(), "gtkcord4-events")
 		os.RemoveAll(dir)

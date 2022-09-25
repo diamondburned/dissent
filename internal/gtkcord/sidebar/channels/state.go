@@ -17,15 +17,6 @@ import (
 
 type any = interface{}
 
-type unreadState = int
-
-const (
-	allRead unreadState = iota
-	unreadMessages
-	unreadMentions
-	channelMuted
-)
-
 const (
 	valueUnread    = "●"
 	valueMentioned = "! " + valueUnread
@@ -77,6 +68,7 @@ var allowedChannelTypes = []discord.ChannelType{
 	discord.GuildCategory,
 	discord.GuildPublicThread,
 	discord.GuildPrivateThread,
+	discord.GuildForum,
 	discord.GuildVoice,
 	discord.GuildStageVoice,
 }
@@ -116,7 +108,14 @@ func (t *GuildTree) Add(channels []discord.Channel) {
 
 	// Set nested text channels that are inside catagories.
 	chs.drain(func(ch discord.Channel) bool {
-		if !ch.ParentID.IsValid() || ch.Type != discord.GuildText {
+		if !ch.ParentID.IsValid() {
+			return false
+		}
+
+		switch ch.Type {
+		case discord.GuildText:
+		case discord.GuildForum:
+		default:
 			return false
 		}
 
@@ -132,8 +131,16 @@ func (t *GuildTree) Add(channels []discord.Channel) {
 		}
 
 		base := t.append(&ch, parentIter)
-		node := newChannelNode(base)
-		node.Update(&ch)
+		var node Node
+
+		switch ch.Type {
+		case discord.GuildText:
+			node = newChannelNode(base)
+			node.Update(&ch)
+		case discord.GuildForum:
+			node = newForumNode(base)
+			node.Update(&ch)
+		}
 
 		t.keep(node)
 		return true
@@ -147,7 +154,7 @@ func (t *GuildTree) Add(channels []discord.Channel) {
 
 		parent := t.nodes[ch.ParentID]
 		if parent == nil {
-			log.Println("channel", ch.Name, "has unknown parent ID")
+			log.Println("nested channel", ch.Name, "has unknown parent ID")
 			return false
 		}
 
@@ -344,10 +351,6 @@ func (n *BaseChannelNode) Update(ch *discord.Channel) {}
 // TreePath implements Node.
 func (n *BaseChannelNode) TreePath() *gtk.TreePath { return n.path }
 
-func (n *BaseChannelNode) treeIter() (*gtk.TreeIter, bool) {
-	return n.head.Iter(n.path)
-}
-
 // zeroInit initializes the row with a nil icon and a channel name.
 func (n *BaseChannelNode) zeroInit(ch *discord.Channel) {
 	muted := n.head.state().ChannelIsMuted(n.id, true)
@@ -468,6 +471,27 @@ func (n *ChannelNode) SetUnread(unread ningen.UnreadIndication) {
 			parent.setUnread(n.id, unread)
 		}
 	}
+}
+
+// ForumNode is a node indicating a Discord forum.
+type ForumNode struct {
+	BaseChannelNode
+}
+
+func newForumNode(base BaseChannelNode) *ForumNode {
+	return &ForumNode{
+		BaseChannelNode: base,
+	}
+}
+
+func (n *ForumNode) Update(ch *discord.Channel) {
+	n.head.setValues(n.path, [maxTreeColumn]any{
+		columnName: ch.Name,
+	})
+}
+
+func (n *ForumNode) SetUnread(unread ningen.UnreadIndication) {
+	n.setUnread(unread)
 }
 
 // ThreadNode is a node indicating a Discord thread.
