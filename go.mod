@@ -5,9 +5,9 @@ go 1.17
 require (
 	github.com/diamondburned/adaptive v0.0.2-0.20220328111603-4f867d7948b2
 	github.com/diamondburned/arikawa/v3 v3.1.1-0.20220923070004-fa35b32b7914
-	github.com/diamondburned/chatkit v0.0.0-20220828023933-6aa94c1fbc0c
-	github.com/diamondburned/gotk4/pkg v0.0.0-20220914035633-4e35b1a80848
-	github.com/diamondburned/gotkit v0.0.0-20220910084638-012d5b2f5c70
+	github.com/diamondburned/chatkit v0.0.0-20220926193033-273b48e93b96
+	github.com/diamondburned/gotk4/pkg v0.0.0-20220925114733-8c5529b9df15
+	github.com/diamondburned/gotkit v0.0.0-20220926013453-bce2ebb46db9
 	github.com/diamondburned/ningen/v3 v3.0.0-20220619214735-56004aa62571
 )
 
@@ -35,8 +35,8 @@ require (
 	go4.org v0.0.0-20200411211856-f5505b9728dd // indirect
 	go4.org/unsafe/assume-no-moving-gc v0.0.0-20220617031537-928513b29760 // indirect
 	golang.org/x/crypto v0.0.0-20220321153916-2c7772ba3064 // indirect
+	golang.org/x/image v0.0.0-20220902085622-e7cb96979f69 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/sys v0.0.0-20211001092434-39dca1131b70 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
 	golang.org/x/tools v0.0.0-20200212150539-ea181f53ac56 // indirect

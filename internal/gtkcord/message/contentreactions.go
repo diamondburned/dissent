@@ -149,7 +149,9 @@ func newContentReaction(rs *contentReactions, reaction discord.Reaction) *conten
 	r.FlowBoxChild.ConnectQueryTooltip(func(_, _ int, _ bool, tooltip *gtk.Tooltip) bool {
 		if !loadedUser {
 			loadedUser = true
-			r.InvalidateUsers()
+			r.invalidateUsers(func() {
+				tooltip.SetMarkup(r.tooltip)
+			})
 		}
 
 		if !r.hasTooltip {
@@ -206,6 +208,10 @@ func (r *contentReaction) Invalidate() {
 }
 
 func (r *contentReaction) InvalidateUsers() {
+	r.invalidateUsers(func() {})
+}
+
+func (r *contentReaction) invalidateUsers(done func()) {
 	if r.emoji.IsCustom() {
 		r.tooltip = ":" + html.EscapeString(r.emoji.Name) + ":\n"
 		r.hasTooltip = true
@@ -219,11 +225,11 @@ func (r *contentReaction) InvalidateUsers() {
 		u, err := client.Reactions(
 			r.reactions.parent.view.ChannelID(),
 			r.reactions.parent.MessageID(),
-			discord.NewCustomEmoji(r.emoji.ID, r.emoji.Name), 11,
+			discord.NewAPIEmoji(r.emoji.ID, r.emoji.Name), 11,
 		)
 		if err != nil {
 			log.Print("cannot fetch reactions for message ", r.reactions.parent.MessageID(), ": ", err)
-			return nil
+			return done
 		}
 
 		var hasMore bool
@@ -249,6 +255,7 @@ func (r *contentReaction) InvalidateUsers() {
 		return func() {
 			r.tooltip = tooltip
 			r.hasTooltip = true
+			done()
 		}
 	})
 }
