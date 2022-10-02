@@ -16,7 +16,7 @@ import (
 	"github.com/sahilm/fuzzy"
 )
 
-const memberCacheExpiry = 15 * time.Second
+const memberCacheExpiry = 5 * time.Second
 
 type members []discord.Member
 
@@ -44,6 +44,15 @@ func NewMemberCompleter(chID discord.ChannelID) autocomplete.Searcher {
 func (c *memberCompleter) Rune() rune { return '@' }
 
 func (c *memberCompleter) Search(ctx context.Context, str string) []autocomplete.Data {
+	if len(str) < 1 {
+		return nil
+	}
+
+	state := gtkcord.FromContext(ctx)
+	if len(str) > 2 {
+		state.MemberState.SearchMember(c.guildID, str)
+	}
+
 	now := time.Now()
 
 	if c.members != nil && c.updated.Add(memberCacheExpiry).After(now) {
@@ -52,7 +61,6 @@ func (c *memberCompleter) Search(ctx context.Context, str string) []autocomplete
 
 	c.updated = now
 
-	state := gtkcord.FromContext(ctx)
 	if c.guildID.IsNull() {
 		ch, _ := state.Cabinet.Channel(c.chID)
 		if ch != nil {
@@ -86,7 +94,6 @@ func (c *memberCompleter) Search(ctx context.Context, str string) []autocomplete
 		return data
 	}
 
-	state.MemberState.SearchMember(c.guildID, str)
 	return nil
 }
 

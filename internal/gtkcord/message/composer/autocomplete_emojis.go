@@ -59,6 +59,10 @@ func NewEmojiCompleter(gID discord.GuildID) autocomplete.Searcher {
 func (c *emojiCompleter) Rune() rune { return ':' }
 
 func (c *emojiCompleter) Search(ctx context.Context, str string) []autocomplete.Data {
+	if len(str) < 2 {
+		return nil
+	}
+
 	now := time.Now()
 
 	if c.emojis != nil && c.updated.Add(emojiCacheExpiry).After(now) {
