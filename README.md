@@ -1,10 +1,10 @@
-<center>
+<div align="center">
 
 ![Logo](./internal/icons/svg/logo.svg)
 
 # gtkcord4
 
-</center>
+</div>
 
 ![Screenshot](./.github/screenshot2.png)
 
