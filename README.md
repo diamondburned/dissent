@@ -1,4 +1,10 @@
+<center>
+
+![Logo](./internal/icons/svg/logo.svg)
+
 # gtkcord4
+
+</center>
 
 ![Screenshot](./.github/screenshot2.png)
 
