@@ -22,6 +22,7 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil/textutil"
 	"github.com/diamondburned/gotkit/utils/osutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
+	"github.com/diamondburned/gtkcord4/internal/gtkcord/message/composer/command"
 	"github.com/pkg/errors"
 )
 
@@ -43,8 +44,9 @@ type InputController interface {
 // Input is the text field of the composer.
 type Input struct {
 	*gtk.TextView
-	Buffer *gtk.TextBuffer
-	ac     *autocomplete.Autocompleter
+	Buffer    *gtk.TextBuffer
+	ac        *autocomplete.Autocompleter
+	commander *command.InputCommander
 
 	ctx  context.Context
 	ctrl InputController
@@ -94,10 +96,10 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 
 	i.TextView.ConnectPasteClipboard(i.readClipboard)
 
-	i.ac = autocomplete.New(ctx, i.TextView, i.onAutocompleted)
+	i.ac = autocomplete.New(ctx, i.TextView)
 	i.ac.SetCancelOnChange(false)
-	i.ac.SetMinLength(2)
-	i.ac.SetTimeout(time.Second)
+	i.ac.SetTimeout(5 * time.Second)
+	i.ac.AddSelectedFunc(i.onAutocompleted)
 
 	state := gtkcord.FromContext(ctx)
 	if ch, err := state.Cabinet.Channel(chID); err == nil {
@@ -128,8 +130,14 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 	})
 
 	enterKeyer := gtk.NewEventControllerKey()
-	enterKeyer.ConnectKeyPressed(i.onKey)
 	i.AddController(enterKeyer)
+
+	// Hook the command executor.
+	i.commander = commands.ForInput(ctx, i.TextView, i.ac)
+	i.commander.ConnectKeyController(enterKeyer)
+
+	// Hook the input keyboard handler.
+	enterKeyer.ConnectKeyPressed(i.onKey)
 
 	gtkutil.Async(ctx, func() func() {
 		var oldMessage string
@@ -173,7 +181,7 @@ var sendOnEnter = prefs.NewBool(true, prefs.PropMeta{
 
 func (i *Input) onKey(val, _ uint, state gdk.ModifierType) bool {
 	switch val {
-	case gdk.KEY_Return:
+	case gdk.KEY_Return, gdk.KEY_KP_Enter:
 		if i.ac.Select() {
 			return true
 		}

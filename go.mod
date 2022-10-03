@@ -2,12 +2,14 @@ module github.com/diamondburned/gtkcord4
 
 go 1.17
 
+replace github.com/diamondburned/chatkit => ../chatkit
+
 require (
 	github.com/diamondburned/adaptive v0.0.2-0.20220328111603-4f867d7948b2
 	github.com/diamondburned/arikawa/v3 v3.1.1-0.20220923070004-fa35b32b7914
-	github.com/diamondburned/chatkit v0.0.0-20220926193033-273b48e93b96
+	github.com/diamondburned/chatkit v0.0.0-20220930235746-58bfa0516b64
 	github.com/diamondburned/gotk4/pkg v0.0.0-20220925114733-8c5529b9df15
-	github.com/diamondburned/gotkit v0.0.0-20220926013453-bce2ebb46db9
+	github.com/diamondburned/gotkit v0.0.0-20220927204852-c6db6b04288f
 	github.com/diamondburned/ningen/v3 v3.0.0-20220619214735-56004aa62571
 )
 
@@ -19,6 +21,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sahilm/fuzzy v0.1.0
 	github.com/yuin/goldmark v1.4.11
+	mvdan.cc/sh/v3 v3.5.1
 )
 
 require (

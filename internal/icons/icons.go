@@ -41,13 +41,27 @@ func PixbufScale(name string, size int) *gdkpixbuf.Pixbuf {
 // the original size.
 func Pixbuf(name string) *gdkpixbuf.Pixbuf {
 	if !strings.HasSuffix(name, "-dark") && !strings.HasSuffix(name, "-light") {
+		themedName := name
 		if textutil.IsDarkTheme() {
-			name += "-dark"
+			themedName += "-dark"
 		} else {
-			name += "-light"
+			themedName += "-light"
+		}
+
+		if pb := pixbuf(themedName); pb != nil {
+			return pb
 		}
 	}
 
+	if pb := pixbuf(name); pb != nil {
+		return pb
+	}
+
+	log.Printf("icon: unknown icon %q", name)
+	return nil
+}
+
+func pixbuf(name string) *gdkpixbuf.Pixbuf {
 	if filepath.Ext(name) == "" {
 		name += ".png"
 	}
@@ -73,7 +87,6 @@ func Pixbuf(name string) *gdkpixbuf.Pixbuf {
 
 	b, err := fs.ReadFile(PNGs, path.Join("png", name))
 	if err != nil {
-		log.Printf("icon: unknown icon %q", name)
 		return nil
 	}
 

@@ -22,6 +22,7 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/mediautil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
+	"github.com/diamondburned/gtkcord4/internal/gtkcord/message/composer/command"
 	"github.com/pkg/errors"
 )
 
@@ -116,6 +117,11 @@ const (
 )
 
 func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View {
+	ctx = command.WithChannelState(ctx, &command.ChannelState{
+		State:     gtkcord.FromContext(ctx),
+		ChannelID: chID,
+	})
+
 	v := &View{
 		ctx:  ctx,
 		ctrl: ctrl,
