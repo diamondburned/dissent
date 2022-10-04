@@ -36,8 +36,8 @@ func init() {
 	api.UserAgent = "gtkcord4 (https://github.com/diamondburned/arikawa/v3)"
 	gateway.DefaultIdentity = gateway.IdentifyProperties{
 		OS:      runtime.GOOS,
-		Device:  hostname,
-		Browser: "gtkcord4",
+		Device:  "Arikawa",
+		Browser: "gtkcord4 on " + hostname,
 	}
 }
 
