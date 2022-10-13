@@ -23,8 +23,7 @@ type CommandExecution struct {
 	errorPopover *errorPopover
 	inputtedArgs []*inputtedArgument
 
-	reservedOffset int
-	destroy        func()
+	destroy func()
 }
 
 var _commandTextTag textutil.TextTag
@@ -57,42 +56,17 @@ func newCommandExecution(commander *InputCommander, cmd Command) *CommandExecuti
 	}
 
 	// Clear the buffer.
+	c.commander.Buffer.SetText("")
+
 	// Write the command into the buffer.
 	prefix := "/" + cmd.Name()
-	commander.Buffer.SetText(prefix + " ")
 
 	// Make a new prefix marker.
-	prefixMark := newImmutableMark(commander.Buffer.StartIter(), "prefix", func() {
-		// Invalidate the reservedOffset before we actually delete
-		// everything. This avoids an infinite recursion.
-		c.reservedOffset = -1
+	prefixMark := newImmutableMark(commander.Buffer.StartIter(), func() {
 		// Finish destroying the command.
 		c.destroy()
 	})
 	prefixMark.SetContent(prefix)
-
-	// Move the cursor to the end of the inserted piece.
-	iter := commander.Buffer.EndIter()
-	commander.Buffer.PlaceCursor(iter)
-
-	// Mark the command region. Deleting any of this region will null the entire
-	// buffer, so we keep track of this.
-	iter.BackwardChar()
-	c.reservedOffset = iter.Offset()
-
-	// Color the command to indicate that we're entering one.
-	cmdTag := commandTextTag().FromTable(commander.Buffer.TagTable(), "__command_prefix")
-	commander.Buffer.ApplyTag(cmdTag, commander.Buffer.StartIter(), iter)
-
-	// Hook the arguments autocompleter. We'll unhook it once we're done.
-	c.argsSearcher = newArgumentsAutocompleter(c.Args, argumentsAutocompleterOpts{
-		inhibitors: []func() bool{
-			// Inhibit if the cursor is still in the middle of the argument
-			// value.
-			func() bool { return isInShellWord(cursorText(commander.Buffer)) },
-		},
-	})
-	commander.Autocompleter.Use(c.argsSearcher)
 
 	c.errorPopover = newErrorPopover()
 	c.errorPopover.SetPosition(gtk.PosTop)
@@ -102,10 +76,15 @@ func newCommandExecution(commander *InputCommander, cmd Command) *CommandExecuti
 		// Hide the error popover before we do anything.
 		c.errorPopover.Hide()
 
-		// Validate all the immutableMarks.
 		prefixMark.Validate()
-		for _, arg := range c.inputtedArgs {
-			arg.mark.Validate()
+		// Validate all the immutableMarks.
+		for i, arg := range c.inputtedArgs {
+			if arg.mark.Validate() {
+				continue
+			}
+
+			// Remove the argument.
+			c.inputtedArgs = append(c.inputtedArgs[:i], c.inputtedArgs[i+1:]...)
 		}
 
 		// TODO: validate all the arguments.
@@ -116,6 +95,24 @@ func newCommandExecution(commander *InputCommander, cmd Command) *CommandExecuti
 			}
 		}
 	})
+
+	// Move the cursor to the end of the inserted piece.
+	commander.Buffer.PlaceCursor(commander.Buffer.EndIter())
+
+	// Color the command to indicate that we're entering one.
+	cmdTag := commandTextTag().FromTable(commander.Buffer.TagTable(), "__command_prefix")
+	cmdStart, cmdEnd := prefixMark.Iters()
+	commander.Buffer.ApplyTag(cmdTag, cmdStart, cmdEnd)
+
+	// Hook the arguments autocompleter. We'll unhook it once we're done.
+	c.argsSearcher = newArgumentsAutocompleter(c.Args, argumentsAutocompleterOpts{
+		inhibitors: []func() bool{
+			// Inhibit if the cursor is still in the middle of the argument
+			// value.
+			func() bool { return isInShellWord(cursorText(commander.Buffer)) },
+		},
+	})
+	commander.Autocompleter.Use(c.argsSearcher)
 
 	c.destroy = func() {
 		commander.Autocompleter.Unuse(c.argsSearcher)
@@ -154,6 +151,12 @@ func (c *CommandExecution) onAutocompleted(selection autocomplete.SelectedData) 
 				panic("bug: user chose an argument that's already inputted")
 			}
 		}
+
+		c.commander.Buffer.BeginUserAction()
+		defer c.commander.Buffer.EndUserAction()
+
+		// Delete the current text bits.
+		c.commander.Buffer.Delete(selection.Bounds[0], selection.Bounds[1])
 
 		inputtedArg := newInputtedArgument(c, data.arg, c.commander.Buffer.EndIter())
 		c.inputtedArgs = append(c.inputtedArgs, inputtedArg)
@@ -199,11 +202,7 @@ type errorPopover struct {
 	*gtk.Popover
 	child struct {
 		*gtk.Box
-		head struct {
-			*gtk.Box
-			icon *gtk.Image
-			text *gtk.Label
-		}
+		icon *gtk.Image
 		body *gtk.Label
 	}
 }
@@ -215,17 +214,10 @@ var errorPopoverCSS = cssutil.Applier(`command-error-popover`, `
 func newErrorPopover() *errorPopover {
 	p := errorPopover{}
 
-	p.child.head.icon = gtk.NewImageFromIconName("dialog-error-symbolic")
-	p.child.head.icon.AddCSSClass("error")
-	p.child.head.icon.SetIconSize(gtk.IconSizeNormal)
-
-	p.child.head.text = gtk.NewLabel("Error!")
-	p.child.head.text.AddCSSClass("error")
-
-	p.child.head.Box = gtk.NewBox(gtk.OrientationHorizontal, 0)
-	p.child.head.Box.AddCSSClass("command-error-popover-head")
-	p.child.head.Box.Append(p.child.head.icon)
-	p.child.head.Box.Append(p.child.head.text)
+	p.child.icon = gtk.NewImageFromIconName("dialog-error-symbolic")
+	p.child.icon.AddCSSClass("error")
+	p.child.icon.SetIconSize(gtk.IconSizeNormal)
+	p.child.icon.SetVAlign(gtk.AlignStart)
 
 	p.child.body = gtk.NewLabel("")
 	p.child.body.AddCSSClass("command-error-popover-body")
@@ -234,7 +226,7 @@ func newErrorPopover() *errorPopover {
 	p.child.body.SetWrapMode(pango.WrapWordChar)
 
 	p.child.Box = gtk.NewBox(gtk.OrientationVertical, 0)
-	p.child.Box.Append(p.child.head)
+	p.child.Box.Append(p.child.icon)
 	p.child.Box.Append(p.child.body)
 
 	p.Popover = gtk.NewPopover()
@@ -264,7 +256,7 @@ func newInputtedArgument(execution *CommandExecution, arg Argument, iterAt *gtk.
 	a := inputtedArgument{}
 	a.arg = arg
 
-	a.mark = newImmutableMark(iterAt, "arg_"+arg.Name(), a.delete)
+	a.mark = newImmutableMark(iterAt, a.delete)
 	a.mark.SetContent(arg.Name() + ":")
 
 	// Replace the iterator with the one at the end of the mark.

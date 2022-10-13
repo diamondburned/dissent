@@ -1,10 +1,10 @@
 package command
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
+	"mvdan.cc/sh/v3/expand"
 	"mvdan.cc/sh/v3/syntax"
 )
 
@@ -24,17 +24,7 @@ func parseSingleWord(text string) (string, error) {
 		return "", errors.Wrap(err, "cannot parse for first shell word")
 	}
 
-	if len(firstWord.Parts) == 0 {
-		return "", nil
-	}
-
-	var b strings.Builder
-
-	if err := shPartsLit(firstWord.Parts, &b); err != nil {
-		return b.String(), err
-	}
-
-	return b.String(), nil
+	return shLiteral(firstWord)
 }
 
 // isInShellWord returns true if the given index is within a shell word.
@@ -48,20 +38,7 @@ func isInShellWord(text string) bool {
 	return err != nil
 }
 
-func shPartsLit(parts []syntax.WordPart, b *strings.Builder) error {
-	for _, part := range parts {
-		switch part := part.(type) {
-		case *syntax.DblQuoted:
-			if err := shPartsLit(part.Parts, b); err != nil {
-				return err
-			}
-		case *syntax.SglQuoted:
-			b.WriteString(part.Value)
-		case *syntax.Lit:
-			b.WriteString(part.Value)
-		default:
-			return fmt.Errorf("word part type %T not allowed", part)
-		}
-	}
-	return nil
+// shLiteral returns the literal string representation of the given shell word.
+func shLiteral(word *syntax.Word) (string, error) {
+	return expand.Literal(nil, word)
 }

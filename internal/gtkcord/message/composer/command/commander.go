@@ -38,10 +38,6 @@ func NewInputCommander(ctx context.Context, registry *Registry, input *gtk.TextV
 	c.Autocompleter.AddSelectedFunc(c.onAutocompleted)
 	c.Autocompleter.Use(newCommandSearcher(c.commands))
 
-	c.Buffer.ConnectChanged(func() {
-		c.Autocompleter.Autocomplete()
-	})
-
 	return &c
 }
 
@@ -72,6 +68,10 @@ func (c *InputCommander) Context() context.Context {
 func (c *InputCommander) onAutocompleted(selection autocomplete.SelectedData) bool {
 	switch data := selection.Data.(type) {
 	case autocompletedCommandData:
+		// Just in case.
+		c.Buffer.BeginIrreversibleAction()
+		defer c.Buffer.EndIrreversibleAction()
+
 		if c.current != nil {
 			c.current.Destroy()
 		}

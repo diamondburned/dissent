@@ -1,33 +1,31 @@
 package command
 
-import "github.com/diamondburned/gotk4/pkg/gtk/v4"
+import (
+	"log"
+
+	"github.com/diamondburned/gotk4/pkg/gtk/v4"
+)
 
 // immutableMark is a mark that cannot be edited by the user. When the user
 // attempts to delete it, the mark will be invalidated, and a callback will be
 // called.
 type immutableMark struct {
-	marks   [2]*gtk.TextMark
-	content string
-	deleted func(start, end *gtk.TextIter)
+	marks       [2]*gtk.TextMark
+	content     string
+	deletedFunc func()
+	deleted     bool
 }
 
-func newImmutableMark(iter *gtk.TextIter, name string, deletedFunc func()) *immutableMark {
+func newImmutableMark(iter *gtk.TextIter, deletedFunc func()) *immutableMark {
 	buffer := iter.Buffer()
 
-	m := &immutableMark{}
-	m.marks[0] = buffer.CreateMark("__immutablemark_"+name, iter, true)
-	m.marks[1] = buffer.CreateMark("__immutablemark_"+name, iter, false)
-
-	m.deleted = func(start, end *gtk.TextIter) {
-		if deletedFunc != nil {
-			deletedFunc()
-		}
-
-		buffer := start.Buffer()
-		buffer.Delete(start, end)
+	return &immutableMark{
+		marks: [2]*gtk.TextMark{
+			buffer.CreateMark("", iter, false),
+			buffer.CreateMark("", iter, true),
+		},
+		deletedFunc: deletedFunc,
 	}
-
-	return m
 }
 
 // Iters returns the start and end iters of the immutableMark.
@@ -36,11 +34,37 @@ func (m *immutableMark) Iters() (start, end *gtk.TextIter) {
 	return buffer.IterAtMark(m.marks[0]), buffer.IterAtMark(m.marks[1])
 }
 
-// Validate validates that the immutableMark is still valid.
-func (m *immutableMark) Validate() {
-	if m.marks[0].Deleted() || m.marks[1].Deleted() {
-		m.deleted(m.Iters())
+// IsDeleted returns whether the immutableMark is deleted.
+func (m *immutableMark) IsDeleted() bool {
+	return m.deleted || m.marks[0].Deleted() || m.marks[1].Deleted()
+}
+
+// Delete deletes the mark. The immutableMark is invalid after calling this
+// function.
+func (m *immutableMark) Delete() {
+	if m.deleted {
 		return
+	}
+
+	m.deleted = true
+
+	buffer := m.marks[0].Buffer()
+
+	start, end := m.Iters()
+	buffer.DeleteMark(m.marks[0])
+	buffer.DeleteMark(m.marks[1])
+	buffer.Delete(start, end)
+
+	if m.deletedFunc != nil {
+		m.deletedFunc()
+	}
+}
+
+// Validate validates that the immutableMark is still valid.
+func (m *immutableMark) Validate() bool {
+	if m.IsDeleted() {
+		log.Println("immutableMark is deleted")
+		return false
 	}
 
 	buffer := m.marks[0].Buffer()
@@ -48,14 +72,20 @@ func (m *immutableMark) Validate() {
 
 	content := buffer.Slice(start, end, true)
 	if content != m.content {
-		m.deleted(start, end)
-		return
+		log.Printf("immutableMark content mismatch: %q != %q", content, m.content)
+		m.Delete()
+		return false
 	}
+
+	return true
 }
 
-// SetContent sets the content of the immutableMark.
+// SetContent sets the content of the immutableMark. The content will be
+// suffixed with a space.
 func (m *immutableMark) SetContent(content string) {
-	m.Validate()
+	if !m.Validate() {
+		return
+	}
 
 	if m.content == content {
 		return
@@ -66,5 +96,14 @@ func (m *immutableMark) SetContent(content string) {
 	start, end := m.Iters()
 	buffer := m.marks[0].Buffer()
 	buffer.Delete(start, end)
-	buffer.Insert(start, content)
+	buffer.Insert(end, content+" ") // this invalidates the start iter
+
+	// Undo the space.
+	end.BackwardChar()
+	// Revalidate the start iter.
+	start = buffer.IterAtOffset(end.Offset() - len(content))
+
+	log.Printf("set content to %q", buffer.Slice(start, end, true))
+	buffer.MoveMark(m.marks[0], start)
+	buffer.MoveMark(m.marks[1], end)
 }

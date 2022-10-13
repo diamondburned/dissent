@@ -156,17 +156,20 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 }
 
 func (i *Input) onAutocompleted(row autocomplete.SelectedData) bool {
-	i.Buffer.BeginUserAction()
-	defer i.Buffer.EndUserAction()
+	insert := func(data string) {
+		i.Buffer.BeginUserAction()
+		defer i.Buffer.EndUserAction()
 
-	i.Buffer.Delete(row.Bounds[0], row.Bounds[1])
+		i.Buffer.Delete(row.Bounds[0], row.Bounds[1])
+		i.Buffer.Insert(row.Bounds[1], data)
+	}
 
 	switch data := row.Data.(type) {
 	case EmojiData:
-		i.Buffer.Insert(row.Bounds[1], data.Content)
+		insert(data.Content)
 		return true
 	case MemberData:
-		i.Buffer.Insert(row.Bounds[1], discord.Member(data).Mention())
+		insert(discord.Member(data).Mention())
 		return true
 	}
 
