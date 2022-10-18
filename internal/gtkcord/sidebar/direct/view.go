@@ -105,19 +105,20 @@ func NewChannelView(ctx context.Context, ctrl Controller) *ChannelView {
 		// TODO: Channel events
 
 		switch ev := ev.(type) {
-		case *read.UpdateEvent:
-			if ch, ok := v.channels[ev.ChannelID]; ok {
-				ch.Invalidate()
-			}
 		case *gateway.ChannelCreateEvent:
 			if !ev.GuildID.IsValid() {
 				v.Invalidate() // recreate everything
 			}
 		case *gateway.ChannelDeleteEvent:
 			v.deleteCh(ev.ID)
+
 		case *gateway.MessageCreateEvent:
 			if ch, ok := v.channels[ev.ChannelID]; ok {
-				ch.InvalidateSort()
+				ch.Invalidate()
+			}
+		case *read.UpdateEvent:
+			if ch, ok := v.channels[ev.ChannelID]; ok {
+				ch.Invalidate()
 			}
 		}
 	})

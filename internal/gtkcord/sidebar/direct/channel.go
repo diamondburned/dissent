@@ -30,9 +30,9 @@ type Channel struct {
 	readIndicator *gtk.Label
 	readState     readState
 
-	ctx      context.Context
-	id       discord.ChannelID
-	lastRead discord.MessageID
+	ctx     context.Context
+	id      discord.ChannelID
+	lastMsg discord.MessageID
 }
 
 var channelCSS = cssutil.Applier("direct-channel", `
@@ -112,11 +112,11 @@ func (ch *Channel) updateReadIndicator(channel *discord.Channel) {
 	newReadState := stateRead
 
 	// Hopefully this doesn't happen.
-	lastMessageID := channel.LastMessageID
-	if !lastMessageID.IsValid() {
+	ch.lastMsg = channel.LastMessageID
+	if !ch.lastMsg.IsValid() {
 		msgs, _ := state.Cabinet.Messages(ch.id)
 		if len(msgs) > 0 {
-			lastMessageID = msgs[0].ID
+			ch.lastMsg = msgs[0].ID
 		}
 	}
 
@@ -125,8 +125,7 @@ func (ch *Channel) updateReadIndicator(channel *discord.Channel) {
 		goto update
 	}
 
-	ch.lastRead = readState.LastMessageID
-	if ch.lastRead >= lastMessageID {
+	if readState.LastMessageID >= ch.lastMsg {
 		goto update
 	}
 
@@ -152,11 +151,13 @@ update:
 			ch.readIndicator.SetText("! ●")
 		}
 	}
+
+	ch.InvalidateSort()
 }
 
 // LastMessageID queries the local state for the channel's last message ID.
 func (ch *Channel) LastMessageID() discord.MessageID {
-	return ch.lastRead
+	return ch.lastMsg
 }
 
 // Name returns the current displaying name of the channel.
