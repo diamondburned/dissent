@@ -730,6 +730,7 @@ func (v *View) MarkRead() {
 	}
 
 	state.ReadState.MarkRead(v.ChannelID(), msgs[0].ID)
+	log.Println("message.View.MarkRead: marked", msgs[0].ID, "as read")
 }
 
 // IsActive returns true if View is active and visible. This implies that the

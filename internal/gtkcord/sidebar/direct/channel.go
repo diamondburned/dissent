@@ -2,6 +2,7 @@ package direct
 
 import (
 	"context"
+	"log"
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
@@ -29,8 +30,9 @@ type Channel struct {
 	readIndicator *gtk.Label
 	readState     readState
 
-	ctx context.Context
-	id  discord.ChannelID
+	ctx      context.Context
+	id       discord.ChannelID
+	lastRead discord.MessageID
 }
 
 var channelCSS = cssutil.Applier("direct-channel", `
@@ -79,9 +81,13 @@ func NewChannel(ctx context.Context, id discord.ChannelID) *Channel {
 func (ch *Channel) Invalidate() {
 	state := gtkcord.FromContext(ch.ctx)
 
-	if channel, _ := state.Cabinet.Channel(ch.id); channel != nil {
-		ch.Update(channel)
+	channel, err := state.Cabinet.Channel(ch.id)
+	if err != nil {
+		log.Println("Channel.Invalidate:", err)
+		return
 	}
+
+	ch.Update(channel)
 }
 
 // Update updates the channel to show information from the instance given. ID is
@@ -105,12 +111,22 @@ func (ch *Channel) updateReadIndicator(channel *discord.Channel) {
 	state := gtkcord.FromContext(ch.ctx)
 	newReadState := stateRead
 
+	// Hopefully this doesn't happen.
+	lastMessageID := channel.LastMessageID
+	if !lastMessageID.IsValid() {
+		msgs, _ := state.Cabinet.Messages(ch.id)
+		if len(msgs) > 0 {
+			lastMessageID = msgs[0].ID
+		}
+	}
+
 	readState := state.ReadState.ReadState(ch.id)
 	if readState == nil || !readState.LastMessageID.IsValid() {
 		goto update
 	}
 
-	if readState.LastMessageID >= channel.LastMessageID {
+	ch.lastRead = readState.LastMessageID
+	if ch.lastRead >= lastMessageID {
 		goto update
 	}
 
@@ -120,10 +136,10 @@ func (ch *Channel) updateReadIndicator(channel *discord.Channel) {
 		newReadState = stateUnread
 	}
 
-	return
-
 update:
 	if ch.readState != newReadState {
+		ch.readState = newReadState
+
 		switch newReadState {
 		case stateRead:
 			ch.RemoveCSSClass("direct-channel-mentioned")
@@ -140,15 +156,7 @@ update:
 
 // LastMessageID queries the local state for the channel's last message ID.
 func (ch *Channel) LastMessageID() discord.MessageID {
-	state := gtkcord.FromContext(ch.ctx)
-
-	channel, _ := state.Cabinet.Channel(ch.id)
-	if channel == nil {
-		return 0
-	}
-
-	ch.updateReadIndicator(channel)
-	return channel.LastMessageID
+	return ch.lastRead
 }
 
 // Name returns the current displaying name of the channel.
