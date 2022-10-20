@@ -112,13 +112,7 @@ func (ch *Channel) updateReadIndicator(channel *discord.Channel) {
 	newReadState := stateRead
 
 	// Hopefully this doesn't happen.
-	ch.lastMsg = channel.LastMessageID
-	if !ch.lastMsg.IsValid() {
-		msgs, _ := state.Cabinet.Messages(ch.id)
-		if len(msgs) > 0 {
-			ch.lastMsg = msgs[0].ID
-		}
-	}
+	ch.lastMsg = state.LastMessage(channel.ID)
 
 	readState := state.ReadState.ReadState(ch.id)
 	if readState == nil || !readState.LastMessageID.IsValid() {

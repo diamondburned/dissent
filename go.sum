@@ -50,8 +50,8 @@ github.com/diamondburned/gotk4/pkg v0.0.0-20220925114733-8c5529b9df15/go.mod h1:
 github.com/diamondburned/gotkit v0.0.0-20220723081049-c6780e784cab/go.mod h1:/QZyeBlEHZab+ir2OnzuveQJC2Bih3eG2J1wXk308zc=
 github.com/diamondburned/gotkit v0.0.0-20220927204852-c6db6b04288f h1:mBORs64bvm2+YFDp8rdMDnsXgTPNmz9OllI+VnbrCog=
 github.com/diamondburned/gotkit v0.0.0-20220927204852-c6db6b04288f/go.mod h1:Z+pnNXzSY3AelxTH5ke0cc8yLanmDgRq7oy4/78hi/c=
-github.com/diamondburned/ningen/v3 v3.0.0-20221014102548-d2758d8c5e33 h1:3BP54Zjq1xcHBQBupyUDpWphg+26XoOU0peKp0zu8lQ=
-github.com/diamondburned/ningen/v3 v3.0.0-20221014102548-d2758d8c5e33/go.mod h1:WLSUx3megnWk5I6rYLE+yPHN3iPJf4Nag2B5Y7l+Vmc=
+github.com/diamondburned/ningen/v3 v3.0.0-20221020234758-38b078a9ab7b h1:SawLoo0L9zDDvDjeLW9gIl3D0ZDLpVa0+KMTH7na9Uc=
+github.com/diamondburned/ningen/v3 v3.0.0-20221020234758-38b078a9ab7b/go.mod h1:WLSUx3megnWk5I6rYLE+yPHN3iPJf4Nag2B5Y7l+Vmc=
 github.com/dlclark/regexp2 v1.4.0 h1:F1rxgk7p4uKjwIQxBs9oAXe5CqrXlCduYEJvrF4u93E=
 github.com/dlclark/regexp2 v1.4.0/go.mod h1:2pZnwuY/m+8K6iRw6wQdMtk+rH5tNGR1i55kozfMjCc=
 github.com/dustin/go-humanize v1.0.0 h1:VSnTsYCnlFHaM2/igO1h6X3HA71jcobQuxemgkq4zYo=
