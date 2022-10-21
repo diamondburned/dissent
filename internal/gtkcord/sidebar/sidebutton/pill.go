@@ -1,4 +1,4 @@
-package guilds
+package sidebutton
 
 import (
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"

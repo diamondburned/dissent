@@ -12,6 +12,7 @@ import (
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar/channels"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar/direct"
+	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar/direct/dmbutton"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar/guilds"
 )
 
@@ -26,7 +27,7 @@ type Sidebar struct {
 	*gtk.Box // horizontal
 
 	Left     *gtk.Box
-	DMButton *DMButton
+	DMButton *dmbutton.Button
 	Guilds   *guilds.View
 	Right    *gtk.Stack
 
@@ -41,6 +42,8 @@ type Sidebar struct {
 }
 
 var sidebarCSS = cssutil.Applier("sidebar-sidebar", `
+	@define-color sidebar_bg mix(@borders, @theme_bg_color, 0.25);
+
 	windowcontrols.end:not(.empty) {
 		margin-right: 4px;
 	}
@@ -49,7 +52,7 @@ var sidebarCSS = cssutil.Applier("sidebar-sidebar", `
 		margin-right: 0;
 	}
 	.sidebar-guildside {
-		background-color: mix(@borders, @theme_bg_color, 0.25);
+		background-color: @sidebar_bg;
 	}
 `)
 
@@ -63,7 +66,7 @@ func NewSidebar(ctx context.Context, ctrl Controller) *Sidebar {
 	s.Guilds = guilds.NewView(ctx, (*guildsSidebar)(&s))
 	s.Guilds.Invalidate()
 
-	s.DMButton = NewDMButton(ctx, func() {
+	s.DMButton = dmbutton.NewButton(ctx, func() {
 		direct := s.openDMs()
 		direct.Invalidate()
 	})

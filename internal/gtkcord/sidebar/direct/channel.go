@@ -2,6 +2,7 @@ package direct
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -13,14 +14,6 @@ import (
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 )
 
-type readState uint8
-
-const (
-	stateRead readState = iota
-	stateUnread
-	stateMentioned
-)
-
 // Channel is an individual direct messaging channel.
 type Channel struct {
 	*gtk.ListBoxRow
@@ -28,7 +21,6 @@ type Channel struct {
 	avatar        *onlineimage.Avatar
 	name          *gtk.Label
 	readIndicator *gtk.Label
-	readState     readState
 
 	ctx     context.Context
 	id      discord.ChannelID
@@ -109,43 +101,34 @@ func (ch *Channel) Update(channel *discord.Channel) {
 
 func (ch *Channel) updateReadIndicator(channel *discord.Channel) {
 	state := gtkcord.FromContext(ch.ctx)
-	newReadState := stateRead
+	var unread int
 
 	// Hopefully this doesn't happen.
 	ch.lastMsg = state.LastMessage(channel.ID)
 
 	readState := state.ReadState.ReadState(ch.id)
-	if readState == nil || !readState.LastMessageID.IsValid() {
-		goto update
-	}
-
-	if readState.LastMessageID >= ch.lastMsg {
-		goto update
-	}
-
-	if readState.MentionCount > 0 {
-		newReadState = stateMentioned
-	} else {
-		newReadState = stateUnread
-	}
-
-update:
-	if ch.readState != newReadState {
-		ch.readState = newReadState
-
-		switch newReadState {
-		case stateRead:
-			ch.RemoveCSSClass("direct-channel-mentioned")
-			ch.readIndicator.SetText("")
-		case stateUnread:
-			ch.RemoveCSSClass("direct-channel-mentioned")
-			ch.readIndicator.SetText("●")
-		case stateMentioned:
-			ch.AddCSSClass("direct-channel-mentioned")
-			ch.readIndicator.SetText("! ●")
+	// We check if either the read state is not known at all or we're getting
+	// neither a mention nor a last read message, indicating that we've never
+	// read anything here.
+	if readState == nil || (readState.MentionCount == 0 && !readState.LastMessageID.IsValid()) {
+		// We've never seen this channel before, so we might not have any
+		// messages. If we do, then we'll count them, otherwise, we'll just
+		// assume that there are 1 (one) unread message.
+		msgs, err := state.Cabinet.Messages(ch.id)
+		if err != nil {
+			unread = 1
+		} else {
+			unread = len(msgs)
 		}
+	} else {
+		unread = readState.MentionCount
 	}
 
+	if unread == 0 {
+		ch.readIndicator.SetText("")
+	} else {
+		ch.readIndicator.SetText(fmt.Sprintf("(%d)", unread))
+	}
 	ch.InvalidateSort()
 }
 

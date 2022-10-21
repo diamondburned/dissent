@@ -1,4 +1,4 @@
-package sidebar
+package dmbutton
 
 import (
 	"context"
@@ -8,14 +8,14 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar/guilds"
+	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar/sidebutton"
 	"github.com/diamondburned/ningen/v3"
 	"github.com/diamondburned/ningen/v3/states/read"
 )
 
-type DMButton struct {
+type Button struct {
 	*gtk.Overlay
-	Pill   *guilds.Pill
+	Pill   *sidebutton.Pill
 	Button *gtk.Button
 
 	ctx context.Context
@@ -28,8 +28,8 @@ var dmButtonCSS = cssutil.Applier("sidebar-dm-button-overlay", `
 	}
 `)
 
-func NewDMButton(ctx context.Context, open func()) *DMButton {
-	b := DMButton{ctx: ctx}
+func NewButton(ctx context.Context, open func()) *Button {
+	b := Button{ctx: ctx}
 
 	icon := gtk.NewImageFromIconName("user-available")
 	icon.SetIconSize(gtk.IconSizeLarge)
@@ -42,13 +42,13 @@ func NewDMButton(ctx context.Context, open func()) *DMButton {
 	b.Button.SetHasFrame(false)
 	b.Button.SetHAlign(gtk.AlignCenter)
 	b.Button.ConnectClicked(func() {
-		b.Pill.State = guilds.PillActive
+		b.Pill.State = sidebutton.PillActive
 		b.Pill.Invalidate()
 
 		open()
 	})
 
-	b.Pill = guilds.NewPill()
+	b.Pill = sidebutton.NewPill()
 
 	b.Overlay = gtk.NewOverlay()
 	b.Overlay.SetChild(b.Button)
@@ -74,11 +74,11 @@ func NewDMButton(ctx context.Context, open func()) *DMButton {
 
 // Invalidate forces a complete recheck of all direct messaging channels to
 // update the unread indicator.
-func (b *DMButton) Invalidate() {
+func (b *Button) Invalidate() {
 	state := gtkcord.FromContext(b.ctx)
 	unread := dmUnreadState(state)
 
-	b.Pill.Attrs = guilds.PillAttrsFromUnread(unread)
+	b.Pill.Attrs = sidebutton.PillAttrsFromUnread(unread)
 	b.Pill.Invalidate()
 }
 
@@ -113,4 +113,7 @@ func dmUnreadState(state *gtkcord.State) ningen.UnreadIndication {
 	}
 
 	return unread
+}
+
+type DMUser struct {
 }

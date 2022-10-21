@@ -7,6 +7,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
+	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar/sidebutton"
 )
 
 const (
@@ -20,7 +21,7 @@ type Folder struct {
 	*gtk.Box
 
 	ButtonOverlay *gtk.Overlay
-	ButtonPill    *Pill
+	ButtonPill    *sidebutton.Pill
 	Button        *FolderButton
 
 	Revealer *gtk.Revealer
@@ -70,7 +71,7 @@ func NewFolder(ctx context.Context, ctrl GuildController) *Folder {
 	f.Button.SetRevealed(false)
 	f.Button.ConnectClicked(f.toggle)
 
-	f.ButtonPill = NewPill()
+	f.ButtonPill = sidebutton.NewPill()
 
 	f.ButtonOverlay = gtk.NewOverlay()
 	f.ButtonOverlay.SetChild(f.Button)
@@ -101,12 +102,12 @@ func (f *Folder) setGuildOpen(open bool) {
 	f.open = open
 
 	if f.Revealer.RevealChild() {
-		f.ButtonPill.State = PillOpened
+		f.ButtonPill.State = sidebutton.PillOpened
 	} else {
 		if open {
-			f.ButtonPill.State = PillActive
+			f.ButtonPill.State = sidebutton.PillActive
 		} else {
-			f.ButtonPill.State = PillInactive
+			f.ButtonPill.State = sidebutton.PillInactive
 		}
 	}
 
