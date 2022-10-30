@@ -114,6 +114,3 @@ func dmUnreadState(state *gtkcord.State) ningen.UnreadIndication {
 
 	return unread
 }
-
-type DMUser struct {
-}

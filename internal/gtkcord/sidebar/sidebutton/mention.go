@@ -9,59 +9,55 @@ import (
 
 // MentionsIndicator is a small indicator that shows the mention count.
 type MentionsIndicator struct {
-	*gtk.Box
-	Reveal *gtk.Revealer
-	Label  *gtk.Label
+	*gtk.Revealer
+	Label *gtk.Label
 }
 
 var mentionCSS = cssutil.Applier("sidebar-mention", `
-	.sidebar-mention,
-	.sidebar-mention > label {
-		border-radius: 50%;
+	.sidebar-mention.sidebar-mention-active,
+	.sidebar-mention.sidebar-mention-active label {
+		border-radius: 100px;
+		background-color: @theme_bg_color;
 	}
-
-	.sidebar-mention {
-		background-color: @sidebar_bg;
-	}
-
-	.sidebar-mention > label {
-		background-color: @mention;
+	.sidebar-mention.sidebar-mention-active label {
 		color: white;
-		min-width:  12px;
-		min-height: 12px;
-		font-size:  10px;
+		background-color: @mentioned;
+		min-width:  12pt;
+		min-height: 12pt;
+		padding: 0;
+		margin: 2px;
+		font-size: 8pt;
+		font-weight: bold;
 	}
 `)
 
 // NewMentionsIndicator creates a new mention indicator.
 func NewMentionsIndicator() *MentionsIndicator {
 	m := &MentionsIndicator{
-		Box:    gtk.NewBox(gtk.OrientationHorizontal, 0),
-		Reveal: gtk.NewRevealer(),
-		Label:  gtk.NewLabel(""),
+		Revealer: gtk.NewRevealer(),
+		Label:    gtk.NewLabel(""),
 	}
 
-	m.Box.Append(m.Reveal)
-	m.Reveal.SetChild(m.Label)
-
+	m.SetChild(m.Label)
 	m.SetHAlign(gtk.AlignEnd)
 	m.SetVAlign(gtk.AlignEnd)
+	m.SetTransitionType(gtk.RevealerTransitionTypeCrossfade)
+	m.SetTransitionDuration(100)
+	m.SetRevealChild(false)
 
-	m.Reveal.SetTransitionType(gtk.RevealerTransitionTypeCrossfade)
-	m.Reveal.SetTransitionDuration(100)
-	m.Reveal.SetRevealChild(false)
-
-	mentionCSS(m.Box)
+	mentionCSS(m)
 	return m
 }
 
 // SetCount sets the mention count.
 func (m *MentionsIndicator) SetCount(count int) {
 	if count == 0 {
-		m.Reveal.SetRevealChild(false)
+		m.RemoveCSSClass("sidebar-mention-active")
+		m.SetRevealChild(false)
 		return
 	}
 
-	m.Reveal.SetRevealChild(true)
+	m.AddCSSClass("sidebar-mention-active")
+	m.SetRevealChild(true)
 	m.Label.SetText(strconv.Itoa(count))
 }
