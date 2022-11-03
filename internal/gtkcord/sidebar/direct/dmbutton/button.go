@@ -86,29 +86,14 @@ func dmUnreadState(state *gtkcord.State) ningen.UnreadIndication {
 	var unread ningen.UnreadIndication
 
 	chs, _ := state.Cabinet.PrivateChannels()
-
 	for _, ch := range chs {
-		reads := state.ReadState.ReadState(ch.ID)
-		if reads == nil || !reads.LastMessageID.IsValid() {
-			continue
+		state := state.ChannelIsUnread(ch.ID)
+		if state > unread {
+			unread = state
 		}
 
-		if state.MutedState.Channel(ch.ID) {
-			continue
-		}
-
-		if reads.LastMessageID < ch.LastMessageID {
-			if unread < ningen.ChannelUnread {
-				unread = ningen.ChannelUnread
-			}
-		}
-
-		if reads.MentionCount > 0 {
-			if unread < ningen.ChannelMentioned {
-				unread = ningen.ChannelMentioned
-			}
-			// Max, so exit early.
-			return unread
+		if unread == ningen.ChannelMentioned {
+			break
 		}
 	}
 

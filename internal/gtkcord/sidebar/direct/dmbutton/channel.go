@@ -46,6 +46,7 @@ func (c *Channel) Invalidate() {
 	}
 
 	c.Update(ch)
+	c.InvalidateUnread()
 }
 
 // Update updates the channel with the given Discord object.
@@ -67,19 +68,13 @@ func (c *Channel) Update(ch *discord.Channel) {
 // InvalidateUnread invalidates the guild's unread state.
 func (c *Channel) InvalidateUnread() {
 	state := gtkcord.FromContext(c.Context())
-
-	var mentions int
+	unreads := state.CountUnreads(c.id)
 
 	indicator := state.ChannelIsUnread(c.id)
-	if indicator == ningen.ChannelMentioned {
-		mentions = 1
-	}
-
-	read := state.ReadState.ReadState(c.id)
-	if read != nil {
-		mentions = read.MentionCount
+	if indicator != ningen.ChannelRead && unreads == 0 {
+		unreads = 1
 	}
 
 	c.SetIndicator(indicator)
-	c.Mentions.SetCount(mentions)
+	c.Mentions.SetCount(unreads)
 }

@@ -305,6 +305,44 @@ func (s *State) MessagePreview(msg *discord.Message) string {
 	return ""
 }
 
+// CountUnreads returns the number of unread messages in the channel.
+func (s *State) CountUnreads(chID discord.ChannelID) int {
+	var unread int
+
+	// Grab our known messages so we can count the unread ones.
+	msgs, _ := s.Cabinet.Messages(chID)
+
+	readState := s.ReadState.ReadState(chID)
+	// We check if either the read state is not known at all or we're getting
+	// neither a mention nor a last read message, indicating that we've never
+	// read anything here.
+	if readState == nil || !readState.LastMessageID.IsValid() {
+		// We've never seen this channel before, so we might not have any
+		// messages. If we do, then we'll count them, otherwise, we'll just
+		// assume that there are 1 (one) unread message.
+		if msgs != nil {
+			unread = len(msgs)
+		} else {
+			unread = 1
+		}
+	} else if msgs != nil {
+		// We've seen this channel before, so we'll count (if we can )the unread
+		// messages from the last read message.
+		for _, msg := range msgs {
+			if msg.ID > readState.LastMessageID {
+				unread++
+			} else {
+				// We've reached the last read message, so we can stop counting.
+				break
+			}
+		}
+	} else if unread == 0 && s.ChannelIsUnread(chID) != ningen.ChannelRead {
+		unread = 1
+	}
+
+	return unread
+}
+
 // InjectAvatarSize calls InjectSize with size being 64px.
 func InjectAvatarSize(urlstr string) string {
 	return InjectSize(urlstr, 64)
