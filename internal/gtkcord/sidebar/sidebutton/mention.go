@@ -11,9 +11,15 @@ import (
 type MentionsIndicator struct {
 	*gtk.Revealer
 	Label *gtk.Label
+
+	count  int
+	reveal bool
 }
 
 var mentionCSS = cssutil.Applier("sidebar-mention", `
+	.sidebar-mention {
+		background: none;
+	}
 	.sidebar-mention.sidebar-mention-active,
 	.sidebar-mention.sidebar-mention-active label {
 		border-radius: 100px;
@@ -36,6 +42,7 @@ func NewMentionsIndicator() *MentionsIndicator {
 	m := &MentionsIndicator{
 		Revealer: gtk.NewRevealer(),
 		Label:    gtk.NewLabel(""),
+		reveal:   true,
 	}
 
 	m.SetChild(m.Label)
@@ -43,21 +50,42 @@ func NewMentionsIndicator() *MentionsIndicator {
 	m.SetVAlign(gtk.AlignEnd)
 	m.SetTransitionType(gtk.RevealerTransitionTypeCrossfade)
 	m.SetTransitionDuration(100)
-	m.SetRevealChild(false)
 
+	m.update()
 	mentionCSS(m)
 	return m
 }
 
 // SetCount sets the mention count.
 func (m *MentionsIndicator) SetCount(count int) {
-	if count == 0 {
+	if count == m.count {
+		return
+	}
+
+	m.count = count
+	m.update()
+}
+
+// Count returns the mention count.
+func (m *MentionsIndicator) Count() int {
+	return m.count
+}
+
+// SetRevealChild sets whether the indicator should be revealed.
+// This lets the user hide the indicator even if there are mentions.
+func (m *MentionsIndicator) SetRevealChild(reveal bool) {
+	m.reveal = reveal
+	m.update()
+}
+
+func (m *MentionsIndicator) update() {
+	if m.count == 0 {
 		m.RemoveCSSClass("sidebar-mention-active")
-		m.SetRevealChild(false)
+		m.Revealer.SetRevealChild(false)
 		return
 	}
 
 	m.AddCSSClass("sidebar-mention-active")
-	m.SetRevealChild(true)
-	m.Label.SetText(strconv.Itoa(count))
+	m.Label.SetText(strconv.Itoa(m.count))
+	m.Revealer.SetRevealChild(m.reveal && m.count > 0)
 }

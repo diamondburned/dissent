@@ -20,9 +20,11 @@ const (
 type Folder struct {
 	*gtk.Box
 
-	ButtonOverlay *gtk.Overlay
-	ButtonPill    *sidebutton.Pill
-	Button        *FolderButton
+	Button struct {
+		*gtk.Overlay
+		Pill   *sidebutton.Pill
+		Folder *FolderButton
+	}
 
 	Revealer *gtk.Revealer
 	GuildBox *gtk.Box
@@ -67,15 +69,15 @@ func NewFolder(ctx context.Context, ctrl GuildController) *Folder {
 		ctrl: ctrl,
 	}
 
-	f.Button = NewFolderButton(ctx)
-	f.Button.SetRevealed(false)
-	f.Button.ConnectClicked(f.toggle)
+	f.Button.Folder = NewFolderButton(ctx)
+	f.Button.Folder.SetRevealed(false)
+	f.Button.Folder.ConnectClicked(f.toggle)
 
-	f.ButtonPill = sidebutton.NewPill()
+	f.Button.Pill = sidebutton.NewPill()
 
-	f.ButtonOverlay = gtk.NewOverlay()
-	f.ButtonOverlay.SetChild(f.Button)
-	f.ButtonOverlay.AddOverlay(f.ButtonPill)
+	f.Button.Overlay = gtk.NewOverlay()
+	f.Button.Overlay.SetChild(f.Button.Folder)
+	f.Button.Overlay.AddOverlay(f.Button.Pill)
 
 	f.GuildBox = gtk.NewBox(gtk.OrientationVertical, 0)
 
@@ -85,7 +87,7 @@ func NewFolder(ctx context.Context, ctrl GuildController) *Folder {
 	f.Revealer.SetChild(f.GuildBox)
 
 	f.Box = gtk.NewBox(gtk.OrientationVertical, 0)
-	f.Box.Append(f.ButtonOverlay)
+	f.Box.Append(f.Button.Overlay)
 	f.Box.Append(f.Revealer)
 	f.AddCSSClass("guild-folder-collapsed")
 	folderCSS(f.Box)
@@ -102,22 +104,23 @@ func (f *Folder) setGuildOpen(open bool) {
 	f.open = open
 
 	if f.Revealer.RevealChild() {
-		f.ButtonPill.State = sidebutton.PillOpened
+		f.Button.Pill.State = sidebutton.PillOpened
 	} else {
 		if open {
-			f.ButtonPill.State = sidebutton.PillActive
+			f.Button.Pill.State = sidebutton.PillActive
 		} else {
-			f.ButtonPill.State = sidebutton.PillInactive
+			f.Button.Pill.State = sidebutton.PillInactive
 		}
 	}
 
-	f.ButtonPill.Invalidate()
+	f.Button.Pill.Invalidate()
 }
 
 func (f *Folder) toggle() {
 	reveal := !f.Revealer.RevealChild()
 	f.Revealer.SetRevealChild(reveal)
-	f.Button.SetRevealed(reveal)
+	f.Button.Folder.SetRevealed(reveal)
+	f.Button.Folder.Mentions.SetRevealChild(!reveal)
 	f.setGuildOpen(f.open)
 
 	if reveal {
@@ -129,10 +132,9 @@ func (f *Folder) toggle() {
 
 // Set sets a fresh list of guilds.
 func (f *Folder) Set(folder *gateway.GuildFolder) {
-	f.Button.SetIcons(folder.GuildIDs)
-
+	f.Button.Folder.SetIcons(folder.GuildIDs)
 	if folder.Color != discord.NullColor {
-		f.Button.SetColor(folder.Color)
+		f.Button.Folder.SetColor(folder.Color)
 	}
 
 	for _, guild := range f.Guilds {
@@ -187,12 +189,19 @@ func (f *Folder) viewChild() {}
 
 // InvalidateUnread invalidates the folder's unread state.
 func (f *Folder) InvalidateUnread() {
-	f.ButtonPill.Attrs = 0
+	f.Button.Pill.Attrs = 0
 	for _, guild := range f.Guilds {
-		f.ButtonPill.Attrs |= guild.Pill.Attrs
+		f.Button.Pill.Attrs |= guild.Pill.Attrs
 	}
 
-	f.ButtonPill.Invalidate()
+	f.Button.Pill.Invalidate()
+
+	var mentions int
+	for _, guild := range f.Guilds {
+		mentions += guild.Mentions.Count()
+	}
+
+	f.Button.Folder.Mentions.SetCount(mentions)
 }
 
 type guildControllerFolder Folder

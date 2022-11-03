@@ -10,6 +10,7 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/imgutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
+	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar/sidebutton"
 )
 
 // FolderButton is the folder icon containing the four guild icons.
@@ -20,6 +21,7 @@ type FolderButton struct {
 	GuildGrid  *gtk.Grid // contains 4 images always.
 	FolderIcon *gtk.Image
 	Images     [4]*onlineimage.Avatar // first 4 of folder.Guilds
+	Mentions   *sidebutton.MentionsIndicator
 
 	prov *gtk.CSSProvider
 	ctx  context.Context
@@ -113,9 +115,17 @@ func NewFolderButton(ctx context.Context) *FolderButton {
 	b.MainStack.AddChild(b.GuildGrid)
 	b.MainStack.AddChild(b.FolderIcon)
 
+	b.Mentions = sidebutton.NewMentionsIndicator()
+	b.Mentions.SetVAlign(gtk.AlignEnd)
+	b.Mentions.SetHAlign(gtk.AlignEnd)
+
+	overlay := gtk.NewOverlay()
+	overlay.SetChild(b.MainStack)
+	overlay.AddOverlay(b.Mentions)
+
 	b.Button = gtk.NewButton()
 	b.Button.SetHasFrame(false)
-	b.Button.SetChild(b.MainStack)
+	b.Button.SetChild(overlay)
 
 	folderButtonCSS(b)
 	return &b
