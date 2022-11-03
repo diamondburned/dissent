@@ -68,9 +68,24 @@ func init() {
 
 // Wrap wraps the given state.
 func Wrap(state *state.State) *State {
-	state.Client.OnRequest = append(state.Client.OnRequest, func(r httpdriver.Request) error {
+	c := state.Client.Client
+	c.OnRequest = append(c.OnRequest, func(r httpdriver.Request) error {
 		req := (*http.Request)(r.(*httpdriver.DefaultRequest))
 		log.Println("Discord API:", req.Method, req.URL.Path)
+		return nil
+	})
+	c.OnResponse = append(c.OnResponse, func(dreq httpdriver.Request, dresp httpdriver.Response) error {
+		req := (*http.Request)(dreq.(*httpdriver.DefaultRequest))
+		if dresp == nil {
+			log.Println("Discord API:", req.Method, req.URL.Path, "nil response")
+			return nil
+		}
+
+		resp := (*http.Response)(dresp.(*httpdriver.DefaultResponse))
+		if resp.StatusCode >= 400 {
+			log.Printf("Discord API: %s %s: %s", req.Method, req.URL.Path, resp.Status)
+		}
+
 		return nil
 	})
 
