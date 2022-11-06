@@ -183,7 +183,7 @@ func (c *Component) loginEmail(email, password, totp string) {
 		}
 
 		return func() {
-			c.page.asyncUseToken(u.Token)
+			c.loginToken(u.Token)
 			c.SetDone()
 		}
 	})
@@ -348,7 +348,7 @@ func NewFormEntry(label string) *FormEntry {
 // Text gets the value entry.
 func (e *FormEntry) Text() string { return e.Entry.Text() }
 
-/// FocusNext navigates to the next widget.
+// FocusNext navigates to the next widget.
 func (e *FormEntry) FocusNext() {
 	e.Entry.Emit("move-focus", gtk.DirTabForward)
 }
