@@ -68,7 +68,7 @@ func (c *Channel) Update(ch *discord.Channel) {
 // InvalidateUnread invalidates the guild's unread state.
 func (c *Channel) InvalidateUnread() {
 	state := gtkcord.FromContext(c.Context())
-	unreads := state.CountUnreads(c.id)
+	unreads := state.ChannelCountUnreads(c.id)
 
 	indicator := state.ChannelIsUnread(c.id)
 	if indicator != ningen.ChannelRead && unreads == 0 {

@@ -8,7 +8,7 @@ require (
 	github.com/diamondburned/chatkit v0.0.0-20220926193033-273b48e93b96
 	github.com/diamondburned/gotk4/pkg v0.0.0-20220925114733-8c5529b9df15
 	github.com/diamondburned/gotkit v0.0.0-20220927204852-c6db6b04288f
-	github.com/diamondburned/ningen/v3 v3.0.0-20221103072710-cb037fc43e5b
+	github.com/diamondburned/ningen/v3 v3.0.0-20221103080151-60cdb3e81ef4
 )
 
 require (
