@@ -4,11 +4,11 @@ go 1.17
 
 require (
 	github.com/diamondburned/adaptive v0.0.2-0.20220328111603-4f867d7948b2
-	github.com/diamondburned/arikawa/v3 v3.1.1-0.20221031113421-60ed12f3c05e
+	github.com/diamondburned/arikawa/v3 v3.1.1-0.20221103093025-87c479a2dcd4
 	github.com/diamondburned/chatkit v0.0.0-20220926193033-273b48e93b96
 	github.com/diamondburned/gotk4/pkg v0.0.0-20220925114733-8c5529b9df15
 	github.com/diamondburned/gotkit v0.0.0-20220927204852-c6db6b04288f
-	github.com/diamondburned/ningen/v3 v3.0.0-20221103080151-60cdb3e81ef4
+	github.com/diamondburned/ningen/v3 v3.0.0-20221109004709-fed56ccbcd19
 )
 
 require (

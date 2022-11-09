@@ -12,7 +12,7 @@ import (
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar/channels"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar/direct"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar/direct/dmbutton"
+	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar/directbutton"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar/guilds"
 )
 
@@ -26,10 +26,10 @@ type Controller interface {
 type Sidebar struct {
 	*gtk.Box // horizontal
 
-	Left     *gtk.Box
-	DMButton *dmbutton.Button
-	Guilds   *guilds.View
-	Right    *gtk.Stack
+	Left   *gtk.Box
+	DMView *directbutton.View
+	Guilds *guilds.View
+	Right  *gtk.Stack
 
 	// Keep track of the last child to remove.
 	current struct {
@@ -66,11 +66,8 @@ func NewSidebar(ctx context.Context, ctrl Controller) *Sidebar {
 	s.Guilds = guilds.NewView(ctx, (*guildsSidebar)(&s))
 	s.Guilds.Invalidate()
 
-	s.DMButton = dmbutton.NewButton(ctx, func() {
-		direct := s.openDMs()
-		direct.Invalidate()
-	})
-	s.DMButton.Invalidate()
+	s.DMView = directbutton.NewView(ctx, &s)
+	s.DMView.Invalidate()
 
 	dmSeparator := gtk.NewSeparator(gtk.OrientationHorizontal)
 	dmSeparator.AddCSSClass("sidebar-dm-separator")
@@ -78,7 +75,7 @@ func NewSidebar(ctx context.Context, ctrl Controller) *Sidebar {
 	// leftBox holds just the DM button and the guild view, as opposed to s.Left
 	// which holds the scrolled window and the window controls.
 	leftBox := gtk.NewBox(gtk.OrientationVertical, 0)
-	leftBox.Append(s.DMButton)
+	leftBox.Append(s.DMView)
 	leftBox.Append(dmSeparator)
 	leftBox.Append(s.Guilds)
 
@@ -166,6 +163,11 @@ func (s *Sidebar) removeCurrent() {
 	})
 }
 
+func (s *Sidebar) OpenDMs() {
+	direct := s.openDMs()
+	direct.Invalidate()
+}
+
 func (s *Sidebar) openDMs() *direct.ChannelView {
 	if direct, ok := s.current.w.(*direct.ChannelView); ok {
 		// we're already there
@@ -188,8 +190,7 @@ func (s *Sidebar) openDMs() *direct.ChannelView {
 }
 
 func (s *Sidebar) openGuild(guildID discord.GuildID) *channels.View {
-	s.DMButton.Pill.State = 0
-	s.DMButton.Pill.Invalidate()
+	s.DMView.Unselect()
 
 	if ch, ok := s.current.w.(*channels.View); ok && ch.GuildID() == guildID {
 		// We're already there.

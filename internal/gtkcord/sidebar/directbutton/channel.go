@@ -1,4 +1,4 @@
-package dmbutton
+package directbutton
 
 import (
 	"context"
@@ -11,11 +11,7 @@ import (
 	"github.com/diamondburned/ningen/v3"
 )
 
-type ChannelController interface {
-	OpenChannel(discord.ChannelID)
-}
-
-type Channel struct {
+type ChannelButton struct {
 	*sidebutton.Button
 	id discord.ChannelID
 }
@@ -23,20 +19,18 @@ type Channel struct {
 var channelCSS = cssutil.Applier("dmbutton-channel", `
 `)
 
-func NewChannel(ctx context.Context, ctrl ChannelController, id discord.ChannelID) *Channel {
-	ch := Channel{id: id}
-	ch.Button = sidebutton.NewButton(ctx, func() {
-		ctrl.OpenChannel(id)
-	})
+func NewChannelButton(ctx context.Context, id discord.ChannelID, opener Opener) *ChannelButton {
+	ch := ChannelButton{id: id}
+	ch.Button = sidebutton.NewButton(ctx, func() { opener.SelectChannel(id) })
 	channelCSS(ch)
 	return &ch
 }
 
 // ID returns the channel ID.
-func (c *Channel) ID() discord.ChannelID { return c.id }
+func (c *ChannelButton) ID() discord.ChannelID { return c.id }
 
 // Invalidate invalidates and updates the state of the channel.
-func (c *Channel) Invalidate() {
+func (c *ChannelButton) Invalidate() {
 	state := gtkcord.FromContext(c.Context())
 
 	ch, err := state.Cabinet.Channel(c.id)
@@ -50,7 +44,7 @@ func (c *Channel) Invalidate() {
 }
 
 // Update updates the channel with the given Discord object.
-func (c *Channel) Update(ch *discord.Channel) {
+func (c *ChannelButton) Update(ch *discord.Channel) {
 	name := gtkcord.ChannelName(ch)
 
 	var iconURL string
@@ -66,7 +60,7 @@ func (c *Channel) Update(ch *discord.Channel) {
 }
 
 // InvalidateUnread invalidates the guild's unread state.
-func (c *Channel) InvalidateUnread() {
+func (c *ChannelButton) InvalidateUnread() {
 	state := gtkcord.FromContext(c.Context())
 	unreads := state.ChannelCountUnreads(c.id)
 

@@ -1,4 +1,4 @@
-package dmbutton
+package directbutton
 
 import (
 	"context"
@@ -60,13 +60,18 @@ func NewButton(ctx context.Context, open func()) *Button {
 	state.BindHandler(vis, func(ev gateway.Event) {
 		switch ev := ev.(type) {
 		case *read.UpdateEvent:
-			if ev.GuildID.IsValid() {
-				return
+			if !ev.GuildID.IsValid() {
+				b.Invalidate()
 			}
-
-			b.Invalidate()
+		case *gateway.MessageCreateEvent:
+			if !ev.GuildID.IsValid() {
+				b.Invalidate()
+			}
 		}
-	})
+	},
+		(*read.UpdateEvent)(nil),
+		(*gateway.MessageCreateEvent)(nil),
+	)
 
 	dmButtonCSS(b)
 	return &b

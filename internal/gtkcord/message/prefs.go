@@ -94,11 +94,16 @@ func (*blockedUsersPrefs) CreateWidget(ctx context.Context, _ func()) gtk.Widget
 		blockedList = gtk.NewBox(gtk.OrientationVertical, 0)
 		blockedList.AddCSSClass("message-blockedusers")
 
-		for _, user := range state.RelationshipState.BlockedUsers() {
-			user := user
+		for _, userID := range state.RelationshipState.BlockedUserIDs() {
+			tag := userID.Mention()
+
+			presence, _ := state.Presence(0, userID)
+			if presence != nil {
+				tag = presence.User.Tag()
+			}
 
 			unblock := gtk.NewButtonWithLabel("Unblock")
-			name := gtk.NewLabel(user.Tag())
+			name := gtk.NewLabel(tag)
 			name.SetHExpand(true)
 			name.SetXAlign(0)
 			name.SetSelectable(true)
@@ -111,18 +116,21 @@ func (*blockedUsersPrefs) CreateWidget(ctx context.Context, _ func()) gtk.Widget
 
 			unblock.ConnectClicked(func() {
 				// Ensure that the user is still blocked.
-				if !state.RelationshipState.IsBlocked(user.ID) {
+				if !state.RelationshipState.IsBlocked(userID) {
 					return
 				}
 
 				box.SetSensitive(false)
 				gtkutil.Async(ctx, func() func() {
-					err := state.DeleteRelationship(user.ID)
+					err := state.DeleteRelationship(userID)
 
 					return func() {
 						if err != nil {
 							box.SetSensitive(true)
-							app.Error(ctx, errors.Wrapf(err, "cannot unblock user %s", user.Tag()))
+							app.Error(ctx, errors.Wrapf(err,
+								"cannot unblock user %s (%s)",
+								tag, userID.Mention(),
+							))
 						} else {
 							blockedList.Remove(box)
 						}
