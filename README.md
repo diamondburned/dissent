@@ -12,8 +12,15 @@
 
 ### Dependencies
 
-gtkcord4 needs GTK4, gobject-introspection, and optionally libcanberra. If compiling, then the library
-headers are also required.
+Gtkcord4 needs the following dependencies met:
+
+```
+sudo dnf install golang gtk4-devel gobject-introspection gobject-introspection-devel
+```
+
+Optionally (but recommended) install `libcanberra`
+
+To build with libadwaita, you will need `libadwaita-devel`
 
 ### Pre-built Binary
 
