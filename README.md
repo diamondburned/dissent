@@ -15,7 +15,7 @@
 Gtkcord4 needs the following dependencies met:
 
 ```
-sudo dnf install golang gtk4-devel gobject-introspection gobject-introspection-devel
+golang git gtk4-devel gobject-introspection gobject-introspection-devel
 ```
 
 Optionally (but recommended) install `libcanberra`
