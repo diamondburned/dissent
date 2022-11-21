@@ -12,7 +12,7 @@
 
 ### Dependencies
 
-Gtkcord4 needs the following dependencies met:
+gtkcord4 needs the following dependencies met:
 
 ```
 golang git gtk4-devel gobject-introspection gobject-introspection-devel
