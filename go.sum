@@ -32,10 +32,11 @@ github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSs
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/diamondburned/adaptive v0.0.2-0.20220226002257-ef8720b54399/go.mod h1:cLoCdQtpCp/TSJBJTgXe7W2FJNelXrmPv+X7luB6/Qg=
-github.com/diamondburned/adaptive v0.0.2-0.20220328111603-4f867d7948b2 h1:xMYuLPsjREtnGwJJik1BiNy28cU7QhGfp5rNbneBmdU=
-github.com/diamondburned/adaptive v0.0.2-0.20220328111603-4f867d7948b2/go.mod h1:cLoCdQtpCp/TSJBJTgXe7W2FJNelXrmPv+X7luB6/Qg=
-github.com/diamondburned/arikawa/v3 v3.1.1-0.20221103093025-87c479a2dcd4 h1:zINIav6NahtUTzz3OifF5XJQQXIZIepTHcT+xurcLQs=
+github.com/diamondburned/adaptive v0.0.2-0.20221212225842-36440d3d2f70 h1:/kHFJJACD3J98k4l/QA6YugCsgRySMpUOK13GFOJmGc=
+github.com/diamondburned/adaptive v0.0.2-0.20221212225842-36440d3d2f70/go.mod h1:cLoCdQtpCp/TSJBJTgXe7W2FJNelXrmPv+X7luB6/Qg=
 github.com/diamondburned/arikawa/v3 v3.1.1-0.20221103093025-87c479a2dcd4/go.mod h1:5jBSNnp82Z/EhsKa6Wk9FsOqSxfVkNZDTDBPOj47LpY=
+github.com/diamondburned/arikawa/v3 v3.1.1-0.20221205015406-73285954a1e9 h1:I9GOMEqbI1cIsmj3OFSAk39qfEkR6ndau9hY41FGQF4=
+github.com/diamondburned/arikawa/v3 v3.1.1-0.20221205015406-73285954a1e9/go.mod h1:5jBSNnp82Z/EhsKa6Wk9FsOqSxfVkNZDTDBPOj47LpY=
 github.com/diamondburned/chatkit v0.0.0-20220926193033-273b48e93b96 h1:hqA4DGU69NcJvNdTPbdAHdQ58mN4Oh+3T4bGcHTTU7U=
 github.com/diamondburned/chatkit v0.0.0-20220926193033-273b48e93b96/go.mod h1:bIp+oXr6sVdieLJ9PzuMC4P52lzZ2PqM4dNSryZ93Rg=
 github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20220417101956-dcc3707dc307 h1:7SvMQLBSty7Y+0gMBYi20JE4+rM+VbLWhZGMVKK3VQg=

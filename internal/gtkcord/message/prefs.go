@@ -86,7 +86,7 @@ func (*blockedUsersPrefs) CreateWidget(ctx context.Context, _ func()) gtk.Widget
 	expander.NotifyProperty("expanded", func() {
 		if !expander.Expanded() {
 			expander.SetLabel("Show")
-			blockedList.Unparent()
+			expander.SetChild(nil)
 			blockedList = nil
 			return
 		}

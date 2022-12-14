@@ -130,7 +130,7 @@ func (v *View) update(unreads map[discord.ChannelID]channelUnreadStatus) {
 
 	// Purge all buttons off the widget.
 	for _, button := range v.mentioned.Buttons {
-		button.Unparent()
+		v.Remove(button)
 	}
 
 	// Delete unused buttons.

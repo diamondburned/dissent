@@ -182,13 +182,6 @@ func (p *ChatPage) switchTo(w gtk.Widgetter) {
 		// Remove the widget when the transition is done.
 		if !p.RightChild.TransitionRunning() {
 			p.RightChild.Remove(old)
-
-			// Workaround for message views leaking.
-			if view, ok := old.(*message.View); ok {
-				view.Unparent()
-				view.Unrealize()
-			}
-
 			return true
 		}
 		return false
