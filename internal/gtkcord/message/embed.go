@@ -27,9 +27,12 @@ import (
 
 // TODO: allow disable fetching videos.
 
-func resizeURL(image *embed.Embed, proxyURL string, w, h int) string {
-	imgW, imgH := image.Size()
-	if imgW == 0 || imgH == 0 {
+var trustedCDNHosts = map[string]struct{}{
+	"cdn.discordapp.com": {},
+}
+
+func resizeURL(directURL, proxyURL string, w, h int) string {
+	if w == 0 || h == 0 {
 		return proxyURL
 	}
 
@@ -42,24 +45,35 @@ func resizeURL(image *embed.Embed, proxyURL string, w, h int) string {
 		scale = 2
 	}
 
-	imgW *= scale
-	imgH *= scale
-
-	if imgW > w || imgH > h {
-		return proxyURL
-	}
-
 	u, err := url.Parse(proxyURL)
 	if err != nil {
 		return proxyURL
 	}
 
-	w = imgW
-	h = imgH
+	if direct, err := url.Parse(directURL); err == nil {
+		// Special-case: sometimes, the URL is already a Discord CDN URL. In
+		// that case, we'll just use it directly.
+		if _, ok := trustedCDNHosts[direct.Host]; ok {
+			u = direct
+		}
+	}
 
 	q := u.Query()
-	q.Set("width", strconv.Itoa(w))
-	q.Set("height", strconv.Itoa(h))
+	// Do we have a size parameter already? We might if the URL is one crafted
+	// by us to fetch an emoji.
+	if q.Has("size") {
+		// If we even have a size, then we can just assume that the size is
+		// the larger dimension.
+		if w > h {
+			q.Set("size", strconv.Itoa(w*scale))
+		} else {
+			q.Set("size", strconv.Itoa(h*scale))
+		}
+	} else {
+		q.Set("width", strconv.Itoa(w*scale))
+		q.Set("height", strconv.Itoa(h*scale))
+	}
+
 	u.RawQuery = q.Encode()
 
 	return u.String()
@@ -145,7 +159,7 @@ func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widg
 				image.SetSizeRequest(int(attachment.Width), int(attachment.Height))
 				if typ == "image" {
 					image.SetFromURL(resizeURL(
-						image,
+						attachment.URL,
 						attachment.Proxy,
 						int(attachment.Width),
 						int(attachment.Height),
@@ -366,6 +380,7 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 	}
 
 	if msgEmbed.Thumbnail != nil {
+		thumb := msgEmbed.Thumbnail
 		big := !hasBody ||
 			msgEmbed.Type == discord.GIFVEmbed ||
 			msgEmbed.Type == discord.ImageEmbed ||
@@ -382,7 +397,7 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 		var opts embed.Opts
 		switch msgEmbed.Type {
 		case discord.NormalEmbed, discord.ImageEmbed:
-			opts.Type = embed.TypeFromURL(msgEmbed.Thumbnail.Proxy)
+			opts.Type = embed.TypeFromURL(thumb.Proxy)
 		case discord.VideoEmbed:
 			opts.Type = embed.EmbedTypeVideo
 		case discord.GIFVEmbed:
@@ -391,12 +406,17 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 
 		image := embed.New(ctx, maxW, maxH, opts)
 		image.SetVAlign(gtk.AlignStart)
-		image.SetSizeRequest(int(msgEmbed.Thumbnail.Width), int(msgEmbed.Thumbnail.Height))
+		if thumb.Width > 0 && thumb.Height > 0 {
+			// Enforce this image's own dimensions if possible.
+			image.ShrinkMaxSize(int(thumb.Width), int(thumb.Height))
+			image.SetSizeRequest(int(thumb.Width), int(thumb.Height))
+		}
+
 		image.SetFromURL(resizeURL(
-			image,
-			msgEmbed.Thumbnail.Proxy,
-			int(msgEmbed.Thumbnail.Width),
-			int(msgEmbed.Thumbnail.Height),
+			thumb.URL,
+			thumb.Proxy,
+			int(thumb.Width),
+			int(thumb.Height),
 		))
 
 		switch {
@@ -405,25 +425,26 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 		case msgEmbed.Video != nil:
 			image.SetName(path.Base(msgEmbed.Video.URL))
 		default:
-			image.SetName(path.Base(msgEmbed.Thumbnail.URL))
+			image.SetName(path.Base(thumb.URL))
 		}
 
-		image.SetOpenURL(func() {
-			// See if we have either an Image or a Video. If we do, then use
-			// that instead.
-			switch {
-			case msgEmbed.Image != nil:
-				// Open the Image proxy instead of the Thumbnail proxy. Honestly
-				// have no idea what the difference is.
+		switch {
+		case msgEmbed.Image != nil:
+			// Open the Image proxy instead of the Thumbnail proxy. Honestly
+			// have no idea what the difference is.
+			image.SetOpenURL(func() {
 				app.OpenURI(ctx, msgEmbed.Image.Proxy)
-				return
-			case msgEmbed.Video != nil:
-				// Video doesn't have resizing, so we use the proxy URL
-				// directly.
+			})
+		case msgEmbed.Video != nil:
+			image.SetOpenURL(func() {
 				image.SetFromURL(msgEmbed.Video.Proxy)
 				image.ActivateDefault()
-			}
-		})
+			})
+		default:
+			image.SetOpenURL(func() {
+				app.OpenURI(ctx, msgEmbed.Thumbnail.Proxy)
+			})
+		}
 
 		if big {
 			image.SetHAlign(gtk.AlignStart)
@@ -456,7 +477,7 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 		if msgEmbed.Image != nil {
 			// The server can only resize images.
 			image.SetFromURL(resizeURL(
-				image,
+				img.URL,
 				img.Proxy,
 				int(img.Width),
 				int(img.Height),
