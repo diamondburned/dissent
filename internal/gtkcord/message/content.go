@@ -246,8 +246,11 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 	case m.Content != "" && md.IsUnicodeEmoji(m.Content):
 		l := gtk.NewLabel(m.Content)
 		l.SetAttributes(gtkcord.EmojiAttrs)
+		l.SetHExpand(true)
 		l.SetXAlign(0)
 		l.SetSelectable(true)
+		l.SetWrap(true)
+		l.SetWrapMode(pango.WrapWordChar)
 		c.append(l)
 
 	// We don't render the message content if all it is is the URL to the
