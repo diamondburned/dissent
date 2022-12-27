@@ -18,8 +18,12 @@ import (
 
 // Controller is the parent controller that Sidebar controls.
 type Controller interface {
-	channels.Controller
 	CloseGuild(permanent bool)
+}
+
+type Opener interface {
+	channels.Opener
+	directbutton.Opener
 }
 
 // Sidebar is the bar on the left side of the application once it's logged in.
@@ -37,8 +41,9 @@ type Sidebar struct {
 		// id discord.GuildID
 	}
 
-	ctx  context.Context
-	ctrl Controller
+	ctx    context.Context
+	ctrl   Controller
+	opener Opener
 }
 
 var sidebarCSS = cssutil.Applier("sidebar-sidebar", `
@@ -57,16 +62,17 @@ var sidebarCSS = cssutil.Applier("sidebar-sidebar", `
 `)
 
 // NewSidebar creates a new Sidebar.
-func NewSidebar(ctx context.Context, ctrl Controller) *Sidebar {
+func NewSidebar(ctx context.Context, ctrl Controller, opener Opener) *Sidebar {
 	s := Sidebar{
-		ctx:  ctx,
-		ctrl: ctrl,
+		ctx:    ctx,
+		ctrl:   ctrl,
+		opener: opener,
 	}
 
 	s.Guilds = guilds.NewView(ctx, (*guildsSidebar)(&s))
 	s.Guilds.Invalidate()
 
-	s.DMView = directbutton.NewView(ctx, &s)
+	s.DMView = directbutton.NewView(ctx, opener)
 	s.DMView.Invalidate()
 
 	dmSeparator := gtk.NewSeparator(gtk.OrientationHorizontal)
@@ -163,12 +169,7 @@ func (s *Sidebar) removeCurrent() {
 	})
 }
 
-func (s *Sidebar) OpenDMs() {
-	direct := s.openDMs()
-	direct.Invalidate()
-}
-
-func (s *Sidebar) openDMs() *direct.ChannelView {
+func (s *Sidebar) OpenDMs() *direct.ChannelView {
 	if direct, ok := s.current.w.(*direct.ChannelView); ok {
 		// we're already there
 		return direct
@@ -177,8 +178,9 @@ func (s *Sidebar) openDMs() *direct.ChannelView {
 	s.ctrl.CloseGuild(true)
 	s.Guilds.Unselect()
 
-	direct := direct.NewChannelView(s.ctx, s.ctrl)
+	direct := direct.NewChannelView(s.ctx, s.opener)
 	direct.SetVExpand(true)
+	direct.Invalidate()
 
 	s.Right.AddChild(direct)
 	s.Right.SetVisibleChild(direct)
@@ -192,25 +194,26 @@ func (s *Sidebar) openDMs() *direct.ChannelView {
 func (s *Sidebar) openGuild(guildID discord.GuildID) *channels.View {
 	s.DMView.Unselect()
 
-	if ch, ok := s.current.w.(*channels.View); ok && ch.GuildID() == guildID {
+	if chs, ok := s.current.w.(*channels.View); ok && chs.GuildID() == guildID {
 		// We're already there.
-		return ch
+		return chs
 	}
 
 	s.ctrl.CloseGuild(true)
 
-	ch := channels.NewView(s.ctx, s.ctrl, guildID)
-	ch.SetVExpand(true)
-	ch.InvalidateHeader()
+	chs := channels.NewView(s.ctx, s.opener, guildID)
+	chs.SetVExpand(true)
+	chs.InvalidateHeader()
+	chs.InvalidateChannels()
 
-	s.Right.AddChild(ch)
-	s.Right.SetVisibleChild(ch)
+	s.Right.AddChild(chs)
+	s.Right.SetVisibleChild(chs)
 
 	s.removeCurrent()
-	s.current.w = ch
+	s.current.w = chs
 
-	ch.Child.Tree.GrabFocus()
-	return ch
+	chs.Child.Tree.GrabFocus()
+	return chs
 }
 
 // SelectGuild selects the guild with the given ID.
@@ -231,11 +234,9 @@ func (s *Sidebar) SelectChannel(chID discord.ChannelID) {
 	if ch.GuildID.IsValid() {
 		guild := s.openGuild(ch.GuildID)
 		guild.SelectChannel(chID)
-		guild.InvalidateChannels()
 	} else {
-		direct := s.openDMs()
+		direct := s.OpenDMs()
 		direct.SelectChannel(chID)
-		direct.Invalidate()
 	}
 }
 

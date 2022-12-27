@@ -19,8 +19,8 @@ import (
 type Opener interface {
 	// OpenDMs opens the DMs view.
 	OpenDMs()
-	// SelectChannel selects the channel with the given ID.
-	SelectChannel(discord.ChannelID)
+	// OpenChannel opens the channel with the given ID.
+	OpenChannel(discord.ChannelID)
 }
 
 type View struct {
@@ -82,8 +82,6 @@ type channelUnreadStatus struct {
 }
 
 func (v *View) Invalidate() {
-	v.DM.Invalidate()
-
 	state := gtkcord.FromContext(v.ctx)
 
 	// This is slow, but whatever.

@@ -32,8 +32,8 @@ type ChannelView struct {
 	selectID discord.ChannelID // delegate to be selected later
 }
 
-// Controller is the parent controller that ChannelView controls.
-type Controller interface {
+// Opener is the parent controller that ChannelView controls.
+type Opener interface {
 	OpenChannel(discord.ChannelID)
 }
 
@@ -48,7 +48,7 @@ var _ = cssutil.WriteCSS(`
 `)
 
 // NewChannelView creates a new view.
-func NewChannelView(ctx context.Context, ctrl Controller) *ChannelView {
+func NewChannelView(ctx context.Context, ctrl Opener) *ChannelView {
 	v := ChannelView{
 		ctx:      ctx,
 		channels: make(map[discord.ChannelID]*Channel, 50),
@@ -60,7 +60,8 @@ func NewChannelView(ctx context.Context, ctrl Controller) *ChannelView {
 	v.list.SetSortFunc(v.sort)
 	v.list.SetFilterFunc(v.filter)
 	v.list.SetSelectionMode(gtk.SelectionBrowse)
-	v.list.ConnectRowSelected(func(r *gtk.ListBoxRow) {
+	v.list.SetActivateOnSingleClick(true)
+	v.list.ConnectRowActivated(func(r *gtk.ListBoxRow) {
 		// Invalidate our selection state.
 		v.selectID = 0
 
@@ -121,7 +122,12 @@ func NewChannelView(ctx context.Context, ctrl Controller) *ChannelView {
 				ch.Invalidate()
 			}
 		}
-	})
+	},
+		(*gateway.ChannelCreateEvent)(nil),
+		(*gateway.ChannelDeleteEvent)(nil),
+		(*gateway.MessageCreateEvent)(nil),
+		(*read.UpdateEvent)(nil),
+	)
 
 	// TODO: search
 
@@ -143,8 +149,6 @@ func (v *ChannelView) SelectChannel(chID discord.ChannelID) {
 
 // Invalidate invalidates the whole channel view.
 func (v *ChannelView) Invalidate() {
-	v.SetLoading()
-
 	state := gtkcord.FromContext(v.ctx)
 
 	// Temporarily disable the sort function. We'll re-enable it once we're
@@ -160,6 +164,8 @@ func (v *ChannelView) Invalidate() {
 		v.SetError(err)
 		return
 	}
+
+	v.SetChild(v.box)
 
 	// Keep track of channels that aren't in the list anymore.
 	keep := make(map[discord.ChannelID]bool, len(v.channels))
@@ -187,13 +193,10 @@ func (v *ChannelView) Invalidate() {
 		}
 	}
 
-	v.SetChild(v.box)
-
 	// If we have a channel to be selectedd, then select it.
 	if v.selectID.IsValid() {
 		if ch, ok := v.channels[v.selectID]; ok {
 			v.list.SelectRow(ch.ListBoxRow)
-			v.selectID = 0
 		}
 	}
 }

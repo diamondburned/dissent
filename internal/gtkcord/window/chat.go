@@ -49,7 +49,7 @@ var chatPageCSS = cssutil.Applier("window-chatpage", `
 
 func NewChatPage(ctx context.Context) *ChatPage {
 	p := ChatPage{ctx: ctx}
-	p.Left = sidebar.NewSidebar(ctx, (*sidebarChatPage)(&p))
+	p.Left = sidebar.NewSidebar(ctx, (*sidebarChatPage)(&p), &p)
 
 	back := adaptive.NewFoldRevealButton()
 	back.SetTransitionType(gtk.RevealerTransitionTypeSlideRight)
@@ -150,10 +150,25 @@ func (p *ChatPage) SwitchToMessages() {
 	}
 }
 
+// OpenDMs opens the DMs page.
+func (p *ChatPage) OpenDMs() {
+	p.SwitchToPlaceholder()
+	p.Left.OpenDMs()
+}
+
 // OpenChannel opens the channel with the given ID. Use this method to direct
 // the user to a new channel when they request to, e.g. through a notification.
 func (p *ChatPage) OpenChannel(chID discord.ChannelID) {
+	p.SwitchToPlaceholder()
 	p.Left.SelectChannel(chID)
+
+	p.RightLabel.SetText(gtkcord.ChannelNameFromID(p.ctx, chID))
+
+	win := app.WindowFromContext(p.ctx)
+	win.SetTitle(gtkcord.ChannelNameFromID(p.ctx, chID))
+
+	view := message.NewView(p.ctx, chID)
+	p.switchTo(view)
 }
 
 // OpenGuild opens the guild with the given ID.
@@ -190,16 +205,6 @@ func (p *ChatPage) switchTo(w gtk.Widgetter) {
 
 // sidebarChatPage implements SidebarController.
 type sidebarChatPage ChatPage
-
-func (p *sidebarChatPage) OpenChannel(chID discord.ChannelID) {
-	p.RightLabel.SetText(gtkcord.ChannelNameFromID(p.ctx, chID))
-
-	win := app.WindowFromContext(p.ctx)
-	win.SetTitle(gtkcord.ChannelNameFromID(p.ctx, chID))
-
-	view := message.NewView(p.ctx, chID)
-	(*ChatPage)(p).switchTo(view)
-}
 
 func (p *sidebarChatPage) CloseGuild(permanent bool) {
 	(*ChatPage)(p).SwitchToPlaceholder()

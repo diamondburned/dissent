@@ -1,13 +1,13 @@
 module github.com/diamondburned/gtkcord4
 
-go 1.17
+go 1.18
 
 require (
-	github.com/diamondburned/adaptive v0.0.2-0.20221212225842-36440d3d2f70
+	github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8
 	github.com/diamondburned/arikawa/v3 v3.1.1-0.20221205015406-73285954a1e9
-	github.com/diamondburned/chatkit v0.0.0-20220926193033-273b48e93b96
-	github.com/diamondburned/gotk4/pkg v0.0.0-20220925114733-8c5529b9df15
-	github.com/diamondburned/gotkit v0.0.0-20220927204852-c6db6b04288f
+	github.com/diamondburned/chatkit v0.0.0-20221220124033-97528a3fd110
+	github.com/diamondburned/gotk4/pkg v0.0.0-20221218002743-6628c95a768a
+	github.com/diamondburned/gotkit v0.0.0-20221217224254-30e97c8b6598
 	github.com/diamondburned/ningen/v3 v3.0.0-20221109004709-fed56ccbcd19
 )
 
@@ -18,7 +18,7 @@ require (
 	github.com/ianlancetaylor/cgosymbolizer v0.0.0-20220405231054-a1ae3e4bba26
 	github.com/pkg/errors v0.9.1
 	github.com/sahilm/fuzzy v0.1.0
-	github.com/yuin/goldmark v1.4.11
+	github.com/yuin/goldmark v1.4.13
 )
 
 require (
@@ -34,10 +34,12 @@ require (
 	github.com/zalando/go-keyring v0.2.1 // indirect
 	go4.org v0.0.0-20200411211856-f5505b9728dd // indirect
 	go4.org/unsafe/assume-no-moving-gc v0.0.0-20220617031537-928513b29760 // indirect
-	golang.org/x/crypto v0.0.0-20220321153916-2c7772ba3064 // indirect
+	golang.org/x/crypto v0.1.0 // indirect
 	golang.org/x/image v0.0.0-20220902085622-e7cb96979f69 // indirect
-	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/mod v0.6.0 // indirect
+	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f // indirect
+	golang.org/x/sys v0.1.0 // indirect
+	golang.org/x/text v0.4.0 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
-	golang.org/x/tools v0.0.0-20200212150539-ea181f53ac56 // indirect
+	golang.org/x/tools v0.2.0 // indirect
 )

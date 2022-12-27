@@ -21,7 +21,7 @@ var channelCSS = cssutil.Applier("dmbutton-channel", `
 
 func NewChannelButton(ctx context.Context, id discord.ChannelID, opener Opener) *ChannelButton {
 	ch := ChannelButton{id: id}
-	ch.Button = sidebutton.NewButton(ctx, func() { opener.SelectChannel(id) })
+	ch.Button = sidebutton.NewButton(ctx, func() { opener.OpenChannel(id) })
 	channelCSS(ch)
 	return &ch
 }

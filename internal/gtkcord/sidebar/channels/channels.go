@@ -15,10 +15,25 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Refactor notice
+//
+// We should probably settle for an API that's kind of like this:
+//
+//    ch := NewView(ctx, ctrl, guildID)
+//    var signal glib.SignalHandle
+//    signal = ch.ConnectOnUpdate(func() bool {
+//        if node := ch.Node(wantedChID); node != nil {
+//            node.Select()
+//            ch.HandlerDisconnect(signal)
+//        }
+//    })
+//    ch.Invalidate()
+//
+
 const ChannelsWidth = bannerWidth
 
-// Controller is the parent controller that View controls.
-type Controller interface {
+// Opener is the parent controller that View controls.
+type Opener interface {
 	OpenChannel(discord.ChannelID)
 }
 
@@ -42,7 +57,7 @@ type View struct {
 	}
 
 	ctx  gtkutil.Cancellable
-	ctrl Controller
+	ctrl Opener
 	tree *GuildTree
 	cols []*gtk.TreeViewColumn
 
@@ -107,7 +122,7 @@ var viewCSS = cssutil.Applier("channels-view", `
 `)
 
 // NewView creates a new View.
-func NewView(ctx context.Context, ctrl Controller, guildID discord.GuildID) *View {
+func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
 	v := View{
 		ctrl:    ctrl,
 		cols:    newTreeColumns(),
@@ -317,8 +332,11 @@ func (v *View) SelectChannel(chID discord.ChannelID) {
 	if v.tree != nil {
 		node := v.tree.Node(chID)
 		if node != nil {
+			path := node.TreePath()
 			selection := v.Child.Tree.Selection()
-			selection.SelectPath(node.TreePath())
+			if !selection.PathIsSelected(path) {
+				selection.SelectPath(path)
+			}
 			return
 		}
 	}

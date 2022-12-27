@@ -37,6 +37,9 @@ var buttonCSS = cssutil.Applier("sidebar-button", `
 	.sidebar-button image {
 		background-color: @theme_bg_color;
 	}
+	.sidebar-button > button .adaptive-avatar {
+		border-radius: 0; /* reset */
+	}
 	.sidebar-button > button .adaptive-avatar > image,
 	.sidebar-button > button .adaptive-avatar > label {
 		outline: 0px solid transparent;
