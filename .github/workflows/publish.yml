@@ -1,0 +1,275 @@
+name: Build and Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      targets:
+        description: Build targets (separated by spaces)
+        type: string
+        default: x86_64 aarch64
+  workflow_call:
+    inputs:
+      targets:
+        description: Build targets (separated by spaces)
+        type: string
+        default: x86_64 aarch64
+  push:
+    branches-ignore:
+      - nightly
+  release:
+    types: [released] # Prevents double builds on nightly
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  gomod:
+    name: Validate Go modules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Nix shell
+        uses: ./.github/actions/init-nix
+        with:
+          shell-file: shell.nix
+
+      - name: Validate Go modules
+        run: |
+          go mod tidy
+
+          if ! git diff --exit-code go.mod go.sum; then
+            echo "::error::Go modules are not tidied"
+            exit 1
+          fi
+
+      - name: Update gomod2nix.toml
+        run: |
+          gomod2nix --outdir nix
+
+          if git diff --exit-code nix/gomod2nix.toml; then
+            echo "changed=0" >> $GITHUB_OUTPUT
+          else
+            echo "changed=1" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit changes to gomod2nix.toml
+        id: commit
+        if: steps.update.outputs.changed == 1
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Update nix/gomod2nix.toml
+          file_pattern: nix/gomod2nix.toml
+
+  lint:
+    name: Lint
+    needs: gomod
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Nix shell
+        uses: ./.github/actions/init-nix
+        with:
+          shell-file: shell.nix
+
+      - name: Format
+        run: |
+          fail=
+          go list -f '{{ .Dir }}' | while read -r d; do
+            goimports -l "$d" | while read -r f; do
+              fail=1
+              printf "::error file=%s::%s\n" "$d/$f" "File is not formatted"
+            done
+          done
+          [[ -z "$fail" ]]
+
+      - name: Vet
+        run: go vet ./... |& workflowify -e -t vet
+
+      - name: Staticcheck (warnings)
+        run: staticcheck ./... || true |& workflowify -w -t staticcheck
+
+      - name: Test
+        run: go test -v ./...
+
+  # We need a whole ass job for this.
+  # https://docs.github.com/en/actions/learn-github-actions/expressions#example-returning-a-json-object
+  build-init:
+    name: Initialize build environment
+    runs-on: ubuntu-latest
+    outputs:
+      target-matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-targets
+        run: |
+          if [[ "$TARGETS" == "" ]]; then
+            case "$ACTION" in
+            push|release)
+              TARGETS="x86_64 aarch64" ;;
+            *)
+              echo "Unknown action: $ACTION"
+              exit 1 ;;
+            esac
+          fi
+          echo "targets=$TARGETS" >> $GITHUB_OUTPUT
+        env:
+          ACTION: ${{ github.event_name }}
+          TARGETS: ${{ inputs.targets }}
+
+      - id: set-matrix
+        run: |
+          echo "matrix=$(printf "%s\n" $TARGETS | jq -R | jq -sc)" >> $GITHUB_OUTPUT
+        env:
+          TARGETS: ${{ steps.set-targets.outputs.targets }}
+
+  build:
+    name: Build
+    needs: [build-init, gomod]
+    runs-on: ubuntu-latest
+    outputs:
+      name: ${{ steps.build.outputs.name }}
+      versions: ${{ steps.versions.outputs.json }}
+      directory: ${{ steps.build.outputs.directory }}
+    strategy:
+      fail-fast: true
+      matrix:
+        target: ${{ fromJSON(needs.build-init.outputs.target-matrix) }}
+        tags:
+          - [""]
+          - ["libadwaita"]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Initialize environment
+        id: init
+        run: |
+          version=$(.github/tools/git-version)
+
+          cat<<EOF > /tmp/expr.nix
+          import ./nix {
+            action  = "build-cross";
+            version = "$version";
+            target  = $TARGET;
+            tags    = $TAGS;
+          }
+          EOF
+
+          # GitHub doesn't allow multiline strings in outputs, so we trim the
+          # new lines.
+          echo "expr=$(cat /tmp/expr.nix | tr -d $'\n')" >> $GITHUB_OUTPUT
+          echo "version=$version" >> $GITHUB_OUTPUT
+        env:
+          TARGET: ${{ toJSON(matrix.target) }}
+          TAGS: ${{ toJSON(matrix.tags) }}
+
+      - name: Install Nix environment
+        uses: ./.github/actions/init-nix
+        with:
+          instantiated-expression: ${{ steps.init.outputs.expr }}
+
+      - name: Build
+        id: build
+        run: |
+          out=$(nix-build -E "$EXPR" --no-out-link)
+          echo "directory=$out" >> $GITHUB_OUTPUT
+
+          target=$(jq -r '.' <<< "$TARGET")
+          tags=$(jq -r '. | join("+")' <<< "$TAGS")
+          echo "name=${VERSION}-${target}${tags:+-"$tags"}" >> $GITHUB_OUTPUT
+        env:
+          EXPR: ${{ steps.init.outputs.expr }}
+          VERSION: ${{ steps.init.outputs.version }}
+          TARGET: ${{ toJSON(matrix.target) }}
+          TAGS: ${{ toJSON(matrix.tags) }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: gtkcord4-${{ steps.build.outputs.name }}
+          path: ${{ steps.build.outputs.directory }}
+
+  upload-release:
+    name: Upload artifacts to release
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Nix shell
+        uses: ./.github/actions/init-nix
+        with:
+          shell-file: shell.nix
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: Upload artifacts to GitHub Releases
+        run: upload-artifacts artifacts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_ID: ${{ github.event.release.id }}
+
+  nightly-release:
+    name: Update nightly release
+    needs: build
+    runs-on: ubuntu-latest
+    # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Nix shell
+        uses: ./.github/actions/init-nix
+        with:
+          shell-file: shell.nix
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: /tmp/artifacts
+
+      - name: Collect built artifacts
+        run: mkdir /tmp/bin && find /tmp/artifacts -type f -exec mv {} /tmp/bin/ \;
+
+      - name: Generate Nightly release notes
+        id: generate-notes
+        run: |
+          versionJSON=$(nightly-info)
+          version() { jq -r ".$1" <<< "$versionJSON"; }
+
+          body=$(cat<<EOF
+          This is a nightly release of gtkcord4. It is built from the latest
+          commit on the `main` branch.
+
+          **Warning:** This release is not guaranteed to be stable. It may
+          contain bugs and/or security vulnerabilities. Use at your own risk.
+          Please report any issues you encounter as separate GitHub Issues.
+
+          ### Version Information
+
+          - gtkcord4: $(version gtkcord4)
+          - Go: $(version go)
+          - GTK: $(version gtk4)
+          - Libadwaita: $(version libadwaita1)
+          EOF)
+
+          echo "body=$(jq --null-input --arg body "$body" '$body')" >> $GITHUB_OUTPUT
+        env:
+          VERSIONS: ${{ needs.build.outputs.versions }}
+
+      - name: Update Nightly release
+        uses: andelf/nightly-release@ce2d0a30db8cf9f3920a4237d6a0b874400710c1
+        with:
+          name: Nightly Release
+          body: ${{ fromJSON(steps.generate-notes.outputs.body) }}
+          tag_name: nightly
+          prerelease: true
+          files: /tmp/bin/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

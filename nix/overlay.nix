@@ -2,10 +2,11 @@ self: super:
 
 with builtins;
 
-let useOverlay = pathExists "/home/diamond/Scripts/gtk";
+let
+	# useOverlay = pathExists "/home/diamond/Scripts/gtk";
+	useOverlay = false;
 
-in
-if (!useOverlay) then ({}) else ({
+in if (!useOverlay) then {} else {
 	# gtk4 = super.gtk4.overrideAttrs (old: {
 	# 	src = filterSource (path: _: baseNameOf path != ".git") /home/diamond/Scripts/gtk;
 	# 	version = "4.7.1";
@@ -25,4 +26,4 @@ if (!useOverlay) then ({}) else ({
 	# libadwaita = super.libadwaita.overrideAttrs (old: {
 	# 	doCheck = false;
 	# });
-})
+}

@@ -1,12 +1,12 @@
 {
 	pname = "gtkcord4";
-	version = "0.0.1-tip";
 	# 0000000000000000000000000000000000000000000000000000000000000000
-	vendorSha256 = "10ijsv73bfgrsmvzirwv0nanyicxy6a6nayimif9dfvi9m5a7521";
+	# vendorSha256 = "10ijsv73bfgrsmvzirwv0nanyicxy6a6nayimif9dfvi9m5a7521";
 
 	src = ../.;
+	modules = ./gomod2nix.toml;
 
-	buildInputs = buildPkgs: with buildPkgs; [
+	buildInputs = pkgs: with pkgs; [
 		# Optional
 		sound-theme-freedesktop
 		libcanberra-gtk3

@@ -1,1 +1,11 @@
-{}: import ./.nix { action = "shell"; }
+{}:
+
+import ./nix {
+	action = "shell";
+	buildInputs = pkgs: with pkgs; [
+		jq
+		niv
+		gomod2nix
+		(callPackage ./.github/tools {})
+	];
+}
