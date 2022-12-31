@@ -1,0 +1,56 @@
+name: Format, lint, and check
+
+on:
+  workflow_dispatch:
+  push:
+  pull_request:
+
+jobs:
+  gomod:
+    name: Tidy up Go modules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Nix packages
+        id: nix-install
+        uses: diamondburned/cache-install@977305a8b3c4abbe0f353f3ea00cfb56dda6ef95
+        with:
+          shell-file: shell.nix
+          auto-optimise: true
+
+      - run: go mod tidy
+      - run: git diff --exit-code go.mod go.sum
+
+  format:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Nix packages
+        id: nix-install
+        uses: diamondburned/cache-install@977305a8b3c4abbe0f353f3ea00cfb56dda6ef95
+        with:
+          shell-file: shell.nix
+          auto-optimise: true
+
+      - run: |
+          deps="$(for d in $(go list -f {{.Dir}} ./...); { goimports -l $d; })"
+          [[ ! "$deps" ]] || printf "Unformatted files: \n%s\n" "$deps"
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Nix packages
+        id: nix-install
+        uses: diamondburned/cache-install@977305a8b3c4abbe0f353f3ea00cfb56dda6ef95
+        with:
+          shell-file: shell.nix
+          auto-optimise: true
+
+      - run: go vet ./...
+      - run: staticcheck ./...

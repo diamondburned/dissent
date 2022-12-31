@@ -5,8 +5,9 @@
 	vendorSha256 = "10ijsv73bfgrsmvzirwv0nanyicxy6a6nayimif9dfvi9m5a7521";
 
 	src = ../.;
+	modules = ./gomod2nix.toml;
 
-	buildInputs = buildPkgs: with buildPkgs; [
+	buildInputs = pkgs: with pkgs; [
 		# Optional
 		sound-theme-freedesktop
 		libcanberra-gtk3

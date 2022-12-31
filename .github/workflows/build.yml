@@ -1,0 +1,60 @@
+name: Build for x86_64
+
+on:
+  workflow_dispatch:
+    inputs:
+      cross-build:
+        description: Build for both x86_64 and aarch64
+        required: false
+        type: boolean
+  workflow_call:
+    inputs:
+      cross-build:
+        description: Build for both x86_64 and aarch64
+        required: false
+        type: boolean
+  push:
+  pull_request:
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    outputs:
+      output-directory: ${{ steps.build.outputs.output-directory }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Initialize Environment
+        id: init
+        run: |
+          if [ "${{ inputs.cross-build }}" = "true" ]; then
+            echo "::set-output name=action::build-cross"
+          else
+            echo "::set-output name=action::build-package"
+          fi
+        env:
+          CROSS_BUILD: ${{ inputs.cross-build }}
+
+      - name: Install Nix packages
+        id: nix-install
+        uses: diamondburned/cache-install@977305a8b3c4abbe0f353f3ea00cfb56dda6ef95
+        with:
+          shell-file: _
+          auto-optimise: true
+          instantiated-expression: |
+            import ./nix { action = "${{ steps.init.outputs.action }}" }
+
+      - name: Build
+        id: build
+        run: |
+          out=$(nix-build nix --argstr action "${ACTION}")
+          echo "::set-output name=output-directory::${out}"
+        env:
+          ACTION: ${{ steps.init.outputs.action }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ steps.init.outputs.action }}-outputs
+          path: ${{ steps.build.outputs.output-directory }}

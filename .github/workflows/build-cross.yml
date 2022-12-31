@@ -1,0 +1,15 @@
+name: Build for x86_64 and arm64
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - gh-actions
+  release:
+
+jobs:
+  build-cross:
+    uses: ./.github/workflows/build.yml
+    with:
+      cross-build: true

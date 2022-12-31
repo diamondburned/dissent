@@ -1,0 +1,39 @@
+{
+    "gomod2nix": {
+        "branch": "master",
+        "description": "Convert applications using Go modules to Nix expressions [maintainer=@adisbladis]",
+        "homepage": "",
+        "owner": "nix-community",
+        "repo": "gomod2nix",
+        "rev": "cc75990c60d01d9eedcf32ff4bf0055dd49c3ea1",
+        "sha256": "1s9m70q2jsr75hynx7q4brgbf22n1lfw5hc45mc3x4r9g4m8qrdz",
+        "type": "tarball",
+        "url": "https://github.com/nix-community/gomod2nix/archive/cc75990c60d01d9eedcf32ff4bf0055dd49c3ea1.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz",
+        "version": "1.5.0"
+    },
+    "gotk4-nix": {
+        "branch": "main",
+        "description": "Nix development and build utilities for gotk4 development.",
+        "homepage": null,
+        "owner": "diamondburned",
+        "repo": "gotk4-nix",
+        "rev": "0d029bb8853e6e42f8e3f64b77fb74cdf9713fea",
+        "sha256": "0d14masfs5lz7p9vy28s64nhq0dzaxf8pllnqy86j1ddp0zrlxfa",
+        "type": "tarball",
+        "url": "https://github.com/diamondburned/gotk4-nix/archive/0d029bb8853e6e42f8e3f64b77fb74cdf9713fea.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    },
+    "nixpkgs": {
+        "branch": "nixos-unstable",
+        "description": "Nix Packages collection",
+        "homepage": "",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "52b2ac8ae18bbad4374ff0dd5aeee0fdf1aea739",
+        "sha256": "16dw011p3z4bgphc8ddahp3qvwj0mz266v7ldwxjl7msypxk8bmc",
+        "type": "tarball",
+        "url": "https://github.com/NixOS/nixpkgs/archive/52b2ac8ae18bbad4374ff0dd5aeee0fdf1aea739.tar.gz",
+        "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+    }
+}
