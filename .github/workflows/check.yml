@@ -61,8 +61,8 @@ jobs:
           shell-file: shell.nix
 
       - run: |
-          nix-shell --run 'go vet ./...'
-          nix-shell --run 'staticcheck ./...'
+          go vet ./...
+          staticcheck ./...
 
   test:
     name: Test
