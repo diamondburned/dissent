@@ -104,7 +104,7 @@ jobs:
           out=$(nix-build -E "$EXPR" --no-out-link)
           echo "::set-output name=output-directory::${out}"
         env:
-          EXPRESSION: ${{ steps.init.outputs.expr }}
+          EXPR: ${{ steps.init.outputs.expr }}
 
       - name: Upload artifacts
         id: upload
