@@ -46,6 +46,8 @@ jobs:
               # Build for all architectures for releases.
               TARGETS="x86_64 aarch64" ;;
             *)
+              echo "Unknown action: $ACTION"
+              exit 1 ;;
             esac
           fi
           echo "::set-output name=targets::$TARGETS"
@@ -74,7 +76,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Initialize Environment
+      - name: Initialize environment
         id: init
         run: |
           cat<<EOF > /tmp/expr.nix
@@ -92,10 +94,8 @@ jobs:
 
       - name: Install Nix packages
         id: nix-install
-        uses: ${{ env.cache-install }}
+        uses: ./.github/actions/init-nix
         with:
-          shell-file: _
-          auto-optimise: true
           instantiated-expression: ${{ steps.init.outputs.expr }}
 
       - name: Build

@@ -5,9 +5,6 @@ on:
   push:
   pull_request:
 
-env:
-  cache-install: diamondburned/cache-install@3c3ac40a3f928c99efd165b900b265b26da4e175
-
 jobs:
   init:
     name: Initialize
@@ -15,11 +12,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install Nix packages
-        uses: ${{ env.cache-install }}
+      - name: Initialize Nix
+        uses: ./.github/actions/init-nix
         with:
           shell-file: shell.nix
-          auto-optimise: true
 
   gomod:
     name: Tidy up Go modules
@@ -29,11 +25,9 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install Nix packages
-        id: nix-install
-        uses: ${{ env.cache-install }}
+        uses: ./.github/actions/init-nix
         with:
           shell-file: shell.nix
-          auto-optimise: true
 
       - run: go mod tidy
       - run: git diff --exit-code go.mod go.sum
@@ -46,11 +40,9 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install Nix packages
-        id: nix-install
-        uses: ${{ env.cache-install }}
+        uses: ./.github/actions/init-nix
         with:
           shell-file: shell.nix
-          auto-optimise: true
 
       - run: |
           deps="$(for d in $(go list -f {{.Dir}} ./...); { goimports -l $d; })"
@@ -64,17 +56,13 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install Nix packages
-        id: nix-install
-        uses: ${{ env.cache-install }}
+        uses: ./.github/actions/init-nix
         with:
           shell-file: shell.nix
-          auto-optimise: true
 
       - run: |
-          nix-shell --run '
-            go vet ./...
-            staticcheck ./...
-          '
+          nix-shell --run 'go vet ./...'
+          nix-shell --run 'staticcheck ./...'
 
   test:
     name: Test
@@ -84,10 +72,8 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Install Nix packages
-        id: nix-install
-        uses: ${{ env.cache-install }}
+        uses: ./.github/actions/init-nix
         with:
           shell-file: shell.nix
-          auto-optimise: true
 
       - run: go test -v ./...
