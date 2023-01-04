@@ -1,59 +1,113 @@
-name: Build for x86_64
+name: Build
 
 on:
   workflow_dispatch:
     inputs:
-      cross-build:
-        description: Build for both x86_64 and aarch64
-        required: false
-        type: boolean
+      targets:
+        description: Build targets (separated by spaces)
+        type: string
+        default: x86_64 aarch64
   workflow_call:
     inputs:
-      cross-build:
-        description: Build for both x86_64 and aarch64
-        required: false
-        type: boolean
+      targets:
+        description: Build targets (separated by spaces)
+        type: string
+        default: x86_64 aarch64
   push:
   pull_request:
+  release:
+    types: [published]
+
+concurrency:
+  group: build
+  cancel-in-progress: true
+
+env:
+  cache-install: diamondburned/cache-install@3c3ac40a3f928c99efd165b900b265b26da4e175
 
 jobs:
+  # We need a whole ass job for this.
+  # https://docs.github.com/en/actions/learn-github-actions/expressions#example-returning-a-json-object
+  init:
+    name: Initialize
+    runs-on: ubuntu-latest
+    outputs:
+      target-matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-targets
+        run: |
+          if [[ "$TARGETS" == "" ]]; then
+            case "$ACTION" in
+            push|pull_request)
+              # Only build for x86_64 for pushes and pull requests, since we're
+              # confident enough that they'll work on other architectures.
+              TARGETS="x86_64" ;;
+            release)
+              # Build for all architectures for releases.
+              TARGETS="x86_64 aarch64" ;;
+            *)
+            esac
+          fi
+          echo "::set-output name=targets::$TARGETS"
+        env:
+          ACTION: ${{ github.event_name }}
+          TARGETS: ${{ inputs.targets }}
+
+      - id: set-matrix
+        run: |
+          matrix=$(printf "%s\n" $TARGETS | jq -R | jq -sc)
+          echo "::set-output name=matrix::$matrix"
+        env:
+          TARGETS: ${{ steps.set-targets.outputs.targets }}
+
   build:
     name: Build
+    needs: init
     runs-on: ubuntu-latest
     outputs:
       output-directory: ${{ steps.build.outputs.output-directory }}
+    strategy:
+      fail-fast: true
+      matrix:
+        target: ${{ fromJSON(needs.init.outputs.target-matrix) }}
+        # tags: ["", "libadwaita"]
     steps:
       - uses: actions/checkout@v3
 
       - name: Initialize Environment
         id: init
         run: |
-          if [ "${{ inputs.cross-build }}" = "true" ]; then
-            echo "::set-output name=action::build-cross"
-          else
-            echo "::set-output name=action::build-package"
-          fi
+          cat<<EOF > /tmp/expr.nix
+          import ./nix {
+            action = "build-cross";
+            targets = [ "$TARGET" ];
+          }
+          EOF
+          # GitHub doesn't allow multiline strings in outputs, so we trim the
+          # new lines.
+          expr="$(cat /tmp/expr.nix | tr -d $'\n')"
+          echo "::set-output name=expr::$expr"
         env:
-          CROSS_BUILD: ${{ inputs.cross-build }}
+          TARGET: ${{ matrix.target }}
 
       - name: Install Nix packages
         id: nix-install
-        uses: diamondburned/cache-install@3c3ac40a3f928c99efd165b900b265b26da4e175
+        uses: ${{ env.cache-install }}
         with:
           shell-file: _
           auto-optimise: true
-          instantiated-expression: |
-            import ./nix { action = "${{ steps.init.outputs.action }}" }
+          instantiated-expression: ${{ steps.init.outputs.expr }}
 
       - name: Build
         id: build
         run: |
-          out=$(nix-build nix --argstr action "${ACTION}")
+          out=$(nix-build -E "$EXPR" --no-out-link)
           echo "::set-output name=output-directory::${out}"
         env:
-          ACTION: ${{ steps.init.outputs.action }}
+          EXPRESSION: ${{ steps.init.outputs.expr }}
 
       - name: Upload artifacts
+        id: upload
         uses: actions/upload-artifact@v2
         with:
           name: ${{ steps.init.outputs.action }}-outputs

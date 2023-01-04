@@ -1,20 +1,36 @@
-name: Format, lint, and check
+name: Check
 
 on:
   workflow_dispatch:
   push:
   pull_request:
 
+env:
+  cache-install: diamondburned/cache-install@3c3ac40a3f928c99efd165b900b265b26da4e175
+
 jobs:
+  init:
+    name: Initialize
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Nix packages
+        uses: ${{ env.cache-install }}
+        with:
+          shell-file: shell.nix
+          auto-optimise: true
+
   gomod:
     name: Tidy up Go modules
+    needs: init
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
 
       - name: Install Nix packages
         id: nix-install
-        uses: diamondburned/cache-install@3c3ac40a3f928c99efd165b900b265b26da4e175
+        uses: ${{ env.cache-install }}
         with:
           shell-file: shell.nix
           auto-optimise: true
@@ -24,13 +40,14 @@ jobs:
 
   format:
     name: Format
+    needs: init
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
 
       - name: Install Nix packages
         id: nix-install
-        uses: diamondburned/cache-install@3c3ac40a3f928c99efd165b900b265b26da4e175
+        uses: ${{ env.cache-install }}
         with:
           shell-file: shell.nix
           auto-optimise: true
@@ -41,16 +58,36 @@ jobs:
 
   lint:
     name: Lint
+    needs: init
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
 
       - name: Install Nix packages
         id: nix-install
-        uses: diamondburned/cache-install@3c3ac40a3f928c99efd165b900b265b26da4e175
+        uses: ${{ env.cache-install }}
         with:
           shell-file: shell.nix
           auto-optimise: true
 
-      - run: go vet ./...
-      - run: staticcheck ./...
+      - run: |
+          nix-shell --run '
+            go vet ./...
+            staticcheck ./...
+          '
+
+  test:
+    name: Test
+    needs: init
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Nix packages
+        id: nix-install
+        uses: ${{ env.cache-install }}
+        with:
+          shell-file: shell.nix
+          auto-optimise: true
+
+      - run: go test -v ./...
