@@ -19,7 +19,7 @@ runs:
         SHELL: ${{ inputs.shell }}
 
     - name: Install Nix shell
-      uses: diamondburned/cache-install@bc96fc2e2fc72007eb4675e79da8a3472717eee8
+      uses: diamondburned/cache-install@195d4a266f4f336a747cae8f64f6b14c780fc548
       with:
         auto-optimise: ${{ inputs.auto-optimise }}
         shell-file: ${{ steps.init.outputs.shell-file }}
