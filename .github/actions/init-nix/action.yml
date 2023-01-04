@@ -1,26 +1,15 @@
 name: Install Nix packages
 inputs:
-  shell:
-    default: true
+  shell-file:
+    required: false
   instantiated-expression:
     required: false
 runs:
   using: composite
   steps:
-    - name: Initialize Action
-      shell: bash
-      run: |
-        if [[ "${SHELL,,}" == true ]]; then
-          echo "::set-output name=shell-file::shell.nix"
-        else
-          echo "::set-output name=shell-file::"
-        fi
-      env:
-        SHELL: ${{ inputs.shell }}
-
     - name: Install Nix shell
       uses: diamondburned/cache-install@195d4a266f4f336a747cae8f64f6b14c780fc548
       with:
         auto-optimise: ${{ inputs.auto-optimise }}
-        shell-file: ${{ steps.init.outputs.shell-file }}
+        shell-file: ${{ inputs.shell-file }}
         instantiated-expression: ${{ inputs.instantiated-expression }}

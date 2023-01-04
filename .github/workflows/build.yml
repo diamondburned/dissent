@@ -50,15 +50,14 @@ jobs:
               exit 1 ;;
             esac
           fi
-          echo "::set-output name=targets::$TARGETS"
+          echo "targets=$TARGETS" >> $GITHUB_OUTPUT
         env:
           ACTION: ${{ github.event_name }}
           TARGETS: ${{ inputs.targets }}
 
       - id: set-matrix
         run: |
-          matrix=$(printf "%s\n" $TARGETS | jq -R | jq -sc)
-          echo "::set-output name=matrix::$matrix"
+          echo "matrix=$(printf "%s\n" $TARGETS | jq -R | jq -sc)" >> $GITHUB_OUTPUT
         env:
           TARGETS: ${{ steps.set-targets.outputs.targets }}
 
@@ -72,7 +71,9 @@ jobs:
       fail-fast: true
       matrix:
         target: ${{ fromJSON(needs.init.outputs.target-matrix) }}
-        # tags: ["", "libadwaita"]
+        tags:
+          - [""]
+          - ["libadwaita"]
     steps:
       - uses: actions/checkout@v3
 
@@ -82,15 +83,16 @@ jobs:
           cat<<EOF > /tmp/expr.nix
           import ./nix {
             action = "build-cross";
-            targets = [ "$TARGET" ];
+            target = $TARGET;
+            tags   = $TAGS;
           }
           EOF
           # GitHub doesn't allow multiline strings in outputs, so we trim the
           # new lines.
-          expr="$(cat /tmp/expr.nix | tr -d $'\n')"
-          echo "::set-output name=expr::$expr"
+          echo "expr=$(cat /tmp/expr.nix | tr -d $'\n')" >> $GITHUB_OUTPUT
         env:
-          TARGET: ${{ matrix.target }}
+          TARGET: ${{ toJSON(matrix.target) }}
+          TAGS: ${{ toJSON(matrix.tags) }}
 
       - name: Install Nix packages
         id: nix-install
@@ -102,7 +104,7 @@ jobs:
         id: build
         run: |
           out=$(nix-build -E "$EXPR" --no-out-link)
-          echo "::set-output name=output-directory::${out}"
+          echo "output-directory=$out" >> $GITHUB_OUTPUT
         env:
           EXPR: ${{ steps.init.outputs.expr }}
 
@@ -110,5 +112,5 @@ jobs:
         id: upload
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ steps.init.outputs.action }}-outputs
+          name: build-outputs
           path: ${{ steps.build.outputs.output-directory }}
