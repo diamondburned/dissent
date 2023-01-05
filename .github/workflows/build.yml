@@ -14,7 +14,6 @@ on:
         type: string
         default: x86_64 aarch64
   push:
-  pull_request:
   release:
     types: [published]
 
@@ -38,12 +37,7 @@ jobs:
         run: |
           if [[ "$TARGETS" == "" ]]; then
             case "$ACTION" in
-            push|pull_request)
-              # Only build for x86_64 for pushes and pull requests, since we're
-              # confident enough that they'll work on other architectures.
-              TARGETS="x86_64" ;;
-            release)
-              # Build for all architectures for releases.
+            push|release)
               TARGETS="x86_64 aarch64" ;;
             *)
               echo "Unknown action: $ACTION"

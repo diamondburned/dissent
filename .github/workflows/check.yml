@@ -6,20 +6,8 @@ on:
   pull_request:
 
 jobs:
-  init:
-    name: Initialize
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-
-      # - name: Initialize Nix
-      #   uses: ./.github/actions/init-nix
-      #   with:
-      #     shell-file: shell.nix
-
-  gomod:
-    name: Tidy up Go modules
-    needs: init
+  check:
+    name: Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -29,53 +17,22 @@ jobs:
         with:
           shell-file: shell.nix
 
-      - run: go mod tidy
-      - run: git diff --exit-code go.mod go.sum
+      - name: Tidy up Go Modules
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod go.sum
 
-  format:
-    name: Format
-    needs: init
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Install Nix packages
-        uses: ./.github/actions/init-nix
-        with:
-          shell-file: shell.nix
-
-      - run: |
+      - name: Format
+        run: |
           deps="$(for d in $(go list -f {{.Dir}} ./...); { goimports -l $d; })"
           [[ ! "$deps" ]] || printf "Unformatted files: \n%s\n" "$deps"
 
-  lint:
-    name: Lint
-    needs: init
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
+      - name: Vet
+        run: go vet ./...
 
-      - name: Install Nix packages
-        uses: ./.github/actions/init-nix
-        with:
-          shell-file: shell.nix
+      - name: staticcheck
+        run: staticcheck ./...
 
-      - run: |
-          go vet ./...
-          staticcheck ./...
-        env:
-          NIX_DEBUG: 7 # debug pkg-config
+      - name: Test
+        run: go test -v ./...
 
-  test:
-    name: Test
-    needs: init
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Install Nix packages
-        uses: ./.github/actions/init-nix
-        with:
-          shell-file: shell.nix
-
-      - run: go test -v ./...
