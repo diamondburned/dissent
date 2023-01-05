@@ -8,7 +8,7 @@ runs:
   using: composite
   steps:
     - name: Install Nix shell
-      uses: diamondburned/cache-install@195d4a266f4f336a747cae8f64f6b14c780fc548
+      uses: diamondburned/cache-install@ffa8c380c0af793137fb364aada05629af6c5e0a
       with:
         auto-optimise: ${{ inputs.auto-optimise }}
         shell-file: ${{ inputs.shell-file }}
