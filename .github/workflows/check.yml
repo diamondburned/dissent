@@ -12,10 +12,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Initialize Nix
-        uses: ./.github/actions/init-nix
-        with:
-          shell-file: shell.nix
+      # - name: Initialize Nix
+      #   uses: ./.github/actions/init-nix
+      #   with:
+      #     shell-file: shell.nix
 
   gomod:
     name: Tidy up Go modules
@@ -63,6 +63,8 @@ jobs:
       - run: |
           go vet ./...
           staticcheck ./...
+        env:
+          NIX_DEBUG: 7 # debug pkg-config
 
   test:
     name: Test
