@@ -55,6 +55,11 @@ jobs:
         env:
           TARGETS: ${{ steps.set-targets.outputs.targets }}
 
+  # gomod2nix:
+  #   name: Update gomod2nix
+  #   runs-on: ubuntu-latest
+  #   outputs: 
+
   build:
     name: Build
     needs: init
@@ -99,12 +104,18 @@ jobs:
         run: |
           out=$(nix-build -E "$EXPR" --no-out-link)
           echo "output-directory=$out" >> $GITHUB_OUTPUT
+
+          target=$(jq -r '.' <<< "$TARGET")
+          tags=$(jq -r '. | join("+")' <<< "$TAGS")
+          echo "output-name=$target-$tags" >> $GITHUB_OUTPUT
         env:
           EXPR: ${{ steps.init.outputs.expr }}
+          TARGET: ${{ toJSON(matrix.target) }}
+          TAGS: ${{ toJSON(matrix.tags) }}
 
       - name: Upload artifacts
         id: upload
         uses: actions/upload-artifact@v2
         with:
-          name: build-outputs
+          name: output-${{ steps.build.outputs.output-name }}
           path: ${{ steps.build.outputs.output-directory }}

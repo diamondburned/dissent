@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -e
+
+title=
+mode=error
+
+usage() {
+	echo "Usage: $0 [-t|--title <title>] [-w|--warning|-e|--error]"
+	exit 1
+}
+
+main() {
+	while (( $# > 0 )); do
+		arg="$1"
+		shift
+		case "$arg" in
+		-t|--title)
+			title="$1"
+			[[ "$title" != "" ]] || usage
+			shift
+			;;
+		-w|--warning)
+			mode="warning"
+			;;
+		-e|--error)
+			mode="error"
+			;;
+		*)
+			usage	
+			;;
+		esac
+	done
+
+	while read -r line; do
+		if [[ "$line" =~ (.*):([0-9])*:([0-9])*:\ (.*) ]]; then
+			echo "::$mode title=$title,file=${BASH_REMATCH[1]},line=${BASH_REMATCH[2]},col=${BASH_REMATCH[3]}::${BASH_REMATCH[4]}"
+		elif [[ "$line" =~ (.*):\ (.*) ]]; then
+			echo "::$mode title=$title,file=${BASH_REMATCH[1]}::${BASH_REMATCH[2]}"
+		else
+			echo "::$mode title=$title::$line"
+		fi
+	done
+}
+
+main "$@"

@@ -20,18 +20,28 @@ jobs:
       - name: Tidy up Go Modules
         run: |
           go mod tidy
-          git diff --exit-code go.mod go.sum
+
+          if ! git diff --exit-code go.mod go.sum; then
+            echo "::error::Go modules are not tidied"
+            exit 1
+          fi
 
       - name: Format
         run: |
-          deps="$(for d in $(go list -f {{.Dir}} ./...); { goimports -l $d; })"
-          [[ ! "$deps" ]] || printf "Unformatted files: \n%s\n" "$deps"
+          fail=
+          go list -f '{{ .Dir }}' | while read -r d; do
+            goimports -l "$d" | while read -r f; do
+              fail=1
+              printf "::error file=%s::%s\n" "$d/$f" "File is not formatted"
+            done
+          done
+          [[ -z "$fail" ]]
 
       - name: Vet
-        run: go vet ./...
+        run: go vet ./... | workflowify -e -t vet
 
-      - name: staticcheck
-        run: staticcheck ./...
+      - name: staticcheck (warnings)
+        run: staticcheck ./... || true | workflowify -w -t staticcheck
 
       - name: Test
         run: go test -v ./...
