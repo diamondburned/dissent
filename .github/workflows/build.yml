@@ -14,15 +14,10 @@ on:
         type: string
         default: x86_64 aarch64
   push:
+    branches-ignore:
+      - nightly
   release:
-    types: [published]
-
-concurrency:
-  group: build
-  cancel-in-progress: true
-
-env:
-  cache-install: diamondburned/cache-install@3c3ac40a3f928c99efd165b900b265b26da4e175
+    types: [released] # Prevents double builds on nightly
 
 jobs:
   # We need a whole ass job for this.
@@ -65,7 +60,8 @@ jobs:
     needs: init
     runs-on: ubuntu-latest
     outputs:
-      output-directory: ${{ steps.build.outputs.output-directory }}
+      name: ${{ steps.build.outputs.name }}
+      directory: ${{ steps.build.outputs.directory }}
     strategy:
       fail-fast: true
       matrix:
@@ -93,7 +89,7 @@ jobs:
           TARGET: ${{ toJSON(matrix.target) }}
           TAGS: ${{ toJSON(matrix.tags) }}
 
-      - name: Install Nix packages
+      - name: Install Nix environment
         id: nix-install
         uses: ./.github/actions/init-nix
         with:
@@ -103,19 +99,61 @@ jobs:
         id: build
         run: |
           out=$(nix-build -E "$EXPR" --no-out-link)
-          echo "output-directory=$out" >> $GITHUB_OUTPUT
+          echo "directory=$out" >> $GITHUB_OUTPUT
 
           target=$(jq -r '.' <<< "$TARGET")
           tags=$(jq -r '. | join("+")' <<< "$TAGS")
-          echo "output-name=$target-$tags" >> $GITHUB_OUTPUT
+          echo "name=${target}${tags:+-"$tags"}" >> $GITHUB_OUTPUT
         env:
           EXPR: ${{ steps.init.outputs.expr }}
           TARGET: ${{ toJSON(matrix.target) }}
           TAGS: ${{ toJSON(matrix.tags) }}
 
-      - name: Upload artifacts
-        id: upload
-        uses: actions/upload-artifact@v2
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
         with:
-          name: output-${{ steps.build.outputs.output-name }}
-          path: ${{ steps.build.outputs.output-directory }}
+          name: gtkcord4-${{ needs.build.outputs.name }}
+          path: ${{ needs.build.outputs.directory }}
+
+  upload-release:
+    name: Upload artifacts to release
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    steps:
+      - name: Install Nix shell
+        uses: ./.github/actions/init-nix
+        with:
+          shell-file: shell.nix
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: Upload artifacts to GitHub Releases
+        run: upload-artifacts artifacts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_ID: ${{ github.event.release.id }}
+
+  nightly-release:
+    name: Create nightly release
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - uses: andelf/nightly-release@ce2d0a30db8cf9f3920a4237d6a0b874400710c1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          name: Nightly Release
+          tag_name: nightly
+          prerelease: true
+          files: artifacts/**/*
+

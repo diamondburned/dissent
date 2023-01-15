@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install Nix packages
+      - name: Install Nix shell
         uses: ./.github/actions/init-nix
         with:
           shell-file: shell.nix
