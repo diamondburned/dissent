@@ -90,7 +90,6 @@ jobs:
           TAGS: ${{ toJSON(matrix.tags) }}
 
       - name: Install Nix environment
-        id: nix-install
         uses: ./.github/actions/init-nix
         with:
           instantiated-expression: ${{ steps.init.outputs.expr }}
@@ -112,8 +111,8 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: gtkcord4-${{ needs.build.outputs.name }}
-          path: ${{ needs.build.outputs.directory }}
+          name: gtkcord4-${{ steps.build.outputs.name }}
+          path: ${{ steps.build.outputs.directory }}
 
   upload-release:
     name: Upload artifacts to release
@@ -141,7 +140,8 @@ jobs:
     name: Create nightly release
     needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push'
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v3
