@@ -1,4 +1,4 @@
-name: Build
+name: Build and Publish
 
 on:
   workflow_dispatch:
@@ -20,10 +20,93 @@ on:
     types: [released] # Prevents double builds on nightly
 
 jobs:
+  gomod:
+    name: Validate Go modules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Nix shell
+        uses: ./.github/actions/init-nix
+        with:
+          shell-file: shell.nix
+
+      - name: Validate Go modules
+        run: |
+          go mod tidy
+
+          if ! git diff --exit-code go.mod go.sum; then
+            echo "::error::Go modules are not tidied"
+            exit 1
+          fi
+
+  gomod2nix:
+    name: Update gomod2nix
+    needs: gomod
+    runs-on: ubuntu-latest
+    outputs:
+      rev: ${{ steps.commit.outputs.rev }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Nix shell
+        uses: ./.github/actions/init-nix
+        with:
+          shell-file: shell.nix
+
+      - name: Update gomod2nix.toml
+        run: |
+          gomod2nix --outdir nix
+
+          if git diff --exit-code nix/gomod2nix.toml; then
+            echo "changed=0" >> $GITHUB_OUTPUT
+          else
+            echo "changed=1" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit changes
+        id: commit
+        if: steps.update.outputs.changed == 1
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "Update nix/gomod2nix.toml"
+          branch: ${{ github.ref_name }}
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Nix shell
+        uses: ./.github/actions/init-nix
+        with:
+          shell-file: shell.nix
+
+      - name: Format
+        run: |
+          fail=
+          go list -f '{{ .Dir }}' | while read -r d; do
+            goimports -l "$d" | while read -r f; do
+              fail=1
+              printf "::error file=%s::%s\n" "$d/$f" "File is not formatted"
+            done
+          done
+          [[ -z "$fail" ]]
+
+      - name: Vet
+        run: go vet ./... |& workflowify -e -t vet
+
+      - name: Staticcheck (warnings)
+        run: staticcheck ./... || true |& workflowify -w -t staticcheck
+
+      - name: Test
+        run: go test -v ./...
+
   # We need a whole ass job for this.
   # https://docs.github.com/en/actions/learn-github-actions/expressions#example-returning-a-json-object
-  init:
-    name: Initialize
+  build-init:
+    name: Initialize build environment
     runs-on: ubuntu-latest
     outputs:
       target-matrix: ${{ steps.set-matrix.outputs.matrix }}
@@ -50,14 +133,9 @@ jobs:
         env:
           TARGETS: ${{ steps.set-targets.outputs.targets }}
 
-  # gomod2nix:
-  #   name: Update gomod2nix
-  #   runs-on: ubuntu-latest
-  #   outputs: 
-
   build:
     name: Build
-    needs: init
+    needs: [build-init, gomod2nix]
     runs-on: ubuntu-latest
     outputs:
       name: ${{ steps.build.outputs.name }}
