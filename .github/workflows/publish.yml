@@ -24,7 +24,7 @@ jobs:
     name: Validate Go modules
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Install Nix shell
         uses: ./.github/actions/init-nix
@@ -60,9 +60,10 @@ jobs:
 
   lint:
     name: Lint
+    needs: gomod
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Install Nix shell
         uses: ./.github/actions/init-nix
