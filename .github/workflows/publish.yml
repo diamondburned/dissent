@@ -40,20 +40,6 @@ jobs:
             exit 1
           fi
 
-  gomod2nix:
-    name: Update gomod2nix
-    needs: gomod
-    runs-on: ubuntu-latest
-    outputs:
-      rev: ${{ steps.commit.outputs.rev }}
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Install Nix shell
-        uses: ./.github/actions/init-nix
-        with:
-          shell-file: shell.nix
-
       - name: Update gomod2nix.toml
         run: |
           gomod2nix --outdir nix
@@ -64,13 +50,13 @@ jobs:
             echo "changed=1" >> $GITHUB_OUTPUT
           fi
 
-      - name: Commit changes
+      - name: Commit changes to gomod2nix.toml
         id: commit
         if: steps.update.outputs.changed == 1
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: "Update nix/gomod2nix.toml"
-          branch: ${{ github.ref_name }}
+          commit_message: Update nix/gomod2nix.toml
+          file_pattern: nix/gomod2nix.toml
 
   lint:
     name: Lint
@@ -135,7 +121,7 @@ jobs:
 
   build:
     name: Build
-    needs: [build-init, gomod2nix]
+    needs: [build-init, gomod]
     runs-on: ubuntu-latest
     outputs:
       name: ${{ steps.build.outputs.name }}
@@ -143,7 +129,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        target: ${{ fromJSON(needs.init.outputs.target-matrix) }}
+        target: ${{ fromJSON(needs.build-init.outputs.target-matrix) }}
         tags:
           - [""]
           - ["libadwaita"]
