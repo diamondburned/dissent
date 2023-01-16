@@ -137,7 +137,7 @@ jobs:
           RELEASE_ID: ${{ github.event.release.id }}
 
   nightly-release:
-    name: Create nightly release
+    name: Update nightly release
     needs: build
     runs-on: ubuntu-latest
     # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -148,12 +148,16 @@ jobs:
         with:
           path: artifacts
 
-      - uses: andelf/nightly-release@ce2d0a30db8cf9f3920a4237d6a0b874400710c1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Collect built artifacts
+        run: mkdir bin && find artifacts -type f -exec mv {} bin \;
+
+      - name: Update nightly release
+        uses: andelf/nightly-release@ce2d0a30db8cf9f3920a4237d6a0b874400710c1
         with:
           name: Nightly Release
           tag_name: nightly
           prerelease: true
-          files: artifacts/**/*
+          files: bin/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
