@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+main() {
+	jq --null-input "$@" \
+		--arg gtkcord4    "$(v_gtkcord4)" \
+		--arg go          "$(v_go)" \
+		--arg gtk4        "$(v_pkgconfig gtk4 4.x)" \
+		--arg libadwaita1 "$(v_pkgconfig libadwaita-1 1.x)" \
+        '{ $gtkcord4, $go, $gtk4, $libadwaita1 }'
+}
+
+v_gtkcord4() {
+	git-version
+}
+
+v_go() {
+	local v
+	v="$(go version)"
+	v="${v#go version go}"
+	v="${v%% *}"
+	echo "v$v"
+}
+
+v_pkgconfig() {
+	local re
+	re="-v?(([0-9]+\.?)+.*)/lib"
+
+	if [[ "$(pkg-config --variable=libdir "$1")" =~ $re ]]; then
+		echo "v${BASH_REMATCH[1]}"
+	elif [[ "$2" ]]; then
+		echo "v$2"
+	else
+		echo "version unknown"
+	fi
+}
+
+main "$@"

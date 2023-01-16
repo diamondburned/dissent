@@ -19,6 +19,10 @@ on:
   release:
     types: [released] # Prevents double builds on nightly
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
 jobs:
   gomod:
     name: Validate Go modules
@@ -126,6 +130,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       name: ${{ steps.build.outputs.name }}
+      versions: ${{ steps.versions.outputs.json }}
       directory: ${{ steps.build.outputs.directory }}
     strategy:
       fail-fast: true
@@ -142,9 +147,10 @@ jobs:
         run: |
           cat<<EOF > /tmp/expr.nix
           import ./nix {
-            action = "build-cross";
-            target = $TARGET;
-            tags   = $TAGS;
+            action  = "build-cross";
+            version = "$(.github/tools/version)";
+            target  = $TARGET;
+            tags    = $TAGS;
           }
           EOF
           # GitHub doesn't allow multiline strings in outputs, so we trim the
@@ -158,6 +164,10 @@ jobs:
         uses: ./.github/actions/init-nix
         with:
           instantiated-expression: ${{ steps.init.outputs.expr }}
+
+      - name: Generate versions JSON
+        id: versions
+        run: echo "json=$(nightly-info -c)" >> $GITHUB_OUTPUT
 
       - name: Build
         id: build
@@ -214,12 +224,38 @@ jobs:
           path: artifacts
 
       - name: Collect built artifacts
-        run: mkdir bin && find artifacts -type f -exec mv {} bin \;
+        run: mkdir bin && find artifacts -type f -exec mv {} bin/ \;
 
-      - name: Update nightly release
+      - name: Generate Nightly release notes
+        id: generate-notes
+        run: |
+          version() { jq -r ".$1" <<< "$VERSIONS"; }
+
+          body=$(cat<<EOF
+          This is a nightly release of gtkcord4. It is built from the latest
+          commit on the `main` branch.
+
+          **Warning:** This release is not guaranteed to be stable. It may
+          contain bugs and/or security vulnerabilities. Use at your own risk.
+          Please report any issues you encounter as separate GitHub Issues.
+
+          ### Version Information
+
+          - gtkcord4: $(version gtkcord4)
+          - Go: $(version go)
+          - GTK: $(version gtk4)
+          - Libadwaita: $(version libadwaita1)
+          EOF)
+
+          echo "body=$(jq --null-input --arg body "$body" '$body')" >> $GITHUB_OUTPUT
+        env:
+          VERSIONS: ${{ needs.build.outputs.versions }}
+
+      - name: Update Nightly release
         uses: andelf/nightly-release@ce2d0a30db8cf9f3920a4237d6a0b874400710c1
         with:
           name: Nightly Release
+          body: ${{ fromJSON(steps.generate-notes.outputs.body) }}
           tag_name: nightly
           prerelease: true
           files: bin/*
