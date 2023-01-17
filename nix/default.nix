@@ -16,9 +16,7 @@ let src = import ./sources.nix;
 			((pkgs.lib.attrByPath [action] (pkgs: []) (extraPkgs)) pkgs);
 	};
 
-	src-gotk4-nix =
-		let path = /home/diamond/Scripts/gotk4/gotk4-nix;
-		in if builtins.pathExists path then path else src.gotk4-nix;
+	src-gotk4-nix = /home/diamond/Scripts/gotk4/gotk4-nix;
 	# src-gotk4-nix = src.gotk4-nix;
 
 	# Delete the action argument.
