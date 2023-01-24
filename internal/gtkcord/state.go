@@ -8,16 +8,20 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"reflect"
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
+	"sync/atomic"
 
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/state"
 	"github.com/diamondburned/arikawa/v3/utils/httputil/httpdriver"
+	"github.com/diamondburned/arikawa/v3/utils/ws"
 	"github.com/diamondburned/chatkit/components/author"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotkit/app/prefs"
@@ -62,10 +66,6 @@ func FromContext(ctx context.Context) *State {
 	return nil
 }
 
-func init() {
-	// ws.EnableRawEvents = true
-}
-
 // Wrap wraps the given state.
 func Wrap(state *state.State) *State {
 	c := state.Client.Client
@@ -93,37 +93,45 @@ func Wrap(state *state.State) *State {
 		log.Printf("state error: %v", err)
 	}
 
-	/*
-		dir := filepath.Join(os.TempDir(), "gtkcord4-events")
-		os.RemoveAll(dir)
-
-		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-			log.Println("cannot mkdir -p for ev logginf:", err)
-		}
-
-		var atom uint64
-		state.AddHandler(func(ev *ws.RawEvent) {
-			id := atomic.AddUint64(&atom, 1)
-
-			f, err := os.Create(filepath.Join(
-				dir,
-				fmt.Sprintf("%05d-%d-%s.json", id, ev.OriginalCode, ev.OriginalType),
-			))
-			if err != nil {
-				log.Println("cannot log op:", err)
-				return
-			}
-			defer f.Close()
-
-			if _, err := f.Write(ev.Raw); err != nil {
-				log.Println("event json error:", err)
-			}
-		})
-	*/
+	// dumpRawEvents(state)
 
 	return &State{
 		State: ningen.FromState(state),
 	}
+}
+
+var rawEventsOnce sync.Once
+
+func dumpRawEvents(state *state.State) {
+	rawEventsOnce.Do(func() {
+		ws.EnableRawEvents = true
+	})
+
+	dir := filepath.Join(os.TempDir(), "gtkcord4-events")
+	os.RemoveAll(dir)
+
+	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+		log.Println("cannot mkdir -p for ev logginf:", err)
+	}
+
+	var atom uint64
+	state.AddHandler(func(ev *ws.RawEvent) {
+		id := atomic.AddUint64(&atom, 1)
+
+		f, err := os.Create(filepath.Join(
+			dir,
+			fmt.Sprintf("%05d-%d-%s.json", id, ev.OriginalCode, ev.OriginalType),
+		))
+		if err != nil {
+			log.Println("cannot log op:", err)
+			return
+		}
+		defer f.Close()
+
+		if _, err := f.Write(ev.Raw); err != nil {
+			log.Println("event json error:", err)
+		}
+	})
 }
 
 // InjectState injects the given state to a new context.
