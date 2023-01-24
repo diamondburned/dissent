@@ -506,8 +506,10 @@ func newThreadNode(base BaseChannelNode) *ThreadNode {
 }
 
 func (n *ThreadNode) Update(ch *discord.Channel) {
+	muted := n.head.state().ChannelIsMuted(n.id, true)
+
 	n.head.setValues(n.path, [maxTreeColumn]any{
-		columnName: ch.Name,
+		columnName: dimMarkup(html.EscapeString(ch.Name)+" ", muted),
 	})
 }
 

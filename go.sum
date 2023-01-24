@@ -33,7 +33,6 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8 h1:ZMe7aut1RcAE52EpSmfuIiKhaIw3MGVw9qOiCcj8R+w=
 github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8/go.mod h1:cLoCdQtpCp/TSJBJTgXe7W2FJNelXrmPv+X7luB6/Qg=
-github.com/diamondburned/arikawa/v3 v3.1.1-0.20221103093025-87c479a2dcd4/go.mod h1:5jBSNnp82Z/EhsKa6Wk9FsOqSxfVkNZDTDBPOj47LpY=
 github.com/diamondburned/arikawa/v3 v3.1.1-0.20221205015406-73285954a1e9 h1:I9GOMEqbI1cIsmj3OFSAk39qfEkR6ndau9hY41FGQF4=
 github.com/diamondburned/arikawa/v3 v3.1.1-0.20221205015406-73285954a1e9/go.mod h1:5jBSNnp82Z/EhsKa6Wk9FsOqSxfVkNZDTDBPOj47LpY=
 github.com/diamondburned/chatkit v0.0.0-20221220124033-97528a3fd110 h1:Tlf2WURusKAQLAW6wvWJIhs9AD/emL3IPJrf/WIwmlg=
@@ -44,8 +43,8 @@ github.com/diamondburned/gotk4/pkg v0.0.5-0.20230105054822-f46414fdaa94 h1:9d996
 github.com/diamondburned/gotk4/pkg v0.0.5-0.20230105054822-f46414fdaa94/go.mod h1:DdFIIgGetfZf4ZQJkdQTYNcrIBPO8DEvVNIJgzGjWEE=
 github.com/diamondburned/gotkit v0.0.0-20221217224254-30e97c8b6598 h1:dByyCCQXI39XCEU7tVp4AAeC3oD++SH8fUvx0WhyLqU=
 github.com/diamondburned/gotkit v0.0.0-20221217224254-30e97c8b6598/go.mod h1:iSeHClaGSn2XwtEFHVdZhyE6XIpX0CU6ZzZCoa5usg4=
-github.com/diamondburned/ningen/v3 v3.0.0-20221109004709-fed56ccbcd19 h1:xW2wAaBI8M8grtac8d2blcukQGZdtorf+KYLGMBhvfY=
-github.com/diamondburned/ningen/v3 v3.0.0-20221109004709-fed56ccbcd19/go.mod h1:wMe9WZQiFgkH5Slr5xK8XBBqMJxWTfRDZU82wPney4Y=
+github.com/diamondburned/ningen/v3 v3.0.1-0.20230124093205-d39554fd5d67 h1:CKW0j3ZDTDyP25anlHFSZx4Wi739ecKKSZ78iYtgY1s=
+github.com/diamondburned/ningen/v3 v3.0.1-0.20230124093205-d39554fd5d67/go.mod h1:y/5F3lEJgPhUe9MrBLN7U5PZ8qqDDdLb5N4KHnoLSKs=
 github.com/dlclark/regexp2 v1.4.0 h1:F1rxgk7p4uKjwIQxBs9oAXe5CqrXlCduYEJvrF4u93E=
 github.com/dlclark/regexp2 v1.4.0/go.mod h1:2pZnwuY/m+8K6iRw6wQdMtk+rH5tNGR1i55kozfMjCc=
 github.com/dustin/go-humanize v1.0.0 h1:VSnTsYCnlFHaM2/igO1h6X3HA71jcobQuxemgkq4zYo=
@@ -117,7 +116,6 @@ github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5Cc
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/twmb/murmur3 v1.1.3 h1:D83U0XYKcHRYwYIpBKf3Pks91Z0Byda/9SJ8B6EMRcA=
 github.com/twmb/murmur3 v1.1.3/go.mod h1:Qq/R7NUyOfr65zD+6Q5IHKsJLwP7exErjN6lyyq3OSQ=
-github.com/yuin/goldmark v1.3.2/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/yuin/goldmark v1.4.13 h1:fVcFKWvrslecOb/tg+Cc05dkeYx540o0FuFt3nUVDoE=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 github.com/zalando/go-keyring v0.2.1 h1:MBRN/Z8H4U5wEKXiD67YbDAr5cj/DOStmSga70/2qKc=
