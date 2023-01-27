@@ -20,8 +20,8 @@
 
 	files = {
 		desktop = {
-			name = "com.github.diamondburned.gtkcord4.desktop";
-			path = ./com.github.diamondburned.gtkcord4.desktop;
+			name = "xyz.diamondb.gtkcord4.desktop";
+			path = ./xyz.diamondb.gtkcord4.desktop;
 		};
 		logo = {
 			name = "gtkcord4.png";
