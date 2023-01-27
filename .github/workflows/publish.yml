@@ -101,6 +101,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       target-matrix: ${{ steps.set-matrix.outputs.matrix }}
+      version: ${{ steps.version.outputs.version }}
     steps:
       - id: set-targets
         run: |
@@ -124,6 +125,10 @@ jobs:
         env:
           TARGETS: ${{ steps.set-targets.outputs.targets }}
 
+      - id: version
+        run: |
+          echo "version=$(.github/tools/git-version)" >> $GITHUB_OUTPUT
+
   build:
     name: Build
     needs: [build-init, gomod]
@@ -145,12 +150,10 @@ jobs:
       - name: Initialize environment
         id: init
         run: |
-          version=$(.github/tools/git-version)
-
           cat<<EOF > /tmp/expr.nix
           import ./nix {
             action  = "build-cross";
-            version = "$version";
+            version = "$VERSION";
             target  = $TARGET;
             tags    = $TAGS;
           }
@@ -159,8 +162,8 @@ jobs:
           # GitHub doesn't allow multiline strings in outputs, so we trim the
           # new lines.
           echo "expr=$(cat /tmp/expr.nix | tr -d $'\n')" >> $GITHUB_OUTPUT
-          echo "version=$version" >> $GITHUB_OUTPUT
         env:
+          VERSION: ${{ needs.build-init.outputs.version }}
           TARGET: ${{ toJSON(matrix.target) }}
           TAGS: ${{ toJSON(matrix.tags) }}
 
@@ -180,9 +183,47 @@ jobs:
           echo "name=${VERSION}-${target}${tags:+-"$tags"}" >> $GITHUB_OUTPUT
         env:
           EXPR: ${{ steps.init.outputs.expr }}
-          VERSION: ${{ steps.init.outputs.version }}
+          VERSION: ${{ needs.build-init.outputs.version }}
           TARGET: ${{ toJSON(matrix.target) }}
           TAGS: ${{ toJSON(matrix.tags) }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: gtkcord4-${{ steps.build.outputs.name }}
+          path: ${{ steps.build.outputs.directory }}
+
+  build-source:
+    name: Build source tarball
+    needs: [build-init, gomod]
+    runs-on: ubuntu-latest
+    outputs:
+      name: ${{ steps.build.outputs.name }}
+      directory: ${{ steps.build.outputs.directory }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Nix environment
+        uses: ./.github/actions/init-nix
+        with:
+          instantiated-expression: ${{ steps.init.outputs.expr }}
+
+      - name: Build
+        id: build
+        run: |
+          cat<<EOF > /tmp/expr.nix
+          import ./nix {
+            action  = "build-source";
+            version = "$VERSION";
+          }
+          EOF
+
+          out=$(nix-build /tmp/expr.nix --no-out-link)
+
+          echo "directory=$out" >> $GITHUB_OUTPUT
+          echo "name=$VERSION-source" >> $GITHUB_OUTPUT
+        env:
+          VERSION: ${{ needs.build-init.outputs.version }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
