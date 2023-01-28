@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>xyz.diamondb.gtkcord4</id>
+
+  <name>gtkcord4</name>
+  <summary>GTK4 Discord client in Go</summary>
+
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>AGPL-3.0-only</project_license>
+
+  <description>
+    <p>
+      GTK4 Discord client in Go
+    </p>
+  </description>
+
+  <launchable type="desktop-id">xyz.diamondb.gtkcord4.desktop</launchable>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/diamondburned/gtkcord4/main/.github/screenshot2.png</image>
+    </screenshot>
+  </screenshots>
+
+  <content_rating type="oars-1.1">
+    <content_attribute id="social-chat">intense</content_attribute>
+    <content_attribute id="social-info">intense</content_attribute>
+    <content_attribute id="social-audio">intense</content_attribute>
+    <content_attribute id="social-contacts">intense</content_attribute>
+    <content_attribute id="money-purchasing">intense</content_attribute>
+  </content_rating>
+  <releases>
+    <release version="v0.0.6" date="2022-11-11">
+      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.6</url>
+    </release>
+  </releases>
+
+  <url type="homepage">https://github.com/diamondburned/gtkcord4</url>
+  <url type="bugtracker">https://github.com/diamondburned/gtkcord4/issues</url>
+</component>
