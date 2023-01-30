@@ -103,6 +103,8 @@ jobs:
       target-matrix: ${{ steps.set-matrix.outputs.matrix }}
       version: ${{ steps.version.outputs.version }}
     steps:
+      - uses: actions/checkout@v3
+
       - id: set-targets
         run: |
           if [[ "$TARGETS" == "" ]]; then
