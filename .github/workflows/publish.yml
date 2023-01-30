@@ -211,14 +211,14 @@ jobs:
       - name: Build
         id: build
         run: |
-          cat<<EOF > /tmp/expr.nix
+          expr=$(cat<<EOF
           import ./nix {
             action  = "build-source";
             version = "$VERSION";
           }
-          EOF
+          EOF)
 
-          out=$(nix-build /tmp/expr.nix --no-out-link)
+          out=$(nix-build -E "$expr" --no-out-link)
 
           echo "directory=$out" >> $GITHUB_OUTPUT
           echo "name=$VERSION-source" >> $GITHUB_OUTPUT
