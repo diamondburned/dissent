@@ -159,7 +159,7 @@ jobs:
           out=$(nix-build -E "$expr" --no-out-link)
 
           echo "directory=$out" >> $GITHUB_OUTPUT
-          echo "name=$VERSION-source" >> $GITHUB_OUTPUT
+          echo "name=source-$VERSION" >> $GITHUB_OUTPUT
         env:
           VERSION: ${{ needs.build-init.outputs.version }}
 
@@ -220,7 +220,7 @@ jobs:
 
           target=$(jq -r '.' <<< "$TARGET")
           tags=$(jq -r '. | join("+")' <<< "$TAGS")
-          echo "name=${VERSION}-${target}${tags:+-"$tags"}" >> $GITHUB_OUTPUT
+          echo "name=${target}-${VERSION}${tags:+-"$tags"}" >> $GITHUB_OUTPUT
         env:
           EXPR: ${{ steps.init.outputs.expr }}
           VERSION: ${{ needs.build-init.outputs.version }}
