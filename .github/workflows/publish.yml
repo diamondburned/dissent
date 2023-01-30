@@ -129,6 +129,44 @@ jobs:
         run: |
           echo "version=$(.github/tools/git-version)" >> $GITHUB_OUTPUT
 
+  build-source:
+    name: Build source tarball
+    needs: [build-init, gomod]
+    runs-on: ubuntu-latest
+    outputs:
+      name: ${{ steps.build.outputs.name }}
+      directory: ${{ steps.build.outputs.directory }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Nix environment
+        uses: ./.github/actions/init-nix
+        with:
+          instantiated-expression: ${{ steps.init.outputs.expr }}
+
+      - name: Build
+        id: build
+        run: |
+          expr=$(cat<<EOF
+          import ./nix {
+            action  = "build-source";
+            version = "$VERSION";
+          }
+          EOF)
+
+          out=$(nix-build -E "$expr" --no-out-link)
+
+          echo "directory=$out" >> $GITHUB_OUTPUT
+          echo "name=$VERSION-source" >> $GITHUB_OUTPUT
+        env:
+          VERSION: ${{ needs.build-init.outputs.version }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: gtkcord4-${{ steps.build.outputs.name }}
+          path: ${{ steps.build.outputs.directory }}
+
   build:
     name: Build
     needs: [build-init, gomod]
@@ -193,47 +231,9 @@ jobs:
           name: gtkcord4-${{ steps.build.outputs.name }}
           path: ${{ steps.build.outputs.directory }}
 
-  build-source:
-    name: Build source tarball
-    needs: [build-init, gomod]
-    runs-on: ubuntu-latest
-    outputs:
-      name: ${{ steps.build.outputs.name }}
-      directory: ${{ steps.build.outputs.directory }}
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Install Nix environment
-        uses: ./.github/actions/init-nix
-        with:
-          instantiated-expression: ${{ steps.init.outputs.expr }}
-
-      - name: Build
-        id: build
-        run: |
-          expr=$(cat<<EOF
-          import ./nix {
-            action  = "build-source";
-            version = "$VERSION";
-          }
-          EOF)
-
-          out=$(nix-build -E "$expr" --no-out-link)
-
-          echo "directory=$out" >> $GITHUB_OUTPUT
-          echo "name=$VERSION-source" >> $GITHUB_OUTPUT
-        env:
-          VERSION: ${{ needs.build-init.outputs.version }}
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: gtkcord4-${{ steps.build.outputs.name }}
-          path: ${{ steps.build.outputs.directory }}
-
   upload-release:
     name: Upload artifacts to release
-    needs: build
+    needs: [build, build-source]
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
     steps:
@@ -257,7 +257,7 @@ jobs:
 
   nightly-release:
     name: Update nightly release
-    needs: build
+    needs: [build, build-source]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     # if: github.event_name == 'push'
