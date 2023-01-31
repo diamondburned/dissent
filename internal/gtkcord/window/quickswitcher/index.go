@@ -196,12 +196,6 @@ type index struct {
 
 const searchLimit = 25
 
-var allowedChannelTypes = []discord.ChannelType{
-	discord.GuildText,
-	discord.GuildPublicThread,
-	discord.GuildPrivateThread,
-}
-
 func (idx *index) update(ctx context.Context, done func()) {
 	gtkutil.Async(ctx, func() func() {
 		state := gtkcord.FromContext(ctx)
@@ -224,7 +218,7 @@ func (idx *index) update(ctx context.Context, done func()) {
 		}
 
 		for i, guild := range guilds {
-			chs, err := state.Channels(guild.ID, allowedChannelTypes)
+			chs, err := state.Channels(guild.ID, gtkcord.AllowedChannelTypes)
 			if err != nil {
 				log.Print("quickswitcher: cannot populate channels for guild ", guild.Name, ": ", err)
 				continue

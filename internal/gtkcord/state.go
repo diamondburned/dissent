@@ -45,6 +45,19 @@ func init() {
 	}
 }
 
+// AllowedChannelTypes are the channel types that are shown.
+var AllowedChannelTypes = []discord.ChannelType{
+	discord.GuildText,
+	discord.GuildCategory,
+	discord.GuildPublicThread,
+	discord.GuildPrivateThread,
+	discord.GuildForum,
+	discord.GuildAnnouncement,
+	discord.GuildAnnouncementThread,
+	discord.GuildVoice,
+	discord.GuildStageVoice,
+}
+
 type ctxKey uint8
 
 const (

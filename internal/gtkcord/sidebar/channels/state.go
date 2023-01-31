@@ -63,14 +63,14 @@ func NewGuildTree(ctx context.Context) *GuildTree {
 	}
 }
 
-var allowedChannelTypes = []discord.ChannelType{
-	discord.GuildText,
-	discord.GuildCategory,
-	discord.GuildPublicThread,
-	discord.GuildPrivateThread,
-	discord.GuildForum,
-	discord.GuildVoice,
-	discord.GuildStageVoice,
+var okChTypes = map[discord.ChannelType]bool{
+	discord.GuildText:               true,
+	discord.GuildAnnouncement:       true,
+	discord.GuildAnnouncementThread: true,
+	discord.GuildPublicThread:       true,
+	discord.GuildPrivateThread:      true,
+	discord.GuildVoice:              true,
+	discord.GuildStageVoice:         true,
 }
 
 // Add adds the given list of channels into the guild tree.
@@ -80,7 +80,7 @@ func (t *GuildTree) Add(channels []discord.Channel) {
 
 	// Set channels without categories.
 	chs.drain(func(ch discord.Channel) bool {
-		if ch.Type != discord.GuildText || ch.ParentID.IsValid() {
+		if ch.ParentID.IsValid() || !okChTypes[ch.Type] {
 			return false
 		}
 
@@ -131,14 +131,13 @@ func (t *GuildTree) Add(channels []discord.Channel) {
 		}
 
 		base := t.append(&ch, parentIter)
-		var node Node
 
-		switch ch.Type {
-		case discord.GuildText:
-			node = newChannelNode(base)
-			node.Update(&ch)
-		case discord.GuildForum:
+		var node Node
+		if ch.Type == discord.GuildForum {
 			node = newForumNode(base)
+			node.Update(&ch)
+		} else {
+			node = newChannelNode(base)
 			node.Update(&ch)
 		}
 
@@ -148,7 +147,7 @@ func (t *GuildTree) Add(channels []discord.Channel) {
 
 	// Set nested threads that are inside channels.
 	chs.drain(func(ch discord.Channel) bool {
-		if !ch.ParentID.IsValid() {
+		if !ch.ParentID.IsValid() || !okChTypes[ch.Type] {
 			return false
 		}
 

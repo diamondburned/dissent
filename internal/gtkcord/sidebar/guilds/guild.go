@@ -91,11 +91,11 @@ func (g *Guild) ParentFolder() *Folder {
 
 func (g *Guild) viewChild() {}
 
-var channelUnreadTypes = []discord.ChannelType{
-	discord.GuildText,
-	discord.GuildPublicThread,
-	discord.GuildPrivateThread,
-}
+// var channelUnreadTypes = []discord.ChannelType{
+// 	discord.GuildText,
+// 	discord.GuildPublicThread,
+// 	discord.GuildPrivateThread,
+// }
 
 // InvalidateUnread invalidates the guild's unread state.
 func (g *Guild) InvalidateUnread() {
@@ -111,7 +111,7 @@ func (g *Guild) InvalidateUnread() {
 		}
 	}
 
-	g.SetIndicator(state.GuildIsUnread(g.id, channelUnreadTypes))
+	g.SetIndicator(state.GuildIsUnread(g.id, gtkcord.AllowedChannelTypes))
 	g.Mentions.SetCount(mentions)
 
 	if g.parent != nil {

@@ -371,7 +371,7 @@ func (v *View) InvalidateChannels() {
 	state := gtkcord.FromContext(v.ctx.Take())
 	state.MemberState.Subscribe(v.guildID)
 
-	chs, err := state.Offline().Channels(v.guildID, allowedChannelTypes)
+	chs, err := state.Offline().Channels(v.guildID, gtkcord.AllowedChannelTypes)
 	if err != nil {
 		v.SetError(errors.Wrap(err, "cannot fetch channels"))
 		return
