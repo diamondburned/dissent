@@ -27,7 +27,7 @@ var dmButtonCSS = cssutil.Applier("sidebar-dm-button-overlay", `
 func NewButton(ctx context.Context, open func()) *Button {
 	b := Button{ctx: ctx}
 
-	icon := gtk.NewImageFromIconName("user-available")
+	icon := gtk.NewImageFromFile("internal/icons/svg/logo.svg")
 	icon.SetIconSize(gtk.IconSizeLarge)
 	icon.SetPixelSize(gtkcord.GuildIconSize)
 
