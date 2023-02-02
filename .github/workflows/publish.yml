@@ -16,6 +16,9 @@ on:
   push:
     branches-ignore:
       - nightly
+  pull_request:
+    branches:
+      - main
   release:
     types: [released] # Prevents double builds on nightly
 
@@ -120,6 +123,8 @@ jobs:
             case "$ACTION" in
             push|release)
               TARGETS="x86_64 aarch64" ;;
+            pull_request)
+              TARGETS="x86_64" ;;
             *)
               echo "Unknown action: $ACTION"
               exit 1 ;;
@@ -278,7 +283,6 @@ jobs:
     needs: [build, build-source]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    # if: github.event_name == 'push'
     steps:
       - uses: actions/checkout@v3
         with:
