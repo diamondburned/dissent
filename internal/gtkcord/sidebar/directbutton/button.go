@@ -7,6 +7,7 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar/sidebutton"
+	"github.com/diamondburned/gtkcord4/internal/icons"
 )
 
 type Button struct {
@@ -27,7 +28,7 @@ var dmButtonCSS = cssutil.Applier("sidebar-dm-button-overlay", `
 func NewButton(ctx context.Context, open func()) *Button {
 	b := Button{ctx: ctx}
 
-	icon := gtk.NewImageFromFile("internal/icons/png/dm.png")
+	icon := gtk.NewImageFromPixbuf(icons.Pixbuf("dm"))
 	icon.SetIconSize(gtk.IconSizeLarge)
 	icon.SetPixelSize(gtkcord.GuildIconSize)
 
