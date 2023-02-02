@@ -49,9 +49,9 @@ jobs:
           gomod2nix --outdir nix
 
           if git diff --exit-code nix/gomod2nix.toml; then
-            echo "changed=0" >> $GITHUB_OUTPUT
-          else
             echo "changed=1" >> $GITHUB_OUTPUT
+          else
+            echo "changed=0" >> $GITHUB_OUTPUT
           fi
 
       - name: Commit changes to gomod2nix.toml
