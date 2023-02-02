@@ -255,6 +255,7 @@ jobs:
         run: upload-artifacts artifacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPO: ${{ github.repository }}
           RELEASE_ID: ${{ github.event.release.id }}
 
   nightly-release:
