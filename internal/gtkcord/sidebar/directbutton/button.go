@@ -2,6 +2,7 @@ package directbutton
 
 import (
 	"context"
+	"math"
 
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
@@ -23,6 +24,10 @@ var dmButtonCSS = cssutil.Applier("sidebar-dm-button-overlay", `
 		padding: 4px 12px;
 		border-radius: 0;
 	}
+	.sidebar-dm-button image {
+		padding-top: 4px;
+		padding-bottom: 2px;
+	}
 `)
 
 func NewButton(ctx context.Context, open func()) *Button {
@@ -30,7 +35,7 @@ func NewButton(ctx context.Context, open func()) *Button {
 
 	icon := gtk.NewImageFromPixbuf(icons.Pixbuf("dm"))
 	icon.SetIconSize(gtk.IconSizeLarge)
-	icon.SetPixelSize(gtkcord.GuildIconSize)
+	icon.SetPixelSize(int(math.Round(gtkcord.GuildIconSize * 0.85)))
 
 	b.Button = gtk.NewButton()
 	b.Button.AddCSSClass("sidebar-dm-button")
