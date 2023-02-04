@@ -16,6 +16,9 @@ on:
   push:
     branches-ignore:
       - nightly
+  pull_request:
+    branches:
+      - main
   release:
     types: [released] # Prevents double builds on nightly
 
@@ -29,6 +32,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          # Use ref_name instead of ref so we always get the branch to pull our
+          # latest commit from.
+          ref: ${{ github.ref_name }}
 
       - name: Install Nix shell
         uses: ./.github/actions/init-nix
@@ -45,6 +52,7 @@ jobs:
           fi
 
       - name: Update gomod2nix.toml
+        id: update
         run: |
           gomod2nix --outdir nix
 
@@ -68,6 +76,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.ref_name }}
 
       - name: Install Nix shell
         uses: ./.github/actions/init-nix
@@ -104,6 +114,8 @@ jobs:
       version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.ref_name }}
 
       - id: set-targets
         run: |
@@ -111,6 +123,8 @@ jobs:
             case "$ACTION" in
             push|release)
               TARGETS="x86_64 aarch64" ;;
+            pull_request)
+              TARGETS="x86_64" ;;
             *)
               echo "Unknown action: $ACTION"
               exit 1 ;;
@@ -140,6 +154,8 @@ jobs:
       directory: ${{ steps.build.outputs.directory }}
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.ref_name }}
 
       - name: Install Nix environment
         uses: ./.github/actions/init-nix
@@ -186,6 +202,8 @@ jobs:
           - ["libadwaita"]
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.ref_name }}
 
       - name: Initialize environment
         id: init
@@ -240,6 +258,8 @@ jobs:
     if: github.event_name == 'release'
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.ref_name }}
 
       - name: Install Nix shell
         uses: ./.github/actions/init-nix
@@ -255,6 +275,7 @@ jobs:
         run: upload-artifacts artifacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPO: ${{ github.repository }}
           RELEASE_ID: ${{ github.event.release.id }}
 
   nightly-release:
@@ -262,9 +283,10 @@ jobs:
     needs: [build, build-source]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    # if: github.event_name == 'push'
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.ref_name }}
 
       - name: Install Nix shell
         uses: ./.github/actions/init-nix

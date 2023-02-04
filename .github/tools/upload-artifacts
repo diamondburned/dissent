@@ -3,6 +3,7 @@ set -e
 
 main() {
 	need_env GITHUB_TOKEN
+	need_env GITHUB_REPO
 	need_env RELEASE_ID
 
 	files=()
@@ -24,7 +25,7 @@ main() {
 			-H "Accept: application/vnd.github.v3+json" \
 			-H "Content-Type: application/x-executable" \
 			--data-binary "@$file" \
-			"https://uploads.github.com/repos/diamondburned/gotktrix/releases/$RELEASE_ID/assets?name=$name"
+			"https://uploads.github.com/repos/$GITHUB_REPO/releases/$RELEASE_ID/assets?name=$name"
 	}
 }
 
