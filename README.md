@@ -6,7 +6,7 @@
 
 </div>
 
-![Screenshot](./.github/screenshot2.png)
+![Screenshot](./.github/screenshot3.png)
 
 ## Installation
 
