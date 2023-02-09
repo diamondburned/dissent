@@ -10,10 +10,10 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar/channels"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar/direct"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar/directbutton"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar/guilds"
+	"github.com/diamondburned/gtkcord4/internal/sidebar/channels"
+	"github.com/diamondburned/gtkcord4/internal/sidebar/direct"
+	"github.com/diamondburned/gtkcord4/internal/sidebar/directbutton"
+	"github.com/diamondburned/gtkcord4/internal/sidebar/guilds"
 )
 
 // Controller is the parent controller that Sidebar controls.

@@ -15,7 +15,7 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord/window/login"
+	"github.com/diamondburned/gtkcord4/internal/window/login"
 	"github.com/diamondburned/ningen/v3"
 )
 

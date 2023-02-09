@@ -11,9 +11,9 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord/message"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord/window/quickswitcher"
+	"github.com/diamondburned/gtkcord4/internal/message"
+	"github.com/diamondburned/gtkcord4/internal/sidebar"
+	"github.com/diamondburned/gtkcord4/internal/window/quickswitcher"
 	"github.com/diamondburned/gtkcord4/internal/icons"
 	"github.com/pkg/errors"
 )

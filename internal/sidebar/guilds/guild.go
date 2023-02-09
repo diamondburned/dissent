@@ -6,7 +6,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord/sidebar/sidebutton"
+	"github.com/diamondburned/gtkcord4/internal/sidebar/sidebutton"
 )
 
 type GuildController interface {

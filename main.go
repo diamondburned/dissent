@@ -10,7 +10,7 @@ import (
 	"github.com/diamondburned/gotkit/components/prefui"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord/window"
+	"github.com/diamondburned/gtkcord4/internal/window"
 
 	_ "github.com/diamondburned/gotkit/gtkutil/aggressivegc"
 )
