@@ -33,7 +33,9 @@ type Content struct {
 	mdview *mdrender.MarkdownViewer
 	react  *contentReactions
 	child  []gtk.Widgetter
-	msgID  discord.MessageID
+
+	chID  discord.ChannelID
+	msgID discord.MessageID
 }
 
 var contentCSS = cssutil.Applier("message-content-box", `
@@ -63,6 +65,7 @@ func NewContent(ctx context.Context, v *View) *Content {
 		ctx:   ctx,
 		view:  v,
 		child: make([]gtk.Widgetter, 0, 2),
+		chID:  v.ChannelID(),
 	}
 	c.Box = gtk.NewBox(gtk.OrientationVertical, 0)
 	contentCSS(c.Box)
@@ -73,6 +76,11 @@ func NewContent(ctx context.Context, v *View) *Content {
 // MessageID returns the message ID.
 func (c *Content) MessageID() discord.MessageID {
 	return c.msgID
+}
+
+// ChannelID returns the channel ID.
+func (c *Content) ChannelID() discord.ChannelID {
+	return c.chID
 }
 
 // SetExtraMenu implements ExtraMenuSetter.

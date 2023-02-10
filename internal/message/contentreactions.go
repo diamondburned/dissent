@@ -2,13 +2,16 @@ package message
 
 import (
 	"context"
+	"fmt"
 	"html"
 	"log"
 	"strconv"
 	"strings"
 
 	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
+	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/components/onlineimage"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
@@ -19,7 +22,7 @@ import (
 type contentReactions struct {
 	*gtk.FlowBox
 	ctx       context.Context
-	reactions map[string]*contentReaction
+	reactions map[discord.APIEmoji]*contentReaction
 	parent    *Content
 }
 
@@ -34,33 +37,51 @@ func newContentReactions(ctx context.Context, parent *Content) *contentReactions
 	rs := contentReactions{
 		ctx:       ctx,
 		parent:    parent,
-		reactions: make(map[string]*contentReaction),
+		reactions: make(map[discord.APIEmoji]*contentReaction),
 	}
 
 	rs.FlowBox = gtk.NewFlowBox()
 	rs.FlowBox.SetOrientation(gtk.OrientationHorizontal)
 	rs.FlowBox.SetHomogeneous(true)
 	rs.FlowBox.SetMaxChildrenPerLine(100)
-	rs.FlowBox.SetSelectionMode(gtk.SelectionNone)
+	rs.FlowBox.SetSelectionMode(gtk.SelectionBrowse)
 	rs.FlowBox.SetRowSpacing(2)
 	rs.FlowBox.SetColumnSpacing(2)
+	rs.FlowBox.SetActivateOnSingleClick(true)
 	reactionsCSS(rs)
 
-	rs.FlowBox.SetSortFunc(func(child1, child2 *gtk.FlowBoxChild) int {
-		name1 := child1.Name()
-		name2 := child2.Name()
+	rs.FlowBox.ConnectChildActivated(func(child *gtk.FlowBoxChild) {
+		client := gtkcord.FromContext(rs.ctx)
+		chID := rs.parent.ChannelID()
+		msgID := rs.parent.MessageID()
 
-		react1 := rs.reactions[name1]
-		react2 := rs.reactions[name2]
+		emoji := discord.APIEmoji(child.Name())
+		selected := rs.reactions[emoji].me
 
-		if react1.count != react2.count {
-			if react1.count > react2.count {
-				return 1
+		child.SetSensitive(false)
+		go func() {
+			var err error
+			if selected {
+				err = client.Unreact(chID, msgID, emoji)
+			} else {
+				err = client.React(chID, msgID, emoji)
 			}
-			return -1
-		}
 
-		return strings.Compare(name1, name2)
+			if err != nil {
+				if selected {
+					err = fmt.Errorf("failed to react: %w", err)
+				} else {
+					err = fmt.Errorf("failed to unreact: %w", err)
+				}
+			}
+
+			glib.IdleAdd(func() {
+				child.SetSensitive(true)
+				if err != nil {
+					app.Error(rs.ctx, err)
+				}
+			})
+		}()
 	})
 
 	return &rs
@@ -77,13 +98,14 @@ func (rs *contentReactions) AddReactions(reactions []discord.Reaction) {
 	for _, react := range reactions {
 		rs.addReaction(react)
 	}
+
 	for _, reaction := range rs.reactions {
 		reaction.Invalidate()
 	}
 }
 
 func (rs *contentReactions) addReaction(reaction discord.Reaction) {
-	name := reaction.Emoji.String()
+	name := reaction.Emoji.APIString()
 
 	r, ok := rs.reactions[name]
 	if ok {
@@ -92,7 +114,15 @@ func (rs *contentReactions) addReaction(reaction discord.Reaction) {
 	} else {
 		r = newContentReaction(rs, reaction)
 		rs.reactions[name] = r
-		rs.Insert(r, -1)
+
+		// Manually search where this reaction should be inserted.
+		pos := -1
+		for _, curr := range rs.reactions {
+			if curr.count > r.count {
+				pos = curr.Index()
+			}
+		}
+		rs.Insert(r, pos)
 	}
 }
 
@@ -115,7 +145,7 @@ var reactionCSS = cssutil.Applier("message-reaction", `
 		padding: 2px 4px;
 	}
 	.message-reaction-me {
-		background-color: alpha(@theme_selected_bg_color, 0.25);
+		/* background-color: alpha(@theme_selected_bg_color, 0.25); */
 	}
 	.message-reaction-count {
 		margin-left: 4px;
@@ -140,7 +170,7 @@ func newContentReaction(rs *contentReactions, reaction discord.Reaction) *conten
 	box := gtk.NewBox(gtk.OrientationHorizontal, 0)
 
 	r.FlowBoxChild = gtk.NewFlowBoxChild()
-	r.FlowBoxChild.SetName(reaction.Emoji.String())
+	r.FlowBoxChild.SetName(string(reaction.Emoji.APIString()))
 	r.FlowBoxChild.SetChild(box)
 	reactionCSS(r)
 
@@ -199,11 +229,11 @@ func (r *contentReaction) Invalidate() {
 	r.countLabel.SetLabel(strconv.Itoa(r.count))
 
 	if r.me {
-		if !r.HasCSSClass("message-reaction-me") {
-			r.AddCSSClass("message-reaction-me")
-		}
+		r.AddCSSClass("message-reaction-me")
+		r.reactions.SelectChild(r.FlowBoxChild)
 	} else {
 		r.RemoveCSSClass("message-reaction-me")
+		r.reactions.UnselectChild(r.FlowBoxChild)
 	}
 }
 

@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8
-	github.com/diamondburned/arikawa/v3 v3.2.1-0.20230131081350-00c3ed4b8afd
+	github.com/diamondburned/arikawa/v3 v3.2.1-0.20230210050458-2c379c90c2ac
 	github.com/diamondburned/chatkit v0.0.0-20230209213000-7d9bb654be2f
 	github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20230105075138-e92a3b568c9e
 	github.com/diamondburned/gotk4/pkg v0.0.5-0.20230105054822-f46414fdaa94
