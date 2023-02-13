@@ -233,11 +233,11 @@ jobs:
         id: build
         run: |
           out=$(nix-build -E "$EXPR" --no-out-link)
-          echo "directory=$out" >> $GITHUB_OUTPUT
+          echo "path=$out" >> $GITHUB_OUTPUT
 
-          target=$(jq -r '.' <<< "$TARGET")
-          tags=$(jq -r '. | join("+")' <<< "$TAGS")
-          echo "name=${target}-${VERSION}${tags:+-"$tags"}" >> $GITHUB_OUTPUT
+          names=$(nix-instantiate --eval --json -E "builtins.attrNames ($EXPR).outputs")
+          name=$(jq -r '.[0]' <<< "$names")
+          echo "name=$name" >> $GITHUB_OUTPUT
         env:
           EXPR: ${{ steps.init.outputs.expr }}
           VERSION: ${{ needs.build-init.outputs.version }}
@@ -247,8 +247,8 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: gtkcord4-${{ steps.build.outputs.name }}
-          path: ${{ steps.build.outputs.directory }}
+          name: ${{ steps.build.outputs.name }}
+          path: ${{ steps.build.outputs.path }}
 
   upload-release:
     name: Upload artifacts to release
