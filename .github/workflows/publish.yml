@@ -199,7 +199,6 @@ jobs:
         target: ${{ fromJSON(needs.build-init.outputs.target-matrix) }}
         tags:
           - [""]
-          - ["libadwaita"]
     steps:
       - uses: actions/checkout@v3
         with:
