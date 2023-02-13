@@ -18,10 +18,10 @@
         "homepage": null,
         "owner": "diamondburned",
         "repo": "gotk4-nix",
-        "rev": "a27a866d4e7a2778f6211b75ed80a4f7dc5c11a5",
-        "sha256": "14mxynl0sjn0r57ag492cl23k1kv4snjx2ldfgfblg9skdbg92dz",
+        "rev": "c37b9a15d8117b5af60a0206d96a09ebf8e7d1ef",
+        "sha256": "05j49fbsqjvw7pqyqpc2g4w2q78n3vkgbbgkkfw2gbckbw7rydh5",
         "type": "tarball",
-        "url": "https://github.com/diamondburned/gotk4-nix/archive/a27a866d4e7a2778f6211b75ed80a4f7dc5c11a5.tar.gz",
+        "url": "https://github.com/diamondburned/gotk4-nix/archive/c37b9a15d8117b5af60a0206d96a09ebf8e7d1ef.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "nixpkgs": {
