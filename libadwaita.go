@@ -1,5 +1,4 @@
-//go:build libadwaita
-// +build libadwaita
+//go:build !nolibadwaita
 
 package main
 

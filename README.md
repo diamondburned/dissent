@@ -30,10 +30,3 @@ To compile from scratch, run
 ```sh
 go install -v github.com/diamondburned/gtkcord4@latest
 ```
-
-## libadwaita
-
-gtkcord4 doesn't use libadwaita by default, and the releases will not be built
-against libadwaita.
-
-To build gtkcord4 against libadwaita, use `go install -tags libadwaita`.
