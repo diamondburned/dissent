@@ -2,13 +2,9 @@ package channels
 
 import (
 	"context"
-	"fmt"
-	"html"
 	"log"
-	"sort"
 
 	"github.com/diamondburned/arikawa/v3/discord"
-	"github.com/diamondburned/chatkit/components/author"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
@@ -16,11 +12,6 @@ import (
 )
 
 type any = interface{}
-
-const (
-	valueUnread    = "●"
-	valueMentioned = "! " + valueUnread
-)
 
 type treeColumn = int
 
@@ -65,10 +56,10 @@ func NewGuildTree(ctx context.Context) *GuildTree {
 
 var okChTypes = map[discord.ChannelType]bool{
 	discord.GuildText:               true,
-	discord.GuildAnnouncement:       true,
-	discord.GuildAnnouncementThread: true,
 	discord.GuildPublicThread:       true,
 	discord.GuildPrivateThread:      true,
+	discord.GuildAnnouncement:       true,
+	discord.GuildAnnouncementThread: true,
 	discord.GuildVoice:              true,
 	discord.GuildStageVoice:         true,
 }
@@ -195,9 +186,9 @@ func (t *GuildTree) keep(n Node) {
 }
 
 // append appends a new empty node and returns its iterator.
-func (t *GuildTree) append(ch *discord.Channel, parent *gtk.TreeIter) BaseChannelNode {
+func (t *GuildTree) append(ch *discord.Channel, parent *gtk.TreeIter) baseChannelNode {
 	iter := t.TreeStore.Append(parent)
-	base := BaseChannelNode{
+	base := baseChannelNode{
 		path: t.Path(iter),
 		head: t,
 		id:   ch.ID,
@@ -272,22 +263,12 @@ func (t *GuildTree) UpdateChannel(id discord.ChannelID) {
 
 // UpdateUnread updates the unread state of the channel with the given ID.
 func (t *GuildTree) UpdateUnread(id discord.ChannelID) {
-	t.SetUnread(id, t.state().ChannelIsUnread(id))
-}
-
-// SetUnread marks the given channel as read or unread.
-func (t *GuildTree) SetUnread(id discord.ChannelID, unread ningen.UnreadIndication) {
 	node := t.Node(id)
 	if node == nil {
 		return
 	}
 
-	switch node := t.Node(id).(type) {
-	case *ChannelNode:
-		node.SetUnread(unread)
-	case *ThreadNode:
-		node.SetUnread(unread)
-	}
+	node.UpdateUnread()
 }
 
 func (t *GuildTree) set(path *gtk.TreePath, v [maxTreeColumn]any) {
@@ -328,312 +309,15 @@ type Node interface {
 	// Update passes the new Channel object into the Node for it to update its
 	// own information.
 	Update(*discord.Channel)
+	// UpdateUnread updates the unread state of the node.
+	UpdateUnread()
 	// TreePath is the tree path pointing to the channel node.
 	TreePath() *gtk.TreePath
+
+	nodeInternals
 }
 
-// BaseChannelNode is the base of all channel nodes. It implements the Node
-// interface and contains common information that all channels have.
-type BaseChannelNode struct {
-	path *gtk.TreePath
-	head *GuildTree
-
-	id discord.ChannelID
-}
-
-// ID implements Node.
-func (n *BaseChannelNode) ID() discord.ChannelID { return n.id }
-
-// Update implements Node. It does nothing.
-func (n *BaseChannelNode) Update(ch *discord.Channel) {}
-
-// TreePath implements Node.
-func (n *BaseChannelNode) TreePath() *gtk.TreePath { return n.path }
-
-// zeroInit initializes the row with a nil icon and a channel name.
-func (n *BaseChannelNode) zeroInit(ch *discord.Channel) {
-	muted := n.head.state().ChannelIsMuted(n.id, true)
-
-	n.head.set(n.path, [...]any{
-		dimText(ch.Name, muted),
-		uint64(n.id),
-		"",
-		html.EscapeString(ch.Name),
-	})
-}
-
-// setUnread sets the unread column.
-func (n *BaseChannelNode) setUnread(unread ningen.UnreadIndication) {
-	var col string
-
-	switch unread {
-	case ningen.ChannelUnread:
-		col = valueUnread
-	case ningen.ChannelMentioned:
-		col = valueMentioned
-	}
-
-	n.head.setValues(n.path, [maxTreeColumn]any{
-		columnUnread: col,
-	})
-}
-
-// CategoryNode is a category node.
-type CategoryNode struct {
-	BaseChannelNode
-	unreadMentioned map[discord.ChannelID]bool
-}
-
-func newCategoryNode(base BaseChannelNode, ch *discord.Channel) *CategoryNode {
-	return &CategoryNode{
-		BaseChannelNode: base,
-		unreadMentioned: make(map[discord.ChannelID]bool),
-	}
-}
-
-func (n *CategoryNode) Update(ch *discord.Channel) {
-	muted := n.head.state().ChannelIsMuted(n.id, true)
-
-	n.head.setValues(n.path, [maxTreeColumn]any{
-		columnName:    dimText(ch.Name, muted),
-		columnTooltip: html.EscapeString(ch.Name),
-	})
-}
-
-// setUnread registers the channel inside the category as read or unread. Note
-// that it does not check if the given channel is actually inside CategoryNode
-// or not.
-func (n *CategoryNode) setUnread(ch discord.ChannelID, unread ningen.UnreadIndication) {
-	if unread == ningen.ChannelRead {
-		delete(n.unreadMentioned, ch)
-	} else {
-		n.unreadMentioned[ch] = (unread == ningen.ChannelMentioned)
-	}
-
-	if len(n.unreadMentioned) == 0 {
-		n.BaseChannelNode.setUnread(ningen.ChannelRead)
-		return
-	}
-
-	unread = ningen.ChannelUnread
-	for _, mentioned := range n.unreadMentioned {
-		if mentioned {
-			unread = ningen.ChannelMentioned
-			break
-		}
-	}
-
-	n.BaseChannelNode.setUnread(unread)
-}
-
-// ChannelNode is a regular text channel node.
-type ChannelNode struct {
-	BaseChannelNode
-	parentID discord.ChannelID
-}
-
-func newChannelNode(base BaseChannelNode) *ChannelNode {
-	return &ChannelNode{
-		BaseChannelNode: base,
-	}
-}
-
-const (
-	chHash     = `<span face="monospace"><b><span size="large" rise="-600">#</span><span size="x-small" rise="-2000"> </span></b></span>`
-	chNSFWHash = `<span face="monospace"><b><span size="large" rise="-600">#</span><span size="x-small" rise="-2000">!</span></b></span>`
-)
-
-func (n *ChannelNode) Update(ch *discord.Channel) {
-	n.parentID = ch.ParentID
-
-	hash := chHash
-	if ch.NSFW {
-		hash = chNSFWHash
-	}
-
-	muted := n.head.state().ChannelIsMuted(n.id, true)
-
-	n.head.setValues(n.path, [maxTreeColumn]any{
-		// Add a space at the end because the channel's height is otherwise a
-		// bit shorter.
-		columnName:    dimMarkup(hash+html.EscapeString(ch.Name)+" ", muted),
-		columnTooltip: "#" + html.EscapeString(ch.Name),
-	})
-}
-
-// SetUnread sets whether the channel is unread and mentioned.
-func (n *ChannelNode) SetUnread(unread ningen.UnreadIndication) {
-	n.setUnread(unread)
-
-	if n.parentID.IsValid() {
-		if parent, ok := n.head.Node(n.parentID).(*CategoryNode); ok {
-			parent.setUnread(n.id, unread)
-		}
-	}
-}
-
-// ForumNode is a node indicating a Discord forum.
-type ForumNode struct {
-	BaseChannelNode
-}
-
-func newForumNode(base BaseChannelNode) *ForumNode {
-	return &ForumNode{
-		BaseChannelNode: base,
-	}
-}
-
-func (n *ForumNode) Update(ch *discord.Channel) {
-	n.head.setValues(n.path, [maxTreeColumn]any{
-		columnName: ch.Name,
-	})
-}
-
-func (n *ForumNode) SetUnread(unread ningen.UnreadIndication) {
-	n.setUnread(unread)
-}
-
-// ThreadNode is a node indicating a Discord thread.
-type ThreadNode struct {
-	BaseChannelNode
-}
-
-func newThreadNode(base BaseChannelNode) *ThreadNode {
-	return &ThreadNode{
-		BaseChannelNode: base,
-	}
-}
-
-func (n *ThreadNode) Update(ch *discord.Channel) {
-	muted := n.head.state().ChannelIsMuted(n.id, true)
-
-	n.head.setValues(n.path, [maxTreeColumn]any{
-		columnName: dimMarkup(html.EscapeString(ch.Name)+" ", muted),
-	})
-}
-
-func (n *ThreadNode) SetUnread(unread ningen.UnreadIndication) {
-	n.setUnread(unread)
-}
-
-type VoiceChannelNode struct {
-	BaseChannelNode
-	guildID discord.GuildID
-}
-
-func newVoiceChannelNode(base BaseChannelNode) *VoiceChannelNode {
-	return &VoiceChannelNode{
-		BaseChannelNode: base,
-	}
-}
-
-const vcIcon = `🔊 `
-
-func (n *VoiceChannelNode) Update(ch *discord.Channel) {
-	n.guildID = ch.GuildID
-
-	states, _ := n.head.state().VoiceStates(ch.GuildID)
-	if states == nil {
-		n.setVoiceUsers(nil)
-		n.head.setValues(n.path, [maxTreeColumn]any{
-			columnName: vcIcon + ch.Name,
-		})
-		return
-	}
-
-	members := make([]discord.Member, 0, len(states))
-	for _, state := range states {
-		if state.ChannelID != ch.ID {
-			continue
-		}
-
-		member := state.Member
-		if member == nil {
-			member, _ = n.head.state().Member(ch.GuildID, state.UserID)
-		}
-		if member == nil {
-			continue
-		}
-		members = append(members, *member)
-	}
-
-	name := vcIcon + ch.Name
-	if len(members) > 0 {
-		name += fmt.Sprintf(" (%d)", len(members))
-	}
-
-	n.setVoiceUsers(members)
-	n.head.setValues(n.path, [maxTreeColumn]any{
-		columnName: name,
-	})
-}
-
-func (n *VoiceChannelNode) setVoiceUsers(members []discord.Member) {
-	// Defer clearing so GTK doesn't hide the node when we're replacing it.
-	clear := n.deferClear()
-	defer clear()
-
-	if len(members) == 0 {
-		return
-	}
-
-	parent, ok := n.head.TreeStore.Iter(n.path)
-	if !ok {
-		return
-	}
-
-	sort.SliceStable(members, func(i, j int) bool {
-		return memberName(&members[i]) < memberName(&members[j])
-	})
-
-	for _, member := range members {
-		iter := n.head.TreeStore.Append(parent)
-		path := n.head.TreeStore.Path(iter)
-
-		n.head.set(path, [...]any{
-			n.head.state().MemberMarkup(
-				n.guildID,
-				&discord.GuildUser{User: member.User, Member: &member},
-				author.WithMinimal(),
-				author.WithColor(""), // no color for consistency
-			),
-			uint64(discord.NullSnowflake),
-			"",
-			member.User.Tag(),
-		})
-	}
-}
-
-func memberName(member *discord.Member) string {
-	if member.Nick != "" {
-		return member.Nick
-	}
-	return member.User.Tag()
-}
-
-func (n *VoiceChannelNode) deferClear() func() {
-	parent, ok := n.head.Iter(n.path)
-	if !ok {
-		return func() {}
-	}
-
-	len := n.head.TreeStore.IterNChildren(parent)
-
-	return func() {
-		it, ok := n.head.TreeStore.IterChildren(parent)
-		for i := 0; ok && i < len; i++ {
-			ok = n.head.TreeStore.Remove(it)
-		}
-	}
-}
-
-func dimMarkup(str string, dimmed bool) string {
-	if dimmed {
-		str = fmt.Sprintf(`<span alpha="50%%">%s</span>`, str)
-	}
-	return str
-}
-
-func dimText(text string, dimmed bool) string {
-	return dimMarkup(html.EscapeString(text), dimmed)
+type nodeInternals interface {
+	setUnread(ningen.UnreadIndication, bool)
+	getUnread() ningen.UnreadIndication
 }
