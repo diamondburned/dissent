@@ -198,8 +198,7 @@ func (s *State) BindWidget(w gtk.Widgetter, fn func(gateway.Event), filters ...g
 	base := gtk.BaseWidget(w)
 
 	var unbind func()
-
-	base.ConnectRealize(func() {
+	bind := func() {
 		log.Printf("State: WidgetHandler: binding to %T...", w)
 
 		unbind = s.AddSyncHandler(func(ev gateway.Event) {
@@ -219,8 +218,13 @@ func (s *State) BindWidget(w gtk.Widgetter, fn func(gateway.Event), filters ...g
 		filtered:
 			glib.IdleAddPriority(glib.PriorityDefault, func() { fn(ev) })
 		})
-	})
+	}
 
+	if base.Realized() {
+		bind()
+	}
+
+	base.ConnectRealize(bind)
 	base.ConnectUnrealize(func() {
 		log.Printf("State: WidgetHandler: unbinding from %T...", w)
 

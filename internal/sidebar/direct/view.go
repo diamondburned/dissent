@@ -41,6 +41,7 @@ var _ = cssutil.WriteCSS(`
 	.direct-searchbar > revealer > box {
 		border-bottom: 0;
 		background: none;
+		box-shadow: none;
 	}
 	.direct-searchbar > revealer > box > entry {
 		min-height: 28px;

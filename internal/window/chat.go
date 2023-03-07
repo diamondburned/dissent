@@ -64,15 +64,35 @@ func NewChatPage(ctx context.Context) *ChatPage {
 	p.RightLabel.SetHExpand(true)
 	p.RightLabel.SetEllipsize(pango.EllipsizeEnd)
 
-	rightHeader := gtk.NewBox(gtk.OrientationHorizontal, 0)
-	rightHeader.AddCSSClass("titlebar")
-	rightHeader.AddCSSClass("right-header")
-	rightHeader.Append(back)
-	rightHeader.Append(p.RightLabel)
-	rightHeader.Append(gtk.NewWindowControls(gtk.PackEnd))
+	rightHeaderBox := gtk.NewBox(gtk.OrientationHorizontal, 0)
+	rightHeaderBox.AddCSSClass("titlebar")
+	rightHeaderBox.AddCSSClass("right-header")
+	rightHeaderBox.Append(back)
+	rightHeaderBox.Append(p.RightLabel)
+	rightHeaderBox.Append(gtk.NewWindowControls(gtk.PackEnd))
 
-	rightHandle := gtk.NewWindowHandle()
-	rightHandle.SetChild(rightHeader)
+	rightHeader := gtk.NewWindowHandle()
+	rightHeader.AddCSSClass("titlebar")
+	rightHeader.SetChild(rightHeaderBox)
+
+	// rightHeader := adw.NewHeaderBar()
+	// rightHeader.AddCSSClass("titlebar")
+	// rightHeader.AddCSSClass("right-header")
+	// rightHeader.PackStart(back)
+	// rightHeader.PackStart(p.RightLabel)
+	// rightHeader.SetTitleWidget(newEmptyHeader())
+	// rightHeader.SetShowStartTitleButtons(false)
+	// rightHeader.SetShowEndTitleButtons(true)
+	// rightHeader.SetCenteringPolicy(adw.CenteringPolicyLoose)
+	//
+	// rightHeader := gtk.NewHeaderBar()
+	// rightHeader.AddCSSClass("titlebar")
+	// rightHeader.AddCSSClass("right-header")
+	// rightHeader.SetShowTitleButtons(false)
+	// rightHeader.PackEnd(gtk.NewWindowControls(gtk.PackEnd))
+	// rightHeader.PackStart(back)
+	// rightHeader.PackStart(p.RightLabel)
+	// rightHeader.SetTitleWidget(newEmptyHeader())
 
 	p.placeholder = newEmptyMessagePlaceholer()
 
@@ -86,7 +106,7 @@ func NewChatPage(ctx context.Context) *ChatPage {
 
 	rightBox := gtk.NewBox(gtk.OrientationVertical, 0)
 	rightBox.SetHExpand(true)
-	rightBox.Append(rightHandle)
+	rightBox.Append(rightHeader)
 	rightBox.Append(p.RightChild)
 
 	p.Flap = adw.NewFlap()
@@ -142,6 +162,7 @@ func (p *ChatPage) SwitchToPlaceholder() {
 	win := app.WindowFromContext(p.ctx)
 	win.SetTitle("")
 
+	p.RightLabel.SetText("")
 	p.switchTo(nil)
 	p.RightChild.SetVisibleChild(p.placeholder)
 }
@@ -154,6 +175,7 @@ func (p *ChatPage) SwitchToMessages() {
 		p.OpenChannel(view.ChannelID())
 	} else {
 		p.SwitchToPlaceholder()
+		p.Left.OpenDMs() // Open DMs by default.
 	}
 }
 
