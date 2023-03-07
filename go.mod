@@ -2,13 +2,15 @@ module github.com/diamondburned/gtkcord4
 
 go 1.18
 
+// replace github.com/diamondburned/gotkit => ../gotkit
+
 require (
 	github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8
 	github.com/diamondburned/arikawa/v3 v3.2.1-0.20230210050458-2c379c90c2ac
 	github.com/diamondburned/chatkit v0.0.0-20230209213000-7d9bb654be2f
 	github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20230105075138-e92a3b568c9e
-	github.com/diamondburned/gotk4/pkg v0.0.5-0.20230105054822-f46414fdaa94
-	github.com/diamondburned/gotkit v0.0.0-20230131094355-0f2a6e285d1e
+	github.com/diamondburned/gotk4/pkg v0.0.5-0.20230307013122-e86c9b44a4bf
+	github.com/diamondburned/gotkit v0.0.0-20230307021534-eb085f344a50
 	github.com/diamondburned/ningen/v3 v3.0.1-0.20230124093205-d39554fd5d67
 	github.com/dustin/go-humanize v1.0.0
 	github.com/enescakir/emoji v1.0.0

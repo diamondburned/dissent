@@ -70,7 +70,7 @@ type View struct {
 		replying bool
 	}
 
-	ctx  gtkutil.Canceller
+	ctx  context.Context
 	chID discord.ChannelID
 }
 
@@ -112,6 +112,7 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 	v := &View{
 		msgs: make(map[messageKey]messageRow),
 		chID: chID,
+		ctx:  ctx,
 	}
 
 	v.List = gtk.NewListBox()
@@ -149,15 +150,13 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 	v.LoadablePage.SetTransitionDuration(125)
 	v.LoadablePage.SetChild(v.Box)
 
-	v.ctx = gtkutil.WithVisibility(ctx, v)
-
-	state := gtkcord.FromContext(v.ctx.Take())
+	state := gtkcord.FromContext(v.ctx)
 	if ch, err := state.Cabinet.Channel(v.chID); err == nil {
 		v.chName = ch.Name
 		v.guildID = ch.GuildID
 	}
 
-	state.BindHandler(v.ctx, func(ev gateway.Event) {
+	state.BindWidget(v, func(ev gateway.Event) {
 		switch ev := ev.(type) {
 		case *gateway.MessageCreateEvent:
 			if ev.ChannelID != v.chID {
@@ -280,16 +279,7 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 		}
 	})
 
-	v.ctx.OnRenew(func(ctx context.Context) func() {
-		w := app.GTKWindowFromContext(ctx)
-		h := w.NotifyProperty("is-active", v.onScrollBottomed)
-		return func() { w.HandlerDisconnect(h) }
-	})
-
-	v.ctx.OnRenew(func(ctx context.Context) func() {
-		v.load()
-		return v.unload
-	})
+	v.load()
 
 	viewCSS(v)
 	return v
@@ -313,13 +303,14 @@ func (v *View) ChannelName() string {
 }
 
 func (v *View) load() {
-	v.ctx.Renew()
+	log.Println("loading message view for", v.chID)
+
 	v.LoadablePage.SetLoading()
 	v.unload()
 
-	state := gtkcord.FromContext(v.ctx.Take())
+	state := gtkcord.FromContext(v.ctx)
 
-	gtkutil.Async(v.ctx.Take(), func() func() {
+	gtkutil.Async(v.ctx, func() func() {
 		msgs, err := state.Messages(v.chID, 45)
 		if err != nil {
 			return func() {
@@ -403,9 +394,9 @@ func (v *View) upsertMessageKeyed(key messageKey, info messageInfo, collapsed bo
 
 	var message Message
 	if collapsed {
-		message = NewCollapsedMessage(v.ctx.Take(), v)
+		message = NewCollapsedMessage(v.ctx, v)
 	} else {
-		message = NewCozyMessage(v.ctx.Take(), v)
+		message = NewCozyMessage(v.ctx, v)
 	}
 
 	row := gtk.NewListBoxRow()
@@ -454,7 +445,7 @@ func (v *View) lastMessage() (messageRow, bool) {
 }
 
 func (v *View) lastUserMessage() Message {
-	state := gtkcord.FromContext(v.ctx.Take())
+	state := gtkcord.FromContext(v.ctx)
 	me, _ := state.Me()
 	if me == nil {
 		return nil
@@ -511,7 +502,7 @@ func (v *View) updateMessageReactions(id discord.MessageID) {
 		return
 	}
 
-	state := gtkcord.FromContext(v.ctx.Take())
+	state := gtkcord.FromContext(v.ctx)
 
 	msg, _ := state.Cabinet.Message(v.chID, id)
 	if msg == nil {
@@ -524,7 +515,7 @@ func (v *View) updateMessageReactions(id discord.MessageID) {
 
 // SendMessage implements composer.Controller.
 func (v *View) SendMessage(msg composer.SendingMessage) {
-	state := gtkcord.FromContext(v.ctx.Take())
+	state := gtkcord.FromContext(v.ctx)
 
 	me, _ := state.Cabinet.Me()
 	if me == nil {
@@ -560,7 +551,7 @@ func (v *View) SendMessage(msg composer.SendingMessage) {
 	gtk.BaseWidget(row).AddCSSClass("message-sending")
 	row.Update(&gateway.MessageCreateEvent{Message: m})
 
-	uploading := newUploadingLabel(v.ctx.Take(), len(msg.Files))
+	uploading := newUploadingLabel(v.ctx, len(msg.Files))
 	uploading.SetVisible(len(msg.Files) > 0)
 
 	content := row.Content()
@@ -700,14 +691,14 @@ func (v *View) Delete(id discord.MessageID) {
 		msg.SetSensitive(false)
 	}
 
-	state := gtkcord.FromContext(v.ctx.Take())
+	state := gtkcord.FromContext(v.ctx)
 	go func() {
 		// This is a fairly important operation, so ensure it goes through even
 		// if the user switches away.
 		state = state.WithContext(context.Background())
 
 		if err := state.DeleteMessage(v.chID, id, ""); err != nil {
-			app.Error(v.ctx.Take(), errors.Wrap(err, "cannot delete message"))
+			app.Error(v.ctx, errors.Wrap(err, "cannot delete message"))
 		}
 	}()
 }
@@ -721,7 +712,7 @@ func (v *View) onScrollBottomed() {
 
 // MarkRead marks the view's latest messages as read.
 func (v *View) MarkRead() {
-	state := gtkcord.FromContext(v.ctx.Take())
+	state := gtkcord.FromContext(v.ctx)
 	// Grab the last message from the state cache, since we sometimes don't even
 	// render blocked messages.
 	msgs, _ := state.Cabinet.Messages(v.ChannelID())
@@ -740,6 +731,6 @@ func (v *View) MarkRead() {
 // IsActive returns true if View is active and visible. This implies that the
 // window is focused.
 func (v *View) IsActive() bool {
-	win := app.GTKWindowFromContext(v.ctx.Take())
+	win := app.GTKWindowFromContext(v.ctx)
 	return win.IsActive() && v.Mapped()
 }

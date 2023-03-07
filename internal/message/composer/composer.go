@@ -18,7 +18,6 @@ import (
 	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/app/prefs"
-	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/mediautil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
@@ -185,7 +184,7 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 	v.SetPlaceholderMarkup("")
 
 	state := gtkcord.FromContext(ctx)
-	state.BindHandler(gtkutil.WithVisibility(ctx, v),
+	state.BindWidget(v,
 		func(ev gateway.Event) {
 			switch ev := ev.(type) {
 			case *gateway.TypingStartEvent:

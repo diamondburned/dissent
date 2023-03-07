@@ -235,6 +235,10 @@ func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
 			return
 		}
 
+		if v.selectID == node.ID() {
+			return
+		}
+
 		// Update the selectID in case we recreate the tree model.
 		v.selectID = node.ID()
 

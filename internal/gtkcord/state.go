@@ -24,6 +24,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/utils/ws"
 	"github.com/diamondburned/chatkit/components/author"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
+	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/app/prefs"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gtkcord4/internal/colorhash"
@@ -184,6 +185,47 @@ func (s *State) BindHandler(ctx gtkutil.Cancellable, fn func(gateway.Event), fil
 		filtered:
 			glib.IdleAddPriority(glib.PriorityDefault, func() { fn(ev) })
 		})
+	})
+}
+
+// BindWidget is similar to BindHandler, except it doesn't rely on contexts.
+func (s *State) BindWidget(w gtk.Widgetter, fn func(gateway.Event), filters ...gateway.Event) {
+	eventTypes := make([]reflect.Type, len(filters))
+	for i, filter := range filters {
+		eventTypes[i] = reflect.TypeOf(filter)
+	}
+
+	base := gtk.BaseWidget(w)
+
+	var unbind func()
+
+	base.ConnectRealize(func() {
+		log.Printf("State: WidgetHandler: binding to %T...", w)
+
+		unbind = s.AddSyncHandler(func(ev gateway.Event) {
+			// Optionally filter out events.
+			if len(eventTypes) > 0 {
+				evType := reflect.TypeOf(ev)
+
+				for _, typ := range eventTypes {
+					if typ == evType {
+						goto filtered
+					}
+				}
+
+				return
+			}
+
+		filtered:
+			glib.IdleAddPriority(glib.PriorityDefault, func() { fn(ev) })
+		})
+	})
+
+	base.ConnectUnrealize(func() {
+		log.Printf("State: WidgetHandler: unbinding from %T...", w)
+
+		unbind()
+		unbind = nil
 	})
 }
 

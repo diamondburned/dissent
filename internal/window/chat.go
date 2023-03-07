@@ -2,6 +2,7 @@ package window
 
 import (
 	"context"
+	"log"
 
 	"github.com/diamondburned/adaptive"
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -11,10 +12,10 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
+	"github.com/diamondburned/gtkcord4/internal/icons"
 	"github.com/diamondburned/gtkcord4/internal/message"
 	"github.com/diamondburned/gtkcord4/internal/sidebar"
 	"github.com/diamondburned/gtkcord4/internal/window/quickswitcher"
-	"github.com/diamondburned/gtkcord4/internal/icons"
 	"github.com/pkg/errors"
 )
 
@@ -197,6 +198,11 @@ func (p *ChatPage) switchTo(w gtk.Widgetter) {
 		// Remove the widget when the transition is done.
 		if !p.RightChild.TransitionRunning() {
 			p.RightChild.Remove(old)
+
+			// Hack: destroy everything!
+			log.Println("destroying previous message view")
+			gtkutil.RecursiveUnfuck(old)
+
 			return true
 		}
 		return false
