@@ -93,8 +93,11 @@ func newSticker(ctx context.Context, sticker *discord.StickerItem) gtk.Widgetter
 	case discord.StickerFormatAPNG, discord.StickerFormatPNG:
 		url := sticker.StickerURLWithType(discord.PNGImage)
 
+		// TODO: this is always round because we're using a GtkFrame. What the
+		// heck? How does this shit even work?!
 		image := embed.New(ctx, gtkcord.StickerSize, gtkcord.StickerSize, embed.Opts{})
 		image.SetName(sticker.Name)
+		image.SetHAlign(gtk.AlignStart)
 		image.SetSizeRequest(gtkcord.StickerSize, gtkcord.StickerSize)
 		image.SetFromURL(url)
 		image.SetOpenURL(func() { app.OpenURI(ctx, url) })
