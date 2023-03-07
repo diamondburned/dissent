@@ -251,7 +251,7 @@ func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
 
 	v.Child.Box = gtk.NewBox(gtk.OrientationVertical, 0)
 	v.Child.Box.SetVExpand(true)
-	v.Child.Box.SetVAlign(gtk.AlignStart)
+	// v.Child.Box.SetVAlign(gtk.AlignStart)
 	v.Child.Box.Append(v.Child.Banner)
 	v.Child.Box.Append(v.Child.Tree)
 	v.Child.Box.SetFocusChild(v.Child.Tree)

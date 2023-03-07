@@ -2,10 +2,10 @@ package window
 
 import (
 	"context"
-	"log"
 
 	"github.com/diamondburned/adaptive"
 	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/app"
@@ -15,12 +15,13 @@ import (
 	"github.com/diamondburned/gtkcord4/internal/icons"
 	"github.com/diamondburned/gtkcord4/internal/message"
 	"github.com/diamondburned/gtkcord4/internal/sidebar"
+	"github.com/diamondburned/gtkcord4/internal/window/backbutton"
 	"github.com/diamondburned/gtkcord4/internal/window/quickswitcher"
 	"github.com/pkg/errors"
 )
 
 type ChatPage struct {
-	*adaptive.Fold
+	*adw.Flap
 	Left       *sidebar.Sidebar
 	RightLabel *gtk.Label
 	RightChild *gtk.Stack
@@ -51,12 +52,11 @@ var chatPageCSS = cssutil.Applier("window-chatpage", `
 func NewChatPage(ctx context.Context) *ChatPage {
 	p := ChatPage{ctx: ctx}
 	p.Left = sidebar.NewSidebar(ctx, (*sidebarChatPage)(&p), &p)
+	p.Left.SetHAlign(gtk.AlignStart)
+	p.Left.SetSizeRequest(225, -1)
 
-	back := adaptive.NewFoldRevealButton()
+	back := backbutton.New()
 	back.SetTransitionType(gtk.RevealerTransitionTypeSlideRight)
-	back.Button.SetIconName("open-menu")
-	back.Button.SetHAlign(gtk.AlignCenter)
-	back.Button.SetVAlign(gtk.AlignCenter)
 
 	p.RightLabel = gtk.NewLabel("")
 	p.RightLabel.AddCSSClass("right-header-label")
@@ -85,17 +85,23 @@ func NewChatPage(ctx context.Context) *ChatPage {
 	p.SwitchToPlaceholder()
 
 	rightBox := gtk.NewBox(gtk.OrientationVertical, 0)
+	rightBox.SetHExpand(true)
 	rightBox.Append(rightHandle)
 	rightBox.Append(p.RightChild)
 
-	p.Fold = adaptive.NewFold(gtk.PosLeft)
-	p.Fold.SetFoldThreshold(700)
-	p.Fold.SetFoldWidth(225)
-	p.Fold.SetChild(rightBox)
-	p.Fold.SetSideChild(p.Left)
-	p.Fold.SetRevealSide(true)
+	p.Flap = adw.NewFlap()
+	p.Flap.SetFlap(p.Left)
+	p.Flap.SetFlapPosition(gtk.PackStart)
+	p.Flap.SetContent(rightBox)
+	p.Flap.SetSeparator(gtk.NewSeparator(gtk.OrientationVertical))
+	p.Flap.SetFoldPolicy(adw.FlapFoldPolicyAuto)
+	p.Flap.SetFoldThresholdPolicy(adw.FoldThresholdPolicyMinimum)
+	p.Flap.SetModal(true)
+	p.Flap.SetSwipeToOpen(true)
+	p.Flap.SetSwipeToClose(true)
+	p.Flap.SetTransitionType(adw.FlapTransitionTypeOver)
 
-	back.ConnectFold(p.Fold)
+	back.ConnectFlap(p.Flap)
 
 	setStatus := func(status discord.Status) {
 		state := gtkcord.FromContext(ctx)
@@ -200,8 +206,8 @@ func (p *ChatPage) switchTo(w gtk.Widgetter) {
 			p.RightChild.Remove(old)
 
 			// Hack: destroy everything!
-			log.Println("destroying previous message view")
-			gtkutil.RecursiveUnfuck(old)
+			// log.Println("destroying previous message view")
+			// gtkutil.RecursiveUnfuck(old)
 
 			return true
 		}

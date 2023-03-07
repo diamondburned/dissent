@@ -129,9 +129,10 @@ func NewSidebar(ctx context.Context, ctrl Controller, opener Opener) *Sidebar {
 	rightWrap.Append(userBar)
 
 	s.Box = gtk.NewBox(gtk.OrientationHorizontal, 0)
+	s.Box.AddCSSClass("background")
+	s.Box.SetHExpand(false)
 	s.Box.Append(s.Left)
 	s.Box.Append(rightWrap)
-	s.Box.Append(gtk.NewSeparator(gtk.OrientationVertical))
 	sidebarCSS(s)
 
 	return &s
