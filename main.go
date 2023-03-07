@@ -11,6 +11,7 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/diamondburned/gtkcord4/internal/window"
+	"github.com/diamondburned/gtkcord4/internal/window/about"
 
 	_ "github.com/diamondburned/gotkit/gtkutil/aggressivegc"
 )
@@ -36,7 +37,7 @@ func main() {
 		"app.open-channel": m.openChannel,
 		"app.preferences":  func() { prefui.ShowDialog(m.win.Context()) },
 		"app.show-qs":      m.openQuickSwitcher,
-		"app.about":        func() { /* TODO */ },
+		"app.about":        func() { about.New(m.win.Context()).Present() },
 		"app.logs":         func() { logui.ShowDefaultViewer(m.win.Context()) },
 		"app.quit":         func() { m.app.Quit() },
 	})

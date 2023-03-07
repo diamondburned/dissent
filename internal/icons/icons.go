@@ -28,6 +28,12 @@ var pngCache struct {
 	m  map[string]*gdkpixbuf.Pixbuf
 }
 
+// Paintable returns a paintable of the given PNG. The size of the paintable
+// returned is the original size.
+func Paintable(name string) gdk.Paintabler {
+	return gdk.NewTextureForPixbuf(Pixbuf(name))
+}
+
 // PixbufScale calls Pixbuf and scales it to size.
 func PixbufScale(name string, size int) *gdkpixbuf.Pixbuf {
 	p := Pixbuf(name)
@@ -40,15 +46,15 @@ func PixbufScale(name string, size int) *gdkpixbuf.Pixbuf {
 // Pixbuf returns a pixbuf of the given PNG. The size of the pixbuf returned is
 // the original size.
 func Pixbuf(name string) *gdkpixbuf.Pixbuf {
-	if !strings.HasSuffix(name, "-dark") && !strings.HasSuffix(name, "-light") {
-		if textutil.IsDarkTheme() {
-			name += "-dark"
-		} else {
-			name += "-light"
-		}
-	}
-
 	if filepath.Ext(name) == "" {
+		if !strings.HasSuffix(name, "-dark") && !strings.HasSuffix(name, "-light") {
+			if textutil.IsDarkTheme() {
+				name += "-dark"
+			} else {
+				name += "-light"
+			}
+		}
+
 		name += ".png"
 	}
 

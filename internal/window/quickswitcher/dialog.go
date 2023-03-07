@@ -26,10 +26,6 @@ func ShowDialog(ctx context.Context, ctrl Controller) {
 	d.Show()
 }
 
-const (
-	refreshResponse = iota + 1
-)
-
 // NewDialog creates a new Quick Switcher dialog.
 func NewDialog(ctx context.Context, ctrl Controller) *Dialog {
 	d := Dialog{ctrl: ctrl}
@@ -66,6 +62,10 @@ func NewDialog(ctx context.Context, ctrl Controller) *Dialog {
 
 	qs.search.SetKeyCaptureWidget(d.Dialog)
 	qs.search.AddController(esc)
+
+	if app.IsDevel() {
+		d.Dialog.AddCSSClass("devel")
+	}
 
 	return &d
 }

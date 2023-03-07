@@ -130,6 +130,8 @@ func NewQuickSwitcher(ctx context.Context, ctrl Controller) *QuickSwitcher {
 	})
 
 	qs.search.SetKeyCaptureWidget(qs)
+
+	qsCSS(qs.Box)
 	return &qs
 }
 
