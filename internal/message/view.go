@@ -11,6 +11,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/utils/sendpart"
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/app"
@@ -55,6 +56,7 @@ func newMessageAuthor(author *discord.User) messageAuthor {
 // View is a message view widget.
 type View struct {
 	*adaptive.LoadablePage
+	Clamp    *adw.Clamp
 	Box      *gtk.Box
 	Scroll   *autoscroll.Window
 	List     *gtk.ListBox
@@ -146,9 +148,15 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 	v.Box.Append(v.Composer)
 	v.Box.SetFocusChild(v.Composer)
 
+	v.Clamp = adw.NewClamp()
+	v.Clamp.SetChild(v.Box)
+	v.Clamp.SetMaximumSize(messagesWidth.Value())
+	// Set tightening threshold to 90% of the clamp's width.
+	v.Clamp.SetTighteningThreshold(int(float64(messagesWidth.Value()) * 0.9))
+
 	v.LoadablePage = adaptive.NewLoadablePage()
 	v.LoadablePage.SetTransitionDuration(125)
-	v.LoadablePage.SetChild(v.Box)
+	v.setPageToMain()
 
 	state := gtkcord.FromContext(v.ctx)
 	if ch, err := state.Cabinet.Channel(v.chID); err == nil {
@@ -323,7 +331,7 @@ func (v *View) load() {
 		})
 
 		return func() {
-			v.LoadablePage.SetChild(v.Box)
+			v.setPageToMain()
 
 			widgets := make([]Message, len(msgs))
 			for i, msg := range msgs {
@@ -372,6 +380,10 @@ func (v *View) load() {
 			}
 		}
 	})
+}
+
+func (v *View) setPageToMain() {
+	v.LoadablePage.SetChild(v.Clamp)
 }
 
 func (v *View) unload() {

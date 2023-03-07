@@ -26,7 +26,7 @@ import (
 
 var showAllEmojis = prefs.NewBool(true, prefs.PropMeta{
 	Name:        "Show All Emojis",
-	Section:     "Discord",
+	Section:     "Composer",
 	Description: "Show (and autocomplete) all emojis even if the user doesn't have Nitro.",
 })
 

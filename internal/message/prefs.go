@@ -15,8 +15,16 @@ import (
 
 var showBlockedMessages = prefs.NewBool(false, prefs.PropMeta{
 	Name:        "Show Blocked Messages",
-	Section:     "Discord",
+	Section:     "Messages",
 	Description: "Show messages from blocked users as dimmed instead of completely hidden.",
+})
+
+var messagesWidth = prefs.NewInt(800, prefs.IntMeta{
+	Name:        "Messages Width",
+	Section:     "Messages",
+	Description: "The width of the messages column.",
+	Min:         400,
+	Max:         12000,
 })
 
 func init() {
@@ -61,7 +69,7 @@ func (*blockedUsersPrefs) UnmarshalJSON(b []byte) error {
 func (*blockedUsersPrefs) Meta() prefs.PropMeta {
 	return prefs.PropMeta{
 		Name:        "Blocked Users",
-		Section:     "Discord",
+		Section:     "Messages",
 		Description: "List of users whose messages you won't see.",
 	}
 }
