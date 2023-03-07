@@ -8,6 +8,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/utils/ws"
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/app"
@@ -23,6 +24,14 @@ import (
 func SetPreferDarkTheme(prefer bool) {
 	settings := gtk.SettingsGetDefault()
 	settings.SetObjectProperty("gtk-application-prefer-dark-theme", prefer)
+
+	scheme := adw.ColorSchemePreferLight
+	if prefer {
+		scheme = adw.ColorSchemePreferDark
+	}
+
+	adwStyles := adw.StyleManagerGetDefault()
+	adwStyles.SetColorScheme(scheme)
 }
 
 // Window is the main gtkcord window.
@@ -85,14 +94,6 @@ func (w *Window) SwitchToLoginPage() {
 }
 
 type loginWindow Window
-
-var monitorEvents = []gateway.Event{
-	(*ningen.ConnectedEvent)(nil),
-	(*ningen.DisconnectedEvent)(nil),
-	(*ws.CloseEvent)(nil),
-	(*ws.BackgroundErrorEvent)(nil),
-	(*gateway.MessageCreateEvent)(nil), // notifications
-}
 
 func (w *loginWindow) Hook(state *gtkcord.State) {
 	w.ctx = gtkcord.InjectState(w.ctx, state)
@@ -178,7 +179,7 @@ func (w *loginWindow) Hook(state *gtkcord.State) {
 				}),
 			})
 		}
-	}, monitorEvents...)
+	})
 }
 
 func (w *loginWindow) Ready(state *gtkcord.State) {
