@@ -6,7 +6,7 @@ require (
 	github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8
 	github.com/diamondburned/arikawa/v3 v3.2.1-0.20230210050458-2c379c90c2ac
 	github.com/diamondburned/chatkit v0.0.0-20230209213000-7d9bb654be2f
-	github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20230307050941-20a05fa3a9df
+	github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20230307040502-bfe82926e1be
 	github.com/diamondburned/gotk4/pkg v0.0.5-0.20230307013122-e86c9b44a4bf
 	github.com/diamondburned/gotkit v0.0.0-20230307054845-dc8ab38b9db4
 	github.com/diamondburned/ningen/v3 v3.0.1-0.20230124093205-d39554fd5d67
