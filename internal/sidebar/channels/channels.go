@@ -205,9 +205,12 @@ func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
 
 		switch node.(type) {
 		case *ChannelNode, *VoiceChannelNode:
+			// These channels have messages, so we don't want to toggle the
+			// children as the user clicks on them.
 			v.Child.Tree.ExpandToPath(path)
 		case *CategoryNode, *ForumNode:
-			// Toggle.
+			// These don't have messages, so you can't act on it, so we toggle
+			// on a click.
 			if v.Child.Tree.RowExpanded(path) {
 				v.Child.Tree.CollapseRow(path)
 			} else {
@@ -243,7 +246,7 @@ func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
 		v.selectID = node.ID()
 
 		switch node.(type) {
-		case *ChannelNode, *ThreadNode:
+		case *ChannelNode, *ThreadNode, *VoiceChannelNode:
 			// We can open these channels.
 			ctrl.OpenChannel(node.ID())
 		}
