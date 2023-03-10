@@ -204,9 +204,9 @@ func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
 		}
 
 		switch node.(type) {
-		case *ChannelNode:
+		case *ChannelNode, *VoiceChannelNode:
 			v.Child.Tree.ExpandToPath(path)
-		case *CategoryNode, *ForumNode, *VoiceChannelNode:
+		case *CategoryNode, *ForumNode:
 			// Toggle.
 			if v.Child.Tree.RowExpanded(path) {
 				v.Child.Tree.CollapseRow(path)
