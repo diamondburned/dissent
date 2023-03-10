@@ -56,8 +56,10 @@ func NewGuildTree(ctx context.Context) *GuildTree {
 
 var okChTypes = map[discord.ChannelType]bool{
 	discord.GuildText:               true,
+	discord.GuildCategory:           false, // handled separately
 	discord.GuildPublicThread:       true,
 	discord.GuildPrivateThread:      true,
+	discord.GuildForum:              true,
 	discord.GuildAnnouncement:       true,
 	discord.GuildAnnouncementThread: true,
 	discord.GuildVoice:              true,
@@ -103,10 +105,8 @@ func (t *GuildTree) Add(channels []discord.Channel) {
 			return false
 		}
 
-		switch ch.Type {
-		case discord.GuildText:
-		case discord.GuildForum:
-		default:
+		if ch.Type != discord.GuildText && ch.Type != discord.GuildForum {
+			// Other channel types are handled in the drain function below.
 			return false
 		}
 
@@ -124,10 +124,11 @@ func (t *GuildTree) Add(channels []discord.Channel) {
 		base := t.append(&ch, parentIter)
 
 		var node Node
-		if ch.Type == discord.GuildForum {
+		switch ch.Type {
+		case discord.GuildForum:
 			node = newForumNode(base)
 			node.Update(&ch)
-		} else {
+		default:
 			node = newChannelNode(base)
 			node.Update(&ch)
 		}
@@ -157,21 +158,15 @@ func (t *GuildTree) Add(channels []discord.Channel) {
 		var node Node
 
 		switch ch.Type {
-		case discord.GuildPrivateThread:
-			node = newThreadNode(base)
-			node.Update(&ch)
-		case discord.GuildPublicThread:
+		case discord.GuildPrivateThread, discord.GuildPublicThread, discord.GuildAnnouncementThread:
 			node = newThreadNode(base)
 			node.Update(&ch)
 		case discord.GuildVoice, discord.GuildStageVoice:
 			node = newVoiceChannelNode(base)
 			node.Update(&ch)
 		default:
-			// Remove the iterator that we've just appended in.
-			if iter, ok := t.Iter(base.path); ok {
-				t.TreeStore.Remove(iter)
-			}
-			return false
+			node = newChannelNode(base)
+			node.Update(&ch)
 		}
 
 		t.keep(node)
