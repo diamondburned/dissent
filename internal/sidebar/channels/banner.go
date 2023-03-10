@@ -24,8 +24,6 @@ type Banner struct {
 	Picture *onlineimage.Picture
 	ctx     context.Context
 	gID     discord.GuildID
-
-	stepClass string
 }
 
 var bannerCSS = cssutil.Applier("channels-banner", ``)
