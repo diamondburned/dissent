@@ -453,6 +453,18 @@ func ChannelName(ch *discord.Channel) string {
 	}
 }
 
+// ChannelCanSendMsgsFromID returns whether the user is allowed to send messages in the channel.
+func ChannelCanSendMsgsFromID(ctx context.Context, id discord.ChannelID) bool {
+	state := FromContext(ctx)
+	ch, _ := state.Cabinet.Channel(id)
+
+	if ch == nil {
+		return false
+	}
+
+	return ch.SelfPermissions.Has(discord.PermissionSendMessages)
+}
+
 // RecipientNames formats the string for the list of recipients inside the given
 // channel.
 func RecipientNames(ch *discord.Channel) string {
