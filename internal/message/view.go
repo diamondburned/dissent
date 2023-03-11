@@ -79,6 +79,7 @@ type View struct {
 var viewCSS = cssutil.Applier("message-view", `
 	.message-list {
 		background: none;
+		margin-bottom: 6px;
 	}
 	.message-list > row {
 		transition: linear 150ms background-color;

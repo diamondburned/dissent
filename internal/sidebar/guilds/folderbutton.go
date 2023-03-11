@@ -55,7 +55,7 @@ var folderButtonCSS = cssutil.Applier("guild-folderbutton", `
 		 */
 		margin-top:   -4px;
 		margin-bottom: 4px;
-		border-radius: calc({$guild_icon_size} / 4);
+		border-radius: calc({$guild_icon_size} / 3);
 	}
 	.guild-foldericons:not(.guild-foldericons-collapsed) {
 		background-color: @theme_bg_color;

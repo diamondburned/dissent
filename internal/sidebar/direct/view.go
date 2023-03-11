@@ -42,9 +42,15 @@ var _ = cssutil.WriteCSS(`
 		border-bottom: 0;
 		background: none;
 		box-shadow: none;
+		margin-top: 2px;
 	}
+
 	.direct-searchbar > revealer > box > entry {
 		min-height: 28px;
+	}
+
+	.direct-list {
+		padding-top: 4px;
 	}
 `)
 

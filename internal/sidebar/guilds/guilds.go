@@ -56,6 +56,7 @@ type currentGuild struct {
 var viewCSS = cssutil.Applier("guild-view", `
 	.guild-view {
 		margin: 4px 0;
+		padding: 0 0 8px 0;
 	}
 	.guild-view button:active:not(:hover) {
 		background: initial;
