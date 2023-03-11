@@ -73,10 +73,9 @@ type View struct {
 	UploadTray  *UploadTray
 	Send        *gtk.Button
 
-	ctx         context.Context
-	ctrl        Controller
-	chID        discord.ChannelID
-	canSendMsgs bool
+	ctx  context.Context
+	ctrl Controller
+	chID discord.ChannelID
 
 	typers        []typer
 	typingHandler glib.SourceHandle
@@ -219,13 +218,6 @@ func (v *View) SetPlaceholderMarkup(markup string) {
 
 func (v *View) ResetPlaceholder() {
 	if len(v.typers) == 0 {
-		if !gtkcord.ChannelCanSendMsgsFromID(v.ctx, v.chID) {
-			v.Placeholder.SetText("You do not have permissions to send messages in this channel.")
-			v.Input.SetCursorVisible(false)
-			v.Input.SetEditable(false)
-			return
-		}
-
 		v.Placeholder.SetText("Message " + gtkcord.ChannelNameFromID(v.ctx, v.chID))
 		return
 	}
