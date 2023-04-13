@@ -7,3 +7,5 @@ export DH_COMPAT=13
 
 override_dh_auto_build:
 	go build -v -o gtkcord4
+
+override_dh_dwz:
