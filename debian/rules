@@ -1,0 +1,9 @@
+#!/usr/bin/make -f
+
+export DH_COMPAT=13
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	go build -v -o gtkcord4

@@ -1,0 +1,16 @@
+Source: gtkcord4
+Section: mist
+Priority: optional
+Maintainer: Bardia Moshiri <fakeshell@bardia.tech>
+Build-Depends: debhelper (>= 10), golang-any (>= 2:1.17), gir1.2-gtk-4.0,
+	libadwaita-1-0 (>= 1.2.0), libadwaita-1-dev (>= 1.2.0), git, libgtk-4-dev
+Standards-Version: 4.4.1
+Homepage: https://github.com/fakeshell/gtkcord4
+Vcs-Browser: https://github.com/fakeshell/gtkcord4
+Vcs-Git: https://github.com/fakeshell/gtkcord4.git
+
+Package: gtkcord4
+Architecture: any
+Depends: ${shlibs:Depends}, libadwaita-1-0 (>= 1.2.0), libgtk-4-1,
+	libgtk-4-bin, libgtk-4-common, gobject-introspection
+Description: GTK4 Discord client in Go

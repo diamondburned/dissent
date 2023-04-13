@@ -1,0 +1,5 @@
+gtkcord4 (0.0.10) stable; urgency=low
+
+  * initial packaging for debian
+
+ -- Bardia Moshiri <fakeshell@bardia.tech>  Thu, 13 Apr 2023 04:40:40 +0330
