@@ -159,13 +159,27 @@ func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widg
 			})
 
 			if attachment.Width > 0 && attachment.Height > 0 {
-				image.SetSizeRequest(int(attachment.Width), int(attachment.Height))
+				origW := int(attachment.Width)
+				origH := int(attachment.Height)
+
+				// Work around to prevent GTK from rendering the image at its
+				// original size, which tanks performance on Cairo renderers.
+				w, h := imgutil.MaxSize(
+					origW, origH,
+					gtkcord.EmbedMaxWidth, gtkcord.EmbedImgHeight,
+				)
+
+				image.SetSizeRequest(w, h)
+				image.Thumbnail.SetSizeRequest(w, h)
 				if typ == "image" {
+					scale := gtkutil.ScaleFactor()
+					w *= scale
+					h *= scale
+
 					image.SetFromURL(resizeURL(
 						attachment.URL,
 						attachment.Proxy,
-						int(attachment.Width),
-						int(attachment.Height),
+						w, h,
 					))
 				} else {
 					image.SetFromURL(attachment.Proxy)
