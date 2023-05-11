@@ -193,15 +193,10 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 				}
 			}
 
-			// See if this message belongs to a blocked user. If it is, then
-			// don't add it.
-			if !showBlockedMessages.Value() && state.UserIsBlocked(ev.Author.ID) {
-				log.Println("ignoring message from blocked user", ev.Author.Tag())
-				return
+			if !v.ignoreMessage(&ev.Message) {
+				msg := v.upsertMessage(ev.ID, newMessageInfo(&ev.Message))
+				msg.Update(ev)
 			}
-
-			msg := v.upsertMessage(ev.ID, newMessageInfo(&ev.Message))
-			msg.Update(ev)
 
 		case *gateway.MessageUpdateEvent:
 			if ev.ChannelID != v.chID {
@@ -209,7 +204,7 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 			}
 
 			m, err := state.Cabinet.Message(ev.ChannelID, ev.ID)
-			if err == nil {
+			if err == nil && !v.ignoreMessage(&ev.Message) {
 				msg := v.upsertMessage(ev.ID, newMessageInfo(m))
 				msg.Update(&gateway.MessageCreateEvent{
 					Message: *m,
@@ -335,11 +330,9 @@ func (v *View) load() {
 
 			widgets := make([]Message, len(msgs))
 			for i, msg := range msgs {
-				if !showBlockedMessages.Value() && state.UserIsBlocked(msg.Author.ID) {
-					log.Println("ignoring message from blocked user", msg.Author.Tag())
-					continue
+				if !v.ignoreMessage(&msg) {
+					widgets[i] = v.upsertMessage(msg.ID, newMessageInfo(&msgs[i]))
 				}
-				widgets[i] = v.upsertMessage(msg.ID, newMessageInfo(&msgs[i]))
 			}
 
 			update := func(i int) {
@@ -391,6 +384,17 @@ func (v *View) unload() {
 		v.List.Remove(msg)
 		delete(v.msgs, k)
 	}
+}
+
+func (v *View) ignoreMessage(msg *discord.Message) bool {
+	state := gtkcord.FromContext(v.ctx)
+
+	if !showBlockedMessages.Value() && state.UserIsBlocked(msg.Author.ID) {
+		log.Println("ignoring message from blocked user", msg.Author.Tag())
+		return true
+	}
+
+	return false
 }
 
 // upsertMessage inserts or updates a new message row.
