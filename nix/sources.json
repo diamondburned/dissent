@@ -18,10 +18,10 @@
         "homepage": null,
         "owner": "diamondburned",
         "repo": "gotk4-nix",
-        "rev": "c37b9a15d8117b5af60a0206d96a09ebf8e7d1ef",
-        "sha256": "05j49fbsqjvw7pqyqpc2g4w2q78n3vkgbbgkkfw2gbckbw7rydh5",
+        "rev": "8628aaaf731397fd89c605ad7ccddedc8b6d42c9",
+        "sha256": "0blsw112bmz934h5gjhhdvcr28jw456pw7ylj51vp45n2i2w6s3j",
         "type": "tarball",
-        "url": "https://github.com/diamondburned/gotk4-nix/archive/c37b9a15d8117b5af60a0206d96a09ebf8e7d1ef.tar.gz",
+        "url": "https://github.com/diamondburned/gotk4-nix/archive/8628aaaf731397fd89c605ad7ccddedc8b6d42c9.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     },
     "nixpkgs": {
@@ -30,10 +30,10 @@
         "homepage": "",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "3e9725a365e",
-        "sha256": "1nywx8473gvn8w1czq4jh6mdk9d0xcs5q8aiaxdraybimz6g4yzx",
+        "rev": "c8018361fa1d1650ee8d4b96294783cf564e8a7f",
+        "sha256": "08glidfsbccqh8aipa6afnk9bxlavj4amzm9hx2dwrnavq0s51as",
         "type": "tarball",
-        "url": "https://github.com/NixOS/nixpkgs/archive/3e9725a365e.tar.gz",
+        "url": "https://github.com/NixOS/nixpkgs/archive/c8018361fa1d1650ee8d4b96294783cf564e8a7f.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
     }
 }
