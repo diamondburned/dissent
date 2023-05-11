@@ -67,7 +67,9 @@ func NewChannelView(ctx context.Context, ctrl Opener) *ChannelView {
 		v.selectID = 0
 
 		ch := v.rowChannel(r)
-		ctrl.OpenChannel(ch.id)
+		if ch != nil {
+			ctrl.OpenChannel(ch.id)
+		}
 	})
 
 	v.scroll = gtk.NewScrolledWindow()
@@ -215,6 +217,12 @@ func (v *ChannelView) deleteCh(id discord.ChannelID) {
 func (v *ChannelView) sort(r1, r2 *gtk.ListBoxRow) int { // -1 == less == r1 first
 	ch1 := v.rowChannel(r1)
 	ch2 := v.rowChannel(r2)
+	if ch1 == nil {
+		return 1
+	}
+	if ch2 == nil {
+		return -1
+	}
 
 	last1 := ch1.LastMessageID()
 	last2 := ch2.LastMessageID()
@@ -241,6 +249,9 @@ func (v *ChannelView) filter(r *gtk.ListBoxRow) bool {
 	}
 
 	ch := v.rowChannel(r)
+	if ch == nil {
+		return false
+	}
 
 	name := strings.ToLower(ch.Name())
 	return strings.Contains(name, v.searchString)
@@ -254,7 +265,8 @@ func (v *ChannelView) rowChannel(r *gtk.ListBoxRow) *Channel {
 
 	ch, ok := v.channels[discord.ChannelID(id)]
 	if !ok {
-		log.Panicln("row has unknown channel ID", id)
+		log.Println("warning: ChannelView: row has unknown channel ID", id)
+		return nil
 	}
 
 	return ch

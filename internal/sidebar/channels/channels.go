@@ -2,6 +2,7 @@ package channels
 
 import (
 	"context"
+	"log"
 
 	"github.com/diamondburned/adaptive"
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -248,6 +249,7 @@ func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
 		switch node.(type) {
 		case *ChannelNode, *ThreadNode, *VoiceChannelNode:
 			// We can open these channels.
+			log.Println("opening channel", node.ID())
 			ctrl.OpenChannel(node.ID())
 		}
 	})
@@ -335,6 +337,7 @@ func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
 // something else.
 func (v *View) SelectChannel(chID discord.ChannelID) {
 	v.selectID = chID
+	log.Println("selecting channel", chID)
 
 	if v.tree != nil {
 		node := v.tree.Node(chID)
