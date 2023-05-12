@@ -161,7 +161,7 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 			msg, _ = state.Cabinet.Message(m.Reference.ChannelID, m.Reference.MessageID)
 		}
 		if msg != nil {
-			if state.UserIsBlocked(msg.Author.ID) {
+			if !showBlockedMessages.Value() && state.UserIsBlocked(msg.Author.ID) {
 				header.SetLabel(header.Label() + "blocked user.")
 			} else {
 				member, _ := state.Cabinet.Member(m.Reference.GuildID, msg.Author.ID)
@@ -184,6 +184,8 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 					replyBox.Append(reply)
 					c.append(replyBox)
 				}
+
+				blockedCSS(replyBox)
 			}
 		} else {
 			header.SetLabel(header.Label() + " unknown message.")
