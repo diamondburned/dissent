@@ -185,7 +185,9 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 					c.append(replyBox)
 				}
 
-				blockedCSS(replyBox)
+				if state.UserIsBlocked(msg.Author.ID) {
+					blockedCSS(replyBox)
+				}
 			}
 		} else {
 			header.SetLabel(header.Label() + " unknown message.")
