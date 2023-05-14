@@ -41,8 +41,6 @@ github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20230307040502-bfe82926e1be h1
 github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20230307040502-bfe82926e1be/go.mod h1:f+Kv3QPlRGEW0nv0oyEZ4qhCcOY9qhxKnmPmrzmBkLo=
 github.com/diamondburned/gotk4/pkg v0.0.6-0.20230331141043-6dd75799f56c h1:EIAjS0CXZ3lwsb8JL+N5B2aRu0UxhdG90NjgVWe6N1I=
 github.com/diamondburned/gotk4/pkg v0.0.6-0.20230331141043-6dd75799f56c/go.mod h1:Jr5xzUuGyLsoMtE9LzE/Lay1gD0ONiFWAmQ0+Z6KLeA=
-github.com/diamondburned/gotkit v0.0.0-20230510044702-7e8f9b4ea57e h1:hPaRXYJU786hZqzq6rQmgfYLntCv5Hx013N4n2DKX4M=
-github.com/diamondburned/gotkit v0.0.0-20230510044702-7e8f9b4ea57e/go.mod h1:lUvT8dZi2rVeL81ESPurhsrF8gbG0yFAxo0HW30zPWk=
 github.com/diamondburned/gotkit v0.0.0-20230514031753-a7b035b3d722 h1:YZW4jN+DNUfa2Katzz7UoBurutRgKhe+uyWMH62puD8=
 github.com/diamondburned/gotkit v0.0.0-20230514031753-a7b035b3d722/go.mod h1:lUvT8dZi2rVeL81ESPurhsrF8gbG0yFAxo0HW30zPWk=
 github.com/diamondburned/ningen/v3 v3.0.1-0.20230124093205-d39554fd5d67 h1:CKW0j3ZDTDyP25anlHFSZx4Wi739ecKKSZ78iYtgY1s=
