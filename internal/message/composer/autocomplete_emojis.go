@@ -109,6 +109,8 @@ func (c *emojiCompleter) Search(ctx context.Context, str string) []autocomplete.
 				// Use the emoji URL instead of the emoji code to allow
 				// non-Nitro users to send emojis by sending the image URL.
 				content = gtkcord.InjectSizeUnscaled(emoji.EmojiURL(), gtkcord.LargeEmojiSize)
+				// Hint the user the emoji name.
+				content += "#" + emoji.Name
 			}
 
 			c.emojis = append(c.emojis, EmojiData{
