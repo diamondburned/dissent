@@ -20,8 +20,24 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil/textutil"
 )
 
+//go:generate -command pack-icons go run ./pack-icons -s rounded -px 20
+//go:generate pack-icons svg/*.svg alternate_email add_reaction campaign forum chat mark_chat_unread mark_chat_read send
+
+//go:generate ./svg2png.sh
+
 //go:embed png/*.png
 var PNGs embed.FS
+
+//go:embed icons.gresource
+var iconsGresource []byte
+
+func init() {
+	r, err := gio.NewResourceFromData(glib.NewBytesWithGo(iconsGresource))
+	if err != nil {
+		log.Panicln("Failed to create icons resource:", err)
+	}
+	gio.ResourcesRegister(r)
+}
 
 var pngCache struct {
 	mu sync.RWMutex
