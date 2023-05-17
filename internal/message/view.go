@@ -580,6 +580,9 @@ func (v *View) SendMessage(msg composer.SendingMessage) {
 			Content:   m.Content,
 			Reference: m.Reference,
 			Nonce:     key.Nonce(),
+			AllowedMentions: &api.AllowedMentions{
+				RepliedUser: &msg.ReplyMention,
+			},
 		}
 
 		// Ensure that we open ALL files and defer-close them. Otherwise, we'll

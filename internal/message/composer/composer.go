@@ -18,6 +18,7 @@ import (
 	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/app/prefs"
+	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/mediautil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
@@ -41,9 +42,10 @@ type File struct {
 
 // SendingMessage is the message created to be sent.
 type SendingMessage struct {
-	Content    string
-	Files      []File
-	ReplyingTo discord.MessageID
+	Content      string
+	Files        []File
+	ReplyingTo   discord.MessageID
+	ReplyMention bool
 }
 
 // Controller is the parent Controller for a View.
@@ -60,22 +62,40 @@ type typer struct {
 	Time   discord.UnixTimestamp
 }
 
+func findTyper(typers []typer, userID discord.UserID) *typer {
+	for i, t := range typers {
+		if t.UserID == userID {
+			return &typers[i]
+		}
+	}
+	return nil
+}
+
 const typerTimeout = 10 * time.Second
+
+type replyingState uint8
+
+const (
+	notReplying replyingState = iota
+	replyingMention
+	replyingNoMention
+)
 
 type View struct {
 	*gtk.Box
-	Action struct {
-		*gtk.Button
-		current func()
-	}
 	Input       *Input
 	Placeholder *gtk.Label
 	UploadTray  *UploadTray
-	Send        *gtk.Button
 
 	ctx  context.Context
 	ctrl Controller
 	chID discord.ChannelID
+
+	rightBox   *gtk.Box
+	sendButton *gtk.Button
+
+	leftBox      *gtk.Box
+	uploadButton *gtk.Button
 
 	typers        []typer
 	typingHandler glib.SourceHandle
@@ -83,15 +103,28 @@ type View struct {
 	state struct {
 		id       discord.MessageID
 		editing  bool
-		replying bool
+		replying replyingState
 	}
 }
 
 var viewCSS = cssutil.Applier("composer-view", `
 	.composer-action {
 		border:  none;
-		margin:  0 11px;
+		margin:  0;
 		padding: 6px;
+	}
+	.composer-left-actions {
+		margin:  0 11px;
+	}
+	.composer-left-actions > *:not(:first-child) {
+		margin-right: 4px;
+	}
+	.composer-right-actions button.toggle:checked {
+		background-color: alpha(@accent_color, 0.25);
+		color: @accent_color;
+	}
+	.composer-right-actions > *:not(:first-child) {
+		margin-left: 4px;
 	}
 	.composer-send {
 		margin:  0px;
@@ -161,25 +194,31 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 	middle.Append(overlay)
 	middle.Append(v.UploadTray)
 
-	v.Action.Button = gtk.NewButton()
-	v.Action.AddCSSClass("composer-action")
-	v.Action.SetHasFrame(false)
-	v.Action.SetHAlign(gtk.AlignCenter)
-	v.Action.SetVAlign(gtk.AlignCenter)
+	v.uploadButton = newActionButton(actionButtonData{
+		Name: "Upload File",
+		Icon: uploadIcon,
+		Func: v.upload,
+	})
 
-	v.Action.ConnectClicked(func() { v.Action.current() })
+	v.leftBox = gtk.NewBox(gtk.OrientationHorizontal, 0)
+	v.leftBox.AddCSSClass("composer-left-actions")
+
+	v.sendButton = gtk.NewButtonFromIconName(sendIcon)
+	v.sendButton.AddCSSClass("composer-send")
+	v.sendButton.SetHasFrame(false)
+	v.sendButton.ConnectClicked(v.send)
+
+	v.rightBox = gtk.NewBox(gtk.OrientationHorizontal, 0)
+	v.rightBox.AddCSSClass("composer-right-actions")
+	v.rightBox.SetHAlign(gtk.AlignEnd)
+
 	v.resetAction()
-
-	v.Send = gtk.NewButtonFromIconName(sendIcon)
-	v.Send.AddCSSClass("composer-send")
-	v.Send.SetHasFrame(false)
-	v.Send.ConnectClicked(v.send)
 
 	v.Box = gtk.NewBox(gtk.OrientationHorizontal, 0)
 	v.Box.SetVAlign(gtk.AlignEnd)
-	v.Box.Append(v.Action)
+	v.Box.Append(v.leftBox)
 	v.Box.Append(middle)
-	v.Box.Append(v.Send)
+	v.Box.Append(v.rightBox)
 
 	v.SetPlaceholderMarkup("")
 
@@ -239,27 +278,64 @@ func (v *View) ResetPlaceholder() {
 	v.Placeholder.SetMarkup(typers)
 }
 
-// actionData is the data that the action button in the composer bar is
+// actionButton is a button that is used in the composer bar.
+type actionButton interface {
+	newButton() gtk.Widgetter
+}
+
+// existingActionButton is a button that already exists in the composer bar.
+type existingActionButton struct{ gtk.Widgetter }
+
+func (a existingActionButton) newButton() gtk.Widgetter { return a }
+
+// actionButtonData is the data that the action button in the composer bar is
 // currently doing.
-type actionData struct {
+type actionButtonData struct {
 	Name string
 	Icon string
 	Func func()
 }
 
+func newActionButton(a actionButtonData) *gtk.Button {
+	button := gtk.NewButton()
+	button.AddCSSClass("composer-action")
+	button.SetHasFrame(false)
+	button.SetHAlign(gtk.AlignCenter)
+	button.SetVAlign(gtk.AlignCenter)
+	button.SetSensitive(a.Func != nil)
+	button.SetIconName(a.Icon)
+	button.SetTooltipText(a.Name)
+	button.ConnectClicked(func() { a.Func() })
+
+	return button
+}
+
+func (a actionButtonData) newButton() gtk.Widgetter {
+	return newActionButton(a)
+}
+
+type actions struct {
+	left  []actionButton
+	right []actionButton
+}
+
 // setAction sets the action of the button in the composer.
-func (v *View) setAction(action actionData) {
-	v.Action.SetSensitive(action.Func != nil)
-	v.Action.SetIconName(action.Icon)
-	v.Action.SetTooltipText(action.Name)
-	v.Action.current = action.Func
+func (v *View) setActions(actions actions) {
+	gtkutil.RemoveChildren(v.leftBox)
+	gtkutil.RemoveChildren(v.rightBox)
+
+	for _, a := range actions.left {
+		v.leftBox.Append(a.newButton())
+	}
+	for _, a := range actions.right {
+		v.rightBox.Append(a.newButton())
+	}
 }
 
 func (v *View) resetAction() {
-	v.setAction(actionData{
-		Name: "Upload File",
-		Icon: uploadIcon,
-		Func: v.upload,
+	v.setActions(actions{
+		left:  []actionButton{existingActionButton{v.uploadButton}},
+		right: []actionButton{existingActionButton{v.sendButton}},
 	})
 }
 
@@ -339,12 +415,13 @@ func (v *View) send() {
 	}
 
 	v.ctrl.SendMessage(SendingMessage{
-		Content:    text,
-		Files:      files,
-		ReplyingTo: v.state.id,
+		Content:      text,
+		Files:        files,
+		ReplyingTo:   v.state.id,
+		ReplyMention: v.state.replying == replyingMention,
 	})
 
-	if v.state.replying {
+	if v.state.replying != notReplying {
 		v.ctrl.StopReplying()
 	}
 }
@@ -374,13 +451,23 @@ func (v *View) StartEditing(msg *discord.Message) {
 	v.state.editing = true
 
 	v.Input.Buffer.SetText(msg.Content)
-	v.Send.SetIconName(editIcon)
 	v.SetPlaceholderMarkup("Editing message")
 	v.AddCSSClass("composer-editing")
-	v.setAction(actionData{
-		Name: "Stop Editing",
-		Icon: stopIcon,
-		Func: v.ctrl.StopEditing,
+	v.setActions(actions{
+		left: []actionButton{
+			actionButtonData{
+				Name: "Stop Editing",
+				Icon: stopIcon,
+				Func: v.ctrl.StopEditing,
+			},
+		},
+		right: []actionButton{
+			actionButtonData{
+				Name: "Edit",
+				Icon: editIcon,
+				Func: v.edit,
+			},
+		},
 	})
 }
 
@@ -393,7 +480,6 @@ func (v *View) StopEditing() {
 	v.state.id = 0
 	v.state.editing = false
 
-	v.Send.SetIconName(sendIcon)
 	v.SetPlaceholderMarkup("")
 	v.RemoveCSSClass("composer-editing")
 	v.resetAction()
@@ -405,9 +491,8 @@ func (v *View) StartReplyingTo(msg *discord.Message) {
 	v.restart()
 
 	v.state.id = msg.ID
-	v.state.replying = true
+	v.state.replying = replyingMention
 
-	v.Send.SetIconName(replyIcon)
 	v.AddCSSClass("composer-replying")
 
 	state := gtkcord.FromContext(v.ctx)
@@ -415,20 +500,48 @@ func (v *View) StartReplyingTo(msg *discord.Message) {
 		"Replying to %s",
 		state.AuthorMarkup(&gateway.MessageCreateEvent{Message: *msg}),
 	))
+
+	mentionToggle := gtk.NewToggleButton()
+	mentionToggle.AddCSSClass("composer-mention-toggle")
+	mentionToggle.SetIconName("alternate_email")
+	mentionToggle.SetActive(true)
+	mentionToggle.SetHAlign(gtk.AlignCenter)
+	mentionToggle.SetVAlign(gtk.AlignCenter)
+	mentionToggle.ConnectToggled(func() {
+		if mentionToggle.Active() {
+			v.state.replying = replyingMention
+		} else {
+			v.state.replying = replyingNoMention
+		}
+	})
+
+	v.setActions(actions{
+		left: []actionButton{
+			existingActionButton{v.uploadButton},
+		},
+		right: []actionButton{
+			existingActionButton{mentionToggle},
+			actionButtonData{
+				Name: "Reply",
+				Icon: replyIcon,
+				Func: v.send,
+			},
+		},
+	})
 }
 
 // StopReplying undoes the start call.
 func (v *View) StopReplying() {
-	if !v.state.replying {
+	if v.state.replying == 0 {
 		return
 	}
 
 	v.state.id = 0
-	v.state.replying = false
+	v.state.replying = 0
 
-	v.Send.SetIconName(sendIcon)
 	v.SetPlaceholderMarkup("")
 	v.RemoveCSSClass("composer-replying")
+	v.resetAction()
 }
 
 func (v *View) restart() bool {
@@ -437,23 +550,17 @@ func (v *View) restart() bool {
 	if v.state.editing {
 		v.ctrl.StopEditing()
 	}
-
-	if v.state.replying {
+	if v.state.replying != notReplying {
 		v.ctrl.StopReplying()
 	}
 
-	return state.editing || state.replying
+	return state.editing || state.replying != notReplying
 }
 
 func (v *View) addTyper(ev *gateway.TypingStartEvent) {
-	for i, typer := range v.typers {
-		if typer.UserID == ev.UserID {
-			v.typers[i].Time = ev.Timestamp
-			goto update
-		}
-	}
-
-	{
+	if t := findTyper(v.typers, ev.UserID); t != nil {
+		t.Time = ev.Timestamp
+	} else {
 		state := gtkcord.FromContext(v.ctx)
 		mods := []author.MarkupMod{author.WithMinimal()}
 		var markup string
@@ -474,7 +581,6 @@ func (v *View) addTyper(ev *gateway.TypingStartEvent) {
 		})
 	}
 
-update:
 	sort.Slice(v.typers, func(i, j int) bool {
 		return v.typers[i].Time < v.typers[j].Time
 	})
