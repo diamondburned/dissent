@@ -42,33 +42,59 @@ jobs:
         with:
           shell-file: shell.nix
 
-      - name: Validate Go modules
-        run: |
-          go mod tidy
-
-          if ! git diff --exit-code go.mod go.sum; then
-            echo "::error::Go modules are not tidied"
-            exit 1
-          fi
+      - name: Tidy up Go modules
+        run: go mod tidy
 
       - name: Update gomod2nix.toml
-        id: update
-        run: |
-          gomod2nix --outdir nix
+        run: gomod2nix --outdir nix
 
-          if git diff --exit-code nix/gomod2nix.toml; then
+      - name: Prepare commit
+        id: prepare
+        run: |
+          if git diff --exit-code nix/gomod2nix.toml go.mod go.sum; then
             echo "changed=0" >> $GITHUB_OUTPUT
           else
             echo "changed=1" >> $GITHUB_OUTPUT
           fi
 
-      - name: Commit changes to gomod2nix.toml
-        id: commit
-        if: steps.update.outputs.changed == 1
+      - name: Commit changes
+        if: steps.prepare.outputs.changed == 1
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: Update nix/gomod2nix.toml
-          file_pattern: nix/gomod2nix.toml
+          commit_message: Tidy up Go modules
+          file_pattern: nix/gomod2nix.toml go.mod go.sum
+
+  generate:
+    name: Run go generate
+    needs: gomod
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Install Nix shell
+        uses: ./.github/actions/init-nix
+        with:
+          shell-file: shell.nix
+
+      - name: Generate
+        run: go generate ./...
+
+      - name: Prepare commit
+        id: prepare
+        run: |
+          if git diff --exit-code; then
+            echo "changed=0" >> $GITHUB_OUTPUT
+          else
+            echo "changed=1" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit changes
+        if: steps.prepare.outputs.changed == 1
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Run go generate
 
   lint:
     name: Lint
