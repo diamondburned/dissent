@@ -6,6 +6,7 @@ import ./nix {
 		jq
 		niv
 		gomod2nix
+		imagemagick
 		(callPackage ./.github/tools {})
 		(writeShellScriptBin "staticcheck" "") # too slow
 	];
