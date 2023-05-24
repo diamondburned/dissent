@@ -33,7 +33,19 @@ type channelItem struct {
 	search string
 }
 
-func newChannelItem(guild *discord.Guild, ch *discord.Channel) channelItem {
+// TODO: move this to gtkcord
+var threadTypes = map[discord.ChannelType]bool{
+	discord.GuildNewsThread:    true,
+	discord.GuildPublicThread:  true,
+	discord.GuildPrivateThread: true,
+}
+
+var voiceTypes = map[discord.ChannelType]bool{
+	discord.GuildVoice:      true,
+	discord.GuildStageVoice: true,
+}
+
+func newChannelItem(state *gtkcord.State, guild *discord.Guild, ch *discord.Channel) channelItem {
 	item := channelItem{
 		Channel: ch,
 		guild:   guild,
@@ -45,6 +57,13 @@ func newChannelItem(guild *discord.Guild, ch *discord.Channel) channelItem {
 		item.name = ch.DMRecipients[0].Tag()
 	} else {
 		item.name = gtkcord.RecipientNames(ch)
+	}
+
+	if threadTypes[ch.Type] {
+		parent, _ := state.Cabinet.Channel(ch.ParentID)
+		if parent != nil {
+			item.name = parent.Name + " › #" + item.name
+		}
 	}
 
 	if item.guild != nil {
@@ -59,13 +78,16 @@ func newChannelItem(guild *discord.Guild, ch *discord.Channel) channelItem {
 func (it channelItem) String() string { return it.search }
 
 const (
-	chHash     = `<span face="monospace"><b><span size="x-large" rise="-800">#</span><span size="x-small" rise="-2000"> </span></b></span>`
-	chNSFWHash = `<span face="monospace"><b><span size="x-large" rise="-800">#</span><span size="x-small" rise="-2000">!</span></b></span>`
+	chHash       = `<span face="monospace"><b><span size="x-large" rise="-800">#</span><span size="x-small" rise="-2000">  </span></b></span>`
+	chNSFWHash   = `<span face="monospace"><b><span size="x-large" rise="-800">#</span><span size="x-small" rise="-2000">! </span></b></span>`
+	chVoiceHash  = `<span face="monospace"><b><span size="x-large" rise="-800">#</span><span size="xx-small" rise="-2000">🔊</span></b></span>`
+	chThreadHash = `<span face="monospace"><b><span size="x-large" rise="-800">#</span><span size="x-small" rise="-2000"># </span></b></span>`
 )
 
 var channelCSS = cssutil.Applier("quickswitcher-channel", `
 	.quickswitcher-channel-icon {
-		margin: 2px 8px;
+		margin: 2px 12px;
+		margin-right: 1px;
 		min-width:  {$inline_emoji_size};
 		min-height: {$inline_emoji_size};
 	}
@@ -115,9 +137,14 @@ func (it channelItem) Row(ctx context.Context) *gtk.ListBoxRow {
 		icon.AddCSSClass("quickswitcher-channel-icon")
 		icon.AddCSSClass("quickswitcher-channel-hash")
 		icon.SetHAlign(gtk.AlignCenter)
-		if it.NSFW {
+		switch {
+		case it.NSFW:
 			icon.SetMarkup(chNSFWHash)
-		} else {
+		case voiceTypes[it.Type]:
+			icon.SetMarkup(chVoiceHash)
+		case threadTypes[it.Type]:
+			icon.SetMarkup(chThreadHash)
+		default:
 			icon.SetMarkup(chHash)
 		}
 
@@ -135,7 +162,7 @@ func (it channelItem) Row(ctx context.Context) *gtk.ListBoxRow {
 	if it.guild != nil {
 		guildName := gtk.NewLabel(it.guild.Name)
 		guildName.AddCSSClass("quickswitcher-channel-guildname")
-		guildName.SetEllipsize(pango.EllipsizeMiddle)
+		guildName.SetEllipsize(pango.EllipsizeEnd)
 
 		box.Append(guildName)
 	}
@@ -208,7 +235,7 @@ func (idx *index) update(ctx context.Context, done func()) {
 		}
 
 		for i := range dms {
-			items = append(items, newChannelItem(nil, &dms[i]))
+			items = append(items, newChannelItem(state, nil, &dms[i]))
 		}
 
 		guilds, err := state.Guilds()
@@ -225,7 +252,7 @@ func (idx *index) update(ctx context.Context, done func()) {
 			}
 			items = append(items, newGuildItem(&guilds[i]))
 			for j := range chs {
-				items = append(items, newChannelItem(&guilds[i], &chs[j]))
+				items = append(items, newChannelItem(state, &guilds[i], &chs[j]))
 			}
 		}
 
