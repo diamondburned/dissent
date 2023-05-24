@@ -582,6 +582,11 @@ func (v *View) SendMessage(msg composer.SendingMessage) {
 			Nonce:     key.Nonce(),
 			AllowedMentions: &api.AllowedMentions{
 				RepliedUser: &msg.ReplyMention,
+				Parse: []api.AllowedMentionType{
+					api.AllowUserMention,
+					api.AllowRoleMention,
+					api.AllowEveryoneMention,
+				},
 			},
 		}
 
