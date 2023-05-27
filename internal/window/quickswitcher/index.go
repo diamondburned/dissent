@@ -91,9 +91,13 @@ var channelCSS = cssutil.Applier("quickswitcher-channel", `
 		min-width:  {$inline_emoji_size};
 		min-height: {$inline_emoji_size};
 	}
-	.quickswitcher-channel-icon.quickswitcher-channel-hash {
+	.quickswitcher-channel-hash {
 		padding-left: 1px; /* account for the NSFW mark */
 		margin-right: 7px;
+	}
+	.quickswitcher-channel-image {
+		margin-left: 8px;
+		margin-right: 12px;
 	}
 	.quickswitcher-channel-guildname {
 		font-size: 0.9em;
