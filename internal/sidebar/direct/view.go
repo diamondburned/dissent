@@ -9,6 +9,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
+	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
@@ -81,7 +82,7 @@ func NewChannelView(ctx context.Context, ctrl Opener) *ChannelView {
 	v.searchEntry = gtk.NewSearchEntry()
 	v.searchEntry.SetHExpand(true)
 	v.searchEntry.SetVAlign(gtk.AlignCenter)
-	v.searchEntry.SetObjectProperty("placeholder-text", "Search Users")
+	v.searchEntry.SetObjectProperty("placeholder-text", locale.Get("Search Users"))
 	v.searchEntry.ConnectSearchChanged(func() {
 		v.searchString = strings.ToLower(v.searchEntry.Text())
 		v.list.InvalidateFilter()

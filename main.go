@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
+	"embed"
+	"io/fs"
 
 	"github.com/diamondburned/adaptive"
 	"github.com/diamondburned/gotkit/app"
+	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/app/prefs"
 	"github.com/diamondburned/gotkit/components/logui"
 	"github.com/diamondburned/gotkit/components/prefui"
@@ -15,6 +18,16 @@ import (
 
 	_ "github.com/diamondburned/gotkit/gtkutil/aggressivegc"
 )
+
+//go:embed po/*
+var po embed.FS
+
+func init() {
+	po, _ := fs.Sub(po, "po")
+	locale.LoadLocale(map[string]fs.FS{
+		"default": po,
+	})
+}
 
 var _ = cssutil.WriteCSS(`
 	window.background,

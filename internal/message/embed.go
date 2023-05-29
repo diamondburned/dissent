@@ -365,7 +365,7 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 		}
 
 		if msgEmbed.Timestamp.IsValid() {
-			time := locale.TimeAgo(ctx, msgEmbed.Timestamp.Time())
+			time := locale.TimeAgo(msgEmbed.Timestamp.Time())
 
 			text := gtk.NewLabel(time)
 			text.AddCSSClass("message-embed-timestamp")

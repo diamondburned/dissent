@@ -12,6 +12,7 @@ import (
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/app"
+	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/components/onlineimage"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
@@ -185,7 +186,7 @@ func newContentReaction(rs *contentReactions, reaction discord.Reaction) *conten
 		}
 
 		if !r.hasTooltip {
-			tooltip.SetText("Loading...")
+			tooltip.SetText(locale.Get("Loading..."))
 			return true
 		}
 

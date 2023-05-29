@@ -137,9 +137,9 @@ func (m *message) bind(parent gtk.Widgetter) *gio.Menu {
 	return m.menu
 }
 
-func menuItemIfOK(actions map[string]func(), label, action string) gtkutil.PopoverMenuItem {
+func menuItemIfOK(actions map[string]func(), label locale.Localized, action string) gtkutil.PopoverMenuItem {
 	_, ok := actions[action]
-	return gtkutil.MenuItem(label, action, ok)
+	return gtkutil.MenuItem(label.String(), action, ok)
 }
 
 var sourceCSS = cssutil.Applier("message-source", `
@@ -280,7 +280,7 @@ func (m *cozyMessage) updateAuthor(message *gateway.MessageCreateEvent) {
 
 	markup := "<b>" + state.AuthorMarkup(message) + "</b>"
 	markup += ` <span alpha="75%" size="small">` +
-		locale.TimeAgo(m.ctx(), message.Timestamp.Time()) +
+		locale.TimeAgo(message.Timestamp.Time()) +
 		"</span>"
 
 	m.TopLabel.SetMarkup(markup)

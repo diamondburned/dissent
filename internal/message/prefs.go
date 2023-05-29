@@ -6,6 +6,7 @@ import (
 
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/app"
+	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/app/prefs"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
@@ -87,13 +88,13 @@ func (*blockedUsersPrefs) CreateWidget(ctx context.Context, _ func()) gtk.Widget
 
 	var blockedList *gtk.Box
 
-	expander := gtk.NewExpander("Show")
+	expander := gtk.NewExpander(locale.Get("Show"))
 	expander.AddCSSClass("message-blockedusers-expander")
 	expander.SetResizeToplevel(true)
 	expander.SetExpanded(false)
 	expander.NotifyProperty("expanded", func() {
 		if !expander.Expanded() {
-			expander.SetLabel("Show")
+			expander.SetLabel(locale.Get("Show"))
 			expander.SetChild(nil)
 			blockedList = nil
 			return
@@ -110,7 +111,7 @@ func (*blockedUsersPrefs) CreateWidget(ctx context.Context, _ func()) gtk.Widget
 				tag = presence.User.Tag()
 			}
 
-			unblock := gtk.NewButtonWithLabel("Unblock")
+			unblock := gtk.NewButtonWithLabel(locale.Get("Unblock"))
 			name := gtk.NewLabel(tag)
 			name.SetHExpand(true)
 			name.SetXAlign(0)
@@ -147,7 +148,7 @@ func (*blockedUsersPrefs) CreateWidget(ctx context.Context, _ func()) gtk.Widget
 			})
 		}
 
-		expander.SetLabel("Hide")
+		expander.SetLabel(locale.Get("Hide"))
 		expander.SetChild(blockedList)
 	})
 

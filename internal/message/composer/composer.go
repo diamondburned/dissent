@@ -17,6 +17,7 @@ import (
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/app"
+	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/app/prefs"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
@@ -291,7 +292,7 @@ func (a existingActionButton) newButton() gtk.Widgetter { return a }
 // actionButtonData is the data that the action button in the composer bar is
 // currently doing.
 type actionButtonData struct {
-	Name string
+	Name locale.Localized
 	Icon string
 	Func func()
 }
@@ -304,7 +305,7 @@ func newActionButton(a actionButtonData) *gtk.Button {
 	button.SetVAlign(gtk.AlignCenter)
 	button.SetSensitive(a.Func != nil)
 	button.SetIconName(a.Icon)
-	button.SetTooltipText(a.Name)
+	button.SetTooltipText(a.Name.String())
 	button.ConnectClicked(func() { a.Func() })
 
 	return button
@@ -451,7 +452,7 @@ func (v *View) StartEditing(msg *discord.Message) {
 	v.state.editing = true
 
 	v.Input.Buffer.SetText(msg.Content)
-	v.SetPlaceholderMarkup("Editing message")
+	v.SetPlaceholderMarkup(locale.Get("Editing message"))
 	v.AddCSSClass("composer-editing")
 	v.setActions(actions{
 		left: []actionButton{

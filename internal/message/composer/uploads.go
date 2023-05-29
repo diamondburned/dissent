@@ -7,6 +7,7 @@ import (
 
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
+	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/dustin/go-humanize"
 )
@@ -68,7 +69,7 @@ func (t *UploadTray) AddFile(file File) {
 
 	f.del = gtk.NewButtonFromIconName("edit-clear-all-symbolic")
 	f.del.SetHasFrame(false)
-	f.del.SetTooltipText("Remove File")
+	f.del.SetTooltipText(locale.Get("Remove File"))
 
 	// TODO: hover to preview?
 	f.Box = gtk.NewBox(gtk.OrientationHorizontal, 0)

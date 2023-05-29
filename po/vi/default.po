@@ -1,0 +1,242 @@
+msgid "Added %s to the group."
+msgstr "Đã thêm %s vào nhóm."
+
+msgid "Blocked Users"
+msgstr "Người dùng bị chặn"
+
+msgid "Boosted the server!"
+msgstr ""
+
+msgid "Busy"
+msgstr ""
+
+msgid "Calling you."
+msgstr "Đang gọi bạn."
+
+msgid "Cancel"
+msgstr "Hủy"
+
+msgid "Changed the channel icon."
+msgstr ""
+
+msgid "Changed the channel name to #"
+msgstr ""
+
+msgid "Composer"
+msgstr "Soạn thảo"
+
+msgid "Connecting"
+msgstr "Đang kết nối"
+
+msgid "Connecting..."
+msgstr "Đang kết nối..."
+
+msgid "Decrypt (?)"
+msgstr ""
+
+msgid "Dependency Authors"
+msgstr ""
+
+msgid "Direct Messages"
+msgstr "Tin nhắn trực tiếp"
+
+msgid "Discord"
+msgstr ""
+
+msgid "Edit"
+msgstr "Sửa"
+
+msgid "Editing message"
+msgstr "Đang sửa tin nhắn"
+
+msgid "Email"
+msgstr ""
+
+msgid "Empty channel"
+msgstr ""
+
+msgid "Enable a semi-WYSIWYG feature that decorates the input Markdown text."
+msgstr ""
+
+msgid "Enter text here"
+msgstr ""
+
+msgid "Entry"
+msgstr ""
+
+msgid "Error marshaing JSON: "
+msgstr ""
+
+msgid "Hide"
+msgstr ""
+
+msgid "Idle"
+msgstr ""
+
+msgid "In_visible"
+msgstr ""
+
+msgid "Invisible"
+msgstr ""
+
+msgid "Joined the server."
+msgstr "Đã vào phòng."
+
+msgid "List of users whose messages you won't see."
+msgstr "Dănh sách người dùng mà bạn sẽ không thấy tin nhắn của họ."
+
+msgid "Loading..."
+msgstr "Đang tải..."
+
+msgid "Login"
+msgstr "Đăng nhập"
+
+msgid "Log In"
+msgstr "Đăng nhập"
+
+msgid "Login using:"
+msgstr "Đăng nhập bằng:"
+
+msgid "Message "
+msgstr "Tin nhắn "
+
+msgid "Message"
+msgstr "Tin nhắn"
+
+msgid "Messages"
+msgstr "Tin nhắn"
+
+msgid "Messages Width"
+msgstr "Chiều rộng tin nhắn"
+
+msgid "Offline"
+msgstr ""
+
+msgid "Online"
+msgstr ""
+
+msgid "Options:"
+msgstr ""
+
+msgid "Override Member Colors"
+msgstr "Ghi đè màu thành viên"
+
+msgid "Password"
+msgstr "Mật khẩu"
+
+msgid "Pinned <a href=\"#message/%d\">a message</a>."
+msgstr "Đã ghim <a href=\"#message/%d\">một tin nhắn</a>."
+
+msgid "Quick Switcher"
+msgstr "Chuyển nhanh"
+
+msgid "Redacted."
+msgstr "Đã xóa."
+
+msgid "Remember Account"
+msgstr ""
+
+msgid "Removed %s from the group."
+msgstr "Đã bỏ %s khỏi nhóm."
+
+msgid "Remove File"
+msgstr ""
+
+msgid "Reply"
+msgstr ""
+
+msgid "Replying to %s"
+msgstr "Đang trả lời %s"
+
+msgid "Rich Preview"
+msgstr ""
+
+msgid "Search"
+msgstr "Tìm kiếm"
+
+msgid "Search Users"
+msgstr "Tìm kiếm người dùng"
+
+msgid "Send Message on Enter"
+msgstr "Gửi tin nhắn khi nhấn Enter"
+
+msgid "Send the message when the user hits the Enter key. Disable this for mobile."
+msgstr "Gửi tin nhắn khi người dùng nhấn Enter. Tắt tính năng này trên điện thoại."
+
+msgid "Set _Status"
+msgstr "Đặt _trạng thái"
+
+msgid "Several people are typing..."
+msgstr "Nhiều người đang gõ..."
+
+msgid "Show"
+msgstr "Hiện"
+
+msgid "Show All Emojis"
+msgstr "Hiện tất cả biểu tượng cảm xúc"
+
+msgid "Show (and autocomplete) all emojis even if the user doesn't have Nitro."
+msgstr "Hiện (và tự động hoàn thành) tất cả emojis kể cả khi người dùng không có Nitro."
+
+msgid "Show Blocked Messages"
+msgstr "Hiện tin nhắn bị chặn"
+
+msgid "Show messages from blocked users as dimmed instead of completely hidden."
+msgstr "Hiện tin nhắn từ người dùng bị chặn nhưng mờ đi thay vì ẩn hoàn toàn."
+
+msgid "Show _Source"
+msgstr "Hiện nguồn"
+
+msgid "Stop Editing"
+msgstr "Dừng sửa"
+
+msgid "The server is now Nitro Boosted to Tier 1."
+msgstr ""
+
+msgid "The server is now Nitro Boosted to Tier 2."
+msgstr ""
+
+msgid "The server is now Nitro Boosted to Tier 3."
+msgstr ""
+
+msgid "The width of the messages column."
+msgstr "Chiều rộng cột tin nhắn."
+
+msgid "Token"
+msgstr ""
+
+msgid "TOTP"
+msgstr ""
+
+msgid "Unblock"
+msgstr "Bỏ chặn"
+
+msgid "Unknown"
+msgstr ""
+
+msgid "Unknown channel"
+msgstr ""
+
+msgid "Upload"
+msgstr "Tải lên"
+
+msgid "Upload File"
+msgstr "Tải lên tập tin"
+
+msgid "Upload Files"
+msgstr "Tải lên tập tin"
+
+msgid "Usage: %s [options] <name>...\n"
+msgstr ""
+
+msgid "Use generated colors instead of role colors for members."
+msgstr "Dùng màu ngẫu nhiên thay vì màu vai trò cho thành viên."
+
+msgid "User Settings"
+msgstr "Cài đặt người dùng"
+
+msgid "UTF-8"
+msgstr ""
+
+msgid "Where would you like to go?"
+msgstr "Bạn muốn đi đâu?"

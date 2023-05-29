@@ -2,13 +2,15 @@ module github.com/diamondburned/gtkcord4
 
 go 1.18
 
+replace github.com/leonelquinteros/gotext => github.com/diamondburned/gotext v0.0.0-20230529225615-4e200827134c
+
 require (
 	github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8
-	github.com/diamondburned/arikawa/v3 v3.2.1-0.20230210050458-2c379c90c2ac
+	github.com/diamondburned/arikawa/v3 v3.3.1-0.20230524212519-c07f57455870
 	github.com/diamondburned/chatkit v0.0.0-20230209213000-7d9bb654be2f
 	github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20230307040502-bfe82926e1be
 	github.com/diamondburned/gotk4/pkg v0.0.6-0.20230331141043-6dd75799f56c
-	github.com/diamondburned/gotkit v0.0.0-20230517061857-5e7b502784b0
+	github.com/diamondburned/gotkit v0.0.0-20230529234348-875fedeceb71
 	github.com/diamondburned/ningen/v3 v3.0.1-0.20230124093205-d39554fd5d67
 	github.com/dustin/go-humanize v1.0.0
 	github.com/enescakir/emoji v1.0.0
@@ -27,16 +29,15 @@ require (
 	github.com/gorilla/schema v1.2.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
+	github.com/leonelquinteros/gotext v1.5.3-0.20230509185024-db315c34509b // indirect
 	github.com/twmb/murmur3 v1.1.3 // indirect
+	github.com/yalue/merged_fs v1.2.3 // indirect
 	github.com/zalando/go-keyring v0.2.1 // indirect
 	go4.org v0.0.0-20200411211856-f5505b9728dd // indirect
 	go4.org/unsafe/assume-no-moving-gc v0.0.0-20230221090011-e4bae7ad2296 // indirect
-	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
+	golang.org/x/crypto v0.1.0 // indirect
 	golang.org/x/image v0.0.0-20220902085622-e7cb96979f69 // indirect
-	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
-	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f // indirect
-	golang.org/x/sys v0.1.0 // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
+	golang.org/x/text v0.4.0 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
-	golang.org/x/tools v0.1.11 // indirect
 )

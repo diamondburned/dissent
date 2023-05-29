@@ -2,7 +2,6 @@ package message
 
 import (
 	"context"
-	"fmt"
 	"html"
 	"strings"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
+	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/components/onlineimage"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
@@ -86,7 +86,7 @@ func (c *Content) ChannelID() discord.ChannelID {
 // SetExtraMenu implements ExtraMenuSetter.
 func (c *Content) SetExtraMenu(menu gio.MenuModeller) {
 	c.menu = gio.NewMenu()
-	c.menu.InsertSection(0, "Message", menu)
+	c.menu.InsertSection(0, locale.Get("Message"), menu)
 
 	if c.mdview != nil {
 		c.setMenu()
@@ -197,31 +197,31 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 	var messageMarkup string
 	switch m.Type {
 	case discord.GuildMemberJoinMessage:
-		messageMarkup = "Joined the server."
+		messageMarkup = locale.Get("Joined the server.")
 	case discord.CallMessage:
-		messageMarkup = "Calling you."
+		messageMarkup = locale.Get("Calling you.")
 	case discord.ChannelIconChangeMessage:
-		messageMarkup = "Changed the channel icon."
+		messageMarkup = locale.Get("Changed the channel icon.")
 	case discord.ChannelNameChangeMessage:
-		messageMarkup = "Changed the channel name to #" + html.EscapeString(m.Content) + "."
+		messageMarkup = locale.Get("Changed the channel name to #%s.", html.EscapeString(m.Content))
 	case discord.ChannelPinnedMessage:
-		messageMarkup = fmt.Sprintf(`Pinned <a href="#message/%d">a message.</a>`, m.ID)
+		messageMarkup = locale.Get(`Pinned <a href="#message/%d">a message</a>.`, m.ID)
 	case discord.RecipientAddMessage, discord.RecipientRemoveMessage:
 		mentioned := state.MemberMarkup(m.GuildID, &m.Mentions[0], author.WithMinimal())
 		switch m.Type {
 		case discord.RecipientAddMessage:
-			messageMarkup = "Added " + mentioned + " to the group."
+			messageMarkup = locale.Get("Added %s to the group.", mentioned)
 		case discord.RecipientRemoveMessage:
-			messageMarkup = "Removed " + mentioned + " from the group."
+			messageMarkup = locale.Get("Removed %s from the group.", mentioned)
 		}
 	case discord.NitroBoostMessage:
-		messageMarkup = "Boosted the server!"
+		messageMarkup = locale.Get("Boosted the server!")
 	case discord.NitroTier1Message:
-		messageMarkup = "The server is now Nitro Boosted to Tier 1."
+		messageMarkup = locale.Get("The server is now Nitro Boosted to Tier 1.")
 	case discord.NitroTier2Message:
-		messageMarkup = "The server is now Nitro Boosted to Tier 2."
+		messageMarkup = locale.Get("The server is now Nitro Boosted to Tier 2.")
 	case discord.NitroTier3Message:
-		messageMarkup = "The server is now Nitro Boosted to Tier 3."
+		messageMarkup = locale.Get("The server is now Nitro Boosted to Tier 3.")
 	}
 
 	c.mdview = nil
@@ -328,7 +328,7 @@ var redactedContentCSS = cssutil.Applier("message-redacted-content", `
 func (c *Content) Redact() {
 	c.clear()
 
-	red := gtk.NewLabel("Redacted.")
+	red := gtk.NewLabel(locale.Get("Redacted."))
 	red.SetXAlign(0)
 	redactedContentCSS(red)
 	c.append(red)
