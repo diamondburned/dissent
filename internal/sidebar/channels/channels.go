@@ -7,6 +7,7 @@ import (
 	"github.com/diamondburned/adaptive"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
+	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/gtkutil"
@@ -222,7 +223,20 @@ func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
 
 	selection := v.Child.Tree.Selection()
 	selection.SetMode(gtk.SelectionBrowse)
+
+	// Hack to stop a weird infinite recursion bug.
+	var selecting bool
+
 	selection.ConnectChanged(func() {
+		if selecting {
+			log.Println("BUG: infinite recursion in selection.ConnectChanged detected")
+			log.Println("BUG: ignoring selection change")
+			return
+		}
+
+		selecting = true
+		glib.IdleAdd(func() { selecting = false })
+
 		// Note: never set v.selectID to 0 here, because we're in Browse mode,
 		// so it should be impossible.
 		if v.tree == nil {
@@ -239,18 +253,19 @@ func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
 			return
 		}
 
-		if v.selectID == node.ID() {
+		nodeID := node.ID()
+		if v.selectID == nodeID {
 			return
 		}
 
-		// Update the selectID in case we recreate the tree model.
-		v.selectID = node.ID()
-
 		switch node.(type) {
 		case *ChannelNode, *ThreadNode, *VoiceChannelNode:
+			// Update the selectID in case we recreate the tree model.
+			v.selectID = nodeID
+
 			// We can open these channels.
-			log.Println("opening channel", node.ID())
-			ctrl.OpenChannel(node.ID())
+			log.Println("opening channel", nodeID)
+			ctrl.OpenChannel(nodeID)
 		}
 	})
 
