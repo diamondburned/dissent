@@ -139,7 +139,7 @@ func (m *message) bind(parent gtk.Widgetter) *gio.Menu {
 
 func menuItemIfOK(actions map[string]func(), label locale.Localized, action string) gtkutil.PopoverMenuItem {
 	_, ok := actions[action]
-	return gtkutil.MenuItem(label.String(), action, ok)
+	return gtkutil.MenuItem(label, action, ok)
 }
 
 var sourceCSS = cssutil.Applier("message-source", `

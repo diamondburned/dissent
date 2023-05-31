@@ -24,9 +24,7 @@ var po embed.FS
 
 func init() {
 	po, _ := fs.Sub(po, "po")
-	locale.LoadLocale(map[string]fs.FS{
-		"default": po,
-	})
+	locale.LoadLocale(po)
 }
 
 var _ = cssutil.WriteCSS(`
