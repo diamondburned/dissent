@@ -1,6 +1,7 @@
-{ action, ... }@args':
+{ action, usePatchedGo ? false, ... }@args':
 
-let src = import ./sources.nix;
+let
+	src = import ./sources.nix;
 	base' = import ./base.nix;
 	systemPkgs = import <nixpkgs> {};
 
@@ -27,10 +28,11 @@ in import "${src-gotk4-nix}/${action}.nix" (args // {
 	pkgs = import "${src-gotk4-nix}/pkgs.nix" {
 		sourceNixpkgs = src.nixpkgs;
 		useFetched = true;
+		usePatchedGo = usePatchedGo;
 		overlays = [
 			(import ./overlay.nix)
 			(import "${src-gotk4-nix}/overlay.nix")
-  			(import "${src.gomod2nix}/overlay.nix")
+			(import "${src.gomod2nix}/overlay.nix")
 		];
 	};
 })
