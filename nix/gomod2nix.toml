@@ -29,8 +29,8 @@ schema = 3
     version = "v0.0.0-20230529234348-875fedeceb71"
     hash = "sha256-ezdCDH6AR9HbJkudaUVrPLN0An2xF7/qRaEBGWZclAg="
   [mod."github.com/diamondburned/ningen/v3"]
-    version = "v3.0.1-0.20230124093205-d39554fd5d67"
-    hash = "sha256-WV3i3pj4uE3s0X4nXiWhUGf7tLKksJHvajuBm7EB5Ko="
+    version = "v3.0.1-0.20230607082110-92cbc1390b2a"
+    hash = "sha256-4bjCf911hS8BqyBcOAFwOtuji8O6UezeWCX5Ib0Mgac="
   [mod."github.com/dlclark/regexp2"]
     version = "v1.4.0"
     hash = "sha256-Pk/S2x2rX7xnGFLyoHEw09CoNQimvz/msdPRsxLaLsc="
