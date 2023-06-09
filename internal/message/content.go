@@ -452,7 +452,7 @@ func renderMention(r *mdrender.Renderer, n ast.Node) ast.WalkStatus {
 }
 
 func newAuthorChip(ctx context.Context, guildID discord.GuildID, user *discord.GuildUser) *author.Chip {
-	name := user.Username
+	name := user.DisplayOrUsername()
 	color := defaultMentionColor
 
 	if user.Member != nil {

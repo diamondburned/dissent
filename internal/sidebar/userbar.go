@@ -2,7 +2,8 @@ package sidebar
 
 import (
 	"context"
-	"fmt"
+	"regexp"
+	"strconv"
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
@@ -110,13 +111,29 @@ func newUserBar(ctx context.Context, menuActions []gtkutil.PopoverMenuItem) *use
 	return &b
 }
 
+var discriminatorRe = regexp.MustCompile(`#\d{1,4}$`)
+
 func (b *userBar) updateUser(me *discord.User) {
-	b.avatar.SetInitials(me.Username)
+	tag := me.Username
+	if v, _ := strconv.Atoi(me.Discriminator); v != 0 {
+		tag += `<span size="smaller">` + "#" + me.Discriminator + "</span>"
+	}
+
+	var name string
+	if me.DisplayName != "" {
+		name = me.DisplayName + "\n" + `<span size="smaller">` + tag + "</span>"
+	} else {
+		name = tag
+	}
+
+	displayName := me.DisplayName
+	if displayName == "" {
+		displayName = me.Username
+	}
+
+	b.avatar.SetInitials(displayName)
 	b.avatar.SetFromURL(me.AvatarURL())
-	b.name.SetMarkup(fmt.Sprintf(
-		`%s`+"\n"+`<span size="smaller">#%s</span>`,
-		me.Username, me.Discriminator,
-	))
+	b.name.SetMarkup(name)
 }
 
 func (b *userBar) updatePresence(presence *discord.Presence) {

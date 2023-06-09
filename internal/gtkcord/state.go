@@ -282,9 +282,9 @@ var overrideMemberColors = prefs.NewBool(false, prefs.PropMeta{
 
 // MemberMarkup is like AuthorMarkup but for any member inside a guild.
 func (s *State) MemberMarkup(gID discord.GuildID, u *discord.GuildUser, mods ...author.MarkupMod) string {
-	name := u.Username
-	var suffix string
+	name := u.DisplayOrUsername()
 
+	var suffix string
 	var prefixMods []author.MarkupMod
 
 	if gID.IsValid() {
@@ -440,7 +440,7 @@ func ChannelName(ch *discord.Channel) string {
 		if len(ch.DMRecipients) == 0 {
 			return RecipientNames(ch)
 		}
-		return ch.DMRecipients[0].Username
+		return ch.DMRecipients[0].DisplayOrUsername()
 	case discord.GroupDM:
 		if ch.Name != "" {
 			return ch.Name
@@ -457,7 +457,7 @@ func ChannelName(ch *discord.Channel) string {
 // channel.
 func RecipientNames(ch *discord.Channel) string {
 	name := func(ix int) string {
-		return ch.DMRecipients[ix].Username
+		return ch.DMRecipients[ix].DisplayOrUsername()
 	}
 
 	// TODO: localize
@@ -472,11 +472,11 @@ func RecipientNames(ch *discord.Channel) string {
 	default:
 		var str strings.Builder
 		for _, u := range ch.DMRecipients[:len(ch.DMRecipients)-1] {
-			str.WriteString(u.Username)
+			str.WriteString(u.DisplayOrUsername())
 			str.WriteString(", ")
 		}
 		str.WriteString(" and ")
-		str.WriteString(ch.DMRecipients[len(ch.DMRecipients)-1].Username)
+		str.WriteString(ch.DMRecipients[len(ch.DMRecipients)-1].DisplayOrUsername())
 		return str.String()
 	}
 }
