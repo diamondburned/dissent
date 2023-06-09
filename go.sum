@@ -33,10 +33,6 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8 h1:ZMe7aut1RcAE52EpSmfuIiKhaIw3MGVw9qOiCcj8R+w=
 github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8/go.mod h1:cLoCdQtpCp/TSJBJTgXe7W2FJNelXrmPv+X7luB6/Qg=
-github.com/diamondburned/arikawa/v3 v3.3.1-0.20230524212519-c07f57455870 h1:sbUVySeUjbvbqgsp1lDgn2p1fO1Yo2JyQNhaqpm5YIs=
-github.com/diamondburned/arikawa/v3 v3.3.1-0.20230524212519-c07f57455870/go.mod h1:+ifmDonP/JdBiUOzZmVReEjPTHDUSkyqqRRmjSf9NE8=
-github.com/diamondburned/arikawa/v3 v3.3.1-0.20230608010326-2b0395ab12a6 h1:96f78R3EDiXRvAA0lWRL8iBeTiHNdQBxEH2cd3fXO90=
-github.com/diamondburned/arikawa/v3 v3.3.1-0.20230608010326-2b0395ab12a6/go.mod h1:+ifmDonP/JdBiUOzZmVReEjPTHDUSkyqqRRmjSf9NE8=
 github.com/diamondburned/arikawa/v3 v3.3.1-0.20230609054540-4224b93c4e01 h1:zhnPLwOYzWinFZMdyoMQopBOujDki1lpZ/RizEPBATs=
 github.com/diamondburned/arikawa/v3 v3.3.1-0.20230609054540-4224b93c4e01/go.mod h1:+ifmDonP/JdBiUOzZmVReEjPTHDUSkyqqRRmjSf9NE8=
 github.com/diamondburned/chatkit v0.0.0-20230209213000-7d9bb654be2f h1:tFnrxdZW6k1SeNPWeb0RYUfyyWq7ru5/ruKs7jsa3wk=
@@ -218,7 +214,6 @@ golang.org/x/sys v0.0.0-20201119102817-f84b799fce68/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
-golang.org/x/sys v0.1.0 h1:kunALQeHf1/185U1i0GOB/fy1IPRDDpuoOOqRReG57U=
 golang.org/x/sys v0.1.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=
 golang.org/x/term v0.0.0-20210927222741-03fcf44c2211/go.mod h1:jbD1KX2456YbFQfuXm/mYQcufACuNUgVhRMnK/tPxf8=
