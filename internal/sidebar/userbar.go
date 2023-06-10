@@ -134,6 +134,7 @@ func (b *userBar) updateUser(me *discord.User) {
 	b.avatar.SetInitials(displayName)
 	b.avatar.SetFromURL(me.AvatarURL())
 	b.name.SetMarkup(name)
+	b.name.SetTooltipMarkup(name)
 }
 
 func (b *userBar) updatePresence(presence *discord.Presence) {
