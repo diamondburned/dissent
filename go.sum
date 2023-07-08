@@ -37,6 +37,8 @@ github.com/diamondburned/arikawa/v3 v3.3.1-0.20230609054540-4224b93c4e01 h1:zhnP
 github.com/diamondburned/arikawa/v3 v3.3.1-0.20230609054540-4224b93c4e01/go.mod h1:+ifmDonP/JdBiUOzZmVReEjPTHDUSkyqqRRmjSf9NE8=
 github.com/diamondburned/chatkit v0.0.0-20230209213000-7d9bb654be2f h1:tFnrxdZW6k1SeNPWeb0RYUfyyWq7ru5/ruKs7jsa3wk=
 github.com/diamondburned/chatkit v0.0.0-20230209213000-7d9bb654be2f/go.mod h1:XoGcKoo4B63Bt8pz+jkZFIn8L4c0KqO0sMa1XOxDRoM=
+github.com/diamondburned/chatkit v0.0.0-20230708224753-27a3241b8575 h1:YborEXym6jarROuxVL798KU6ao6PQFl4gS/Urpw8GW4=
+github.com/diamondburned/chatkit v0.0.0-20230708224753-27a3241b8575/go.mod h1:XoGcKoo4B63Bt8pz+jkZFIn8L4c0KqO0sMa1XOxDRoM=
 github.com/diamondburned/gotext v0.0.0-20230529225615-4e200827134c h1:qTQrWnavuH2+tlEUDEWM9TKyxGF4fhKYedWviSG60LE=
 github.com/diamondburned/gotext v0.0.0-20230529225615-4e200827134c/go.mod h1:AT4NpQrOmyj1L/+hLja6aR0lk81yYYL4ePnj2kp7d6M=
 github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20230307040502-bfe82926e1be h1:XzG9azkbXwZwL7afxavVy8kl7+6VQ92eHtH0maDg5xQ=

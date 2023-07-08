@@ -7,7 +7,7 @@ replace github.com/leonelquinteros/gotext => github.com/diamondburned/gotext v0.
 require (
 	github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8
 	github.com/diamondburned/arikawa/v3 v3.3.1-0.20230609054540-4224b93c4e01
-	github.com/diamondburned/chatkit v0.0.0-20230209213000-7d9bb654be2f
+	github.com/diamondburned/chatkit v0.0.0-20230708224753-27a3241b8575
 	github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20230307040502-bfe82926e1be
 	github.com/diamondburned/gotk4/pkg v0.0.6-0.20230331141043-6dd75799f56c
 	github.com/diamondburned/gotkit v0.0.0-20230529234348-875fedeceb71
