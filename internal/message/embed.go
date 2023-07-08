@@ -454,8 +454,14 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 			})
 		case msgEmbed.Video != nil:
 			image.SetOpenURL(func() {
-				image.SetFromURL(msgEmbed.Video.Proxy)
-				image.ActivateDefault()
+				// Some video URLs aren't direct links, so GTK cannot play them
+				// back. We can detect this by checking if it has a provider.
+				if msgEmbed.Provider != nil {
+					app.OpenURI(ctx, msgEmbed.Video.URL)
+				} else {
+					image.SetFromURL(msgEmbed.Video.Proxy)
+					image.ActivateDefault()
+				}
 			})
 		default:
 			image.SetOpenURL(func() {
