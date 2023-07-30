@@ -440,7 +440,7 @@ func ChannelName(ch *discord.Channel) string {
 		if len(ch.DMRecipients) == 0 {
 			return RecipientNames(ch)
 		}
-		return ch.DMRecipients[0].DisplayOrUsername()
+		return userName(&ch.DMRecipients[0])
 	case discord.GroupDM:
 		if ch.Name != "" {
 			return ch.Name
@@ -456,9 +456,7 @@ func ChannelName(ch *discord.Channel) string {
 // RecipientNames formats the string for the list of recipients inside the given
 // channel.
 func RecipientNames(ch *discord.Channel) string {
-	name := func(ix int) string {
-		return ch.DMRecipients[ix].DisplayOrUsername()
-	}
+	name := func(ix int) string { return userName(&ch.DMRecipients[ix]) }
 
 	// TODO: localize
 
@@ -472,11 +470,21 @@ func RecipientNames(ch *discord.Channel) string {
 	default:
 		var str strings.Builder
 		for _, u := range ch.DMRecipients[:len(ch.DMRecipients)-1] {
-			str.WriteString(u.DisplayOrUsername())
+			str.WriteString(userName(&u))
 			str.WriteString(", ")
 		}
 		str.WriteString(" and ")
-		str.WriteString(ch.DMRecipients[len(ch.DMRecipients)-1].DisplayOrUsername())
+		str.WriteString(userName(&ch.DMRecipients[len(ch.DMRecipients)-1]))
 		return str.String()
 	}
+}
+
+func userName(u *discord.User) string {
+	if u.DisplayName == "" {
+		return u.Username
+	}
+	if strings.EqualFold(u.DisplayName, u.Username) {
+		return u.DisplayName
+	}
+	return fmt.Sprintf("%s (%s)", u.DisplayName, u.Username)
 }
