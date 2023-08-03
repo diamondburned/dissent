@@ -82,6 +82,7 @@ var viewCSS = cssutil.Applier("message-view", `
 	}
 	.message-list > row {
 		transition: linear 150ms background-color;
+		box-shadow: none;
 		background: none;
 		background-image: none;
 		background-color: transparent;
@@ -96,7 +97,7 @@ var viewCSS = cssutil.Applier("message-view", `
 		background-color: alpha(@theme_fg_color, 0.125);
 	}
 	.message-list > row:hover {
-		background-color: alpha(@theme_fg_color, 0.05);
+		background-color: alpha(@theme_fg_color, 0.075);
 	}
 	.message-list > row.message-editing,
 	.message-list > row.message-replying {
