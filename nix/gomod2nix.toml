@@ -23,11 +23,11 @@ schema = 3
     version = "v0.0.0-20230307040502-bfe82926e1be"
     hash = "sha256-jp2KeXza45zFCNvcEpA2UrOYZKLHQrU4+3A7SSRsuCc="
   [mod."github.com/diamondburned/gotk4/pkg"]
-    version = "v0.0.6-0.20230331141043-6dd75799f56c"
-    hash = "sha256-Kov9AICWntyY07wRIdDdW6SHD/5XtUSGXfZ5KBLgqv0="
+    version = "v0.0.6-0.20230825053034-ad325703aa2e"
+    hash = "sha256-47LA2OAz5aWD9Yjv27yAlQxxlDfjByRvmyXapS6vy/8="
   [mod."github.com/diamondburned/gotkit"]
-    version = "v0.0.0-20230529234348-875fedeceb71"
-    hash = "sha256-ezdCDH6AR9HbJkudaUVrPLN0An2xF7/qRaEBGWZclAg="
+    version = "v0.0.0-20230823074854-3658c907eb6b"
+    hash = "sha256-Mppk2BMp6Qrc9bNlZmcORNRGaO8sUJDaZmRBLhjFRLo="
   [mod."github.com/diamondburned/ningen/v3"]
     version = "v3.0.1-0.20230607082110-92cbc1390b2a"
     hash = "sha256-4bjCf911hS8BqyBcOAFwOtuji8O6UezeWCX5Ib0Mgac="

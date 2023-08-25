@@ -41,8 +41,6 @@ github.com/diamondburned/gotext v0.0.0-20230529225615-4e200827134c h1:qTQrWnavuH
 github.com/diamondburned/gotext v0.0.0-20230529225615-4e200827134c/go.mod h1:AT4NpQrOmyj1L/+hLja6aR0lk81yYYL4ePnj2kp7d6M=
 github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20230307040502-bfe82926e1be h1:XzG9azkbXwZwL7afxavVy8kl7+6VQ92eHtH0maDg5xQ=
 github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20230307040502-bfe82926e1be/go.mod h1:f+Kv3QPlRGEW0nv0oyEZ4qhCcOY9qhxKnmPmrzmBkLo=
-github.com/diamondburned/gotk4/pkg v0.0.6-0.20230812020241-a8c49098a9dc h1:cocc9PWhkERW7NBxPJ0AajgdMhf5dBUemwwKn6ZNu18=
-github.com/diamondburned/gotk4/pkg v0.0.6-0.20230812020241-a8c49098a9dc/go.mod h1:Jr5xzUuGyLsoMtE9LzE/Lay1gD0ONiFWAmQ0+Z6KLeA=
 github.com/diamondburned/gotk4/pkg v0.0.6-0.20230825053034-ad325703aa2e h1:fH47UZxCz7xvmJHQ1w+nizBZpDNHdYmHwMwnUAByaLg=
 github.com/diamondburned/gotk4/pkg v0.0.6-0.20230825053034-ad325703aa2e/go.mod h1:Jr5xzUuGyLsoMtE9LzE/Lay1gD0ONiFWAmQ0+Z6KLeA=
 github.com/diamondburned/gotkit v0.0.0-20230823074854-3658c907eb6b h1:EQC78Hu5w7aSUmhAafwaIEE3q6tVqMDim5dZCKMyK9Y=
