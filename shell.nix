@@ -10,5 +10,5 @@ import ./nix {
 		(callPackage ./.github/tools {})
 		(writeShellScriptBin "staticcheck" "") # too slow
 	];
-	usePatchedGo = true;
+	usePatchedGo = false;
 }
