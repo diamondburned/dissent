@@ -11,7 +11,7 @@ require (
 	github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20230307040502-bfe82926e1be
 	github.com/diamondburned/gotk4/pkg v0.0.6-0.20230825053034-ad325703aa2e
 	github.com/diamondburned/gotkit v0.0.0-20230823074854-3658c907eb6b
-	github.com/diamondburned/ningen/v3 v3.0.1-0.20230825092511-84129c98819e
+	github.com/diamondburned/ningen/v3 v3.0.1-0.20230825235203-736ded6dc985
 	github.com/dustin/go-humanize v1.0.0
 	github.com/enescakir/emoji v1.0.0
 	github.com/ianlancetaylor/cgosymbolizer v0.0.0-20220405231054-a1ae3e4bba26
