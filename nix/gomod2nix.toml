@@ -81,8 +81,8 @@ schema = 3
     version = "v0.0.0-20200411211856-f5505b9728dd"
     hash = "sha256-UxbUjyr/bArM+3XAQfQ58XBbePvUdZ31EiQkCfXl/i0="
   [mod."go4.org/unsafe/assume-no-moving-gc"]
-    version = "v0.0.0-20230221090011-e4bae7ad2296"
-    hash = "sha256-CGgZxTB4SerzJOlqpkzWPOqe4nwh2jn6iztAYJzlPdc="
+    version = "v0.0.0-20230525183740-e7c30c78aeb2"
+    hash = "sha256-IDQleFabPVMsuiCrYNPBNNDOvl+JrKQTrsmbZy4vtlA="
   [mod."golang.org/x/crypto"]
     version = "v0.1.0"
     hash = "sha256-0oZWBSiW5Pd/2a1p2beuoelDe0CpfXZhrg/qPduJlYs="
