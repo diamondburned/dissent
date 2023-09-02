@@ -119,80 +119,133 @@ var _ = cssutil.WriteCSS(`
 	}
 `)
 
+var messageAttachmentCSS = cssutil.Applier("message-attachment", `
+	.message-attachment-filename {
+		padding-left: 0.35em;
+		padding-right: 0.35em;
+	}
+	.message-attachment-filesize {
+		color: alpha(@theme_fg_color, 0.75);
+	}
+`)
+
 func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widgetter {
+	var mimeType string
 	if attachment.ContentType != "" {
-		typ := strings.SplitN(attachment.ContentType, "/", 2)[0]
-		if typ == "image" || typ == "video" {
-			// Make this attachment like an image embed.
-			opts := embed.Opts{}
+		mimeType, _, _ = strings.Cut(attachment.ContentType, "/")
+	}
 
-			switch {
-			case attachment.ContentType == "image/gif":
-				opts.Type = embed.EmbedTypeGIF
-			case typ == "image":
-				opts.Type = embed.EmbedTypeImage
-			case typ == "video":
-				opts.Type = embed.EmbedTypeVideo
-				// Use FFmpeg for video so we can get the thumbnail.
-				opts.Provider = imgutil.FFmpegProvider
+	switch mimeType {
+	case "image", "video":
+		// Make this attachment like an image embed.
+		opts := embed.Opts{}
+
+		switch {
+		case attachment.ContentType == "image/gif":
+			opts.Type = embed.EmbedTypeGIF
+		case mimeType == "image":
+			opts.Type = embed.EmbedTypeImage
+		case mimeType == "video":
+			opts.Type = embed.EmbedTypeVideo
+			// Use FFmpeg for video so we can get the thumbnail.
+			opts.Provider = imgutil.FFmpegProvider
+		}
+
+		name := fmt.Sprintf(
+			"%s (%s)",
+			attachment.Filename,
+			humanize.Bytes(attachment.Size),
+		)
+
+		image := embed.New(ctx, gtkcord.EmbedMaxWidth, gtkcord.EmbedImgHeight, opts)
+		image.SetLayoutManager(gtk.NewBinLayout())
+		image.AddCSSClass("message-richframe")
+		image.SetHAlign(gtk.AlignStart)
+		image.SetHExpand(false)
+		image.SetName(name)
+		image.SetOpenURL(func() {
+			switch opts.Type {
+			case embed.EmbedTypeVideo:
+				image.ActivateDefault()
+			default:
+				app.OpenURI(ctx, attachment.URL)
 			}
+		})
 
-			name := fmt.Sprintf(
-				"%s (%s)",
-				attachment.Filename,
-				humanize.Bytes(attachment.Size),
+		if attachment.Width > 0 && attachment.Height > 0 {
+			origW := int(attachment.Width)
+			origH := int(attachment.Height)
+
+			// Work around to prevent GTK from rendering the image at its
+			// original size, which tanks performance on Cairo renderers.
+			w, h := imgutil.MaxSize(
+				origW, origH,
+				gtkcord.EmbedMaxWidth, gtkcord.EmbedImgHeight,
 			)
 
-			image := embed.New(ctx, gtkcord.EmbedMaxWidth, gtkcord.EmbedImgHeight, opts)
-			image.SetLayoutManager(gtk.NewBinLayout())
-			image.AddCSSClass("message-richframe")
-			image.SetHAlign(gtk.AlignStart)
-			image.SetHExpand(false)
-			image.SetName(name)
-			image.SetOpenURL(func() {
-				switch opts.Type {
-				case embed.EmbedTypeVideo:
-					image.ActivateDefault()
-				default:
-					app.OpenURI(ctx, attachment.URL)
-				}
-			})
+			image.SetSizeRequest(w, h)
+			image.Thumbnail.SetSizeRequest(w, h)
+			if mimeType == "image" {
+				scale := gtkutil.ScaleFactor()
+				w *= scale
+				h *= scale
 
-			if attachment.Width > 0 && attachment.Height > 0 {
-				origW := int(attachment.Width)
-				origH := int(attachment.Height)
-
-				// Work around to prevent GTK from rendering the image at its
-				// original size, which tanks performance on Cairo renderers.
-				w, h := imgutil.MaxSize(
-					origW, origH,
-					gtkcord.EmbedMaxWidth, gtkcord.EmbedImgHeight,
-				)
-
-				image.SetSizeRequest(w, h)
-				image.Thumbnail.SetSizeRequest(w, h)
-				if typ == "image" {
-					scale := gtkutil.ScaleFactor()
-					w *= scale
-					h *= scale
-
-					image.SetFromURL(resizeURL(
-						attachment.URL,
-						attachment.Proxy,
-						w, h,
-					))
-				} else {
-					image.SetFromURL(attachment.Proxy)
-				}
+				image.SetFromURL(resizeURL(
+					attachment.URL,
+					attachment.Proxy,
+					w, h,
+				))
 			} else {
 				image.SetFromURL(attachment.Proxy)
 			}
-
-			return image
+		} else {
+			image.SetFromURL(attachment.Proxy)
 		}
-	}
 
-	return gtk.NewBox(gtk.OrientationVertical, 0)
+		return image
+	default:
+		icon := gtk.NewImageFromIconName(mimeIcon(mimeType))
+		icon.AddCSSClass("message-attachment-icon")
+		icon.SetIconSize(gtk.IconSizeNormal)
+
+		filename := gtk.NewLabel("")
+		filename.AddCSSClass("message-attachment-filename")
+		filename.SetMarkup(fmt.Sprintf(
+			`<a href="%s">%s</a>`,
+			attachment.URL,
+			html.EscapeString(attachment.Filename),
+		))
+		filename.SetEllipsize(pango.EllipsizeEnd)
+		filename.SetXAlign(0)
+
+		filesize := gtk.NewLabel(humanize.Bytes(attachment.Size))
+		filesize.AddCSSClass("message-attachment-filesize")
+		filesize.SetXAlign(0)
+
+		box := gtk.NewBox(gtk.OrientationHorizontal, 0)
+		box.SetTooltipText(attachment.Filename)
+		box.Append(icon)
+		box.Append(filename)
+		box.Append(filesize)
+		messageAttachmentCSS(box)
+
+		return box
+	}
+}
+
+func mimeIcon(mimePrefix string) string {
+	switch mimePrefix {
+	case "audio":
+		return "audio-x-generic-symbolic"
+	case "image":
+		return "image-x-generic-symbolic"
+	case "video":
+		return "video-x-generic-symbolic"
+	case "application":
+		return "application-x-executable-symbolic"
+	default:
+		return "text-x-generic-symbolic"
+	}
 }
 
 var normalEmbedCSS = cssutil.Applier("message-normalembed", `

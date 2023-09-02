@@ -42,6 +42,9 @@ var contentCSS = cssutil.Applier("message-content-box", `
 	.message-content-box {
 		margin-right: 4px;
 	}
+	.message-content-box > *:not(:first-child) {
+		margin-top: 4px;
+	}
 	.message-content-box .thumbnail-embed {
 		border-width: 0;
 		border-radius: 8px; /* stolen from Discord mobile */
