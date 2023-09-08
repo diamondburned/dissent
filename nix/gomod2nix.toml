@@ -29,8 +29,8 @@ schema = 3
     version = "v0.0.0-20230823074854-3658c907eb6b"
     hash = "sha256-Mppk2BMp6Qrc9bNlZmcORNRGaO8sUJDaZmRBLhjFRLo="
   [mod."github.com/diamondburned/ningen/v3"]
-    version = "v3.0.1-0.20230825235203-736ded6dc985"
-    hash = "sha256-aqz619Hs/v/ofnzSdu34pbsAu/0/NbYnYsTZBJnYnPk="
+    version = "v3.0.1-0.20230908225032-f3dbe02c7c8d"
+    hash = "sha256-rHaVhuQ68U1wHQ/kDJbzpGi0ZSamJlpE3ikK8XItaWg="
   [mod."github.com/dlclark/regexp2"]
     version = "v1.4.0"
     hash = "sha256-Pk/S2x2rX7xnGFLyoHEw09CoNQimvz/msdPRsxLaLsc="
@@ -72,8 +72,8 @@ schema = 3
     version = "v1.2.3"
     hash = "sha256-qj+AMOjdFRFoUj9KIKLIBd3DenicUtF2tBEWYZ5zyIY="
   [mod."github.com/yuin/goldmark"]
-    version = "v1.4.13"
-    hash = "sha256-GVwFKZY6moIS6I0ZGuio/WtDif+lkZRfqWS6b4AAJyI="
+    version = "v1.5.6"
+    hash = "sha256-+yAEKuRtXHX2THh3XMSG6UPcPPU0sSz5H5taH9Mx1Jc="
   [mod."github.com/zalando/go-keyring"]
     version = "v0.2.1"
     hash = "sha256-F4G03wV1GeLucqJIOXVN4htEETfGzIVAsBTU1iNLxlA="
