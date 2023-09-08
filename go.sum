@@ -47,6 +47,8 @@ github.com/diamondburned/gotkit v0.0.0-20230823074854-3658c907eb6b h1:EQC78Hu5w7
 github.com/diamondburned/gotkit v0.0.0-20230823074854-3658c907eb6b/go.mod h1:XIwMmOzQnBDStJKYDMjTDsAcFN47bd4Qas7xrQelfOg=
 github.com/diamondburned/ningen/v3 v3.0.1-0.20230825235203-736ded6dc985 h1:Fi1dBYMrNtlcjNMz93CZu/tYN3xuYp06nedh8U2lU7A=
 github.com/diamondburned/ningen/v3 v3.0.1-0.20230825235203-736ded6dc985/go.mod h1:y/5F3lEJgPhUe9MrBLN7U5PZ8qqDDdLb5N4KHnoLSKs=
+github.com/diamondburned/ningen/v3 v3.0.1-0.20230908225032-f3dbe02c7c8d h1:lvB4U0XaVnbnanCvEQoNhwwAsvI9fOWnHJQ+IMMyKoA=
+github.com/diamondburned/ningen/v3 v3.0.1-0.20230908225032-f3dbe02c7c8d/go.mod h1:PUr2nk5xo+A5hguLIe6qJzCFhTJxdN5/1i7Lr8iCWpQ=
 github.com/dlclark/regexp2 v1.4.0 h1:F1rxgk7p4uKjwIQxBs9oAXe5CqrXlCduYEJvrF4u93E=
 github.com/dlclark/regexp2 v1.4.0/go.mod h1:2pZnwuY/m+8K6iRw6wQdMtk+rH5tNGR1i55kozfMjCc=
 github.com/dustin/go-humanize v1.0.0 h1:VSnTsYCnlFHaM2/igO1h6X3HA71jcobQuxemgkq4zYo=
@@ -122,6 +124,8 @@ github.com/yalue/merged_fs v1.2.3 h1:lJ32O+ZiVF4h+4SD8e7IfG8+V2Em4LPcT3Z7h2n2TrY
 github.com/yalue/merged_fs v1.2.3/go.mod h1:WqqchfVYQyclV2tnR7wtRhBddzBvLVR83Cjw9BKQw0M=
 github.com/yuin/goldmark v1.4.13 h1:fVcFKWvrslecOb/tg+Cc05dkeYx540o0FuFt3nUVDoE=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
+github.com/yuin/goldmark v1.5.6 h1:COmQAWTCcGetChm3Ig7G/t8AFAN00t+o8Mt4cf7JpwA=
+github.com/yuin/goldmark v1.5.6/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 github.com/zalando/go-keyring v0.2.1 h1:MBRN/Z8H4U5wEKXiD67YbDAr5cj/DOStmSga70/2qKc=
 github.com/zalando/go-keyring v0.2.1/go.mod h1:g63M2PPn0w5vjmEbwAX3ib5I+41zdm4esSETOn9Y6Dw=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=
