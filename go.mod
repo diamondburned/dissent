@@ -2,15 +2,13 @@ module github.com/diamondburned/gtkcord4
 
 go 1.18
 
-replace github.com/leonelquinteros/gotext => github.com/diamondburned/gotext v0.0.0-20230529225615-4e200827134c
-
 require (
 	github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8
 	github.com/diamondburned/arikawa/v3 v3.3.1-0.20230609054540-4224b93c4e01
 	github.com/diamondburned/chatkit v0.0.0-20230904043742-66a46d3d2a92
 	github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20230307040502-bfe82926e1be
 	github.com/diamondburned/gotk4/pkg v0.0.6-0.20230825053034-ad325703aa2e
-	github.com/diamondburned/gotkit v0.0.0-20230823074854-3658c907eb6b
+	github.com/diamondburned/gotkit v0.0.0-20230924232942-13262cede8d5
 	github.com/diamondburned/ningen/v3 v3.0.1-0.20230908225032-f3dbe02c7c8d
 	github.com/dustin/go-humanize v1.0.0
 	github.com/enescakir/emoji v1.0.0
@@ -29,7 +27,7 @@ require (
 	github.com/gorilla/schema v1.2.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
-	github.com/leonelquinteros/gotext v1.5.3-0.20230509185024-db315c34509b // indirect
+	github.com/leonelquinteros/gotext v1.5.3-0.20230829162019-37f474cfb069 // indirect
 	github.com/twmb/murmur3 v1.1.3 // indirect
 	github.com/yalue/merged_fs v1.2.3 // indirect
 	github.com/zalando/go-keyring v0.2.1 // indirect
