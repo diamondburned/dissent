@@ -23,7 +23,7 @@ the binaries.
 
 ### Compiling
 
-You need the Go compiler that's 1.17 or newer for this step.
+You need Go 1.18+ for this step.
 
 To compile from scratch, run
 
