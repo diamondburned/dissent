@@ -30,6 +30,8 @@ import (
 	"github.com/diamondburned/gtkcord4/internal/colorhash"
 	"github.com/diamondburned/ningen/v3"
 	"github.com/diamondburned/ningen/v3/discordmd"
+
+	coreglib "github.com/diamondburned/gotk4/pkg/core/glib"
 )
 
 func init() {
@@ -195,10 +197,11 @@ func (s *State) BindWidget(w gtk.Widgetter, fn func(gateway.Event), filters ...g
 		eventTypes[i] = reflect.TypeOf(filter)
 	}
 
-	base := gtk.BaseWidget(w)
+	ref := coreglib.NewWeakRef(w)
 
 	var unbind func()
 	bind := func() {
+		w := ref.Get()
 		log.Printf("State: WidgetHandler: binding to %T...", w)
 
 		unbind = s.AddSyncHandler(func(ev gateway.Event) {
@@ -220,6 +223,7 @@ func (s *State) BindWidget(w gtk.Widgetter, fn func(gateway.Event), filters ...g
 		})
 	}
 
+	base := gtk.BaseWidget(w)
 	if base.Realized() {
 		bind()
 	}

@@ -122,23 +122,24 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 	v.List.AddCSSClass("message-list")
 	v.List.SetSelectionMode(gtk.SelectionNone)
 
+	v.Clamp = adw.NewClamp()
+	v.Clamp.SetChild(v.List)
+	v.Clamp.SetFocusChild(v.List)
+	v.Clamp.SetMaximumSize(messagesWidth.Value())
+	// Set tightening threshold to 90% of the clamp's width.
+	v.Clamp.SetTighteningThreshold(int(float64(messagesWidth.Value()) * 0.9))
+
 	v.Scroll = autoscroll.NewWindow()
 	v.Scroll.AddCSSClass("message-scroll")
-	v.Scroll.ScrollToBottom()
 	v.Scroll.SetVExpand(true)
 	v.Scroll.SetPolicy(gtk.PolicyNever, gtk.PolicyAutomatic)
-	v.Scroll.SetPropagateNaturalWidth(false)
+	v.Scroll.SetPropagateNaturalWidth(true)
 	v.Scroll.SetPropagateNaturalHeight(true)
 	v.Scroll.OnBottomed(v.onScrollBottomed)
+	v.Scroll.SetChild(v.Clamp)
 
 	vp := v.Scroll.Viewport()
-	vp.SetVScrollPolicy(gtk.ScrollNatural)
-	vp.SetHScrollPolicy(gtk.ScrollMinimum)
-	vp.SetChild(v.List)
-	vp.SetFocusChild(v.List)
 	vp.SetScrollToFocus(true)
-
-	v.Scroll.SetFocusChild(vp)
 	v.List.SetAdjustment(v.Scroll.VAdjustment())
 
 	v.Composer = composer.NewView(ctx, v, chID)
@@ -148,12 +149,6 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 	v.Box.Append(v.Scroll)
 	v.Box.Append(v.Composer)
 	v.Box.SetFocusChild(v.Composer)
-
-	v.Clamp = adw.NewClamp()
-	v.Clamp.SetChild(v.Box)
-	v.Clamp.SetMaximumSize(messagesWidth.Value())
-	// Set tightening threshold to 90% of the clamp's width.
-	v.Clamp.SetTighteningThreshold(int(float64(messagesWidth.Value()) * 0.9))
 
 	v.LoadablePage = adaptive.NewLoadablePage()
 	v.LoadablePage.SetTransitionDuration(125)
@@ -328,6 +323,7 @@ func (v *View) load() {
 
 		return func() {
 			v.setPageToMain()
+			v.Scroll.ScrollToBottom()
 
 			widgets := make([]Message, len(msgs))
 			for i, msg := range msgs {
@@ -377,7 +373,7 @@ func (v *View) load() {
 }
 
 func (v *View) setPageToMain() {
-	v.LoadablePage.SetChild(v.Clamp)
+	v.LoadablePage.SetChild(v.Box)
 }
 
 func (v *View) unload() {
@@ -628,15 +624,15 @@ func (v *View) SendMessage(msg composer.SendingMessage) {
 // ScrollToMessage scrolls to the message with the given ID. If the ID is
 // unknown, then false is returned.
 func (v *View) ScrollToMessage(id discord.MessageID) bool {
-	v.Scroll.GrabFocus()
-
 	msg, ok := v.msgs[messageKeyID(id)]
 	if !ok {
 		log.Println("cannot scroll to message", messageKeyID(id))
 		return false
 	}
 
-	msg.ListBoxRow.GrabFocus()
+	position := msg.ListBoxRow.Index()
+	v.List.ActivateAction("list.scroll-to-item", glib.NewVariantUint32(uint32(position)))
+
 	log.Println("scrolled to message", id)
 	return true
 }

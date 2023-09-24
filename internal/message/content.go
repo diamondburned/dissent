@@ -142,12 +142,15 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 	state := gtkcord.FromContext(c.ctx)
 
 	if m.Reference != nil {
-		header := gtk.NewLabel("<a href=\"#\">Replying to</a> ")
+		header := gtk.NewLabel("<a href=\"gtkcord4://reply\">Replying to</a> ")
 		header.AddCSSClass("message-reply-header")
 		header.SetUseMarkup(true)
-		header.ConnectActivateLink(func(string) bool {
-			c.view.ScrollToMessage(m.ID)
-			return true
+		header.ConnectActivateLink(func(link string) bool {
+			if link == "gtkcord4://reply" {
+				c.view.ScrollToMessage(m.ID)
+				return true
+			}
+			return false
 		})
 
 		topBox := gtk.NewBox(gtk.OrientationHorizontal, 0)
