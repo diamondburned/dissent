@@ -26,8 +26,8 @@ schema = 3
     version = "v0.0.6-0.20230825053034-ad325703aa2e"
     hash = "sha256-47LA2OAz5aWD9Yjv27yAlQxxlDfjByRvmyXapS6vy/8="
   [mod."github.com/diamondburned/gotkit"]
-    version = "v0.0.0-20230823074854-3658c907eb6b"
-    hash = "sha256-Mppk2BMp6Qrc9bNlZmcORNRGaO8sUJDaZmRBLhjFRLo="
+    version = "v0.0.0-20230924232942-13262cede8d5"
+    hash = "sha256-Sfc09okdSrIm8nKrGD+YXrkS9QnUrLKD7koiV867wi4="
   [mod."github.com/diamondburned/ningen/v3"]
     version = "v3.0.1-0.20230908225032-f3dbe02c7c8d"
     hash = "sha256-rHaVhuQ68U1wHQ/kDJbzpGi0ZSamJlpE3ikK8XItaWg="
@@ -56,9 +56,8 @@ schema = 3
     version = "v1.1.0"
     hash = "sha256-DJ0re9mGqZb6PROQI8NPC0JVyDHdZ/y4uehNH7MbczY="
   [mod."github.com/leonelquinteros/gotext"]
-    version = "v0.0.0-20230529225615-4e200827134c"
-    hash = "sha256-q0dy9A5YlfaA4tk/8h0sHMFgRuGIRgvmtWf6cpDSSrE="
-    replaced = "github.com/diamondburned/gotext"
+    version = "v1.5.3-0.20230829162019-37f474cfb069"
+    hash = "sha256-ylBa3NtdtkgqEAhsXdYBTyhUUSU7e5NpHfw6Wq7cwbU="
   [mod."github.com/pkg/errors"]
     version = "v0.9.1"
     hash = "sha256-mNfQtcrQmu3sNg/7IwiieKWOgFQOVVe2yXgKBpe/wZw="
