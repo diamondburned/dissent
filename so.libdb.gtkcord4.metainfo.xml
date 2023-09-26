@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>so.libdb.gtkcord4</id>
+
+  <name>gtkcord4</name>
+  <summary>GTK4 Discord client in Go</summary>
+
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>AGPL-3.0-only</project_license>
+
+  <description>
+    <p>
+      GTK4 Discord client in Go
+    </p>
+  </description>
+
+  <launchable type="desktop-id">so.libdb.gtkcord4.desktop</launchable>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/diamondburned/gtkcord4/v0.0.12/.github/screenshot4.png</image>
+    </screenshot>
+  </screenshots>
+
+  <content_rating type="oars-1.1">
+    <content_attribute id="social-chat">intense</content_attribute>
+    <content_attribute id="social-info">intense</content_attribute>
+    <content_attribute id="social-audio">intense</content_attribute>
+    <content_attribute id="social-contacts">intense</content_attribute>
+    <content_attribute id="money-purchasing">intense</content_attribute>
+  </content_rating>
+  <releases>
+    <release version="v0.0.12" date="2023-08-28">
+      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.12</url>
+    </release>
+    <release version="v0.0.11" date="2023-05-27">
+      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.11</url>
+    </release>
+    <release version="v0.0.10" date="2023-03-08">
+      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.10</url>
+    </release>
+    <release version="v0.0.9" date="2023-02-10">
+      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.9</url>
+    </release>
+    <release version="v0.0.8" date="2023-02-02">
+      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.8</url>
+    </release>
+    <release version="v0.0.7" date="2023-02-01">
+      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.7</url>
+    </release>
+    <release version="v0.0.6" date="2022-11-11">
+      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.6</url>
+    </release>
+  </releases>
+
+  <url type="homepage">https://github.com/diamondburned/gtkcord4</url>
+  <url type="bugtracker">https://github.com/diamondburned/gtkcord4/issues</url>
+</component>
