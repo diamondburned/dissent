@@ -24,8 +24,8 @@
 			path = ./xyz.diamondb.gtkcord4.desktop;
 		};
 		logo = {
-			name = "gtkcord4.png";
-			path = ../internal/icons/png/logo.png;
+			name = "gtkcord4.svg";
+			path = ../internal/icons/hicolor/scalable/apps/logo.svg;
 		};
 	};
 }
