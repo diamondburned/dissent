@@ -15,6 +15,7 @@ import (
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/diamondburned/gtkcord4/internal/window"
 	"github.com/diamondburned/gtkcord4/internal/window/about"
+	"github.com/diamondburned/gtkcord4/internal/icons"
 
 	_ "github.com/diamondburned/gotkit/gtkutil/aggressivegc"
 )
@@ -25,6 +26,8 @@ var po embed.FS
 func init() {
 	po, _ := fs.Sub(po, "po")
 	locale.LoadLocale(po)
+
+	icons.LoadResources()
 }
 
 var _ = cssutil.WriteCSS(`
