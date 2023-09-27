@@ -32,7 +32,7 @@ var dmButtonCSS = cssutil.Applier("sidebar-dm-button-overlay", `
 func NewButton(ctx context.Context, open func()) *Button {
 	b := Button{ctx: ctx}
 
-	icon := gtk.NewImageFromIconName("forum")
+	icon := gtk.NewImageFromIconName("chat-bubbles-empty-symbolic")
 	icon.SetIconSize(gtk.IconSizeLarge)
 	icon.SetPixelSize(int(math.Round(gtkcord.GuildIconSize * 0.85)))
 

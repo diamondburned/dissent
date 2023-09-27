@@ -87,7 +87,7 @@ var folderButtonCSS = cssutil.Applier("guild-folderbutton", `
 // NewFolderButton creates a new FolderButton.
 func NewFolderButton(ctx context.Context) *FolderButton {
 	b := FolderButton{ctx: ctx}
-	b.FolderIcon = gtk.NewImageFromIconName("folder-symbolic")
+	b.FolderIcon = gtk.NewImageFromIconName("folder-visiting-symbolic")
 	b.FolderIcon.SetPixelSize(FolderSize)
 
 	b.GuildGrid = gtk.NewGrid()
