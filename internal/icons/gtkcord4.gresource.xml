@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='utf-8'?>
+<gresources>
+  <gresource prefix="/xyz/diamondb/gtkcord4/icons/scalable/actions/">
+    <file preprocess="xml-stripblanks" alias="logo.svg">hicolor/scalable/apps/logo.svg</file>
+    <file preprocess="xml-stripblanks" alias="logo-nightly.svg">hicolor/scalable/apps/logo-nightly.svg</file>
+  </gresource>
+  <gresource prefix="/xyz/diamondb/gtkcord4/icons/scalable/actions/">
+    <file preprocess="xml-stripblanks" alias="chat-bubbles-empty-symbolic.svg">scalable/actions/chat-bubbles-empty-symbolic.svg</file>
+    <file preprocess="xml-stripblanks" alias="document-edit-symbolic.svg">scalable/actions/document-edit-symbolic.svg</file>
+    <file preprocess="xml-stripblanks" alias="edit-clear-all-symbolic.svg">scalable/actions/edit-clear-all-symbolic.svg</file>
+    <file preprocess="xml-stripblanks" alias="list-add-symbolic.svg">scalable/actions/list-add-symbolic.svg</file>
+    <file preprocess="xml-stripblanks" alias="mail-reply-sender-symbolic.svg">scalable/actions/mail-reply-sender-symbolic.svg</file>
+    <file preprocess="xml-stripblanks" alias="online-symbolic.svg">scalable/actions/online-symbolic.svg</file>
+    <file preprocess="xml-stripblanks" alias="paper-plane-symbolic.svg">scalable/actions/paper-plane-symbolic.svg</file>
+  </gresource>
+</gresources>
