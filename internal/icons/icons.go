@@ -14,7 +14,7 @@ import (
 //go:embed gtkcord4.gresource
 var Resources []byte
 
-func LoadResources() {
+func init() {
 	resources, err := gio.NewResourceFromData(glib.NewBytesWithGo(Resources))
 	if err != nil {
 		log.Panicln("Failed to create resources: ", err)
