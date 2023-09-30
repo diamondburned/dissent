@@ -349,6 +349,7 @@ func (v *View) upload() {
 		"Upload", "Cancel",
 	)
 	chooser.SetSelectMultiple(true)
+	chooser.SetModal(true)
 	chooser.ConnectResponse(func(resp int) {
 		if resp == int(gtk.ResponseAccept) {
 			v.addFiles(chooser.Files())
