@@ -141,7 +141,7 @@ var viewCSS = cssutil.Applier("composer-view", `
 `)
 
 const (
-	sendIcon   = "document-send-symbolic"
+	sendIcon   = "paper-plane-symbolic"
 	editIcon   = "document-edit-symbolic"
 	stopIcon   = "edit-clear-all-symbolic"
 	replyIcon  = "mail-reply-sender-symbolic"
@@ -206,6 +206,7 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 
 	v.sendButton = gtk.NewButtonFromIconName(sendIcon)
 	v.sendButton.AddCSSClass("composer-send")
+	v.sendButton.SetTooltipText("Send Message")
 	v.sendButton.SetHasFrame(false)
 	v.sendButton.ConnectClicked(v.send)
 
@@ -504,7 +505,7 @@ func (v *View) StartReplyingTo(msg *discord.Message) {
 
 	mentionToggle := gtk.NewToggleButton()
 	mentionToggle.AddCSSClass("composer-mention-toggle")
-	mentionToggle.SetIconName("alternate_email")
+	mentionToggle.SetIconName("online-symbolic")
 	mentionToggle.SetHasFrame(false)
 	mentionToggle.SetActive(true)
 	mentionToggle.SetHAlign(gtk.AlignCenter)

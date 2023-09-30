@@ -58,7 +58,8 @@ func newUserBar(ctx context.Context, menuActions []gtkutil.PopoverMenuItem) *use
 
 	b.menu = gtk.NewToggleButton()
 	b.menu.AddCSSClass("user-bar-menu")
-	b.menu.SetIconName("open-menu-symbolic")
+	b.menu.SetIconName("menu-large-symbolic")
+	b.menu.SetTooltipText("Main Menu")
 	b.menu.SetHasFrame(false)
 	b.menu.SetVAlign(gtk.AlignCenter)
 	b.menu.ConnectClicked(func() {

@@ -12,7 +12,6 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
-	"github.com/diamondburned/gtkcord4/internal/icons"
 	"github.com/diamondburned/gtkcord4/internal/message"
 	"github.com/diamondburned/gtkcord4/internal/sidebar"
 	"github.com/diamondburned/gtkcord4/internal/window/backbutton"
@@ -144,10 +143,8 @@ func NewChatPage(ctx context.Context) *ChatPage {
 
 func newEmptyMessagePlaceholer() gtk.Widgetter {
 	status := adaptive.NewStatusPage()
+	status.SetIconName("chat-bubbles-empty-symbolic")
 	status.Icon.SetOpacity(0.45)
-	status.Icon.SetSizeRequest(128, 128)
-	status.Icon.SetFromPixbuf(icons.Pixbuf("forum"))
-	status.Icon.Show()
 
 	return status
 }

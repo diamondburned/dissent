@@ -9,7 +9,6 @@ import (
 
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/app"
-	"github.com/diamondburned/gtkcord4/internal/icons"
 )
 
 // New creates a new about window.
@@ -18,8 +17,8 @@ func New(ctx context.Context) *gtk.AboutDialog {
 	about.SetTransientFor(app.GTKWindowFromContext(ctx))
 	about.SetModal(true)
 	about.SetProgramName("gtkcord4")
-	about.SetLogo(icons.Paintable("logo.png"))
-	about.SetVersion("git") // TODO version
+	about.SetLogoIconName("logo")
+	about.SetVersion("git") // TODO: version
 	about.SetWebsite("https://libdb.so/gtkcord4")
 	about.SetLicenseType(gtk.LicenseGPL30)
 
@@ -44,7 +43,7 @@ func New(ctx context.Context) *gtk.AboutDialog {
 
 		if strings.HasSuffix(version, "(dirty)") {
 			about.AddCSSClass("devel")
-			about.SetLogo(icons.Paintable("logo_nightly.png"))
+			about.SetLogoIconName("logo-nightly")
 		}
 	}
 

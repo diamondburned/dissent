@@ -6,7 +6,7 @@ import (
 )
 
 // BackButtonIcon is the default icon name for a fold reveal button.
-const BackButtonIcon = "open-menu"
+const BackButtonIcon = "sidebar-show-symbolic"
 
 // BackButton is a button that toggles whether or not the fold's sidebar
 // should be revealed.

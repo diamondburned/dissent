@@ -15,6 +15,7 @@ import (
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/diamondburned/gtkcord4/internal/window"
 	"github.com/diamondburned/gtkcord4/internal/window/about"
+	_ "github.com/diamondburned/gtkcord4/internal/icons"
 
 	_ "github.com/diamondburned/gotkit/gtkutil/aggressivegc"
 )
