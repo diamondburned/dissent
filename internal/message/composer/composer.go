@@ -111,13 +111,8 @@ type View struct {
 }
 
 var viewCSS = cssutil.Applier("composer-view", `
-	.composer-action {
-		border:  none;
-		margin:  0;
-		padding: 6px;
-	}
 	.composer-left-actions {
-		margin:  0 11px;
+		margin: 0 4px 0 11px;
 	}
 	.composer-left-actions > *:not(:first-child) {
 		margin-right: 4px;
@@ -126,15 +121,11 @@ var viewCSS = cssutil.Applier("composer-view", `
 		background-color: alpha(@accent_color, 0.25);
 		color: @accent_color;
 	}
+	.composer-right-actions {
+		margin: 0 11px 0 0;
+	}
 	.composer-right-actions > *:not(:first-child) {
 		margin-left: 4px;
-	}
-	.composer-send {
-		margin:  0px;
-		padding: 0px 10px;
-		border-radius: 0;
-		min-height: 0;
-		min-width:  0;
 	}
 	.composer-placeholder {
 		padding: 16px 2px;
@@ -219,6 +210,7 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 
 	v.sendButton = gtk.NewButtonFromIconName(sendIcon)
 	v.sendButton.AddCSSClass("composer-send")
+	v.sendButton.SetVAlign(gtk.AlignCenter)
 	v.sendButton.SetTooltipText("Send Message")
 	v.sendButton.SetHasFrame(false)
 	v.sendButton.ConnectClicked(v.send)
