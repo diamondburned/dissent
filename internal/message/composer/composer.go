@@ -163,7 +163,7 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 	scroll := gtk.NewScrolledWindow()
 	scroll.SetPolicy(gtk.PolicyNever, gtk.PolicyAutomatic)
 	scroll.SetPropagateNaturalHeight(true)
-	scroll.SetMaxContentHeight(500)
+	scroll.SetMaxContentHeight(100)
 	scroll.SetChild(v.Input)
 
 	v.Placeholder = gtk.NewLabel("")
