@@ -87,13 +87,15 @@ type View struct {
 	Input       *Input
 	Placeholder *gtk.Label
 	UploadTray  *UploadTray
+	EmojiChooser *gtk.EmojiChooser
 
 	ctx  context.Context
 	ctrl Controller
 	chID discord.ChannelID
 
-	rightBox   *gtk.Box
-	sendButton *gtk.Button
+	rightBox    *gtk.Box
+	emojiButton *gtk.MenuButton
+	sendButton  *gtk.Button
 
 	leftBox      *gtk.Box
 	uploadButton *gtk.Button
@@ -109,13 +111,8 @@ type View struct {
 }
 
 var viewCSS = cssutil.Applier("composer-view", `
-	.composer-action {
-		border:  none;
-		margin:  0;
-		padding: 6px;
-	}
 	.composer-left-actions {
-		margin:  0 11px;
+		margin: 0 4px 0 11px;
 	}
 	.composer-left-actions > *:not(:first-child) {
 		margin-right: 4px;
@@ -124,15 +121,11 @@ var viewCSS = cssutil.Applier("composer-view", `
 		background-color: alpha(@accent_color, 0.25);
 		color: @accent_color;
 	}
+	.composer-right-actions {
+		margin: 0 11px 0 0;
+	}
 	.composer-right-actions > *:not(:first-child) {
 		margin-left: 4px;
-	}
-	.composer-send {
-		margin:  0px;
-		padding: 0px 10px;
-		border-radius: 0;
-		min-height: 0;
-		min-width:  0;
 	}
 	.composer-placeholder {
 		padding: 16px 2px;
@@ -142,6 +135,7 @@ var viewCSS = cssutil.Applier("composer-view", `
 
 const (
 	sendIcon   = "paper-plane-symbolic"
+	emojiIcon = "sentiment-satisfied-symbolic"
 	editIcon   = "document-edit-symbolic"
 	stopIcon   = "edit-clear-all-symbolic"
 	replyIcon  = "mail-reply-sender-symbolic"
@@ -160,7 +154,7 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 	scroll := gtk.NewScrolledWindow()
 	scroll.SetPolicy(gtk.PolicyNever, gtk.PolicyAutomatic)
 	scroll.SetPropagateNaturalHeight(true)
-	scroll.SetMaxContentHeight(500)
+	scroll.SetMaxContentHeight(100)
 	scroll.SetChild(v.Input)
 
 	v.Placeholder = gtk.NewLabel("")
@@ -204,8 +198,19 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 	v.leftBox = gtk.NewBox(gtk.OrientationHorizontal, 0)
 	v.leftBox.AddCSSClass("composer-left-actions")
 
+	v.EmojiChooser = gtk.NewEmojiChooser()
+	v.EmojiChooser.ConnectEmojiPicked(func(emoji string) { v.insertEmoji(emoji) })
+
+	v.emojiButton = gtk.NewMenuButton()
+	v.emojiButton.SetIconName(emojiIcon)
+	v.emojiButton.AddCSSClass("flat")
+	v.emojiButton.SetVAlign(gtk.AlignCenter)
+	v.emojiButton.SetTooltipText("Choose Emoji")
+	v.emojiButton.SetPopover(v.EmojiChooser)
+
 	v.sendButton = gtk.NewButtonFromIconName(sendIcon)
 	v.sendButton.AddCSSClass("composer-send")
+	v.sendButton.SetVAlign(gtk.AlignCenter)
 	v.sendButton.SetTooltipText("Send Message")
 	v.sendButton.SetHasFrame(false)
 	v.sendButton.ConnectClicked(v.send)
@@ -337,7 +342,7 @@ func (v *View) setActions(actions actions) {
 func (v *View) resetAction() {
 	v.setActions(actions{
 		left:  []actionButton{existingActionButton{v.uploadButton}},
-		right: []actionButton{existingActionButton{v.sendButton}},
+		right: []actionButton{existingActionButton{v.emojiButton}, existingActionButton{v.sendButton}},
 	})
 }
 
@@ -404,6 +409,11 @@ func (v *View) commit() (string, []File) {
 	files := v.UploadTray.Clear()
 
 	return text, files
+}
+
+func (v *View) insertEmoji(emoji string) {
+	endIter := v.Input.Buffer.EndIter()
+	v.Input.Buffer.Insert(endIter, emoji)
 }
 
 func (v *View) send() {
@@ -524,6 +534,7 @@ func (v *View) StartReplyingTo(msg *discord.Message) {
 			existingActionButton{v.uploadButton},
 		},
 		right: []actionButton{
+			existingActionButton{v.emojiButton},
 			existingActionButton{mentionToggle},
 			actionButtonData{
 				Name: "Reply",
