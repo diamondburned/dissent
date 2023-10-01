@@ -1,6 +1,6 @@
 <div align="center">
 
-![Logo](./internal/icons/svg/logo.svg)
+![Logo](./internal/icons/hicolor/scalable/apps/logo.svg)
 
 # gtkcord4
 
