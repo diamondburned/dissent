@@ -212,7 +212,7 @@ func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widg
 		filename.AddCSSClass("message-attachment-filename")
 		filename.SetMarkup(fmt.Sprintf(
 			`<a href="%s">%s</a>`,
-			attachment.URL,
+			html.EscapeString(attachment.URL),
 			html.EscapeString(attachment.Filename),
 		))
 		filename.SetEllipsize(pango.EllipsizeEnd)
