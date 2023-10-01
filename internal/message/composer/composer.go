@@ -541,6 +541,7 @@ func (v *View) StartReplyingTo(msg *discord.Message) {
 			existingActionButton{v.uploadButton},
 		},
 		right: []actionButton{
+			existingActionButton{v.emojiButton},
 			existingActionButton{mentionToggle},
 			actionButtonData{
 				Name: "Reply",
