@@ -637,6 +637,16 @@ func (v *View) ScrollToMessage(id discord.MessageID) bool {
 	return true
 }
 
+// AddReaction adds an reaction to the message with the given ID.
+func (v *View) AddReaction(id discord.MessageID, emoji discord.APIEmoji) {
+	state := gtkcord.FromContext(v.ctx)
+
+	error := state.React(v.chID, id, emoji)
+	if error != nil {
+		log.Println(error)
+	}
+}
+
 // ReplyTo starts replying to the message with the given ID.
 func (v *View) ReplyTo(id discord.MessageID) {
 	v.stopEditingOrReplying()

@@ -27,6 +27,7 @@ type ExtraMenuSetter interface {
 	SetExtraMenu(gio.MenuModeller)
 }
 
+// TODO: Implement BlockedMessage widget
 // Message describes a Message widget.
 type Message interface {
 	gtk.Widgetter
@@ -111,6 +112,7 @@ func (m *message) bind(parent gtk.Widgetter) *gio.Menu {
 
 	state := gtkcord.FromContext(m.ctx())
 	me, _ := state.Cabinet.Me()
+	channel, _ := state.Cabinet.Channel(m.message.ChannelID)
 
 	if me != nil && m.message.Author.ID == me.ID {
 		actions["message.edit"] = func() { m.view().Edit(m.message.ID) }
@@ -121,7 +123,16 @@ func (m *message) bind(parent gtk.Widgetter) *gio.Menu {
 		actions["message.delete"] = func() { m.view().Delete(m.message.ID) }
 	}
 
+	if channel != nil && (channel.Type == discord.DirectMessage || channel.Type == discord.GroupDM) {
+		actions["message.add-reaction"] = func() { m.ShowEmojiChooser() }
+	}
+
+	if state.HasPermissions(m.message.ChannelID, discord.PermissionAddReactions) {
+		actions["message.add-reaction"] = func() { m.ShowEmojiChooser() }
+	}
+
 	menuItems := []gtkutil.PopoverMenuItem{
+		menuItemIfOK(actions, "Add _Reaction", "message.add-reaction"),
 		menuItemIfOK(actions, "_Reply", "message.reply"),
 		menuItemIfOK(actions, "_Edit", "message.edit"),
 		menuItemIfOK(actions, "_Delete", "message.delete"),
@@ -148,6 +159,21 @@ var sourceCSS = cssutil.Applier("message-source", `
 		font-family: monospace;
 	}
 `)
+
+// ShowEmojiChooser opens a Gtk.EmojiChooser popover.
+func (m *message) ShowEmojiChooser() {
+	e := gtk.NewEmojiChooser()
+	e.SetParent(m.content)
+	e.SetHasArrow(false)
+
+	e.ConnectEmojiPicked(func(text string) {
+		emoji := discord.APIEmoji(text)
+		m.view().AddReaction(m.content.msgID, emoji)
+	})
+
+	e.Present()
+	e.Popup()
+}
 
 // ShowSource opens a JSON showing the message JSON.
 func (m *message) ShowSource() {
