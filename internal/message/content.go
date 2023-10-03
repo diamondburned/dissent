@@ -27,12 +27,13 @@ import (
 // Content is the message content widget.
 type Content struct {
 	*gtk.Box
-	ctx    context.Context
-	view   *View
-	menu   *gio.Menu
-	mdview *mdrender.MarkdownViewer
-	react  *contentReactions
-	child  []gtk.Widgetter
+	ctx     context.Context
+	view    *View
+	menu    *gio.Menu
+	spoiler *spoiler
+	mdview  *mdrender.MarkdownViewer
+	react   *contentReactions
+	child   []gtk.Widgetter
 
 	chID  discord.ChannelID
 	msgID discord.MessageID
@@ -94,6 +95,12 @@ func (c *Content) SetExtraMenu(menu gio.MenuModeller) {
 	if c.mdview != nil {
 		c.setMenu()
 	}
+}
+
+// SetSpoiler implements Spoiler.
+func (c *Content) SetSpoiler() {
+	spoiler := newSpoiler(c.ctx)
+	c.spoiler = spoiler
 }
 
 type extraMenuSetter interface{ SetExtraMenu(gio.MenuModeller) }
@@ -275,6 +282,11 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 		l.SetWrapMode(pango.WrapWordChar)
 		c.append(l)
 
+	// We render an spoiler overlay if the content is inside of a spoiler
+	case m.Content != "" && strings.HasPrefix(m.Content, "||") && strings.HasSuffix(m.Content, "||"):
+		c.SetSpoiler()
+		fallthrough
+
 	// We don't render the message content if all it is is the URL to the
 	// embedded image, because that's what the official client does.
 	case m.Content != "" &&
@@ -284,7 +296,13 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 		node := discordmd.ParseWithMessage(src, *state.Cabinet, m, true)
 
 		c.mdview = mdrender.NewMarkdownViewer(c.ctx, src, node, renderers...)
-		c.append(c.mdview)
+
+		if c.spoiler != nil {
+			c.spoiler.SetChild(c.mdview)
+			c.append(c.spoiler)
+		} else {
+			c.append(c.mdview)
+		}
 	}
 
 	for i := range m.Stickers {
