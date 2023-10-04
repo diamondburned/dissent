@@ -20,7 +20,7 @@ const memberCacheExpiry = 5 * time.Second
 
 type members []discord.Member
 
-func (m members) String(i int) string { return m[i].Nick + m[i].User.Tag() }
+func (m members) String(i int) string { return m[i].Nick + m[i].User.DisplayName + m[i].User.Tag() }
 func (m members) Len() int            { return len(m) }
 
 type memberCompleter struct {
