@@ -44,7 +44,7 @@ var _ = cssutil.WriteCSS(`
 
 func main() {
 	m := manager{}
-	m.app = app.New(context.Background(), "xyz.diamondb.gtkcord4", "gtkcord4")
+	m.app = app.New(context.Background(), "so.libdb.gtkcord4", "gtkcord4")
 	m.app.AddJSONActions(map[string]interface{}{
 		"app.open-channel": m.openChannel,
 		"app.preferences":  func() { prefui.ShowDialog(m.win.Context()) },

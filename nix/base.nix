@@ -20,8 +20,8 @@
 
 	files = {
 		desktop = {
-			name = "xyz.diamondb.gtkcord4.desktop";
-			path = ./xyz.diamondb.gtkcord4.desktop;
+			name = "so.libdb.gtkcord4.desktop";
+			path = ./so.libdb.gtkcord4.desktop;
 		};
 		logo = {
 			name = "gtkcord4.svg";
