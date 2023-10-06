@@ -641,9 +641,11 @@ func (v *View) ScrollToMessage(id discord.MessageID) bool {
 func (v *View) AddReaction(id discord.MessageID, emoji discord.APIEmoji) {
 	state := gtkcord.FromContext(v.ctx)
 
+	emoji = discord.APIEmoji(gtkcord.SanitizeEmoji(string(emoji)))
+
 	error := state.React(v.chID, id, emoji)
 	if error != nil {
-		log.Println(error)
+		log.Println("Failed to react:", error)
 	}
 }
 
