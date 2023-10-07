@@ -119,7 +119,7 @@ func (m *message) bind(parent gtk.Widgetter) *gio.Menu {
 		actions["message.delete"] = func() { m.view().Delete(m.message.ID) }
 	}
 
-	if state.HasPermissions(m.message.ChannelID, discord.PermissionManageMessages) {
+	if state.Offline().HasPermissions(m.message.ChannelID, discord.PermissionManageMessages) {
 		actions["message.delete"] = func() { m.view().Delete(m.message.ID) }
 	}
 
@@ -127,7 +127,7 @@ func (m *message) bind(parent gtk.Widgetter) *gio.Menu {
 		actions["message.add-reaction"] = func() { m.ShowEmojiChooser() }
 	}
 
-	if state.HasPermissions(m.message.ChannelID, discord.PermissionAddReactions) {
+	if state.Offline().HasPermissions(m.message.ChannelID, discord.PermissionAddReactions) {
 		actions["message.add-reaction"] = func() { m.ShowEmojiChooser() }
 	}
 
