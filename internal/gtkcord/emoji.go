@@ -9,7 +9,7 @@ func SanitizeEmoji(emoji string) string {
 	// Flags from \u1f1e6 to \u1f1ff
 	if runesAmount == 3 {
 		if (emojiRune[0] >= 127462) && (emojiRune[0] <= 127487) {
-			if (emojiRune[1] >= 127464) && (emojiRune[1] >= 127484) {
+			if (emojiRune[1] >= 127464) && (emojiRune[1] <= 127484) {
 				return string(emojiRune[:runesAmount-1])
 			}
 		}
