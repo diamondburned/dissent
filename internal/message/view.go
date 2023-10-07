@@ -643,10 +643,11 @@ func (v *View) AddReaction(id discord.MessageID, emoji discord.APIEmoji) {
 
 	emoji = discord.APIEmoji(gtkcord.SanitizeEmoji(string(emoji)))
 
-	error := state.React(v.chID, id, emoji)
-	if error != nil {
-		log.Println("Failed to react:", error)
-	}
+	go func() {
+		if error := state.React(v.chID, id, emoji); error != nil {
+			app.Error(state.Context(), errors.Wrap(error, "Failed to react:"))
+		}
+	}()
 }
 
 // ReplyTo starts replying to the message with the given ID.
