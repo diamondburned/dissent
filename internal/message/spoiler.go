@@ -9,7 +9,7 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 )
 
-type spoiler struct {
+type Spoiler struct {
 	*gtk.Overlay
 	ctx context.Context
 }
@@ -20,8 +20,8 @@ var spoilerCSS = cssutil.Applier("message-spoiler", `
 	}
 `)
 
-func newSpoiler(ctx context.Context) *spoiler {
-	s := spoiler{
+func NewSpoiler(ctx context.Context) *Spoiler {
+	s := Spoiler{
 		ctx: ctx,
 	}
 

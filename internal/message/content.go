@@ -30,7 +30,7 @@ type Content struct {
 	ctx     context.Context
 	view    *View
 	menu    *gio.Menu
-	spoiler *spoiler
+	spoiler *Spoiler
 	mdview  *mdrender.MarkdownViewer
 	react   *contentReactions
 	child   []gtk.Widgetter
@@ -99,7 +99,7 @@ func (c *Content) SetExtraMenu(menu gio.MenuModeller) {
 
 // SetSpoiler implements Spoiler.
 func (c *Content) SetSpoiler() {
-	spoiler := newSpoiler(c.ctx)
+	spoiler := NewSpoiler(c.ctx)
 	c.spoiler = spoiler
 }
 
