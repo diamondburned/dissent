@@ -26,7 +26,7 @@ func New(ctx context.Context) *adw.AboutWindow {
 
 	about.SetDevelopers([]string{
 		"diamondburned",
-		"Gtkcord4 contributors",
+		"gtkcord4 contributors",
 	})
 
 	about.AddCreditSection("Sound Files", []string{
