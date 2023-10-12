@@ -9,6 +9,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/chatkit/md/hl"
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
@@ -177,10 +178,14 @@ func (m *message) ShowEmojiChooser() {
 
 // ShowSource opens a JSON showing the message JSON.
 func (m *message) ShowSource() {
-	d := gtk.NewDialog()
+	d := adw.NewWindow()
+	d.SetTitle(locale.Get("View Source"))
 	d.SetTransientFor(app.GTKWindowFromContext(m.ctx()))
 	d.SetModal(true)
-	d.SetDefaultSize(400, 300)
+	d.SetDefaultSize(500, 300)
+
+	h := adw.NewHeaderBar()
+	h.SetCenteringPolicy(adw.CenteringPolicyStrict)
 
 	buf := gtk.NewTextBuffer(nil)
 
@@ -204,8 +209,20 @@ func (m *message) ShowSource() {
 	s.SetPolicy(gtk.PolicyNever, gtk.PolicyAutomatic)
 	s.SetChild(t)
 
-	box := d.ContentArea()
+	copyBtn := gtk.NewButtonFromIconName("edit-copy-symbolic")
+	copyBtn.SetTooltipText(locale.Get("Copy JSON"))
+	copyBtn.ConnectClicked(func() {
+		clipboard := m.view().Clipboard()
+		sourceText := buf.Text(buf.StartIter(), buf.EndIter(), false)
+		clipboard.SetText(sourceText)
+	})
+	h.PackStart(copyBtn)
+
+	box := gtk.NewBox(gtk.OrientationVertical, 0)
+	box.Append(h)
 	box.Append(s)
+
+	d.SetContent(box)
 
 	d.Show()
 }
