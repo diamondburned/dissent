@@ -7,43 +7,45 @@ import (
 	"runtime/debug"
 	"strings"
 
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/app"
 )
 
 // New creates a new about window.
-func New(ctx context.Context) *gtk.AboutDialog {
-	about := gtk.NewAboutDialog()
+func New(ctx context.Context) *adw.AboutWindow {
+	about := adw.NewAboutWindow()
 	about.SetTransientFor(app.GTKWindowFromContext(ctx))
 	about.SetModal(true)
-	about.SetProgramName("gtkcord4")
-	about.SetLogoIconName("logo")
+	about.SetApplicationName("gtkcord4")
+	about.SetApplicationIcon("logo")
 	about.SetVersion("git") // TODO: version
 	about.SetWebsite("https://libdb.so/gtkcord4")
+	about.SetCopyright("© 2023 diamondburned and contributors")
 	about.SetLicenseType(gtk.LicenseGPL30)
 
-	about.SetAuthors([]string{
+	about.SetDevelopers([]string{
 		"diamondburned",
 		"gtkcord4 contributors",
 	})
 
 	about.AddCreditSection("Sound Files", []string{
-		// https://directory.fsf.org/wiki/Sound-theme-freedesktop
-		"freedesktop.org",
+		"freedesktop.org https://www.freedesktop.org/wiki/",
 		"Lennart Poettering",
 	})
 
 	build, ok := debug.ReadBuildInfo()
 	if ok {
 		about.AddCreditSection("Dependency Authors", modAuthors(build.Deps))
-		about.SetSystemInformation(build.String())
+		about.SetDebugInfo(build.String())
+		about.SetDebugInfoFilename("gtkcord4-debuginfo")
 
 		version := buildVersion(build.Settings)
 		about.SetVersion(version)
 
 		if strings.HasSuffix(version, "(dirty)") {
 			about.AddCSSClass("devel")
-			about.SetLogoIconName("logo-nightly")
+			about.SetApplicationIcon("logo-nightly")
 		}
 	}
 
