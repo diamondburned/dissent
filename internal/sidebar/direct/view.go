@@ -57,7 +57,7 @@ func NewChannelView(ctx context.Context, ctrl Opener) *ChannelView {
 	}
 
 	v.list = gtk.NewListBox()
-	v.list.AddCSSClass("direct-list")
+	v.list.SetCSSClasses([]string{"direct-list", "navigation-sidebar"})
 	v.list.SetHExpand(true)
 	v.list.SetSortFunc(v.sort)
 	v.list.SetFilterFunc(v.filter)
