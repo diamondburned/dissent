@@ -28,6 +28,22 @@ var messagesWidth = prefs.NewInt(800, prefs.IntMeta{
 	Max:         12000,
 })
 
+var maxEmbedWidth = prefs.NewInt(gtkcord.EmbedMaxWidth, prefs.IntMeta{
+	Name:        "Max Embed Width",
+	Section:     "Messages",
+	Description: "The maximum width of an embed or image. May impact minimum window width.",
+	Min:         100,
+	Max:         2000,
+})
+
+var maxImageHeight = prefs.NewInt(gtkcord.EmbedImgHeight, prefs.IntMeta{
+	Name:        "Max Image Height",
+	Section:     "Messages",
+	Description: "The maximum height of an image.",
+	Min:         100,
+	Max:         2000,
+})
+
 func init() {
 	prefs.RegisterProp((*blockedUsersPrefs)(nil))
 	prefs.Order((*blockedUsersPrefs)(nil), showBlockedMessages)

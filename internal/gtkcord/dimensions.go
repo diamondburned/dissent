@@ -40,8 +40,6 @@ func init() {
 		"guild_icon_size":      px(GuildIconSize),
 		"channel_icon_size":    px(ChannelIconSize),
 		"message_avatar_size":  px(MessageAvatarSize),
-		"embed_max_width":      px(EmbedMaxWidth),
-		"embed_img_height":     px(EmbedImgHeight),
 		"inline_emoji_size":    px(InlineEmojiSize),
 		"large_emoji_size":     px(LargeEmojiSize),
 		"sticker_size":         px(StickerSize),

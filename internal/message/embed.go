@@ -157,7 +157,7 @@ func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widg
 			humanize.Bytes(attachment.Size),
 		)
 
-		image := embed.New(ctx, gtkcord.EmbedMaxWidth, gtkcord.EmbedImgHeight, opts)
+		image := embed.New(ctx, maxEmbedWidth.Value(), maxImageHeight.Value(), opts)
 		image.SetLayoutManager(gtk.NewBinLayout())
 		image.AddCSSClass("message-richframe")
 		image.SetHAlign(gtk.AlignStart)
@@ -180,7 +180,7 @@ func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widg
 			// original size, which tanks performance on Cairo renderers.
 			w, h := imgutil.MaxSize(
 				origW, origH,
-				gtkcord.EmbedMaxWidth, gtkcord.EmbedImgHeight,
+				maxEmbedWidth.Value(), maxImageHeight.Value(),
 			)
 
 			image.SetSizeRequest(w, h)
@@ -460,8 +460,8 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 		maxW := 80
 		maxH := 80
 		if big {
-			maxW = gtkcord.EmbedMaxWidth
-			maxH = gtkcord.EmbedImgHeight
+			maxW = maxEmbedWidth.Value()
+			maxH = maxImageHeight.Value()
 		}
 
 		var opts embed.Opts
@@ -545,7 +545,7 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 			opts.Provider = imgutil.FFmpegProvider
 		}
 
-		image := embed.New(ctx, gtkcord.EmbedMaxWidth, gtkcord.EmbedImgHeight, opts)
+		image := embed.New(ctx, maxEmbedWidth.Value(), maxImageHeight.Value(), opts)
 		image.SetSizeRequest(int(img.Width), int(img.Height))
 		image.SetOpenURL(func() { app.OpenURI(ctx, msgEmbed.URL) })
 
