@@ -17,7 +17,7 @@
   <launchable type="desktop-id">so.libdb.gtkcord4.desktop</launchable>
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/diamondburned/gtkcord4/v0.0.12/.github/screenshot4.png</image>
+      <image>https://raw.githubusercontent.com/diamondburned/gtkcord4/v0.0.14/.github/screenshot4.png</image>
     </screenshot>
   </screenshots>
 
@@ -29,6 +29,12 @@
     <content_attribute id="money-purchasing">intense</content_attribute>
   </content_rating>
   <releases>
+    <release version="v0.0.14" date="2023-10-07">
+      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.14</url>
+    </release>
+    <release version="v0.0.13" date="2023-10-04">
+      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.13</url>
+    </release>
     <release version="v0.0.12" date="2023-08-28">
       <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.12</url>
     </release>
