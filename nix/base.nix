@@ -23,6 +23,10 @@
 			name = "so.libdb.gtkcord4.desktop";
 			path = ./so.libdb.gtkcord4.desktop;
 		};
+		service = {
+			name = "so.libdb.gtkcord4.service";
+			path = ./so.libdb.gtkcord4.service;
+		};
 		logo = {
 			name = "gtkcord4.svg";
 			path = ../internal/icons/hicolor/scalable/apps/logo.svg;
