@@ -26,7 +26,6 @@ let
 in import "${src-gotk4-nix}/${action}.nix" (args // {
 	base = base;
 	pkgs = import "${src-gotk4-nix}/pkgs.nix" {
-		sourceNixpkgs = src.nixpkgs;
 		useFetched = true;
 		usePatchedGo = usePatchedGo;
 		overlays = [
