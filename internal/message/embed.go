@@ -100,7 +100,7 @@ func newSticker(ctx context.Context, sticker *discord.StickerItem) gtk.Widgetter
 		image.SetHAlign(gtk.AlignStart)
 		image.SetSizeRequest(gtkcord.StickerSize, gtkcord.StickerSize)
 		image.SetFromURL(url)
-		image.SetOpenURL(func() { app.OpenURI(ctx, url) })
+		image.SetOpenURL(func() { app.OpenURI(ctx, url) })  // TODO: Add sticker info popover
 		stickerCSS(image)
 		return image
 	default:
@@ -163,13 +163,9 @@ func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widg
 		image.SetHAlign(gtk.AlignStart)
 		image.SetHExpand(false)
 		image.SetName(name)
+
 		image.SetOpenURL(func() {
-			switch opts.Type {
-			case embed.EmbedTypeVideo:
-				image.ActivateDefault()
-			default:
-				app.OpenURI(ctx, attachment.URL)
-			}
+			openViewer(ctx, attachment.URL, opts)
 		})
 
 		if attachment.Width > 0 && attachment.Height > 0 {
@@ -503,7 +499,7 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 			// Open the Image proxy instead of the Thumbnail proxy. Honestly
 			// have no idea what the difference is.
 			image.SetOpenURL(func() {
-				app.OpenURI(ctx, msgEmbed.Image.Proxy)
+				openViewer(ctx, msgEmbed.Image.Proxy, opts)
 			})
 		case msgEmbed.Video != nil:
 			image.SetOpenURL(func() {
@@ -517,7 +513,7 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 			})
 		default:
 			image.SetOpenURL(func() {
-				app.OpenURI(ctx, msgEmbed.Thumbnail.Proxy)
+				openViewer(ctx, msgEmbed.Thumbnail.Proxy, opts)
 			})
 		}
 
@@ -547,7 +543,10 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 
 		image := embed.New(ctx, maxEmbedWidth.Value(), maxImageHeight.Value(), opts)
 		image.SetSizeRequest(int(img.Width), int(img.Height))
-		image.SetOpenURL(func() { app.OpenURI(ctx, msgEmbed.URL) })
+
+		image.SetOpenURL(func() {
+			openViewer(ctx, msgEmbed.URL, opts)
+		})
 
 		if msgEmbed.Image != nil {
 			// The server can only resize images.
@@ -566,6 +565,16 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 
 	embedBox.AddCSSClass("message-richframe")
 	return embedBox
+}
+
+func openViewer(ctx context.Context, uri string, opts embed.Opts) {
+	embedViewer, err := embed.NewViewer(ctx, uri, opts)
+	if err != nil {
+		app.Error(ctx, err)
+		return
+	}
+
+	embedViewer.Show()
 }
 
 func fixNatWrap(label *gtk.Label) {

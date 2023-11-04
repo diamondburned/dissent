@@ -8,6 +8,7 @@
     <file preprocess="xml-stripblanks" alias="avatar-default-symbolic.svg">scalable/actions/avatar-default-symbolic.svg</file>
     <file preprocess="xml-stripblanks" alias="chat-bubbles-empty-symbolic.svg">scalable/actions/chat-bubbles-empty-symbolic.svg</file>
     <file preprocess="xml-stripblanks" alias="document-edit-symbolic.svg">scalable/actions/document-edit-symbolic.svg</file>
+    <file preprocess="xml-stripblanks" alias="earth-symbolic.svg">scalable/actions/earth-symbolic.svg</file>
     <file preprocess="xml-stripblanks" alias="edit-clear-all-symbolic.svg">scalable/actions/edit-clear-all-symbolic.svg</file>
     <file preprocess="xml-stripblanks" alias="edit-copy-symbolic.svg">scalable/actions/edit-copy-symbolic.svg</file>
     <file preprocess="xml-stripblanks" alias="folder-visiting-symbolic.svg">scalable/actions/folder-visiting-symbolic.svg</file>
