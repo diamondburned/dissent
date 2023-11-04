@@ -94,6 +94,19 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 
 	i.TextView.ConnectPasteClipboard(i.readClipboard)
 
+	i.TextView.ConnectUnrealize(func () {
+		start, end := i.Buffer.Bounds()
+		cfg := app.AcquireState(ctx, "input-state")
+
+		// Persist input.
+		if end.Offset() == 0 {
+			cfg.Delete(chID.String())
+		} else {
+			text := i.Buffer.Text(start, end, false)
+			cfg.Set(chID.String(), text)
+		}
+	})
+
 	i.ac = autocomplete.New(ctx, i.TextView)
 	i.ac.AddSelectedFunc(i.onAutocompleted)
 	i.ac.SetCancelOnChange(false)
@@ -109,23 +122,12 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 	}
 
 	i.Buffer = i.TextView.Buffer()
-	i.Buffer.ConnectChanged(func() {
+	i.Buffer.ConnectChanged(func () {
 		if inputWYSIWYG.Value() {
 			mdrender.RenderWYSIWYG(ctx, i.Buffer)
 		}
 
 		i.ac.Autocomplete()
-
-		start, end := i.Buffer.Bounds()
-
-		// Persist input.
-		cfg := app.AcquireState(ctx, "input-state")
-		if end.Offset() == 0 {
-			cfg.Delete(chID.String())
-		} else {
-			text := i.Buffer.Text(start, end, false)
-			cfg.Set(chID.String(), text)
-		}
 	})
 
 	enterKeyer := gtk.NewEventControllerKey()
