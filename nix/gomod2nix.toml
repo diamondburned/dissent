@@ -26,8 +26,8 @@ schema = 3
     version = "v0.0.6-0.20230825053034-ad325703aa2e"
     hash = "sha256-47LA2OAz5aWD9Yjv27yAlQxxlDfjByRvmyXapS6vy/8="
   [mod."github.com/diamondburned/gotkit"]
-    version = "v0.0.0-20230930214311-f664ea5c2236"
-    hash = "sha256-XzBh8Xg2w5ba2x06IpEsYPBgptPg3OY+wqVGvziK94I="
+    version = "v0.0.0-20231108044328-9ac96cd5a778"
+    hash = "sha256-jcGYtVS8XTk2YMW9Nh/nFbpeyQYfOH3/desA/dEGSIM="
   [mod."github.com/diamondburned/ningen/v3"]
     version = "v3.0.1-0.20230908225032-f3dbe02c7c8d"
     hash = "sha256-rHaVhuQ68U1wHQ/kDJbzpGi0ZSamJlpE3ikK8XItaWg="
