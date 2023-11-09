@@ -84,9 +84,9 @@ const (
 
 type View struct {
 	*gtk.Box
-	Input       *Input
-	Placeholder *gtk.Label
-	UploadTray  *UploadTray
+	Input        *Input
+	Placeholder  *gtk.Label
+	UploadTray   *UploadTray
 	EmojiChooser *gtk.EmojiChooser
 
 	ctx  context.Context
@@ -135,7 +135,7 @@ var viewCSS = cssutil.Applier("composer-view", `
 
 const (
 	sendIcon   = "paper-plane-symbolic"
-	emojiIcon = "sentiment-satisfied-symbolic"
+	emojiIcon  = "sentiment-satisfied-symbolic"
 	editIcon   = "document-edit-symbolic"
 	stopIcon   = "edit-clear-all-symbolic"
 	replyIcon  = "mail-reply-sender-symbolic"
@@ -154,7 +154,7 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 	scroll := gtk.NewScrolledWindow()
 	scroll.SetPolicy(gtk.PolicyNever, gtk.PolicyAutomatic)
 	scroll.SetPropagateNaturalHeight(true)
-	scroll.SetMaxContentHeight(100)
+	scroll.SetMaxContentHeight(1000)
 	scroll.SetChild(v.Input)
 
 	v.Placeholder = gtk.NewLabel("")
