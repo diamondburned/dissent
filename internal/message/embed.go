@@ -100,7 +100,7 @@ func newSticker(ctx context.Context, sticker *discord.StickerItem) gtk.Widgetter
 		image.SetHAlign(gtk.AlignStart)
 		image.SetSizeRequest(gtkcord.StickerSize, gtkcord.StickerSize)
 		image.SetFromURL(url)
-		image.SetOpenURL(func() { app.OpenURI(ctx, url) })  // TODO: Add sticker info popover
+		image.SetOpenURL(func() { app.OpenURI(ctx, url) }) // TODO: Add sticker info popover
 		stickerCSS(image)
 		return image
 	default:

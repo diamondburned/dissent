@@ -13,9 +13,9 @@ import (
 	"github.com/diamondburned/gotkit/components/prefui"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
+	_ "github.com/diamondburned/gtkcord4/internal/icons"
 	"github.com/diamondburned/gtkcord4/internal/window"
 	"github.com/diamondburned/gtkcord4/internal/window/about"
-	_ "github.com/diamondburned/gtkcord4/internal/icons"
 
 	_ "github.com/diamondburned/gotkit/gtkutil/aggressivegc"
 )
