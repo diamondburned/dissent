@@ -2,6 +2,7 @@ package message
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"sort"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/app"
+	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/components/autoscroll"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
@@ -30,12 +32,14 @@ type messageRow struct {
 }
 
 type messageInfo struct {
+	id        discord.MessageID
 	author    messageAuthor
 	timestamp discord.Timestamp
 }
 
 func newMessageInfo(msg *discord.Message) messageInfo {
 	return messageInfo{
+		id:        msg.ID,
 		author:    newMessageAuthor(&msg.Author),
 		timestamp: msg.Timestamp,
 	}
@@ -58,6 +62,7 @@ type View struct {
 	*adaptive.LoadablePage
 	Clamp    *adw.Clamp
 	Box      *gtk.Box
+	LoadMore *gtk.Button
 	Scroll   *autoscroll.Window
 	List     *gtk.ListBox
 	Composer *composer.View
@@ -107,7 +112,22 @@ var viewCSS = cssutil.Applier("message-view", `
 	.message-list > row.message-sending {
 		opacity: 0.65;
 	}
+	.message-show-more {
+		background: none;
+		border-radius: 0;
+		font-size: 0.85em;
+		opacity: 0.65;
+	}
+	.message-show-more:hover {
+		background: alpha(@theme_fg_color, 0.075);
+	}
 `)
+
+const (
+	loadMoreBatch = 25 // load this many more messages on scroll
+	initialBatch  = 15 // load this many messages on startup
+	idealMaxCount = 50 // ideally keep this many messages in the view
+)
 
 // NewView creates a new View widget associated with the given channel ID. All
 // methods call on it will act on that channel.
@@ -118,12 +138,25 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 		ctx:  ctx,
 	}
 
+	v.LoadMore = gtk.NewButton()
+	v.LoadMore.AddCSSClass("message-show-more")
+	v.LoadMore.SetLabel(locale.Get("Show More"))
+	v.LoadMore.SetHExpand(true)
+	v.LoadMore.SetSensitive(true)
+	v.LoadMore.ConnectClicked(v.loadMore)
+
 	v.List = gtk.NewListBox()
 	v.List.AddCSSClass("message-list")
 	v.List.SetSelectionMode(gtk.SelectionNone)
 
+	clampBox := gtk.NewBox(gtk.OrientationVertical, 0)
+	clampBox.SetHExpand(true)
+	clampBox.SetVExpand(true)
+	clampBox.Append(v.LoadMore)
+	clampBox.Append(v.List)
+
 	v.Clamp = adw.NewClamp()
-	v.Clamp.SetChild(v.List)
+	v.Clamp.SetChild(clampBox)
 	v.Clamp.SetFocusChild(v.List)
 	v.Clamp.SetMaximumSize(messagesWidth.Value())
 	// Set tightening threshold to 90% of the clamp's width.
@@ -190,7 +223,7 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 			}
 
 			if !v.ignoreMessage(&ev.Message) {
-				msg := v.upsertMessage(ev.ID, newMessageInfo(&ev.Message))
+				msg := v.upsertMessage(ev.ID, newMessageInfo(&ev.Message), 0)
 				msg.Update(ev)
 			}
 
@@ -201,7 +234,7 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 
 			m, err := state.Cabinet.Message(ev.ChannelID, ev.ID)
 			if err == nil && !v.ignoreMessage(&ev.Message) {
-				msg := v.upsertMessage(ev.ID, newMessageInfo(m))
+				msg := v.upsertMessage(ev.ID, newMessageInfo(m), 0)
 				msg.Update(&gateway.MessageCreateEvent{
 					Message: *m,
 					Member:  ev.Member,
@@ -310,7 +343,7 @@ func (v *View) load() {
 	state := gtkcord.FromContext(v.ctx)
 
 	gtkutil.Async(v.ctx, func() func() {
-		msgs, err := state.Messages(v.chID, 45)
+		msgs, err := state.Messages(v.chID, 15)
 		if err != nil {
 			return func() {
 				v.LoadablePage.SetError(err)
@@ -325,48 +358,103 @@ func (v *View) load() {
 			v.setPageToMain()
 			v.Scroll.ScrollToBottom()
 
-			widgets := make([]Message, len(msgs))
-			for i, msg := range msgs {
-				if !v.ignoreMessage(&msg) {
-					widgets[i] = v.upsertMessage(msg.ID, newMessageInfo(&msgs[i]))
+			for _, msg := range v.filterIgnoredMessages(msgs) {
+				w := v.upsertMessage(msg.ID, newMessageInfo(&msg), 0)
+				w.Update(&gateway.MessageCreateEvent{Message: msg})
+			}
+		}
+	})
+}
+
+func (v *View) loadMore() {
+	firstRow, ok := v.firstMessage()
+	if !ok {
+		return
+	}
+
+	firstID := firstRow.info.id
+
+	log.Println("loading more messages for", v.chID)
+
+	ctx := v.ctx
+	state := gtkcord.FromContext(ctx)
+
+	prevScrollVal := v.Scroll.VAdjustment().Value()
+	prevScrollMax := v.Scroll.VAdjustment().Upper()
+
+	upsertMessages := func(msgs []discord.Message) {
+		msgs = v.filterIgnoredMessages(msgs)
+
+		infos := make([]messageInfo, len(msgs))
+		for i := range msgs {
+			infos[i] = newMessageInfo(&msgs[i])
+		}
+
+		for i, msg := range msgs {
+			flags := 0 |
+				upsertFlagOverrideCollapse |
+				upsertFlagPrepend
+
+			// Manually prepend our own messages. This also requires us to
+			// manually check if we should collapse the message.
+			if i != len(msgs)-1 {
+				curr := infos[i]
+				last := infos[i+1]
+				if shouldBeCollapsed(curr, last) {
+					flags |= upsertFlagCollapsed
 				}
 			}
 
-			update := func(i int) {
-				if widgets[i] != nil {
-					widgets[i].Update(&gateway.MessageCreateEvent{
-						Message: msgs[i],
-					})
-				}
+			w := v.upsertMessage(msg.ID, infos[i], flags)
+			w.Update(&gateway.MessageCreateEvent{Message: msg})
+		}
+
+		// Do this on the next iteration of the main loop so that the scroll
+		// adjustment has time to update.
+		glib.IdleAdd(func() {
+			// Calculate the offset at which to scroll to after loading more
+			// messages.
+			currentScrollMax := v.Scroll.VAdjustment().Upper()
+			v.Scroll.VAdjustment().SetValue(prevScrollVal + (currentScrollMax - prevScrollMax))
+		})
+	}
+
+	stateMessages, err := state.Cabinet.Messages(v.chID)
+	if err == nil && len(stateMessages) > 0 {
+		// State messages are ordered last first, so we can traverse them.
+		var found bool
+		for i, m := range stateMessages {
+			if m.ID < firstID {
+				log.Println("found earlier message in state, content:", m.Content)
+				stateMessages = stateMessages[i:]
+				found = true
+				break
 			}
+		}
 
-			const prerender = 10
-			const batch = 5
-			const delay = 15 // 5 messages per 20ms
-
-			n := 0
-			m := len(widgets) - 1
-
-			for n < len(widgets) && n < prerender {
-				i := m - n
-
-				update(i)
-
-				n++
+		if found {
+			if len(stateMessages) > loadMoreBatch {
+				stateMessages = stateMessages[:loadMoreBatch]
 			}
+			upsertMessages(stateMessages)
+			return
+		}
+	}
 
-			// Render the top few messages at a later time for smoother
-			// transitions.
-			for n < (len(widgets) + batch) {
-				i := m - n + batch
+	gtkutil.Async(ctx, func() func() {
+		messages, err := state.MessagesBefore(v.chID, firstID, loadMoreBatch)
+		if err != nil {
+			app.Error(ctx, fmt.Errorf("failed to load more messages: %w", err))
+			return nil
+		}
 
-				glib.TimeoutAdd(uint(n-prerender+1)*delay, func() {
-					for j := i; j >= 0 && j >= (i-batch); j-- {
-						update(j)
-					}
-				})
+		return func() {
+			upsertMessages(messages)
 
-				n += batch
+			if len(messages) < loadMoreBatch {
+				// We've reached the end of the channel's history.
+				// Disable the load more button.
+				v.LoadMore.SetSensitive(false)
 			}
 		}
 	})
@@ -383,6 +471,22 @@ func (v *View) unload() {
 	}
 }
 
+// filterIgnoredMessages filters in-place the given messages, removing any
+// messages that should be ignored.
+func (v *View) filterIgnoredMessages(msgs []discord.Message) []discord.Message {
+	if showBlockedMessages.Value() {
+		return msgs // doesn't matter
+	}
+
+	filtered := msgs[:0]
+	for i := range msgs {
+		if !v.ignoreMessage(&msgs[i]) {
+			filtered = append(filtered, msgs[i])
+		}
+	}
+	return filtered
+}
+
 func (v *View) ignoreMessage(msg *discord.Message) bool {
 	state := gtkcord.FromContext(v.ctx)
 
@@ -394,19 +498,31 @@ func (v *View) ignoreMessage(msg *discord.Message) bool {
 	return false
 }
 
+type upsertFlags int
+
+const (
+	upsertFlagCollapsed upsertFlags = 1 << iota
+	upsertFlagOverrideCollapse
+	upsertFlagPrepend
+)
+
 // upsertMessage inserts or updates a new message row.
-func (v *View) upsertMessage(id discord.MessageID, info messageInfo) Message {
-	return v.upsertMessageKeyed(messageKeyID(id), info, v.shouldBeCollapsed(info))
+// TODO: move boolean args to flags.
+func (v *View) upsertMessage(id discord.MessageID, info messageInfo, flags upsertFlags) Message {
+	if flags&upsertFlagOverrideCollapse == 0 && v.shouldBeCollapsed(info) {
+		flags |= upsertFlagCollapsed
+	}
+	return v.upsertMessageKeyed(messageKeyID(id), info, flags)
 }
 
 // upsertMessageKeyed inserts or updates a new message row with the given key.
-func (v *View) upsertMessageKeyed(key messageKey, info messageInfo, collapsed bool) Message {
+func (v *View) upsertMessageKeyed(key messageKey, info messageInfo, flags upsertFlags) Message {
 	if msg, ok := v.msgs[key]; ok {
 		return msg.message
 	}
 
 	var message Message
-	if collapsed {
+	if flags&upsertFlagCollapsed != 0 {
 		message = NewCollapsedMessage(v.ctx, v)
 	} else {
 		message = NewCozyMessage(v.ctx, v)
@@ -417,7 +533,11 @@ func (v *View) upsertMessageKeyed(key messageKey, info messageInfo, collapsed bo
 	row.SetName(string(key))
 	row.SetChild(message)
 
-	v.List.Append(row)
+	if flags&upsertFlagPrepend != 0 {
+		v.List.Prepend(row)
+	} else {
+		v.List.Append(row)
+	}
 	v.List.SetFocusChild(row)
 
 	v.msgs[key] = messageRow{
@@ -427,6 +547,31 @@ func (v *View) upsertMessageKeyed(key messageKey, info messageInfo, collapsed bo
 	}
 
 	return message
+}
+
+// resetMessage resets the message with the given messageRow.
+// Its main point is to re-evaluate the collapsed state of the message.
+func (v *View) resetMessage(key messageKey) {
+	row, ok := v.msgs[key]
+	if !ok {
+		return
+	}
+
+	var message Message
+	if v.shouldBeCollapsed(row.info) {
+		message = NewCollapsedMessage(v.ctx, v)
+	} else {
+		message = NewCozyMessage(v.ctx, v)
+	}
+
+	message.Update(&gateway.MessageCreateEvent{
+		Message: *row.message.Message(),
+	})
+
+	row.message = message
+	row.ListBoxRow.SetChild(message)
+
+	v.msgs[key] = row
 }
 
 func (v *View) deleteMessage(id discord.MessageID) {
@@ -440,11 +585,15 @@ func (v *View) deleteMessage(id discord.MessageID) {
 
 func (v *View) shouldBeCollapsed(info messageInfo) bool {
 	last, ok := v.lastMessage()
-	return ok &&
+	return ok && shouldBeCollapsed(info, last.info)
+}
+
+func shouldBeCollapsed(curr, last messageInfo) bool {
+	return true &&
 		// same author
-		last.info.author == info.author &&
+		last.author == curr.author &&
 		// within the last 10 minutes
-		last.info.timestamp.Time().Add(10*time.Minute).After(info.timestamp.Time())
+		last.timestamp.Time().Add(10*time.Minute).After(curr.timestamp.Time())
 }
 
 func (v *View) lastMessage() (messageRow, bool) {
@@ -473,6 +622,18 @@ func (v *View) lastUserMessage() Message {
 	return msg
 }
 
+func (v *View) firstMessage() (messageRow, bool) {
+	row, _ := v.List.FirstChild().(*gtk.ListBoxRow)
+	if row != nil {
+		msg, ok := v.msgs[messageKeyRow(row)]
+		return msg, ok
+	}
+
+	return messageRow{}, false
+}
+
+// eachMessage iterates over each message in the view, starting from the bottom.
+// If the callback returns true, the loop will break.
 func (v *View) eachMessage(f func(messageRow) bool) {
 	row, _ := v.List.LastChild().(*gtk.ListBoxRow)
 	for row != nil {
@@ -542,8 +703,13 @@ func (v *View) SendMessage(msg composer.SendingMessage) {
 		timestamp: discord.Timestamp(time.Now()),
 	}
 
+	var flags upsertFlags
+	if v.shouldBeCollapsed(info) {
+		flags |= upsertFlagCollapsed
+	}
+
 	key := messageKeyLocal()
-	row := v.upsertMessageKeyed(key, info, v.shouldBeCollapsed(info))
+	row := v.upsertMessageKeyed(key, info, flags)
 
 	m := discord.Message{
 		ChannelID: v.chID,
@@ -738,10 +904,31 @@ func (v *View) Delete(id discord.MessageID) {
 }
 
 func (v *View) onScrollBottomed() {
-	if !v.IsActive() {
-		return
+	if v.IsActive() {
+		v.MarkRead()
 	}
-	v.MarkRead()
+
+	// Try to clean up the top messages.
+	// Fast path: check our cache first.
+	if len(v.msgs) > idealMaxCount {
+		var count int
+
+		row, _ := v.List.LastChild().(*gtk.ListBoxRow)
+		for row != nil {
+			if count < idealMaxCount {
+				count++
+				continue
+			}
+
+			next, _ := row.PrevSibling().(*gtk.ListBoxRow)
+
+			// Start purging messages.
+			v.List.Remove(row)
+			delete(v.msgs, messageKeyRow(row))
+
+			row = next
+		}
+	}
 }
 
 // MarkRead marks the view's latest messages as read.
