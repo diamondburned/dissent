@@ -915,16 +915,15 @@ func (v *View) onScrollBottomed() {
 
 		row, _ := v.List.LastChild().(*gtk.ListBoxRow)
 		for row != nil {
-			if count < idealMaxCount {
-				count++
-				continue
-			}
-
 			next, _ := row.PrevSibling().(*gtk.ListBoxRow)
 
-			// Start purging messages.
-			v.List.Remove(row)
-			delete(v.msgs, messageKeyRow(row))
+			if count < idealMaxCount {
+				count++
+			} else {
+				// Start purging messages.
+				v.List.Remove(row)
+				delete(v.msgs, messageKeyRow(row))
+			}
 
 			row = next
 		}
