@@ -112,6 +112,10 @@ var viewCSS = cssutil.Applier("message-view", `
 	.message-list > row.message-sending {
 		opacity: 0.65;
 	}
+	.message-list > row.message-first-prepended {
+		border-bottom: 1.5px dashed alpha(@theme_fg_color, 0.25);
+		padding-bottom: 2.5px;
+	}
 	.message-show-more {
 		background: none;
 		border-radius: 0;
@@ -415,7 +419,19 @@ func (v *View) loadMore() {
 			// Calculate the offset at which to scroll to after loading more
 			// messages.
 			currentScrollMax := v.Scroll.VAdjustment().Upper()
-			v.Scroll.VAdjustment().SetValue(prevScrollVal + (currentScrollMax - prevScrollMax))
+
+			vadj := v.Scroll.VAdjustment()
+			vadj.SetValue(prevScrollVal + (currentScrollMax - prevScrollMax))
+		})
+
+		// Style the first prepended message to add a visual indicator for the
+		// user.
+		first := v.msgs[messageKeyID(msgs[0].ID)]
+		first.ListBoxRow.AddCSSClass("message-first-prepended")
+
+		// Remove this visual indicator after a short while.
+		glib.TimeoutSecondsAdd(10, func() {
+			first.ListBoxRow.RemoveCSSClass("message-first-prepended")
 		})
 	}
 
@@ -449,7 +465,9 @@ func (v *View) loadMore() {
 		}
 
 		return func() {
-			upsertMessages(messages)
+			if len(messages) > 0 {
+				upsertMessages(messages)
+			}
 
 			if len(messages) < loadMoreBatch {
 				// We've reached the end of the channel's history.
