@@ -71,6 +71,9 @@ var inputWYSIWYG = prefs.NewBool(true, prefs.PropMeta{
 	Description: "Enable a semi-WYSIWYG feature that decorates the input Markdown text.",
 })
 
+// inputStateKey is the app state that stores the last input message.
+var inputStateKey = app.NewStateKey[string]("input-state")
+
 // NewInput creates a new Input widget.
 func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID) *Input {
 	i := Input{
@@ -119,12 +122,12 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 		start, end := i.Buffer.Bounds()
 
 		// Persist input.
-		cfg := app.AcquireState(ctx, "input-state")
+		inputState := inputStateKey.Acquire(ctx)
 		if end.Offset() == 0 {
-			cfg.Delete(chID.String())
+			inputState.Delete(chID.String())
 		} else {
 			text := i.Buffer.Text(start, end, false)
-			cfg.Set(chID.String(), text)
+			inputState.Set(chID.String(), text)
 		}
 	})
 
@@ -133,10 +136,10 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 	i.AddController(enterKeyer)
 
 	gtkutil.Async(ctx, func() func() {
-		var oldMessage string
+		inputState := inputStateKey.Acquire(ctx)
 
-		cfg := app.AcquireState(ctx, "input-state")
-		if !cfg.Get(chID.String(), &oldMessage) {
+		oldMessage, ok := inputState.Get(chID.String())
+		if !ok {
 			return nil
 		}
 
