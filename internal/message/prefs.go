@@ -14,6 +14,12 @@ import (
 	"github.com/pkg/errors"
 )
 
+var askBeforeDelete = prefs.NewBool(true, prefs.PropMeta{
+	Name:        "Ask Before Deleting",
+	Section:     "Messages",
+	Description: "Ask before deleting a message.",
+})
+
 var showBlockedMessages = prefs.NewBool(false, prefs.PropMeta{
 	Name:        "Show Blocked Messages",
 	Section:     "Messages",

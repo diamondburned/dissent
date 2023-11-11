@@ -12,6 +12,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/utils/sendpart"
+	"github.com/diamondburned/chatkit/components/author"
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
@@ -902,8 +903,45 @@ func (v *View) EditLastMessage() bool {
 	return true
 }
 
-// Delete deletes the message with the given ID.
+// Delete deletes the message with the given ID. It may prompt the user to
+// confirm the deletion.
 func (v *View) Delete(id discord.MessageID) {
+	if !askBeforeDelete.Value() {
+		v.delete(id)
+		return
+	}
+
+	user := "?" // juuust in case
+
+	row, ok := v.msgs[messageKeyID(id)]
+	if ok {
+		message := row.message.Message()
+		state := gtkcord.FromContext(v.ctx)
+		user = state.AuthorMarkup(&gateway.MessageCreateEvent{Message: *message},
+			author.WithMinimal())
+		user = "<b>" + user + "</b>"
+	}
+
+	window := app.GTKWindowFromContext(v.ctx)
+	dialog := adw.NewMessageDialog(window,
+		locale.Get("Delete Message"),
+		locale.Sprintf("Are you sure you want to delete %s's message?", user))
+	dialog.SetBodyUseMarkup(true)
+	dialog.AddResponse("cancel", locale.Get("_Cancel"))
+	dialog.AddResponse("delete", locale.Get("_Delete"))
+	dialog.SetResponseAppearance("delete", adw.ResponseDestructive)
+	dialog.SetDefaultResponse("cancel")
+	dialog.SetCloseResponse("cancel")
+	dialog.ConnectResponse(func(response string) {
+		switch response {
+		case "delete":
+			v.delete(id)
+		}
+	})
+	dialog.Show()
+}
+
+func (v *View) delete(id discord.MessageID) {
 	if msg, ok := v.msgs[messageKeyID(id)]; ok {
 		// Visual indicator.
 		msg.SetSensitive(false)
