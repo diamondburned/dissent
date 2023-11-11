@@ -31,6 +31,10 @@ var trustedCDNHosts = map[string]struct{}{
 	"cdn.discordapp.com": {},
 }
 
+var defaultEmbedOpts = embed.Opts{
+	IgnoreWidth: true,
+}
+
 func resizeURL(directURL, proxyURL string, w, h int) string {
 	if w == 0 || h == 0 {
 		return proxyURL
@@ -95,7 +99,7 @@ func newSticker(ctx context.Context, sticker *discord.StickerItem) gtk.Widgetter
 
 		// TODO: this is always round because we're using a GtkFrame. What the
 		// heck? How does this shit even work?!
-		image := embed.New(ctx, gtkcord.StickerSize, gtkcord.StickerSize, embed.Opts{})
+		image := embed.New(ctx, gtkcord.StickerSize, gtkcord.StickerSize, defaultEmbedOpts)
 		image.SetName(sticker.Name)
 		image.SetHAlign(gtk.AlignStart)
 		image.SetSizeRequest(gtkcord.StickerSize, gtkcord.StickerSize)
@@ -138,7 +142,7 @@ func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widg
 	switch mimeType {
 	case "image", "video":
 		// Make this attachment like an image embed.
-		opts := embed.Opts{}
+		opts := defaultEmbedOpts
 
 		switch {
 		case attachment.ContentType == "image/gif":
@@ -179,8 +183,8 @@ func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widg
 				maxEmbedWidth.Value(), maxImageHeight.Value(),
 			)
 
-			image.SetSizeRequest(w, h)
-			image.Thumbnail.SetSizeRequest(w, h)
+			image.SetSizeRequest(-1, h)
+			image.Thumbnail.SetSizeRequest(-1, h)
 			if mimeType == "image" {
 				scale := gtkutil.ScaleFactor()
 				w *= scale
@@ -271,8 +275,8 @@ func newEmbed(ctx context.Context, msg *discord.Message, embed *discord.Embed) g
 
 func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord.Embed) gtk.Widgetter {
 	bodyBox := gtk.NewBox(gtk.OrientationVertical, 0)
-	bodyBox.SetHAlign(gtk.AlignStart)
-	bodyBox.SetHExpand(false)
+	bodyBox.SetHAlign(gtk.AlignFill)
+	bodyBox.SetHExpand(true)
 	bodyBox.AddCSSClass("message-normalembed-body")
 
 	// Track whether or not we have an embed body. An embed body should have any
@@ -435,8 +439,7 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 		// bodyBox.SetHExpand(false)
 
 		embedBox = gtk.NewBox(gtk.OrientationHorizontal, 0)
-		embedBox.SetHExpand(false)
-		embedBox.SetHAlign(gtk.AlignStart)
+		embedBox.SetHAlign(gtk.AlignFill)
 		embedBox.Append(bodyBox)
 		normalEmbedCSS(embedBox)
 
@@ -460,7 +463,7 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 			maxH = maxImageHeight.Value()
 		}
 
-		var opts embed.Opts
+		opts := defaultEmbedOpts
 		switch msgEmbed.Type {
 		case discord.NormalEmbed, discord.ImageEmbed:
 			opts.Type = embed.TypeFromURL(thumb.Proxy)
@@ -527,7 +530,7 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 	}
 
 	if msgEmbed.Thumbnail == nil && (msgEmbed.Image != nil || msgEmbed.Video != nil) {
-		var opts embed.Opts
+		opts := defaultEmbedOpts
 		var img discord.EmbedImage
 
 		switch {
