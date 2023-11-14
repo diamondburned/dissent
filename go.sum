@@ -43,8 +43,8 @@ github.com/diamondburned/gotk4/pkg v0.0.6-0.20230825053034-ad325703aa2e h1:fH47U
 github.com/diamondburned/gotk4/pkg v0.0.6-0.20230825053034-ad325703aa2e/go.mod h1:Jr5xzUuGyLsoMtE9LzE/Lay1gD0ONiFWAmQ0+Z6KLeA=
 github.com/diamondburned/gotkit v0.0.0-20231111065921-0542a145d61e h1:Ck/mTbJsDIrKKgZA5b91eJ7B5VNGaoYqwNSUZJig0Eg=
 github.com/diamondburned/gotkit v0.0.0-20231111065921-0542a145d61e/go.mod h1:N9XvN0kELfwPD/6qn1tEZIhni1vphE91lo7Pn0CxA+Q=
-github.com/diamondburned/ningen/v3 v3.0.1-0.20231109131259-9140d0873f98 h1:X6MZzOCMwLCUh193M6k66NARFIGy1fxWuINSOgBsYOI=
-github.com/diamondburned/ningen/v3 v3.0.1-0.20231109131259-9140d0873f98/go.mod h1:PUr2nk5xo+A5hguLIe6qJzCFhTJxdN5/1i7Lr8iCWpQ=
+github.com/diamondburned/ningen/v3 v3.0.1-0.20231114075203-ff2cd6b90304 h1:AkgWYfF2gmh1T8FwYS++3Agi0bgUJ2jJJrQmSc+4QoY=
+github.com/diamondburned/ningen/v3 v3.0.1-0.20231114075203-ff2cd6b90304/go.mod h1:yMpvuQBxIzSf2grJg3KcBWle8m3jcuZ9Ij/sTv7XSF4=
 github.com/dlclark/regexp2 v1.4.0 h1:F1rxgk7p4uKjwIQxBs9oAXe5CqrXlCduYEJvrF4u93E=
 github.com/dlclark/regexp2 v1.4.0/go.mod h1:2pZnwuY/m+8K6iRw6wQdMtk+rH5tNGR1i55kozfMjCc=
 github.com/dustin/go-humanize v1.0.0 h1:VSnTsYCnlFHaM2/igO1h6X3HA71jcobQuxemgkq4zYo=
@@ -98,7 +98,6 @@ github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORN
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
 github.com/kylelemons/godebug v1.1.0 h1:RPNrshWIDI6G2gRW9EHilWtl7Z6Sb1BR0xunSBf0SNc=
-github.com/kylelemons/godebug v1.1.0/go.mod h1:9/0rRGxNHcop5bhtWyNeEfOS8JIWk580+fNqagV/RAw=
 github.com/leonelquinteros/gotext v1.5.3-0.20230829162019-37f474cfb069 h1:9ZM/t54vDjI3XRw2+HC2DxrH2Giv/jAyv7+Vq2QgXmg=
 github.com/leonelquinteros/gotext v1.5.3-0.20230829162019-37f474cfb069/go.mod h1:AT4NpQrOmyj1L/+hLja6aR0lk81yYYL4ePnj2kp7d6M=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=

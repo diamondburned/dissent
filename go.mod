@@ -9,7 +9,7 @@ require (
 	github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20230307050941-20a05fa3a9df
 	github.com/diamondburned/gotk4/pkg v0.0.6-0.20230825053034-ad325703aa2e
 	github.com/diamondburned/gotkit v0.0.0-20231111065921-0542a145d61e
-	github.com/diamondburned/ningen/v3 v3.0.1-0.20231109131259-9140d0873f98
+	github.com/diamondburned/ningen/v3 v3.0.1-0.20231114075203-ff2cd6b90304
 	github.com/dustin/go-humanize v1.0.0
 	github.com/enescakir/emoji v1.0.0
 	github.com/ianlancetaylor/cgosymbolizer v0.0.0-20220405231054-a1ae3e4bba26
@@ -26,7 +26,6 @@ require (
 	github.com/godbus/dbus/v5 v5.0.6 // indirect
 	github.com/gorilla/schema v1.2.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
-	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/leonelquinteros/gotext v1.5.3-0.20230829162019-37f474cfb069 // indirect
 	github.com/twmb/murmur3 v1.1.3 // indirect
 	github.com/yalue/merged_fs v1.2.3 // indirect
