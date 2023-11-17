@@ -17,20 +17,20 @@ schema = 3
     version = "v3.3.1-0.20230609054540-4224b93c4e01"
     hash = "sha256-zDmcpqeJMEf0Qd0kOFkKKNhCASxNwBsh+fUOwsl1LFM="
   [mod."github.com/diamondburned/chatkit"]
-    version = "v0.0.0-20231111052812-ca02e3a0ae01"
-    hash = "sha256-tQjwXLBhwI907HuRN3r1v5e1nKCXB8S9g5FRyKMgluw="
+    version = "v0.0.0-20231117102020-f172e4a1e35d"
+    hash = "sha256-4enkipshShwRuhldVqYSFDaS9qvzOYL/hCregZlHM/c="
   [mod."github.com/diamondburned/gotk4-adwaita/pkg"]
-    version = "v0.0.0-20230307050941-20a05fa3a9df"
-    hash = "sha256-+EK5Vh8CpIayRUumKA0he1qENbHjkhNaCWrBvlP6pcQ="
+    version = "v0.0.0-20231117093505-26f1789529b0"
+    hash = "sha256-NIfi+uDeGAlNfWQRm7GZXVs900BoUWk/Ud3tsNUPUrg="
   [mod."github.com/diamondburned/gotk4/pkg"]
-    version = "v0.0.6-0.20230825053034-ad325703aa2e"
-    hash = "sha256-47LA2OAz5aWD9Yjv27yAlQxxlDfjByRvmyXapS6vy/8="
+    version = "v0.0.6-0.20231117083507-eb41da62b149"
+    hash = "sha256-iFiL0z0DW6vP2si8YEk6AUGFuF7E4pFlGzDT2uCX+0A="
   [mod."github.com/diamondburned/gotkit"]
-    version = "v0.0.0-20231111065921-0542a145d61e"
-    hash = "sha256-EGTlRaQz2MqNyhCYg7sCCIkewmcRaX5a9/r9QjWv0rg="
+    version = "v0.0.0-20231117094938-ace9cfa5e044"
+    hash = "sha256-t++QA6paIzZg2dzqUFigykNVqZCWrwkP1LrshDSrCRA="
   [mod."github.com/diamondburned/ningen/v3"]
-    version = "v3.0.1-0.20231109131259-9140d0873f98"
-    hash = "sha256-ug1DwXo3CxJFdgfYWh7YT5/oU5xYwPQEQzwTdm2amxA="
+    version = "v3.0.1-0.20231114075203-ff2cd6b90304"
+    hash = "sha256-96R6llXdnusv3b4lxQXINKrqd0DUe1jzcXNLI6ZovM8="
   [mod."github.com/dlclark/regexp2"]
     version = "v1.4.0"
     hash = "sha256-Pk/S2x2rX7xnGFLyoHEw09CoNQimvz/msdPRsxLaLsc="
@@ -52,9 +52,6 @@ schema = 3
   [mod."github.com/ianlancetaylor/cgosymbolizer"]
     version = "v0.0.0-20220405231054-a1ae3e4bba26"
     hash = "sha256-gQ5SUjHpX82+Eke8znuweBL/yzaVQQV06eLH91gTfcI="
-  [mod."github.com/kylelemons/godebug"]
-    version = "v1.1.0"
-    hash = "sha256-DJ0re9mGqZb6PROQI8NPC0JVyDHdZ/y4uehNH7MbczY="
   [mod."github.com/leonelquinteros/gotext"]
     version = "v1.5.3-0.20230829162019-37f474cfb069"
     hash = "sha256-ylBa3NtdtkgqEAhsXdYBTyhUUSU7e5NpHfw6Wq7cwbU="
