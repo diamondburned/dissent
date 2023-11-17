@@ -32,6 +32,7 @@ var trustedCDNHosts = map[string]struct{}{
 }
 
 var defaultEmbedOpts = embed.Opts{
+	Provider:    imgutil.HTTPProvider,
 	IgnoreWidth: true,
 }
 
@@ -509,9 +510,22 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 				// Some video URLs don't have direct links, like YouTube.
 				if msgEmbed.Video.Proxy == "" {
 					app.OpenURI(ctx, msgEmbed.Video.URL)
-				} else {
+					return
+				}
+
+				switch opts.Type {
+				case embed.EmbedTypeGIFV:
+					// Play GIFVs in the embed. The image library will handle
+					// rendering the GIFV like a GIF.
 					image.SetFromURL(msgEmbed.Video.Proxy)
 					image.ActivateDefault()
+					// Override the next click to open the video in the viewer.
+					image.SetOpenURL(func() {
+						openViewer(ctx, msgEmbed.Video.Proxy, opts)
+					})
+				case embed.EmbedTypeVideo:
+					// Play videos in the viewer.
+					openViewer(ctx, msgEmbed.Video.Proxy, opts)
 				}
 			})
 		default:

@@ -91,7 +91,7 @@ func NewChannelView(ctx context.Context, ctrl Opener) *ChannelView {
 	v.searchBar = gtk.NewSearchBar()
 	v.searchBar.AddCSSClass("titlebar")
 	v.searchBar.AddCSSClass("direct-searchbar")
-	v.searchBar.ConnectEntry(&v.searchEntry.Editable)
+	v.searchBar.ConnectEntry(&v.searchEntry.EditableTextWidget)
 	v.searchBar.SetSearchMode(true)
 	v.searchBar.SetShowCloseButton(false)
 	v.searchBar.SetChild(v.searchEntry)
