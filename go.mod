@@ -2,10 +2,6 @@ module github.com/diamondburned/gtkcord4
 
 go 1.18
 
-replace github.com/diamondburned/chatkit => ../chatkit
-
-replace github.com/diamondburned/gotkit => ../gotkit
-
 require (
 	github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8
 	github.com/diamondburned/arikawa/v3 v3.3.1-0.20230609054540-4224b93c4e01
