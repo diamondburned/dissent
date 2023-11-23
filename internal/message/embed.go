@@ -250,23 +250,42 @@ func mimeIcon(mimePrefix string) string {
 }
 
 var normalEmbedCSS = cssutil.Applier("message-normalembed", `
+	@define-color gtkcord4_embed_background alpha(@theme_fg_color, 0.05);
+
 	.message-normalembed {
-		border-left: 3px solid;
-		padding: 5px 10px;
-		background-color: mix(@theme_bg_color, @theme_fg_color, 0.10);
+		border: none;
+		border-radius: 8px;
+		padding: 10px;
+		background-color: @gtkcord4_embed_background;
 	}
 	.message-normalembed-body > *:not(:last-child) {
-		margin-bottom: 4px;
+		margin-bottom: 0.5em;
+	}
+	.message-normalembed-body > .thumbnail-embed-bin {
+		margin-top: 0.5em;
 	}
 	.message-embed-author,
 	.message-embed-description {
 		font-size: 0.9em;
 	}
+	.message-embed-author-icon,
+	.message-embed-footer-icon {
+		margin-right: 0.5em;
+	}
+	.message-embed-footer {
+		opacity: 0.5;
+		font-size: 0.8em;
+	}
 `)
 
 const embedColorCSSf = `
 	.message-normalembed {
-		border-color: %s;
+		padding-left: 14px;
+		background: linear-gradient(to right,
+			%s 4px,
+			@gtkcord4_embed_background 0px,
+			@gtkcord4_embed_background 100%%
+		);
 	}
 `
 
@@ -290,7 +309,7 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 		box.AddCSSClass("message-embed-author")
 
 		if msgEmbed.Author.ProxyIcon != "" {
-			img := onlineimage.NewAvatar(ctx, imgutil.HTTPProvider, 24)
+			img := onlineimage.NewAvatar(ctx, imgutil.HTTPProvider, 18)
 			img.AddCSSClass("message-embed-author-icon")
 			img.SetFromURL(msgEmbed.Author.ProxyIcon)
 
@@ -399,7 +418,7 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 
 		if msgEmbed.Footer != nil {
 			if msgEmbed.Footer.ProxyIcon != "" {
-				img := onlineimage.NewAvatar(ctx, imgutil.HTTPProvider, 24)
+				img := onlineimage.NewAvatar(ctx, imgutil.HTTPProvider, 18)
 				img.AddCSSClass("message-embed-footer-icon")
 
 				footer.Append(img)
@@ -408,7 +427,6 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 			if msgEmbed.Footer.Text != "" {
 				text := gtk.NewLabel(msgEmbed.Footer.Text)
 				text.SetVAlign(gtk.AlignStart)
-				text.SetOpacity(0.65)
 				text.SetSingleLineMode(true)
 				text.SetEllipsize(pango.EllipsizeEnd)
 				text.SetTooltipText(msgEmbed.Footer.Text)
@@ -440,7 +458,7 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 		// bodyBox.SetHExpand(false)
 
 		embedBox = gtk.NewBox(gtk.OrientationHorizontal, 0)
-		embedBox.SetHAlign(gtk.AlignFill)
+		embedBox.SetHAlign(gtk.AlignStart)
 		embedBox.Append(bodyBox)
 		normalEmbedCSS(embedBox)
 
