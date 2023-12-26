@@ -68,6 +68,9 @@ type View struct {
 }
 
 var viewCSS = cssutil.Applier("channels-view", `
+	.channels-viewtree {
+		background: none;
+	}
 	.channels-header {
 		padding: 0 {$header_padding};
 		border-radius: 0;
