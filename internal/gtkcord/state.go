@@ -70,6 +70,7 @@ const (
 
 // State extends the Discord state controller.
 type State struct {
+	*MainThreadHandler
 	*ningen.State
 }
 
@@ -110,9 +111,10 @@ func Wrap(state *state.State) *State {
 	}
 
 	// dumpRawEvents(state)
-
+	ningen := ningen.FromState(state)
 	return &State{
-		State: ningen.FromState(state),
+		MainThreadHandler: NewMainThreadHandler(ningen.Handler),
+		State:             ningen,
 	}
 }
 
@@ -157,9 +159,9 @@ func InjectState(ctx context.Context, state *State) context.Context {
 
 // WithContext creates a copy of State with a new context.
 func (s *State) WithContext(ctx context.Context) *State {
-	return &State{
-		State: s.State.WithContext(ctx),
-	}
+	s2 := *s
+	s2.State = s.State.WithContext(ctx)
+	return &s2
 }
 
 // BindHandler is similar to BindWidgetHandler, except the lifetime of the

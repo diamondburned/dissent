@@ -207,7 +207,6 @@ func (s *Sidebar) openGuild(guildID discord.GuildID) *channels.View {
 	chs := channels.NewView(s.ctx, s.opener, guildID)
 	chs.SetVExpand(true)
 	chs.InvalidateHeader()
-	chs.InvalidateChannels()
 
 	s.Right.AddChild(chs)
 	s.Right.SetVisibleChild(chs)
@@ -215,7 +214,7 @@ func (s *Sidebar) openGuild(guildID discord.GuildID) *channels.View {
 	s.removeCurrent()
 	s.current.w = chs
 
-	chs.Child.Tree.GrabFocus()
+	chs.Child.View.GrabFocus()
 	return chs
 }
 
@@ -247,8 +246,7 @@ func (s *Sidebar) SelectChannel(chID discord.ChannelID) {
 type guildsSidebar Sidebar
 
 func (s *guildsSidebar) OpenGuild(guildID discord.GuildID) {
-	ch := (*Sidebar)(s).openGuild(guildID)
-	ch.InvalidateChannels()
+	(*Sidebar)(s).openGuild(guildID)
 }
 
 // CloseGuild implements guilds.Controller.

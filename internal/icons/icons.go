@@ -19,6 +19,5 @@ func init() {
 	if err != nil {
 		log.Panicln("Failed to create resources: ", err)
 	}
-
 	gio.ResourcesRegister(resources)
 }

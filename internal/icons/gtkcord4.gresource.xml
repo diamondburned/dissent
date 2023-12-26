@@ -25,5 +25,9 @@
     <file preprocess="xml-stripblanks" alias="user-invisible-symbolic.svg">scalable/actions/user-invisible-symbolic.svg</file>
     <file preprocess="xml-stripblanks" alias="user-offline-symbolic.svg">scalable/actions/user-offline-symbolic.svg</file>
     <file preprocess="xml-stripblanks" alias="user-status-pending-symbolic.svg">scalable/actions/user-status-pending-symbolic.svg</file>
+    <file preprocess="xml-stripblanks" alias="channel-symbolic.svg">scalable/actions/channel-symbolic.svg</file>
+    <file preprocess="xml-stripblanks" alias="channel-voice-symbolic.svg">scalable/actions/channel-voice-symbolic.svg</file>
+    <file preprocess="xml-stripblanks" alias="channel-broadcast-symbolic.svg">scalable/actions/channel-broadcast-symbolic.svg</file>
+    <file preprocess="xml-stripblanks" alias="thread-branch-symbolic.svg">scalable/actions/thread-branch-symbolic.svg</file>
   </gresource>
 </gresources>

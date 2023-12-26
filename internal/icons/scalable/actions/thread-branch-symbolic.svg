@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg class="spine__88e6d" width="21px" height="20px" viewBox="0 0 21 20" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" xmlns:bx="https://boxy-svg.com">
+  <defs>
+    <bx:guide x="11.426" y="10.051" angle="90"/>
+    <bx:guide x="10.023" y="10.343" angle="0"/>
+  </defs>
+  <path d="M 20 9 L 13 9 C 11.895 9 11 8.105 11 7 L 11 1 C 11 0.448 10.552 0 10 0 C 9.448 0 9 0.448 9 1 L 9 7 C 9 9.209 10.791 11 13 11 L 20 11 C 20.552 11 21 10.552 21 10 C 21 9.448 20.552 9 20 9 Z" fill="currentColor"/>
+</svg>
