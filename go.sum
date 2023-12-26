@@ -37,12 +37,12 @@ github.com/diamondburned/arikawa/v3 v3.3.1-0.20230609054540-4224b93c4e01 h1:zhnP
 github.com/diamondburned/arikawa/v3 v3.3.1-0.20230609054540-4224b93c4e01/go.mod h1:+ifmDonP/JdBiUOzZmVReEjPTHDUSkyqqRRmjSf9NE8=
 github.com/diamondburned/chatkit v0.0.0-20231117102020-f172e4a1e35d h1:kR4wgyCOaWPrzNsh8A3/+W/gzDawrAkLvmQiuAzHO+s=
 github.com/diamondburned/chatkit v0.0.0-20231117102020-f172e4a1e35d/go.mod h1:1c8LntfS6zSYe3Zsy5/dG7qZHNb+vUrxYD6ya4ulOUE=
-github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20231117093505-26f1789529b0 h1:95ZAdIjBYJ3IJ8OjYrgV1h1gEGVUOVtyg5RAyeD5dpc=
-github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20231117093505-26f1789529b0/go.mod h1:bUVlQiML8tKR3YedHmzCDLd/ZIQ/2W4GTAhgB/NqKn0=
+github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20231226035729-503b3cb0406c h1:ecwRp621CdeTHl6QICVHwFboOha+xzHxSxIoGLvw9wg=
+github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20231226035729-503b3cb0406c/go.mod h1:bUVlQiML8tKR3YedHmzCDLd/ZIQ/2W4GTAhgB/NqKn0=
 github.com/diamondburned/gotk4/pkg v0.0.6-0.20231117083507-eb41da62b149 h1:ePqHNy56Dx6ROgndnNEqDOOmWHK3S6zhdB5hd0J+lRs=
 github.com/diamondburned/gotk4/pkg v0.0.6-0.20231117083507-eb41da62b149/go.mod h1:Jr5xzUuGyLsoMtE9LzE/Lay1gD0ONiFWAmQ0+Z6KLeA=
-github.com/diamondburned/gotkit v0.0.0-20231117094938-ace9cfa5e044 h1:b5qoKcxNXjM8hvkKArCzRe+5zXA0pnLmCEAPkc+t8ho=
-github.com/diamondburned/gotkit v0.0.0-20231117094938-ace9cfa5e044/go.mod h1:sRA9aDaFI0h2EbGafVSNw8jDOgqj+DPJKwmwvVZMDVI=
+github.com/diamondburned/gotkit v0.0.0-20231226054311-e5a23f3b63c1 h1:PRkYDmaLqQNMlSj1IVJi1OyBlOmXuGibl5ll7BqRhog=
+github.com/diamondburned/gotkit v0.0.0-20231226054311-e5a23f3b63c1/go.mod h1:sRA9aDaFI0h2EbGafVSNw8jDOgqj+DPJKwmwvVZMDVI=
 github.com/diamondburned/ningen/v3 v3.0.1-0.20231125085623-c71ae51f868b h1:TTw3EVXoPH9Q7melEYmLEUJcdQXEHKJItxH5bRsjBEQ=
 github.com/diamondburned/ningen/v3 v3.0.1-0.20231125085623-c71ae51f868b/go.mod h1:yMpvuQBxIzSf2grJg3KcBWle8m3jcuZ9Ij/sTv7XSF4=
 github.com/dlclark/regexp2 v1.4.0 h1:F1rxgk7p4uKjwIQxBs9oAXe5CqrXlCduYEJvrF4u93E=

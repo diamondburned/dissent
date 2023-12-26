@@ -6,9 +6,9 @@ require (
 	github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8
 	github.com/diamondburned/arikawa/v3 v3.3.1-0.20230609054540-4224b93c4e01
 	github.com/diamondburned/chatkit v0.0.0-20231117102020-f172e4a1e35d
-	github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20231117093505-26f1789529b0
+	github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20231226035729-503b3cb0406c
 	github.com/diamondburned/gotk4/pkg v0.0.6-0.20231117083507-eb41da62b149
-	github.com/diamondburned/gotkit v0.0.0-20231117094938-ace9cfa5e044
+	github.com/diamondburned/gotkit v0.0.0-20231226054311-e5a23f3b63c1
 	github.com/diamondburned/ningen/v3 v3.0.1-0.20231125085623-c71ae51f868b
 	github.com/dustin/go-humanize v1.0.0
 	github.com/enescakir/emoji v1.0.0

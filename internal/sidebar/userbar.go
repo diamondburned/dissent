@@ -34,9 +34,6 @@ var userBarCSS = cssutil.Applier("user-bar", `
 	.user-bar-menu {
 		margin: 0 6px;
 	}
-	.user-bar {
-		border-top: 1px solid @borders;
-	}
 `)
 
 func newUserBar(ctx context.Context, menuActions []gtkutil.PopoverMenuItem) *userBar {

@@ -39,7 +39,8 @@ var _ = cssutil.WriteCSS(`
 
 // Window is the main gtkcord window.
 type Window struct {
-	*app.Window
+	*adw.ApplicationWindow
+	win *app.Window
 	ctx context.Context
 
 	Stack   *gtk.Stack
@@ -50,16 +51,20 @@ type Window struct {
 
 // NewWindow creates a new Window.
 func NewWindow(ctx context.Context) *Window {
-	win := app.FromContext(ctx).NewWindow()
-	win.SetTitle("")
-	win.SetTitlebar(newEmptyHeader())
+	appInstance := app.FromContext(ctx)
+
+	win := adw.NewApplicationWindow(appInstance.Application)
+	win.SetSizeRequest(320, 320)
 	win.SetDefaultSize(800, 600)
 
-	ctx = app.WithWindow(ctx, win)
+	appWindow := app.WrapWindow(appInstance, &win.ApplicationWindow)
+	ctx = app.WithWindow(ctx, appWindow)
 
 	w := Window{
-		Window: win,
-		ctx:    ctx,
+		ApplicationWindow: win,
+
+		win: appWindow,
+		ctx: ctx,
 	}
 
 	w.Login = login.NewPage(ctx, (*loginWindow)(&w))
@@ -72,8 +77,8 @@ func NewWindow(ctx context.Context) *Window {
 	w.Stack.AddChild(w.Login)
 	w.Stack.AddChild(w.Loading)
 	w.Stack.SetVisibleChild(w.Login)
+	win.SetContent(w.Stack)
 
-	win.SetChild(w.Stack)
 	return &w
 }
 
@@ -83,7 +88,7 @@ func (w *Window) Context() context.Context {
 
 func (w *Window) SwitchToChatPage() {
 	if w.Chat == nil {
-		w.Chat = NewChatPage(w.ctx)
+		w.Chat = NewChatPage(w.ctx, w)
 		w.Stack.AddChild(w.Chat)
 	}
 	w.Stack.SetVisibleChild(w.Chat)
@@ -94,6 +99,10 @@ func (w *Window) SwitchToChatPage() {
 func (w *Window) SwitchToLoginPage() {
 	w.Stack.SetVisibleChild(w.Login)
 	w.SetTitle("Login")
+}
+
+func (w *Window) SetLoading() {
+	panic("not implemented")
 }
 
 var emptyHeaderCSS = cssutil.Applier("empty-header", `

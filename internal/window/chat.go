@@ -20,7 +20,7 @@ import (
 )
 
 type ChatPage struct {
-	*adw.Flap
+	*adw.OverlaySplitView
 	Left       *sidebar.Sidebar
 	RightLabel *gtk.Label
 	RightChild *gtk.Stack
@@ -37,25 +37,21 @@ var chatPageCSS = cssutil.Applier("window-chatpage", `
 		box-shadow: none;
 	}
 	.right-header .adaptive-sidebar-reveal-button {
-		margin: 0 8px;
+		margin: 0;
 	}
 	.right-header .adaptive-sidebar-reveal-button button {
-		margin: 0;
-		min-width: calc({$message_avatar_size} - 12px);
+		margin-left: 8px;
+		margin-right: 4px;
 	}
 	.right-header-label {
 		font-weight: bold;
 	}
 `)
 
-func NewChatPage(ctx context.Context) *ChatPage {
+func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	p := ChatPage{ctx: ctx}
 	p.Left = sidebar.NewSidebar(ctx, (*sidebarChatPage)(&p), &p)
 	p.Left.SetHAlign(gtk.AlignStart)
-	p.Left.SetSizeRequest(225, -1)
-
-	back := backbutton.New()
-	back.SetTransitionType(gtk.RevealerTransitionTypeSlideRight)
 
 	p.RightLabel = gtk.NewLabel("")
 	p.RightLabel.AddCSSClass("right-header-label")
@@ -63,35 +59,16 @@ func NewChatPage(ctx context.Context) *ChatPage {
 	p.RightLabel.SetHExpand(true)
 	p.RightLabel.SetEllipsize(pango.EllipsizeEnd)
 
-	rightHeaderBox := gtk.NewBox(gtk.OrientationHorizontal, 0)
-	rightHeaderBox.AddCSSClass("titlebar")
-	rightHeaderBox.AddCSSClass("right-header")
-	rightHeaderBox.Append(back)
-	rightHeaderBox.Append(p.RightLabel)
-	rightHeaderBox.Append(gtk.NewWindowControls(gtk.PackEnd))
+	back := backbutton.New()
+	back.SetTransitionType(gtk.RevealerTransitionTypeSlideRight)
 
-	rightHeader := gtk.NewWindowHandle()
-	rightHeader.AddCSSClass("titlebar")
-	rightHeader.SetChild(rightHeaderBox)
-
-	// rightHeader := adw.NewHeaderBar()
-	// rightHeader.AddCSSClass("titlebar")
-	// rightHeader.AddCSSClass("right-header")
-	// rightHeader.PackStart(back)
-	// rightHeader.PackStart(p.RightLabel)
-	// rightHeader.SetTitleWidget(newEmptyHeader())
-	// rightHeader.SetShowStartTitleButtons(false)
-	// rightHeader.SetShowEndTitleButtons(true)
-	// rightHeader.SetCenteringPolicy(adw.CenteringPolicyLoose)
-	//
-	// rightHeader := gtk.NewHeaderBar()
-	// rightHeader.AddCSSClass("titlebar")
-	// rightHeader.AddCSSClass("right-header")
-	// rightHeader.SetShowTitleButtons(false)
-	// rightHeader.PackEnd(gtk.NewWindowControls(gtk.PackEnd))
-	// rightHeader.PackStart(back)
-	// rightHeader.PackStart(p.RightLabel)
-	// rightHeader.SetTitleWidget(newEmptyHeader())
+	rightHeader := adw.NewHeaderBar()
+	rightHeader.AddCSSClass("right-header")
+	rightHeader.SetShowEndTitleButtons(true)
+	rightHeader.SetShowBackButton(false) // this is useless with OverlaySplitView
+	rightHeader.SetShowTitle(false)
+	rightHeader.PackStart(back)
+	rightHeader.PackStart(p.RightLabel)
 
 	p.placeholder = newEmptyMessagePlaceholer()
 
@@ -103,24 +80,27 @@ func NewChatPage(ctx context.Context) *ChatPage {
 	p.RightChild.SetTransitionType(gtk.StackTransitionTypeCrossfade)
 	p.SwitchToPlaceholder()
 
-	rightBox := gtk.NewBox(gtk.OrientationVertical, 0)
+	rightBox := adw.NewToolbarView()
 	rightBox.SetHExpand(true)
-	rightBox.Append(rightHeader)
-	rightBox.Append(p.RightChild)
+	rightBox.AddTopBar(rightHeader)
+	rightBox.SetContent(p.RightChild)
+	rightBox.SetTopBarStyle(adw.ToolbarFlat)
 
-	p.Flap = adw.NewFlap()
-	p.Flap.SetFlap(p.Left)
-	p.Flap.SetFlapPosition(gtk.PackStart)
-	p.Flap.SetContent(rightBox)
-	p.Flap.SetSeparator(gtk.NewSeparator(gtk.OrientationVertical))
-	p.Flap.SetFoldPolicy(adw.FlapFoldPolicyAuto)
-	p.Flap.SetFoldThresholdPolicy(adw.FoldThresholdPolicyMinimum)
-	p.Flap.SetModal(true)
-	p.Flap.SetSwipeToOpen(true)
-	p.Flap.SetSwipeToClose(true)
-	p.Flap.SetTransitionType(adw.FlapTransitionTypeOver)
+	p.OverlaySplitView = adw.NewOverlaySplitView()
+	p.OverlaySplitView.SetSidebar(p.Left)
+	p.OverlaySplitView.SetSidebarPosition(gtk.PackStart)
+	p.OverlaySplitView.SetContent(rightBox)
+	p.OverlaySplitView.SetEnableHideGesture(true)
+	p.OverlaySplitView.SetEnableShowGesture(true)
+	p.OverlaySplitView.SetMinSidebarWidth(200)
+	p.OverlaySplitView.SetMaxSidebarWidth(300)
+	p.OverlaySplitView.SetSidebarWidthFraction(0.5)
 
-	back.ConnectFlap(p.Flap)
+	back.ConnectSplitView(p.OverlaySplitView)
+
+	breakpoint := adw.NewBreakpoint(adw.BreakpointConditionParse("max-width: 500sp"))
+	breakpoint.AddSetter(p.OverlaySplitView, "collapsed", true)
+	w.AddBreakpoint(breakpoint)
 
 	setStatus := func(status discord.Status) {
 		state := gtkcord.FromContext(ctx)

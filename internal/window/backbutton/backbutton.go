@@ -43,19 +43,20 @@ func (b *BackButton) SetIconName(icon string) {
 
 // ConnectFold connects the current sidebar reveal button to the given
 // sidebar.
-func (b *BackButton) ConnectFlap(flap *adw.Flap) {
+func (b *BackButton) ConnectSplitView(view *adw.OverlaySplitView) {
+	view.NotifyProperty("show-sidebar", func() {
+		b.Button.SetActive(view.ShowSidebar())
+	})
+
+	view.NotifyProperty("collapsed", func() {
+		collapsed := view.Collapsed()
+		b.SetRevealChild(collapsed)
+		b.Button.SetSensitive(collapsed)
+	})
+
+	// Specifically bind to "clicked" rather than notifying on "active" to
+	// prevent infinite recursion.
 	b.Button.ConnectClicked(func() {
-		flap.SetRevealFlap(b.Button.Active())
-	})
-
-	flap.NotifyProperty("reveal-flap", func() {
-		b.Button.SetActive(flap.RevealFlap())
-	})
-
-	flap.NotifyProperty("folded", func() {
-		folded := flap.Folded()
-		b.SetRevealChild(folded)
-		b.Button.SetActive(flap.RevealFlap())
-		b.Button.SetSensitive(folded)
+		view.SetShowSidebar(b.Button.Active())
 	})
 }

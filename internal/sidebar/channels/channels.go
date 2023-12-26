@@ -7,6 +7,7 @@ import (
 	"github.com/diamondburned/adaptive"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
@@ -43,11 +44,10 @@ type Opener interface {
 // and threads.
 type View struct {
 	*adaptive.LoadablePage
-	Overlay *gtk.Overlay // covers whole
+	Overlay *adw.ToolbarView
 
 	Header struct {
-		*gtk.WindowHandle
-		Box  *gtk.Box
+		*adw.HeaderBar
 		Name *gtk.Label
 	}
 
@@ -83,12 +83,18 @@ var viewCSS = cssutil.Applier("channels-view", `
 		 */
 		margin-top: 0;
 	}
+	.channels-has-banner .top-bar {
+		background-color: transparent;
+		box-shadow: none;
+	}
 	.channels-has-banner  windowhandle,
 	.channels-has-banner .channels-header {
 		transition: linear 65ms all;
 	}
 	.channels-has-banner.channels-scrolled windowhandle {
-		/* Workaround for Adwaita having weird styling. */
+		background-color: transparent;
+	}
+	.channels-has-banner.channels-scrolled headerbar {
 		background-color: @theme_bg_color;
 	}
 	.channels-has-banner .channels-header {
@@ -144,15 +150,10 @@ func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
 
 	// The header is placed on top of the overlay, kind of like the official
 	// client.
-	v.Header.Box = gtk.NewBox(gtk.OrientationHorizontal, 0)
-	v.Header.Box.AddCSSClass("channels-header")
-	v.Header.Box.AddCSSClass("titlebar")
-	v.Header.Box.SetHExpand(true)
-	v.Header.Box.Append(v.Header.Name)
-
-	v.Header.WindowHandle = gtk.NewWindowHandle()
-	v.Header.WindowHandle.SetVAlign(gtk.AlignStart)
-	v.Header.WindowHandle.SetChild(v.Header.Box)
+	v.Header.HeaderBar = adw.NewHeaderBar()
+	v.Header.HeaderBar.AddCSSClass("channels-header")
+	v.Header.HeaderBar.SetShowTitle(false)
+	v.Header.HeaderBar.PackStart(v.Header.Name)
 
 	viewport := gtk.NewViewport(nil, nil)
 
@@ -279,9 +280,10 @@ func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
 	viewport.SetChild(v.Child)
 	viewport.SetFocusChild(v.Child)
 
-	v.Overlay = gtk.NewOverlay()
-	v.Overlay.SetChild(v.Scroll)
-	v.Overlay.AddOverlay(v.Header)
+	v.Overlay = adw.NewToolbarView()
+	v.Overlay.SetExtendContentToTopEdge(true) // basically act like an overlay
+	v.Overlay.AddTopBar(v.Header)
+	v.Overlay.SetContent(v.Scroll)
 	v.Overlay.SetFocusChild(v.Scroll)
 
 	state := gtkcord.FromContext(ctx)

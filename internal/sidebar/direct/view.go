@@ -8,6 +8,7 @@ import (
 	"github.com/diamondburned/adaptive"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/gtkutil"
@@ -19,7 +20,7 @@ import (
 // ChannelView displays a list of direct messaging channels.
 type ChannelView struct {
 	*adaptive.LoadablePage
-	box *gtk.Box // direct child
+	box *adw.ToolbarView
 
 	scroll *gtk.ScrolledWindow
 	list   *gtk.ListBox
@@ -96,9 +97,9 @@ func NewChannelView(ctx context.Context, ctrl Opener) *ChannelView {
 	v.searchBar.SetShowCloseButton(false)
 	v.searchBar.SetChild(v.searchEntry)
 
-	v.box = gtk.NewBox(gtk.OrientationVertical, 0)
-	v.box.Append(v.searchBar)
-	v.box.Append(v.scroll)
+	v.box = adw.NewToolbarView()
+	v.box.SetContent(v.scroll)
+	v.box.AddTopBar(v.searchBar)
 
 	v.LoadablePage = adaptive.NewLoadablePage()
 	v.LoadablePage.SetLoading()

@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
@@ -124,12 +125,13 @@ func NewSidebar(ctx context.Context, ctrl Controller, opener Opener) *Sidebar {
 		gtkutil.MenuItem("_Quit", "app.quit"),
 	})
 
-	rightWrap := gtk.NewBox(gtk.OrientationVertical, 0)
-	rightWrap.Append(s.Right)
-	rightWrap.Append(userBar)
+	// TODO: consider if we can merge this ToolbarView with the one in channels
+	// and direct.
+	rightWrap := adw.NewToolbarView()
+	rightWrap.AddBottomBar(userBar)
+	rightWrap.SetContent(s.Right)
 
 	s.Box = gtk.NewBox(gtk.OrientationHorizontal, 0)
-	s.Box.AddCSSClass("background")
 	s.Box.SetHExpand(false)
 	s.Box.Append(s.Left)
 	s.Box.Append(rightWrap)
