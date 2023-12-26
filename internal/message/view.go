@@ -61,8 +61,8 @@ func newMessageAuthor(author *discord.User) messageAuthor {
 // View is a message view widget.
 type View struct {
 	*adaptive.LoadablePage
-	Clamp    *adw.Clamp
-	Box      *gtk.Box
+	focused gtk.Widgetter
+
 	LoadMore *gtk.Button
 	Scroll   *autoscroll.Window
 	List     *gtk.ListBox
@@ -134,6 +134,12 @@ const (
 	idealMaxCount = 50 // ideally keep this many messages in the view
 )
 
+func applyViewClamp(clamp *adw.Clamp) {
+	clamp.SetMaximumSize(messagesWidth.Value())
+	// Set tightening threshold to 90% of the clamp's width.
+	clamp.SetTighteningThreshold(int(float64(messagesWidth.Value()) * 0.9))
+}
+
 // NewView creates a new View widget associated with the given channel ID. All
 // methods call on it will act on that channel.
 func NewView(ctx context.Context, chID discord.ChannelID) *View {
@@ -160,12 +166,12 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 	clampBox.Append(v.LoadMore)
 	clampBox.Append(v.List)
 
-	v.Clamp = adw.NewClamp()
-	v.Clamp.SetChild(clampBox)
-	v.Clamp.SetFocusChild(v.List)
-	v.Clamp.SetMaximumSize(messagesWidth.Value())
-	// Set tightening threshold to 90% of the clamp's width.
-	v.Clamp.SetTighteningThreshold(int(float64(messagesWidth.Value()) * 0.9))
+	// Require 2 clamps, one inside the scroll view and another outside the
+	// scroll view. This way, the scrollbars will be on the far right rather
+	// than being stuck in the middle.
+	clampScroll := adw.NewClamp()
+	clampScroll.SetChild(clampBox)
+	applyViewClamp(clampScroll)
 
 	v.Scroll = autoscroll.NewWindow()
 	v.Scroll.AddCSSClass("message-scroll")
@@ -174,7 +180,7 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 	v.Scroll.SetPropagateNaturalWidth(true)
 	v.Scroll.SetPropagateNaturalHeight(true)
 	v.Scroll.OnBottomed(v.onScrollBottomed)
-	v.Scroll.SetChild(v.Clamp)
+	v.Scroll.SetChild(clampScroll)
 
 	vp := v.Scroll.Viewport()
 	vp.SetScrollToFocus(true)
@@ -183,10 +189,18 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 	v.Composer = composer.NewView(ctx, v, chID)
 	gtkutil.ForwardTyping(v.List, v.Composer.Input)
 
-	v.Box = gtk.NewBox(gtk.OrientationVertical, 0)
-	v.Box.Append(v.Scroll)
-	v.Box.Append(v.Composer)
-	v.Box.SetFocusChild(v.Composer)
+	composerClamp := adw.NewClamp()
+	composerClamp.SetChild(v.Composer)
+	applyViewClamp(composerClamp)
+
+	outerBox := gtk.NewBox(gtk.OrientationVertical, 0)
+	outerBox.SetHExpand(true)
+	outerBox.SetVExpand(true)
+	outerBox.Append(v.Scroll)
+	outerBox.Append(composerClamp)
+
+	// This becomes the outermost widget.
+	v.focused = outerBox
 
 	v.LoadablePage = adaptive.NewLoadablePage()
 	v.LoadablePage.SetTransitionDuration(125)
@@ -480,7 +494,7 @@ func (v *View) loadMore() {
 }
 
 func (v *View) setPageToMain() {
-	v.LoadablePage.SetChild(v.Box)
+	v.LoadablePage.SetChild(v.focused)
 }
 
 func (v *View) unload() {
