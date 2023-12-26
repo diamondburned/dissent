@@ -20,14 +20,14 @@ schema = 3
     version = "v0.0.0-20231117102020-f172e4a1e35d"
     hash = "sha256-4enkipshShwRuhldVqYSFDaS9qvzOYL/hCregZlHM/c="
   [mod."github.com/diamondburned/gotk4-adwaita/pkg"]
-    version = "v0.0.0-20231117093505-26f1789529b0"
-    hash = "sha256-NIfi+uDeGAlNfWQRm7GZXVs900BoUWk/Ud3tsNUPUrg="
+    version = "v0.0.0-20231226035729-503b3cb0406c"
+    hash = "sha256-KRn8dqQ0HUrzR7S/83BL2r8X+76KFlzbwjEMtLaW8i8="
   [mod."github.com/diamondburned/gotk4/pkg"]
     version = "v0.0.6-0.20231117083507-eb41da62b149"
     hash = "sha256-iFiL0z0DW6vP2si8YEk6AUGFuF7E4pFlGzDT2uCX+0A="
   [mod."github.com/diamondburned/gotkit"]
-    version = "v0.0.0-20231117094938-ace9cfa5e044"
-    hash = "sha256-t++QA6paIzZg2dzqUFigykNVqZCWrwkP1LrshDSrCRA="
+    version = "v0.0.0-20231226054311-e5a23f3b63c1"
+    hash = "sha256-5vDsHuVlXjKsOCz0gxCa5x7k2i6mv7mtvq698ZV/J2g="
   [mod."github.com/diamondburned/ningen/v3"]
     version = "v3.0.1-0.20231125085623-c71ae51f868b"
     hash = "sha256-mHpcCx7BN2JAqhY2/xFO+N0tSUfD0CNLO/178Oc70Ek="
