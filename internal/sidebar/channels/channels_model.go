@@ -282,7 +282,7 @@ func fetchSortedChannels(state *gtkcord.State, guildID discord.GuildID, parentID
 	// Filter out all channels that are not in the same parent channel.
 	filtered := channels[:0]
 	for i, ch := range channels {
-		if ch.ParentID == parentID {
+		if ch.ParentID == parentID || (parentID == 0 && !ch.ParentID.IsValid()) {
 			filtered = append(filtered, channels[i])
 		}
 	}
