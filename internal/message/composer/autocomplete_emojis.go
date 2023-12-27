@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"html"
+	"sort"
 	"time"
 
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -122,10 +123,10 @@ func (c *emojiCompleter) Search(ctx context.Context, str string) []autocomplete.
 		}
 	}
 
-	return c.search(str)
+	return c.search(str, hasNitro)
 }
 
-func (c *emojiCompleter) search(str string) []autocomplete.Data {
+func (c *emojiCompleter) search(str string, hasNitro bool) []autocomplete.Data {
 	res := fuzzy.FindFrom(str, c.emojis)
 	if len(res) > maxAutocompletion {
 		res = res[:maxAutocompletion]
@@ -134,6 +135,17 @@ func (c *emojiCompleter) search(str string) []autocomplete.Data {
 	data := c.matched[:0]
 	for _, r := range res {
 		data = append(data, c.emojis[r.Index])
+	}
+
+	// Put the guild emojis first if we don't have Nitro.
+	if !hasNitro {
+		sort.SliceStable(data, func(i, j int) bool {
+			a := data[i].(EmojiData)
+			b := data[j].(EmojiData)
+			correctA := a.Guild != nil && a.Guild.ID == c.guildID
+			correctB := b.Guild != nil && b.Guild.ID == c.guildID
+			return correctA && !correctB
+		})
 	}
 
 	return data
