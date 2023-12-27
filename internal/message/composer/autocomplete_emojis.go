@@ -66,8 +66,11 @@ func (c *emojiCompleter) Search(ctx context.Context, str string) []autocomplete.
 
 	now := time.Now()
 
+	state := gtkcord.FromContext(ctx)
+	hasNitro := state.EmojiState.HasNitro()
+
 	if c.emojis != nil && c.updated.Add(emojiCacheExpiry).After(now) {
-		return c.search(str)
+		return c.search(str, hasNitro)
 	}
 
 	c.updated = now
@@ -85,16 +88,12 @@ func (c *emojiCompleter) Search(ctx context.Context, str string) []autocomplete.
 		})
 	}
 
-	state := gtkcord.FromContext(ctx)
-
 	var emojis []emoji.Guild
 	if showAllEmojis.Value() {
 		emojis, _ = state.EmojiState.AllEmojis()
 	} else {
 		emojis, _ = state.EmojiState.ForGuild(c.guildID)
 	}
-
-	hasNitro := state.EmojiState.HasNitro()
 
 	for i, guild := range emojis {
 		for _, emoji := range guild.Emojis {
