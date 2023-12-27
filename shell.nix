@@ -5,6 +5,7 @@ import ./nix {
 	buildInputs = pkgs: with pkgs; [
 		jq
 		niv
+		libxml2 # for xmllint
 		gomod2nix
 		imagemagick
 		(callPackage ./.github/tools {})
