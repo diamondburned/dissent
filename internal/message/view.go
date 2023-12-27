@@ -206,6 +206,24 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 	v.LoadablePage.SetTransitionDuration(125)
 	v.setPageToMain()
 
+	// If the window gains focus, try to carefully mark the channel as read.
+	var windowSignal glib.SignalHandle
+	v.ConnectMap(func() {
+		window := app.GTKWindowFromContext(ctx)
+		windowSignal = window.NotifyProperty("is-active", func() {
+			if v.IsActive() {
+				v.MarkRead()
+			}
+		})
+	})
+	// Immediately disconnect the signal when the widget is unmapped.
+	// This should prevent v from being referenced forever.
+	v.ConnectUnmap(func() {
+		window := app.GTKWindowFromContext(ctx)
+		window.HandlerDisconnect(windowSignal)
+		windowSignal = 0
+	})
+
 	state := gtkcord.FromContext(v.ctx)
 	if ch, err := state.Cabinet.Channel(v.chID); err == nil {
 		v.chName = ch.Name
