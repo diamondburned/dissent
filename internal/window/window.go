@@ -12,9 +12,6 @@ import (
 
 // SetPreferDarkTheme sets whether or not GTK should use a dark theme.
 func SetPreferDarkTheme(prefer bool) {
-	settings := gtk.SettingsGetDefault()
-	settings.SetObjectProperty("gtk-application-prefer-dark-theme", prefer)
-
 	scheme := adw.ColorSchemePreferLight
 	if prefer {
 		scheme = adw.ColorSchemePreferDark
