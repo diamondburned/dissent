@@ -6,12 +6,23 @@ import (
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/app"
+	"github.com/diamondburned/gotkit/app/prefs"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/window/login"
 )
 
+var useDiscordColorScheme = prefs.NewBool(true, prefs.PropMeta{
+	Name:        "Use Discord's color preference",
+	Section:     "Discord",
+	Description: "Whether or not to use Discord's dark/light mode preference.",
+})
+
 // SetPreferDarkTheme sets whether or not GTK should use a dark theme.
 func SetPreferDarkTheme(prefer bool) {
+	if !useDiscordColorScheme.Value() {
+		return
+	}
+
 	scheme := adw.ColorSchemePreferLight
 	if prefer {
 		scheme = adw.ColorSchemePreferDark
