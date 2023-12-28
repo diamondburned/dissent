@@ -71,26 +71,6 @@ func (m *modelManager) Model(chID discord.ChannelID) *gtk.StringList {
 		return nil
 	}
 
-	switch ch.Type {
-	case discord.GuildCategory:
-		m.bindCategory(chID, list)
-	case discord.GuildText, discord.GuildForum:
-		m.bindThreads(chID, list)
-	default:
-		return nil
-	}
-
-	m.addAllChannels(chID, list)
-	return model
-}
-
-func (m *modelManager) addAllChannels(parentID discord.ChannelID, list *channelList) {
-	for _, ch := range fetchSortedChannels(m.state, m.guildID, parentID) {
-		list.Append(ch)
-	}
-}
-
-func (m *modelManager) bindCategory(chID discord.ChannelID, list *channelList) {
 	var unbind signaling.DisconnectStack
 	list.ConnectDestroy(func() { unbind.Disconnect() })
 
@@ -114,30 +94,6 @@ func (m *modelManager) bindCategory(chID discord.ChannelID, list *channelList) {
 				list.Remove(ev.Channel.ID)
 			}
 		}),
-	)
-}
-
-func (m *modelManager) bindThreads(chID discord.ChannelID, list *channelList) {
-	var unbind signaling.DisconnectStack
-	list.ConnectDestroy(func() { unbind.Disconnect() })
-
-	unbind.Push(
-		m.state.AddHandler(func(ev *gateway.ThreadListSyncEvent) {
-			if ev.GuildID != m.guildID {
-				return
-			}
-
-			for _, parentID := range ev.ChannelIDs {
-				if parentID != chID {
-					continue
-				}
-
-				// This sync event is for us.
-				list.Clear()
-				m.addAllChannels(chID, list)
-				break
-			}
-		}),
 		m.state.AddHandler(func(ev *gateway.ThreadCreateEvent) {
 			if ev.GuildID != m.guildID || ev.Channel.ParentID != chID {
 				return
@@ -150,7 +106,40 @@ func (m *modelManager) bindThreads(chID discord.ChannelID, list *channelList) {
 			}
 			list.Remove(ev.ID)
 		}),
+		m.state.AddHandler(func(ev *gateway.ThreadListSyncEvent) {
+			if ev.GuildID != m.guildID {
+				return
+			}
+
+			if ev.ChannelIDs == nil {
+				// The entire guild was synced, so invalidate everything.
+				m.invalidateAll(chID, list)
+				return
+			}
+
+			for _, parentID := range ev.ChannelIDs {
+				if parentID == chID {
+					// This sync event is also for us.
+					m.invalidateAll(chID, list)
+					break
+				}
+			}
+		}),
 	)
+
+	m.addAllChannels(chID, list)
+	return model
+}
+
+func (m *modelManager) invalidateAll(parentID discord.ChannelID, list *channelList) {
+	list.Clear()
+	m.addAllChannels(parentID, list)
+}
+
+func (m *modelManager) addAllChannels(parentID discord.ChannelID, list *channelList) {
+	for _, ch := range fetchSortedChannels(m.state, m.guildID, parentID) {
+		list.Append(ch)
+	}
 }
 
 // channelList wraps a StringList to maintain a set of channel IDs.
