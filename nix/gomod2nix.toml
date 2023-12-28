@@ -14,8 +14,8 @@ schema = 3
     version = "v0.0.2-0.20221227093656-fa139be203a8"
     hash = "sha256-xIerrbYQf6FPbbRd60OnBStIJMl6mg/Qvl+LTmRbyIw="
   [mod."github.com/diamondburned/arikawa/v3"]
-    version = "v3.3.1-0.20230609054540-4224b93c4e01"
-    hash = "sha256-zDmcpqeJMEf0Qd0kOFkKKNhCASxNwBsh+fUOwsl1LFM="
+    version = "v3.3.5-0.20231228032010-9809321f6ff4"
+    hash = "sha256-HwK2mBYxGs8/1ZK51HJboJYDobGzEwBse14siQAqmMk="
   [mod."github.com/diamondburned/chatkit"]
     version = "v0.0.0-20231117102020-f172e4a1e35d"
     hash = "sha256-4enkipshShwRuhldVqYSFDaS9qvzOYL/hCregZlHM/c="
@@ -80,17 +80,17 @@ schema = 3
     version = "v0.0.0-20230525183740-e7c30c78aeb2"
     hash = "sha256-IDQleFabPVMsuiCrYNPBNNDOvl+JrKQTrsmbZy4vtlA="
   [mod."golang.org/x/crypto"]
-    version = "v0.1.0"
-    hash = "sha256-0oZWBSiW5Pd/2a1p2beuoelDe0CpfXZhrg/qPduJlYs="
+    version = "v0.17.0"
+    hash = "sha256-/vzBaeD/Ymyc7cpjBvSfJfuZ57zWa9LOaZM7b33eIx0="
   [mod."golang.org/x/image"]
     version = "v0.0.0-20220902085622-e7cb96979f69"
     hash = "sha256-yVdEVP3jBVOYd4ADvz9UHQfju9Hhh9Xr9TE9kfHJGbw="
   [mod."golang.org/x/sync"]
-    version = "v0.0.0-20220722155255-886fb9371eb4"
-    hash = "sha256-ZZyIlxh+nqsOiWHstW7eHXN7RhHnbSL2eDIzcve07Q0="
+    version = "v0.1.0"
+    hash = "sha256-Hygjq9euZ0qz6TvHYQwOZEjNiTbTh1nSLRAWZ6KFGR8="
   [mod."golang.org/x/text"]
-    version = "v0.4.0"
-    hash = "sha256-JvyMygdmTvWg7xhbnUB9MMk6WcYXJt8DAj4DYl82Pys="
+    version = "v0.14.0"
+    hash = "sha256-yh3B0tom1RfzQBf1RNmfdNWF1PtiqxV41jW1GVS6JAg="
   [mod."golang.org/x/time"]
     version = "v0.0.0-20210723032227-1f47c861a9ac"
     hash = "sha256-YygVh3tohBFn6Or1txGRgeaCaCoMJLhEmKaKxLkjLbc="
