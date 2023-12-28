@@ -161,6 +161,7 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 	v.Placeholder.AddCSSClass("composer-placeholder")
 	v.Placeholder.SetVAlign(gtk.AlignStart)
 	v.Placeholder.SetHAlign(gtk.AlignFill)
+	v.Placeholder.SetXAlign(0)
 	v.Placeholder.SetEllipsize(pango.EllipsizeEnd)
 
 	revealer := gtk.NewRevealer()
