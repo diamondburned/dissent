@@ -6,6 +6,7 @@ import (
 	"io/fs"
 
 	"github.com/diamondburned/adaptive"
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/app/prefs"
@@ -86,6 +87,7 @@ func (m *manager) openChannel(cmd gtkcord.OpenChannelCommand) {
 }
 
 func (m *manager) activate(ctx context.Context) {
+	adw.Init()
 	adaptive.Init()
 
 	if m.win != nil {
