@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8
-	github.com/diamondburned/arikawa/v3 v3.3.1-0.20230609054540-4224b93c4e01
+	github.com/diamondburned/arikawa/v3 v3.3.5-0.20231228032010-9809321f6ff4
 	github.com/diamondburned/chatkit v0.0.0-20231117102020-f172e4a1e35d
 	github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20231226035729-503b3cb0406c
 	github.com/diamondburned/gotk4/pkg v0.0.6-0.20231117083507-eb41da62b149
@@ -32,9 +32,9 @@ require (
 	github.com/zalando/go-keyring v0.2.1 // indirect
 	go4.org v0.0.0-20200411211856-f5505b9728dd // indirect
 	go4.org/unsafe/assume-no-moving-gc v0.0.0-20230525183740-e7c30c78aeb2 // indirect
-	golang.org/x/crypto v0.1.0 // indirect
+	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/image v0.0.0-20220902085622-e7cb96979f69 // indirect
-	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
-	golang.org/x/text v0.4.0 // indirect
+	golang.org/x/sync v0.1.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
 )
