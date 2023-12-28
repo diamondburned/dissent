@@ -397,7 +397,7 @@ func newChannelItemCategory(ch *discord.Channel, row *gtk.TreeListRow, reveal *a
 
 	// Add this notifier after a small delay so GTK can initialize the row.
 	// Otherwise, it will falsely emit the signal.
-	glib.TimeoutAdd(200, func() {
+	glib.TimeoutSecondsAdd(1, func() {
 		row.NotifyProperty("expanded", func() {
 			row := ref.Get()
 			if row == nil {
