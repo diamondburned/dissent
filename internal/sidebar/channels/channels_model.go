@@ -49,28 +49,6 @@ func (m *modelManager) Model(chID discord.ChannelID) *gtk.StringList {
 
 	list := newChannelList(m.state, glib.NewWeakRef(model))
 
-	if chID == 0 {
-		m.bindCategory(0, list)
-		m.addAllChannels(chID, list)
-		return model
-	}
-
-	ch, _ := m.state.Offline().Channel(chID)
-	if ch == nil {
-		// Uncertain? Just throw a warning for now.
-		log.Printf(
-			"channelsTreeManager: channel %d not found in state, assuming it won't have children",
-			chID)
-		return nil
-	}
-
-	if ch.GuildID != m.guildID {
-		log.Printf(
-			"channelsTreeManager: channel %d (guild %d) is not in guild %d, assuming it won't have children",
-			chID, ch.GuildID, m.guildID)
-		return nil
-	}
-
 	var unbind signaling.DisconnectStack
 	list.ConnectDestroy(func() { unbind.Disconnect() })
 
@@ -95,16 +73,20 @@ func (m *modelManager) Model(chID discord.ChannelID) *gtk.StringList {
 			}
 		}),
 		m.state.AddHandler(func(ev *gateway.ThreadCreateEvent) {
-			if ev.GuildID != m.guildID || ev.Channel.ParentID != chID {
+			if ev.GuildID != m.guildID {
 				return
 			}
-			list.Append(ev.Channel)
+			if ev.Channel.ParentID == chID {
+				list.Append(ev.Channel)
+			}
 		}),
 		m.state.AddHandler(func(ev *gateway.ThreadDeleteEvent) {
-			if ev.GuildID != m.guildID || ev.ParentID != chID {
+			if ev.GuildID != m.guildID {
 				return
 			}
-			list.Remove(ev.ID)
+			if ev.ParentID == chID {
+				list.Remove(ev.ID)
+			}
 		}),
 		m.state.AddHandler(func(ev *gateway.ThreadListSyncEvent) {
 			if ev.GuildID != m.guildID {
