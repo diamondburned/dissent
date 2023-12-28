@@ -149,10 +149,15 @@ func NewChannelView(ctx context.Context, ctrl Opener) *ChannelView {
 
 	gtkutil.Async(ctx, func() func() {
 		lastOpen, ok := lastOpen.Get(lastOpenStateKey)
-		if ok {
-			return func() { v.SelectChannel(lastOpen) }
+		if !ok {
+			return nil
 		}
-		return nil
+		return func() {
+			// Only restore selection if we're not already selecting something.
+			if v.list.SelectedRow() == nil {
+				v.SelectChannel(lastOpen)
+			}
+		}
 	})
 
 	return &v
