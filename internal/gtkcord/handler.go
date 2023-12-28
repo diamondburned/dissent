@@ -56,10 +56,7 @@ func NewMainThreadHandler(h *handler.Handler) *MainThreadHandler {
 // The given handler will be called on the main thread.
 // The returned function will remove the handler.
 func (m *MainThreadHandler) AddHandler(handler any) func() {
-	detach := m.h.AddSyncHandler(handler)
-	return func() {
-		detach()
-	}
+	return m.h.AddSyncHandler(handler)
 }
 
 // AddSyncHandler is the same as [AddHandler].

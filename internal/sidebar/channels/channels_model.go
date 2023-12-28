@@ -145,6 +145,10 @@ func newChannelList(state *gtkcord.State, ref *glib.WeakRef[*gtk.StringList]) *c
 // function returns the end of the list.
 func (l *channelList) CalculatePosition(target discord.Channel) uint {
 	list := l.list.Get()
+	if list == nil {
+		return 0
+	}
+
 	end := list.NItems()
 
 	// Find this particular channel in the list.
@@ -165,6 +169,11 @@ func (l *channelList) CalculatePosition(target discord.Channel) uint {
 // Append appends a channel to the list. If the channel already exists, then
 // this function does nothing.
 func (l *channelList) Append(ch discord.Channel) {
+	list := l.list.Get()
+	if list == nil {
+		return
+	}
+
 	str := ch.ID.String()
 	if _, exists := l.set[str]; exists {
 		return
@@ -172,7 +181,6 @@ func (l *channelList) Append(ch discord.Channel) {
 	l.set[str] = struct{}{}
 
 	pos := l.CalculatePosition(ch)
-	list := l.list.Get()
 	list.Splice(pos, 0, []string{str})
 }
 
@@ -183,8 +191,13 @@ func (l *channelList) Remove(chID discord.ChannelID) {
 	if _, exists := l.set[str]; !exists {
 		return
 	}
+
+	list := l.list.Get()
+	if list == nil {
+		return
+	}
+
 	if i := l.Index(chID); i != -1 {
-		list := l.list.Get()
 		list.Remove(uint(i))
 	}
 	delete(l.set, str)
@@ -214,6 +227,10 @@ func (l *channelList) Index(chID discord.ChannelID) int {
 // Clear clears the list.
 func (l *channelList) Clear() {
 	list := l.list.Get()
+	if list == nil {
+		return
+	}
+
 	list.Splice(0, list.NItems(), nil)
 	l.set = make(map[string]struct{})
 }
@@ -221,6 +238,10 @@ func (l *channelList) Clear() {
 // All returns a function that iterates over all channel IDs in the list.
 func (l *channelList) All() func(yield func(i int, id discord.ChannelID) bool) {
 	list := l.list.Get()
+	if list == nil {
+		return func(yield func(i int, id discord.ChannelID) bool) {}
+	}
+
 	n := list.NItems()
 	return func(yield func(int, discord.ChannelID) bool) {
 		for i := uint(0); i < n; i++ {
@@ -236,10 +257,13 @@ func (l *channelList) All() func(yield func(i int, id discord.ChannelID) bool) {
 }
 
 func (l *channelList) ConnectDestroy(f func()) {
+	list := l.list.Get()
+	if list == nil {
+		return
+	}
 	// I think this is the only way to know if a ListModel is no longer
 	// being used? At least from reading the source code, which just calls
 	// g_clear_pointer.
-	list := l.list.Get()
 	glib.WeakRefObject(list, f)
 }
 
