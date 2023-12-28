@@ -237,7 +237,7 @@ func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
 		row.SetExpanded(true)
 	})
 
-	v.Child.View = gtk.NewListView(selection, newChannelItemFactory(state, v.model.TreeListModel))
+	v.Child.View = gtk.NewListView(selection, newChannelItemFactory(ctx, v.model.TreeListModel))
 	v.Child.View.SetSizeRequest(bannerWidth, -1)
 	v.Child.View.AddCSSClass("channels-viewtree")
 	v.Child.View.SetVExpand(true)

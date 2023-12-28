@@ -10,6 +10,8 @@ import (
 	"github.com/diamondburned/gotk4/pkg/core/glib"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
+	"github.com/diamondburned/gotkit/app"
+	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/imgutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
@@ -18,8 +20,19 @@ import (
 	"github.com/diamondburned/ningen/v3/states/read"
 )
 
-func newChannelItemFactory(state *gtkcord.State, model *gtk.TreeListModel) *gtk.ListItemFactory {
+var revealStateKey = app.NewStateKey[bool]("collapsed-channels-state")
+
+type channelItemState struct {
+	state  *gtkcord.State
+	reveal *app.TypedState[bool]
+}
+
+func newChannelItemFactory(ctx context.Context, model *gtk.TreeListModel) *gtk.ListItemFactory {
 	factory := gtk.NewSignalListItemFactory()
+	state := channelItemState{
+		state:  gtkcord.FromContext(ctx),
+		reveal: revealStateKey.Acquire(ctx),
+	}
 
 	unbindFns := make(map[uintptr]func())
 
@@ -92,9 +105,10 @@ var _ = cssutil.WriteCSS(`
 `)
 
 type channelItem struct {
-	state *gtkcord.State
-	item  *gtk.ListItem
-	row   *gtk.TreeListRow
+	state  *gtkcord.State
+	item   *gtk.ListItem
+	row    *gtk.TreeListRow
+	reveal *app.TypedState[bool]
 
 	child struct {
 		*gtk.Box
@@ -105,12 +119,13 @@ type channelItem struct {
 	chID discord.ChannelID
 }
 
-func bindChannelItem(state *gtkcord.State, item *gtk.ListItem, row *gtk.TreeListRow) func() {
+func bindChannelItem(state channelItemState, item *gtk.ListItem, row *gtk.TreeListRow) func() {
 	i := &channelItem{
-		state: state,
-		item:  item,
-		row:   row,
-		chID:  channelIDFromListItem(item),
+		state:  state.state,
+		item:   item,
+		row:    row,
+		reveal: state.reveal,
+		chID:   channelIDFromListItem(item),
 	}
 
 	i.child.indicator = gtk.NewLabel("")
@@ -127,23 +142,23 @@ func bindChannelItem(state *gtkcord.State, item *gtk.ListItem, row *gtk.TreeList
 
 	var unbind signaling.DisconnectStack
 	unbind.Push(
-		state.AddHandler(func(ev *read.UpdateEvent) {
+		i.state.AddHandler(func(ev *read.UpdateEvent) {
 			if ev.ChannelID == i.chID {
 				i.Invalidate()
 			}
 		}),
-		state.AddHandler(func(ev *gateway.ChannelUpdateEvent) {
+		i.state.AddHandler(func(ev *gateway.ChannelUpdateEvent) {
 			if ev.ID == i.chID {
 				i.Invalidate()
 			}
 		}),
 	)
 
-	ch, _ := state.Offline().Channel(i.chID)
+	ch, _ := i.state.Offline().Channel(i.chID)
 	if ch != nil {
 		switch ch.Type {
 		case discord.GuildPublicThread, discord.GuildPrivateThread, discord.GuildAnnouncementThread:
-			unbind.Push(state.AddHandler(func(ev *gateway.ThreadUpdateEvent) {
+			unbind.Push(i.state.AddHandler(func(ev *gateway.ThreadUpdateEvent) {
 				if ev.ID == i.chID {
 					i.Invalidate()
 				}
@@ -153,7 +168,7 @@ func bindChannelItem(state *gtkcord.State, item *gtk.ListItem, row *gtk.TreeList
 		guildID := ch.GuildID
 		switch ch.Type {
 		case discord.GuildVoice, discord.GuildStageVoice:
-			unbind.Push(state.AddHandler(func(ev *gateway.VoiceStateUpdateEvent) {
+			unbind.Push(i.state.AddHandler(func(ev *gateway.VoiceStateUpdateEvent) {
 				// The channel ID becomes null when the user leaves the channel,
 				// so we'll just update when any guild state changes.
 				if ev.GuildID == guildID {
@@ -202,7 +217,7 @@ func (i *channelItem) Invalidate() {
 
 			switch ch.Type {
 			case discord.GuildCategory:
-				i.child.content = newChannelItemCategory(ch, i.row)
+				i.child.content = newChannelItemCategory(ch, i.row, i.reveal)
 			case discord.GuildForum:
 				i.child.content = newChannelItemForum(ch, i.row)
 			}
@@ -357,7 +372,7 @@ var _ = cssutil.WriteCSS(`
 	}
 `)
 
-func newChannelItemCategory(ch *discord.Channel, row *gtk.TreeListRow) gtk.Widgetter {
+func newChannelItemCategory(ch *discord.Channel, row *gtk.TreeListRow, reveal *app.TypedState[bool]) gtk.Widgetter {
 	label := gtk.NewLabel(ch.Name)
 	label.SetEllipsize(pango.EllipsizeEnd)
 	label.SetXAlign(0)
@@ -368,6 +383,35 @@ func newChannelItemCategory(ch *discord.Channel, row *gtk.TreeListRow) gtk.Widge
 	expander.AddCSSClass("channel-item-category")
 	expander.SetListRow(row)
 	expander.SetChild(label)
+
+	ref := glib.NewWeakRef[*gtk.TreeListRow](row)
+	chID := ch.ID
+
+	// Restore this on the next tick, otherwise GTK will crash and burn.
+	gtkutil.Async(context.Background(), func() func() {
+		if collapsed, _ := reveal.Get(chID.String()); collapsed {
+			return func() { row.SetExpanded(false) }
+		}
+		return nil
+	})
+
+	// Add this notifier after a small delay so GTK can initialize the row.
+	// Otherwise, it will falsely emit the signal.
+	glib.TimeoutAdd(200, func() {
+		row.NotifyProperty("expanded", func() {
+			row := ref.Get()
+			if row == nil {
+				return
+			}
+			// Only retain collapsed states. Expanded states are assumed to be
+			// the default.
+			if !row.Expanded() {
+				reveal.Set(chID.String(), true)
+			} else {
+				reveal.Delete(chID.String())
+			}
+		})
+	})
 
 	return expander
 }
