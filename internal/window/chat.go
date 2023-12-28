@@ -19,6 +19,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+const lastOpenKey = "last-open-channel-state"
+
+var lastOpenStateKey = app.NewStateKey[discord.ChannelID](lastOpenKey)
+
 type ChatPage struct {
 	*adw.OverlaySplitView
 	Left       *sidebar.Sidebar
@@ -26,6 +30,7 @@ type ChatPage struct {
 	RightChild *gtk.Stack
 
 	prevView gtk.Widgetter
+	lastOpen *app.TypedState[discord.ChannelID]
 
 	ctx         context.Context
 	placeholder gtk.Widgetter
@@ -49,7 +54,10 @@ var chatPageCSS = cssutil.Applier("window-chatpage", `
 `)
 
 func NewChatPage(ctx context.Context, w *Window) *ChatPage {
-	p := ChatPage{ctx: ctx}
+	p := ChatPage{
+		ctx:      ctx,
+		lastOpen: lastOpenStateKey.Acquire(ctx),
+	}
 	p.Left = sidebar.NewSidebar(ctx, (*sidebarChatPage)(&p), &p)
 	p.Left.SetHAlign(gtk.AlignStart)
 
@@ -150,10 +158,23 @@ func (p *ChatPage) SwitchToMessages() {
 	view, ok := p.prevView.(*message.View)
 	if ok {
 		p.OpenChannel(view.ChannelID())
-	} else {
-		p.SwitchToPlaceholder()
-		p.Left.OpenDMs() // Open DMs by default.
+		return
 	}
+
+	p.SwitchToPlaceholder()
+
+	// Restore the last opened channel if there is one.
+	gtkutil.Async(p.ctx, func() func() {
+		lastOpenID, ok := p.lastOpen.Get(lastOpenKey)
+		return func() {
+			if ok {
+				p.OpenChannel(lastOpenID)
+			} else {
+				// Open DMs if there is no last opened channel.
+				p.OpenDMs()
+			}
+		}
+	})
 }
 
 // OpenDMs opens the DMs page.
@@ -175,6 +196,8 @@ func (p *ChatPage) OpenChannel(chID discord.ChannelID) {
 
 	view := message.NewView(p.ctx, chID)
 	p.switchTo(view)
+
+	p.lastOpen.Set(lastOpenKey, chID)
 }
 
 // OpenGuild opens the guild with the given ID.
