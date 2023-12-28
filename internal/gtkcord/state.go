@@ -239,6 +239,20 @@ func (s *State) BindWidget(w gtk.Widgetter, fn func(gateway.Event), filters ...g
 	})
 }
 
+// AddHandlerForWidget replaces BindWidget and provides a way to bind a handler
+// that only receives events as long as the widget is mapped. As soon as the
+// widget is unmapped, the handler is unbound.
+func (s *State) AddHandlerForWidget(w gtk.Widgetter, fn any) {
+	var unbind func()
+	ww := gtk.BaseWidget(w)
+	ww.ConnectMap(func() {
+		unbind = s.AddHandler(fn)
+	})
+	ww.ConnectUnmap(func() {
+		unbind()
+	})
+}
+
 // AuthorMarkup renders the markup for the message author's name. It makes no
 // API calls.
 func (s *State) AuthorMarkup(m *gateway.MessageCreateEvent, mods ...author.MarkupMod) string {

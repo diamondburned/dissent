@@ -5,6 +5,7 @@ import (
 	"math"
 
 	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/components/onlineimage"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
@@ -51,6 +52,13 @@ func NewBanner(ctx context.Context, guildID discord.GuildID) *Banner {
 	b.Overlay.SetCanFocus(false)
 	b.Hide()
 	bannerCSS(b)
+
+	state := gtkcord.FromContext(ctx)
+	state.AddHandlerForWidget(b, func(ev *gateway.GuildUpdateEvent) {
+		if ev.Guild.ID == guildID {
+			b.Invalidate()
+		}
+	})
 
 	return &b
 }
