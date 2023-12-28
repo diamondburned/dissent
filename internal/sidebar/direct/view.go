@@ -10,6 +10,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
+	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
@@ -50,12 +51,18 @@ var _ = cssutil.WriteCSS(`
 	}
 `)
 
+const lastOpenStateKey = "direct-last-open"
+
+var lastOpenKey = app.NewStateKey[discord.ChannelID](lastOpenStateKey)
+
 // NewChannelView creates a new view.
 func NewChannelView(ctx context.Context, ctrl Opener) *ChannelView {
 	v := ChannelView{
 		ctx:      ctx,
 		channels: make(map[discord.ChannelID]*Channel, 50),
 	}
+
+	lastOpen := lastOpenKey.Acquire(ctx)
 
 	v.list = gtk.NewListBox()
 	v.list.SetCSSClasses([]string{"direct-list", "navigation-sidebar"})
@@ -64,13 +71,19 @@ func NewChannelView(ctx context.Context, ctrl Opener) *ChannelView {
 	v.list.SetFilterFunc(v.filter)
 	v.list.SetSelectionMode(gtk.SelectionBrowse)
 	v.list.SetActivateOnSingleClick(true)
-	v.list.ConnectRowActivated(func(r *gtk.ListBoxRow) {
+	v.list.ConnectRowSelected(func(r *gtk.ListBoxRow) {
+		if r == nil {
+			// This should not happen.
+			return
+		}
+
 		// Invalidate our selection state.
 		v.selectID = 0
 
 		ch := v.rowChannel(r)
 		if ch != nil {
 			ctrl.OpenChannel(ch.id)
+			lastOpen.Set(lastOpenStateKey, ch.id)
 		}
 	})
 
@@ -134,7 +147,13 @@ func NewChannelView(ctx context.Context, ctrl Opener) *ChannelView {
 		(*read.UpdateEvent)(nil),
 	)
 
-	// TODO: search
+	gtkutil.Async(ctx, func() func() {
+		lastOpen, ok := lastOpen.Get(lastOpenStateKey)
+		if ok {
+			return func() { v.SelectChannel(lastOpen) }
+		}
+		return nil
+	})
 
 	return &v
 }
