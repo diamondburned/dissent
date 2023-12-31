@@ -67,6 +67,19 @@ func channelIDFromItem(item *glib.Object) discord.ChannelID {
 }
 
 var _ = cssutil.WriteCSS(`
+	.channels-viewtree row:hover,
+	.channels-viewtree row:selected {
+		background: none;
+	}
+	.channels-viewtree row:hover .channel-item-outer {
+		background: alpha(@theme_fg_color, 0.075);
+	}
+	.channels-viewtree row:selected .channel-item-outer {
+		background: alpha(@theme_fg_color, 0.125);
+	}
+	.channels-viewtree row:selected:hover .channel-item-outer {
+		background: alpha(@theme_fg_color, 0.175);
+	}
 	.channel-item {
 		padding: 0.35em 0;
 	}
@@ -135,7 +148,6 @@ func bindChannelItem(state channelItemState, item *gtk.ListItem, row *gtk.TreeLi
 	i.child.indicator.SetVAlign(gtk.AlignCenter)
 
 	i.child.Box = gtk.NewBox(gtk.OrientationHorizontal, 0)
-	i.child.Box.AddCSSClass("channel-item-outer")
 	i.child.Box.Append(i.child.indicator)
 
 	i.item.SetChild(i.child.Box)
@@ -196,7 +208,6 @@ func (i *channelItem) Invalidate() {
 	}
 
 	i.item.SetSelectable(true)
-	i.item.SetActivatable(false)
 
 	ch, _ := i.state.Offline().Channel(i.chID)
 	if ch == nil {
@@ -211,13 +222,10 @@ func (i *channelItem) Invalidate() {
 			i.child.content = newChannelItemText(ch)
 
 		case discord.GuildCategory, discord.GuildForum:
-			// allow double-clicking to expand/collapse categories
-			i.item.SetSelectable(false)
-			i.item.SetActivatable(true)
-
 			switch ch.Type {
 			case discord.GuildCategory:
 				i.child.content = newChannelItemCategory(ch, i.row, i.reveal)
+				i.item.SetSelectable(false)
 			case discord.GuildForum:
 				i.child.content = newChannelItemForum(ch, i.row)
 			}
@@ -230,16 +238,19 @@ func (i *channelItem) Invalidate() {
 		}
 	}
 
+	i.child.Box.SetCSSClasses(nil)
 	i.child.Box.Prepend(i.child.content)
 
-	for _, cssClass := range readCSSClasses {
-		i.child.Box.RemoveCSSClass(cssClass)
+	// Steal CSS classes from the child.
+	for _, class := range gtk.BaseWidget(i.child.content).CSSClasses() {
+		i.child.Box.AddCSSClass(class + "-outer")
 	}
 
 	unread := i.state.ChannelIsUnread(i.chID)
 	if unread != ningen.ChannelRead {
 		i.child.Box.AddCSSClass(readCSSClasses[unread])
 	}
+
 	i.updateIndicator(unread)
 
 	if i.state.ChannelIsMuted(i.chID, false) {
@@ -356,8 +367,13 @@ func newChannelItemForum(ch *discord.Channel, row *gtk.TreeListRow) gtk.Widgette
 }
 
 var _ = cssutil.WriteCSS(`
+	.channels-viewtree row:not(:first-child) .channel-item-category-outer {
+		margin-top: 0.75em;
+	}
+	.channels-viewtree row:hover .channel-item-category-outer {
+		background: none;
+	}
 	.channel-item-category {
-		margin-top: 0.5em;
 		padding: 0.4em;
 	}
 	.channel-item-category expander {

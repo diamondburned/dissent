@@ -6,7 +6,6 @@ import (
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
-	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/gtkutil"
@@ -53,9 +52,11 @@ type View struct {
 		View   *gtk.ListView
 	}
 
-	ctx   gtkutil.Cancellable
-	ctrl  Opener
-	model *modelManager
+	ctx  gtkutil.Cancellable
+	ctrl Opener
+
+	model     *modelManager
+	selection *gtk.SingleSelection
 
 	guildID  discord.GuildID
 	selectID discord.ChannelID // delegate to select later
@@ -71,12 +72,6 @@ var viewCSS = cssutil.Applier("channels-view", `
 	.channels-viewtree > row {
 		margin: 0;
 		padding: 0;
-	}
-	.channels-viewtree > row:hover:not(:selected) {
-		background: @borders;
-	}
-	.channels-viewtree > row:hover:selected {
-		background: mix(@borders, @theme_selected_bg_color, 0.25);
 	}
 	.channels-header {
 		padding: 0 {$header_padding};
@@ -198,23 +193,18 @@ func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
 	v.Child.Banner = NewBanner(ctx, guildID)
 	v.Child.Banner.Invalidate()
 
-	selection := gtk.NewSingleSelection(v.model)
-	selection.SetCanUnselect(false)
+	v.selection = gtk.NewSingleSelection(v.model)
+	v.selection.SetAutoselect(false)
+	v.selection.SetCanUnselect(true)
 
-	var selecting bool
-	selection.ConnectSelectionChanged(func(position, nItems uint) {
-		log.Printf("channels.View: selection changed: %d %d", position, nItems)
-
-		if selecting {
-			log.Println("BUG: infinite recursion in selection.ConnectChanged detected")
-			log.Println("BUG: ignoring selection change")
+	v.selection.ConnectSelectionChanged(func(position, nItems uint) {
+		item := v.selection.SelectedItem()
+		if item == nil {
+			ctrl.OpenChannel(0)
 			return
 		}
 
-		selecting = true
-		glib.IdleAdd(func() { selecting = false })
-
-		chID := channelIDFromItem(selection.SelectedItem())
+		chID := channelIDFromItem(item)
 
 		ch, _ := state.Cabinet.Channel(chID)
 		if ch == nil {
@@ -230,22 +220,36 @@ func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
 			return
 		}
 
-		v.selectID = chID
+		log.Printf("channels.View: selected channel %d", chID)
+
+		v.selectID = 0
 		ctrl.OpenChannel(chID)
 
-		row := v.model.Row(selection.Selected())
+		row := v.model.Row(v.selection.Selected())
 		row.SetExpanded(true)
 	})
 
-	v.Child.View = gtk.NewListView(selection, newChannelItemFactory(ctx, v.model.TreeListModel))
+	// Bind to a signal that selects any channel that we need to be selected.
+	// This lets the channel be lazy-loaded.
+	v.selection.ConnectItemsChanged(func(_, _, _ uint) {
+		if v.selectID == 0 {
+			return
+		}
+
+		log.Println("channels.View: selecting channel", v.selectID, "after items changed")
+
+		i, ok := v.findChannelItem(v.selectID)
+		if ok {
+			v.selection.SelectItem(i, true)
+			v.selectID = 0
+		}
+	})
+
+	v.Child.View = gtk.NewListView(v.selection, newChannelItemFactory(ctx, v.model.TreeListModel))
 	v.Child.View.SetSizeRequest(bannerWidth, -1)
 	v.Child.View.AddCSSClass("channels-viewtree")
 	v.Child.View.SetVExpand(true)
 	v.Child.View.SetHExpand(true)
-	v.Child.View.ConnectActivate(func(position uint) {
-		row := v.model.Row(position)
-		row.SetExpanded(!row.Expanded())
-	})
 
 	v.Child.Box = gtk.NewBox(gtk.OrientationVertical, 0)
 	v.Child.Box.SetVExpand(true)
@@ -268,21 +272,31 @@ func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
 // later when the list is changed or never selected if the user selects
 // something else.
 func (v *View) SelectChannel(selectID discord.ChannelID) bool {
-	v.selectID = selectID
-	log.Println("selecting channel", selectID)
-
-	n := v.model.NItems()
-	for i := uint(0); i < n; i++ {
-		item := v.model.Item(i)
-		chID := channelIDFromItem(item)
-		if chID != selectID {
-			continue
-		}
-		selectionModel := v.Child.View.Model()
-		return selectionModel.SelectItem(i, true)
+	i, ok := v.findChannelItem(selectID)
+	if ok && v.selection.SelectItem(i, true) {
+		log.Println("channels.View: selected channel", selectID, "immediately at", i)
+		v.selectID = 0
+		return true
 	}
 
+	log.Println("channels.View: channel", selectID, "not found, selecting later")
+	v.selectID = selectID
 	return false
+}
+
+// findChannelItem finds the channel item by ID.
+// BUG: this function is not able to find channels within collapsed categories.
+func (v *View) findChannelItem(id discord.ChannelID) (uint, bool) {
+	n := v.selection.NItems()
+	for i := uint(0); i < n; i++ {
+		item := v.selection.Item(i)
+		chID := channelIDFromItem(item)
+		if chID == id {
+			return i, true
+		}
+	}
+	// TODO: recursively search v.model so we can find collapsed channels.
+	return n, false
 }
 
 // GuildID returns the view's guild ID.

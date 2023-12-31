@@ -187,6 +187,11 @@ func (p *ChatPage) OpenDMs() {
 // the user to a new channel when they request to, e.g. through a notification.
 func (p *ChatPage) OpenChannel(chID discord.ChannelID) {
 	p.SwitchToPlaceholder()
+
+	if !chID.IsValid() {
+		return
+	}
+
 	p.Left.SelectChannel(chID)
 
 	p.RightLabel.SetText(gtkcord.ChannelNameFromID(p.ctx, chID))
