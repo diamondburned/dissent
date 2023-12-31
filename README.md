@@ -7,7 +7,8 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/diamondburned/gtkcord4)](https://goreportcard.com/report/github.com/diamondburned/gtkcord4)
 [![Packaging status](https://img.shields.io/repology/repositories/gtkcord4?label=in%20repositories)](https://repology.org/project/gtkcord4/versions)
 ![GitHub download count](https://img.shields.io/github/downloads/diamondburned/gtkcord4/total?label=GitHub%20Downloads&logo=github)
-![SourceForge download count](https://img.shields.io/sourceforge/dt/gtkcord4.mirror?label=SourceForge%20Downloads&logo=sourceforge)
+![Flathub download count](https://img.shields.io/flathub/downloads/so.libdb.gtkcord4?logo=flatpak&logoColor=orange&label=Flatpak%20Installs&color=orange)
+![SourceForge download count](https://img.shields.io/sourceforge/dt/gtkcord4.mirror?label=SourceForge%20Downloads&logo=sourceforge&color=orange)
 [![Nightly release status](https://img.shields.io/github/deployments/diamondburned/gtkcord4/Nightly%20release?logo=github&label=Nightly%20Build)](https://github.com/diamondburned/gtkcord4/deployments/Nightly%20release)
 ![Latest release](https://img.shields.io/github/v/tag/diamondburned/gtkcord4?filter=!nightly&label=Latest%20Release&color=blue)
 <!-- [![Stable release status](https://img.shields.io/github/deployments/diamondburned/gtkcord4/Stable%20release?logo=github&label=Stable%20Build)](https://github.com/diamondburned/gtkcord4/deployments/Stable%20release) -->
@@ -40,6 +41,8 @@ gtkcord4 is available in the following distributions:
 ### Flatpak
 
 gtkcord4 is available on Flathub:
+
+[![Flathub Version](https://img.shields.io/flathub/v/so.libdb.gtkcord4?logo=flatpak&logoColor=orange&label=Flathub)](https://flathub.org/apps/details/so.libdb.gtkcord4)
 
 <a href="https://flathub.org/apps/details/so.libdb.gtkcord4">
     <img src="https://flathub.org/assets/badges/flathub-badge-en.svg" alt="Download on Flathub" width="180">
