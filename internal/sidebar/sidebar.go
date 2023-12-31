@@ -185,11 +185,11 @@ func (s *Sidebar) OpenDMs() *direct.ChannelView {
 	direct.SetVExpand(true)
 	direct.Invalidate()
 
-	s.Right.AddChild(direct)
-	s.Right.SetVisibleChild(direct)
-
 	s.removeCurrent()
 	s.current.w = direct
+
+	s.Right.AddChild(direct)
+	s.Right.SetVisibleChild(direct)
 
 	return direct
 }
