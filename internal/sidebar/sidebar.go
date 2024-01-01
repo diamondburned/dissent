@@ -180,17 +180,16 @@ func (s *Sidebar) OpenDMs() *direct.ChannelView {
 
 	s.ctrl.CloseGuild(true)
 	s.Guilds.Unselect()
+	s.removeCurrent()
 
 	direct := direct.NewChannelView(s.ctx, s.opener)
 	direct.SetVExpand(true)
-	direct.Invalidate()
-
-	s.removeCurrent()
 	s.current.w = direct
 
 	s.Right.AddChild(direct)
 	s.Right.SetVisibleChild(direct)
 
+	direct.Invalidate()
 	return direct
 }
 
@@ -203,18 +202,17 @@ func (s *Sidebar) openGuild(guildID discord.GuildID) *channels.View {
 	}
 
 	s.ctrl.CloseGuild(true)
+	s.removeCurrent()
 
 	chs := channels.NewView(s.ctx, s.opener, guildID)
 	chs.SetVExpand(true)
-	chs.InvalidateHeader()
+	s.current.w = chs
 
 	s.Right.AddChild(chs)
 	s.Right.SetVisibleChild(chs)
 
-	s.removeCurrent()
-	s.current.w = chs
-
 	chs.Child.View.GrabFocus()
+	chs.InvalidateHeader()
 	return chs
 }
 

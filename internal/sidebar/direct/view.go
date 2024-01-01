@@ -172,8 +172,8 @@ func (v *ChannelView) SelectChannel(chID discord.ChannelID) {
 		return
 	}
 
-	v.list.SelectRow(ch.ListBoxRow)
 	v.selectID = 0
+	v.list.SelectRow(ch.ListBoxRow)
 }
 
 // Invalidate invalidates the whole channel view.
