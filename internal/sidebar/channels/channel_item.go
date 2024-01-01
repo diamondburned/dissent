@@ -44,6 +44,7 @@ func newChannelItemFactory(ctx context.Context, model *gtk.TreeListModel) *gtk.L
 	factory.ConnectUnbind(func(item *gtk.ListItem) {
 		unbind := unbindFns[item.Native()]
 		unbind()
+		delete(unbindFns, item.Native())
 		item.SetChild(nil)
 	})
 
