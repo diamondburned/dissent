@@ -12,7 +12,7 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
-	"github.com/diamondburned/gtkcord4/internal/message"
+	"github.com/diamondburned/gtkcord4/internal/messages"
 	"github.com/diamondburned/gtkcord4/internal/sidebar"
 	"github.com/diamondburned/gtkcord4/internal/window/backbutton"
 	"github.com/diamondburned/gtkcord4/internal/window/quickswitcher"
@@ -155,7 +155,7 @@ func (p *ChatPage) SwitchToPlaceholder() {
 // SwitchToMessages reopens a new message page of the same channel ID if the
 // user is opening one. Otherwise, the placeholder is seen.
 func (p *ChatPage) SwitchToMessages() {
-	view, ok := p.prevView.(*message.View)
+	view, ok := p.prevView.(*messages.View)
 	if ok {
 		p.OpenChannel(view.ChannelID())
 		return
@@ -196,7 +196,7 @@ func (p *ChatPage) OpenChannel(chID discord.ChannelID) {
 	win := app.WindowFromContext(p.ctx)
 	win.SetTitle(gtkcord.ChannelNameFromID(p.ctx, chID))
 
-	view := message.NewView(p.ctx, chID)
+	view := messages.NewView(p.ctx, chID)
 	p.switchTo(view)
 
 	p.lastOpen.Set(lastOpenKey, chID)

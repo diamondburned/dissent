@@ -1,4 +1,4 @@
-package message
+package messages
 
 import (
 	"context"
@@ -22,7 +22,7 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
-	"github.com/diamondburned/gtkcord4/internal/message/composer"
+	"github.com/diamondburned/gtkcord4/internal/messages/composer"
 	"github.com/pkg/errors"
 )
 
