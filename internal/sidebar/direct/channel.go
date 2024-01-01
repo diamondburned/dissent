@@ -28,7 +28,7 @@ type Channel struct {
 
 var channelCSS = cssutil.Applier("direct-channel", `
 	.direct-channel {
-		padding: 4px 6px;
+		padding: 4px 12px;
 	}
 	.direct-channel-avatar {
 		margin-right: 6px;
