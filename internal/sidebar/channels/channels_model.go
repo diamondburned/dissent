@@ -119,8 +119,8 @@ func (m *modelManager) invalidateAll(parentID discord.ChannelID, list *channelLi
 }
 
 func (m *modelManager) addAllChannels(parentID discord.ChannelID, list *channelList) {
-	for _, ch := range fetchSortedChannels(m.state, m.guildID, parentID) {
-		list.Append(ch)
+	for i, ch := range fetchSortedChannels(m.state, m.guildID, parentID) {
+		list.insertAt(ch, uint(i))
 	}
 }
 
@@ -151,15 +151,16 @@ func (l *channelList) CalculatePosition(target discord.Channel) uint {
 
 	end := list.NItems()
 
-	// Find this particular channel in the list.
-	for i, ch := range fetchSortedChannels(l.state, target.GuildID, target.ParentID) {
-		if ch.ID == target.ID {
-			// Sanity check.
-			if i > int(end) {
-				log.Printf("CalculatePosition: channel %d is out of bounds", target.ID)
-				return end
-			}
-			return uint(i)
+	for i := uint(0); i < end; i++ {
+		id := channelIDFromItem(list.Item(i))
+
+		ch, _ := l.state.Channel(id)
+		if ch == nil {
+			continue
+		}
+
+		if ch.Position > target.Position {
+			return i
 		}
 	}
 
@@ -169,6 +170,11 @@ func (l *channelList) CalculatePosition(target discord.Channel) uint {
 // Append appends a channel to the list. If the channel already exists, then
 // this function does nothing.
 func (l *channelList) Append(ch discord.Channel) {
+	pos := l.CalculatePosition(ch)
+	l.insertAt(ch, pos)
+}
+
+func (l *channelList) insertAt(ch discord.Channel, pos uint) {
 	list := l.list.Get()
 	if list == nil {
 		return
@@ -180,7 +186,6 @@ func (l *channelList) Append(ch discord.Channel) {
 	}
 	l.set[str] = struct{}{}
 
-	pos := l.CalculatePosition(ch)
 	list.Splice(pos, 0, []string{str})
 }
 
