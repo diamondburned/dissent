@@ -111,6 +111,8 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 		)
 	}
 
+	inputState := inputStateKey.Acquire(ctx)
+
 	i.Buffer = i.TextView.Buffer()
 	i.Buffer.ConnectChanged(func() {
 		if inputWYSIWYG.Value() {
@@ -122,7 +124,6 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 		start, end := i.Buffer.Bounds()
 
 		// Persist input.
-		inputState := inputStateKey.Acquire(ctx)
 		if end.Offset() == 0 {
 			inputState.Delete(chID.String())
 		} else {
@@ -135,17 +136,8 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 	enterKeyer.ConnectKeyPressed(i.onKey)
 	i.AddController(enterKeyer)
 
-	gtkutil.Async(ctx, func() func() {
-		inputState := inputStateKey.Acquire(ctx)
-
-		oldMessage, ok := inputState.Get(chID.String())
-		if !ok {
-			return nil
-		}
-
-		return func() {
-			i.Buffer.SetText(oldMessage)
-		}
+	inputState.Get(chID.String(), func(text string) {
+		i.Buffer.SetText(text)
 	})
 
 	return &i

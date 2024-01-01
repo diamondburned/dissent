@@ -163,17 +163,14 @@ func (p *ChatPage) SwitchToMessages() {
 
 	p.SwitchToPlaceholder()
 
-	// Restore the last opened channel if there is one.
-	gtkutil.Async(p.ctx, func() func() {
-		lastOpenID, ok := p.lastOpen.Get(lastOpenKey)
-		return func() {
-			if ok {
-				p.OpenChannel(lastOpenID)
-			} else {
-				// Open DMs if there is no last opened channel.
-				p.OpenDMs()
-			}
+	p.lastOpen.Exists(lastOpenKey, func(exists bool) {
+		if !exists {
+			// Open DMs if there is no last opened channel.
+			p.OpenDMs()
+			return
 		}
+		// Restore the last opened channel if there is one.
+		p.lastOpen.Get(lastOpenKey, p.OpenChannel)
 	})
 }
 

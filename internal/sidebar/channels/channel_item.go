@@ -11,7 +11,6 @@ import (
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/app"
-	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/imgutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
@@ -403,22 +402,20 @@ func newChannelItemCategory(ch *discord.Channel, row *gtk.TreeListRow, reveal *a
 	ref := glib.NewWeakRef[*gtk.TreeListRow](row)
 	chID := ch.ID
 
-	// Restore this on the next tick, otherwise GTK will crash and burn.
-	gtkutil.Async(context.Background(), func() func() {
-		if collapsed, _ := reveal.Get(chID.String()); collapsed {
-			return func() { row.SetExpanded(false) }
-		}
-		return nil
-	})
-
 	// Add this notifier after a small delay so GTK can initialize the row.
 	// Otherwise, it will falsely emit the signal.
 	glib.TimeoutSecondsAdd(1, func() {
+		row := ref.Get()
+		if row == nil {
+			return
+		}
+
 		row.NotifyProperty("expanded", func() {
 			row := ref.Get()
 			if row == nil {
 				return
 			}
+
 			// Only retain collapsed states. Expanded states are assumed to be
 			// the default.
 			if !row.Expanded() {
@@ -427,6 +424,14 @@ func newChannelItemCategory(ch *discord.Channel, row *gtk.TreeListRow, reveal *a
 				reveal.Delete(chID.String())
 			}
 		})
+	})
+
+	reveal.Get(ch.ID.String(), func(collapsed bool) {
+		if collapsed {
+			// GTK will actually explode if we set the expanded property without
+			// waiting for it to load for some reason?
+			glib.IdleAdd(func() { row.SetExpanded(false) })
+		}
 	})
 
 	return expander

@@ -1,7 +1,6 @@
 package channels
 
 import (
-	"fmt"
 	"log"
 	"sort"
 
@@ -109,34 +108,28 @@ func (m *modelManager) Model(chID discord.ChannelID) *gtk.StringList {
 		}),
 	)
 
-	m.addAllChannels(chID, list)
+	m.invalidateAll(chID, list)
 	return model
 }
 
 func (m *modelManager) invalidateAll(parentID discord.ChannelID, list *channelList) {
-	list.Clear()
-	m.addAllChannels(parentID, list)
-}
-
-func (m *modelManager) addAllChannels(parentID discord.ChannelID, list *channelList) {
-	for i, ch := range fetchSortedChannels(m.state, m.guildID, parentID) {
-		list.insertAt(ch, uint(i))
-	}
+	channels := fetchSortedChannels(m.state, m.guildID, parentID)
+	list.ClearAndAppend(channels)
 }
 
 // channelList wraps a StringList to maintain a set of channel IDs.
 // Because this is a set, each channel ID can only appear once.
 type channelList struct {
 	state *gtkcord.State
-	list  *glib.WeakRef[*gtk.StringList]
-	set   map[string]struct{}
+	ref   *glib.WeakRef[*gtk.StringList]
+	ids   []discord.ChannelID
 }
 
 func newChannelList(state *gtkcord.State, ref *glib.WeakRef[*gtk.StringList]) *channelList {
 	return &channelList{
 		state: state,
-		list:  ref,
-		set:   make(map[string]struct{}),
+		ref:   ref,
+		ids:   make([]discord.ChannelID, 0, 4),
 	}
 }
 
@@ -144,27 +137,18 @@ func newChannelList(state *gtkcord.State, ref *glib.WeakRef[*gtk.StringList]) *c
 // position relative to the list. If the channel is not found, then this
 // function returns the end of the list.
 func (l *channelList) CalculatePosition(target discord.Channel) uint {
-	list := l.list.Get()
-	if list == nil {
-		return 0
-	}
-
-	end := list.NItems()
-
-	for i := uint(0); i < end; i++ {
-		id := channelIDFromItem(list.Item(i))
-
+	for i, id := range l.ids {
 		ch, _ := l.state.Channel(id)
 		if ch == nil {
 			continue
 		}
 
 		if ch.Position > target.Position {
-			return i
+			return uint(i)
 		}
 	}
 
-	return end
+	return uint(len(l.ids))
 }
 
 // Append appends a channel to the list. If the channel already exists, then
@@ -175,94 +159,80 @@ func (l *channelList) Append(ch discord.Channel) {
 }
 
 func (l *channelList) insertAt(ch discord.Channel, pos uint) {
-	list := l.list.Get()
+	i := l.Index(ch.ID)
+	if i != -1 {
+		return
+	}
+
+	list := l.ref.Get()
 	if list == nil {
 		return
 	}
 
-	str := ch.ID.String()
-	if _, exists := l.set[str]; exists {
-		return
-	}
-	l.set[str] = struct{}{}
-
-	list.Splice(pos, 0, []string{str})
+	list.Splice(pos, 0, []string{ch.ID.String()})
+	l.ids = append(l.ids[:pos], append([]discord.ChannelID{ch.ID}, l.ids[pos:]...)...)
 }
 
 // Remove removes the channel ID from the list. If the channel ID is not in the
 // list, then this function does nothing.
 func (l *channelList) Remove(chID discord.ChannelID) {
-	str := chID.String()
-	if _, exists := l.set[str]; !exists {
-		return
-	}
+	i := l.Index(chID)
+	if i == -1 {
+		l.ids = append(l.ids[:i], l.ids[i+1:]...)
 
-	list := l.list.Get()
-	if list == nil {
-		return
+		list := l.ref.Get()
+		if list != nil {
+			list.Remove(uint(i))
+		}
 	}
-
-	if i := l.Index(chID); i != -1 {
-		list.Remove(uint(i))
-	}
-	delete(l.set, str)
 }
 
 // Contains returns whether the channel ID is in the list.
 func (l *channelList) Contains(chID discord.ChannelID) bool {
-	_, exists := l.set[chID.String()]
-	return exists
+	return l.Index(chID) != -1
 }
 
 // Index returns the index of the channel ID in the list. If the channel ID is
 // not in the list, then this function returns -1.
 func (l *channelList) Index(chID discord.ChannelID) int {
-	ix := -1
-	iter := l.All()
-	iter(func(i int, id discord.ChannelID) bool {
+	for i, id := range l.ids {
 		if id == chID {
-			ix = i
-			return false
+			return i
 		}
-		return true
-	})
-	return ix
+	}
+	return -1
 }
 
 // Clear clears the list.
 func (l *channelList) Clear() {
-	list := l.list.Get()
+	l.ids = l.ids[:0]
+
+	list := l.ref.Get()
+	if list != nil {
+		list.Splice(0, list.NItems(), nil)
+	}
+}
+
+// ClearAndAppend clears the list and appends the given channels.
+func (l *channelList) ClearAndAppend(chs []discord.Channel) {
+	list := l.ref.Get()
 	if list == nil {
 		return
 	}
 
-	list.Splice(0, list.NItems(), nil)
-	l.set = make(map[string]struct{})
-}
+	ids := make([]string, len(chs))
+	l.ids = make([]discord.ChannelID, len(chs))
 
-// All returns a function that iterates over all channel IDs in the list.
-func (l *channelList) All() func(yield func(i int, id discord.ChannelID) bool) {
-	list := l.list.Get()
-	if list == nil {
-		return func(yield func(i int, id discord.ChannelID) bool) {}
+	for i, ch := range chs {
+		ids[i] = ch.ID.String()
+		l.ids = append(l.ids, ch.ID)
 	}
 
-	n := list.NItems()
-	return func(yield func(int, discord.ChannelID) bool) {
-		for i := uint(0); i < n; i++ {
-			id, err := discord.ParseSnowflake(list.String(i))
-			if err != nil {
-				panic(fmt.Sprintf("channelList: invalid channel ID %q", list.String(i)))
-			}
-			if !yield(int(i), discord.ChannelID(id)) {
-				return
-			}
-		}
-	}
+	list.Splice(0, list.NItems(), ids)
 }
 
 func (l *channelList) ConnectDestroy(f func()) {
-	list := l.list.Get()
+	list := l.ref.Get()
 	if list == nil {
 		return
 	}
