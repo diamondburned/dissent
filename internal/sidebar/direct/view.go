@@ -71,6 +71,8 @@ func NewChannelView(ctx context.Context, ctrl Opener) *ChannelView {
 	v.list.SetFilterFunc(v.filter)
 	v.list.SetSelectionMode(gtk.SelectionBrowse)
 	v.list.SetActivateOnSingleClick(true)
+
+	var currentCh discord.ChannelID
 	v.list.ConnectRowSelected(func(r *gtk.ListBoxRow) {
 		if r == nil {
 			// This should not happen.
@@ -81,10 +83,13 @@ func NewChannelView(ctx context.Context, ctrl Opener) *ChannelView {
 		v.selectID = 0
 
 		ch := v.rowChannel(r)
-		if ch != nil {
-			ctrl.OpenChannel(ch.id)
-			lastOpen.Set(lastOpenStateKey, ch.id)
+		if ch == nil || ch.id == currentCh {
+			return
 		}
+
+		currentCh = ch.id
+		ctrl.OpenChannel(ch.id)
+		lastOpen.Set(lastOpenStateKey, ch.id)
 	})
 
 	v.scroll = gtk.NewScrolledWindow()
@@ -168,6 +173,7 @@ func (v *ChannelView) SelectChannel(chID discord.ChannelID) {
 	}
 
 	v.list.SelectRow(ch.ListBoxRow)
+	v.selectID = 0
 }
 
 // Invalidate invalidates the whole channel view.
