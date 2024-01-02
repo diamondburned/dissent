@@ -138,7 +138,7 @@ func newChannelList(state *gtkcord.State, ref *glib.WeakRef[*gtk.StringList]) *c
 // function returns the end of the list.
 func (l *channelList) CalculatePosition(target discord.Channel) uint {
 	for i, id := range l.ids {
-		ch, _ := l.state.Channel(id)
+		ch, _ := l.state.Offline().Channel(id)
 		if ch == nil {
 			continue
 		}
