@@ -177,7 +177,7 @@ func (l *channelList) insertAt(ch discord.Channel, pos uint) {
 // list, then this function does nothing.
 func (l *channelList) Remove(chID discord.ChannelID) {
 	i := l.Index(chID)
-	if i == -1 {
+	if i != -1 {
 		l.ids = append(l.ids[:i], l.ids[i+1:]...)
 
 		list := l.ref.Get()
