@@ -11,6 +11,7 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
+	"github.com/diamondburned/ningen/v3"
 	"github.com/diamondburned/ningen/v3/states/read"
 )
 
@@ -96,7 +97,7 @@ func (v *View) Invalidate() {
 
 	var unreads map[discord.ChannelID]channelUnreadStatus
 	for i, dm := range dms {
-		count := state.ChannelCountUnreads(dm.ID)
+		count := state.ChannelCountUnreads(dm.ID, ningen.UnreadOpts{})
 		if count == 0 {
 			continue
 		}

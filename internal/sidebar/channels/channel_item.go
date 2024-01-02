@@ -87,7 +87,7 @@ var _ = cssutil.WriteCSS(`
 		margin: 0 0.65em;
 	}
 	.channel-item-muted {
-		opacity: 0.5;
+		opacity: 0.35;
 	}
 	.channel-unread-indicator {
 		font-size: 0.75em;
@@ -246,14 +246,20 @@ func (i *channelItem) Invalidate() {
 		i.child.Box.AddCSSClass(class + "-outer")
 	}
 
-	unread := i.state.ChannelIsUnread(i.chID)
+	unreadOpts := ningen.UnreadOpts{
+		// We can do this within the channel list itself because it's easy to
+		// expand categories and see the unread channels within them.
+		IncludeMutedCategories: true,
+	}
+
+	unread := i.state.ChannelIsUnread(i.chID, unreadOpts)
 	if unread != ningen.ChannelRead {
 		i.child.Box.AddCSSClass(readCSSClasses[unread])
 	}
 
 	i.updateIndicator(unread)
 
-	if i.state.ChannelIsMuted(i.chID, false) {
+	if i.state.ChannelIsMuted(i.chID, unreadOpts) {
 		i.child.Box.AddCSSClass(channelMutedClass)
 	} else {
 		i.child.Box.RemoveCSSClass(channelMutedClass)
@@ -270,7 +276,7 @@ func (i *channelItem) updateIndicator(unread ningen.UnreadIndication) {
 
 var _ = cssutil.WriteCSS(`
 	.channel-item-unknown {
-		opacity: 0.5;
+		opacity: 0.35;
 		font-style: italic;
 	}
 `)
@@ -454,7 +460,7 @@ var _ = cssutil.WriteCSS(`
 		margin-left: 0.5em;
 		margin-right: 0.5em;
 		font-size: 0.8em;
-		opacity: 0.5;
+		opacity: 0.75;
 	}
 `)
 

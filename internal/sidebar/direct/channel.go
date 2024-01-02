@@ -12,6 +12,7 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/imgutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
+	"github.com/diamondburned/ningen/v3"
 )
 
 // Channel is an individual direct messaging channel.
@@ -101,7 +102,7 @@ func (ch *Channel) Update(channel *discord.Channel) {
 
 func (ch *Channel) updateReadIndicator(channel *discord.Channel) {
 	state := gtkcord.FromContext(ch.ctx)
-	unread := state.ChannelCountUnreads(channel.ID)
+	unread := state.ChannelCountUnreads(channel.ID, ningen.UnreadOpts{})
 
 	if unread == 0 {
 		ch.readIndicator.SetText("")

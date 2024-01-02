@@ -7,6 +7,7 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/diamondburned/gtkcord4/internal/sidebar/sidebutton"
+	"github.com/diamondburned/ningen/v3"
 )
 
 type GuildController interface {
@@ -111,7 +112,10 @@ func (g *Guild) InvalidateUnread() {
 		}
 	}
 
-	g.SetIndicator(state.GuildIsUnread(g.id, gtkcord.AllowedChannelTypes))
+	g.SetIndicator(state.GuildIsUnread(g.id, ningen.GuildUnreadOpts{
+		UnreadOpts: ningen.UnreadOpts{},
+		Types:      gtkcord.AllowedChannelTypes,
+	}))
 	g.Mentions.SetCount(mentions)
 
 	if g.parent != nil {
