@@ -4,11 +4,11 @@ go 1.18
 
 require (
 	github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8
-	github.com/diamondburned/arikawa/v3 v3.3.5-0.20231228032010-9809321f6ff4
+	github.com/diamondburned/arikawa/v3 v3.3.5-0.20240102004031-dffb6400fe06
 	github.com/diamondburned/chatkit v0.0.0-20231117102020-f172e4a1e35d
 	github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20231226035729-503b3cb0406c
 	github.com/diamondburned/gotk4/pkg v0.0.6-0.20231117083507-eb41da62b149
-	github.com/diamondburned/gotkit v0.0.0-20240102001904-23085b92d441
+	github.com/diamondburned/gotkit v0.0.0-20240102033527-96cad08a6ad6
 	github.com/diamondburned/ningen/v3 v3.0.1-0.20240102085723-970026175e1a
 	github.com/dustin/go-humanize v1.0.0
 	github.com/enescakir/emoji v1.0.0

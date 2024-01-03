@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -111,6 +112,7 @@ func Wrap(state *state.State) *State {
 	}
 
 	// dumpRawEvents(state)
+
 	ningen := ningen.FromState(state)
 	return &State{
 		MainThreadHandler: NewMainThreadHandler(ningen.Handler),
@@ -161,6 +163,13 @@ func InjectState(ctx context.Context, state *State) context.Context {
 func (s *State) WithContext(ctx context.Context) *State {
 	s2 := *s
 	s2.State = s.State.WithContext(ctx)
+	return &s2
+}
+
+// Offline creates a copy of State with the state set to offline.
+func (s *State) Offline() *State {
+	s2 := *s
+	s2.State = s.State.Offline()
 	return &s2
 }
 
@@ -390,6 +399,40 @@ func (s *State) MessagePreview(msg *discord.Message) string {
 	}
 
 	return ""
+}
+
+// NestedChannels returns all channels that are directly nested under the
+// given parent channel. The returned slice is sorted by position.
+func (s *State) NestedChannels(parentID discord.ChannelID) ([]discord.Channel, error) {
+	parent, _ := s.Channel(parentID)
+	if parent == nil {
+		return nil, fmt.Errorf("channel %d not found", parentID)
+	}
+
+	channels, err := s.Channels(parent.GuildID, AllowedChannelTypes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get channels for parent's guild: %w", err)
+	}
+
+	// Filter out all channels that are not in the same parent channel.
+	filtered := channels[:0]
+	for i, ch := range channels {
+		if ch.ParentID == parentID || (parentID == 0 && !ch.ParentID.IsValid()) {
+			filtered = append(filtered, channels[i])
+		}
+	}
+
+	// Sort so that the channels are in increasing order.
+	sort.Slice(filtered, func(i, j int) bool {
+		a := filtered[i]
+		b := filtered[j]
+		if a.Position == b.Position {
+			return a.ID < b.ID
+		}
+		return a.Position < b.Position
+	})
+
+	return filtered, nil
 }
 
 // InjectAvatarSize calls InjectSize with size being 64px.

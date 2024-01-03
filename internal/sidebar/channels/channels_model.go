@@ -2,7 +2,6 @@ package channels
 
 import (
 	"log"
-	"sort"
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
@@ -243,29 +242,9 @@ func (l *channelList) ConnectDestroy(f func()) {
 }
 
 func fetchSortedChannels(state *gtkcord.State, guildID discord.GuildID, parentID discord.ChannelID) []discord.Channel {
-	channels, err := state.Offline().Channels(guildID, gtkcord.AllowedChannelTypes)
+	channels, err := state.Offline().NestedChannels(parentID, gtkcord.AllowedChannelTypes)
 	if err != nil {
 		log.Printf("CalculatePosition: failed to get channels: %v", err)
-		return nil
 	}
-
-	// Filter out all channels that are not in the same parent channel.
-	filtered := channels[:0]
-	for i, ch := range channels {
-		if ch.ParentID == parentID || (parentID == 0 && !ch.ParentID.IsValid()) {
-			filtered = append(filtered, channels[i])
-		}
-	}
-
-	// Sort so that the channels are in increasing order.
-	sort.Slice(filtered, func(i, j int) bool {
-		a := filtered[i]
-		b := filtered[j]
-		if a.Position == b.Position {
-			return a.ID < b.ID
-		}
-		return a.Position < b.Position
-	})
-
-	return filtered
+	return channels
 }
