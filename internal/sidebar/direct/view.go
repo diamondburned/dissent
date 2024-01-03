@@ -51,9 +51,7 @@ var _ = cssutil.WriteCSS(`
 	}
 `)
 
-const lastOpenStateKey = "direct-last-open"
-
-var lastOpenKey = app.NewStateKey[discord.ChannelID](lastOpenStateKey)
+var lastOpenKey = app.NewSingleStateKey[discord.ChannelID]("direct-last-open")
 
 // NewChannelView creates a new view.
 func NewChannelView(ctx context.Context, ctrl Opener) *ChannelView {
@@ -61,8 +59,6 @@ func NewChannelView(ctx context.Context, ctrl Opener) *ChannelView {
 		ctx:      ctx,
 		channels: make(map[discord.ChannelID]*Channel, 50),
 	}
-
-	lastOpen := lastOpenKey.Acquire(ctx)
 
 	v.list = gtk.NewListBox()
 	v.list.SetCSSClasses([]string{"direct-list", "navigation-sidebar"})
@@ -73,6 +69,8 @@ func NewChannelView(ctx context.Context, ctrl Opener) *ChannelView {
 	v.list.SetActivateOnSingleClick(true)
 
 	var currentCh discord.ChannelID
+	lastOpen := lastOpenKey.Acquire(ctx)
+
 	v.list.ConnectRowSelected(func(r *gtk.ListBoxRow) {
 		if r == nil {
 			// This should not happen.
@@ -88,8 +86,8 @@ func NewChannelView(ctx context.Context, ctrl Opener) *ChannelView {
 		}
 
 		currentCh = ch.id
+		lastOpen.Set(ch.id)
 		ctrl.OpenChannel(ch.id)
-		lastOpen.Set(lastOpenStateKey, ch.id)
 	})
 
 	v.scroll = gtk.NewScrolledWindow()
@@ -152,11 +150,15 @@ func NewChannelView(ctx context.Context, ctrl Opener) *ChannelView {
 		(*read.UpdateEvent)(nil),
 	)
 
-	lastOpen.Get(lastOpenStateKey, func(id discord.ChannelID) {
-		// Only restore selection if we're not already selecting something.
-		if v.list.SelectedRow() == nil {
-			v.SelectChannel(id)
-		}
+	// Restore the last open channel. We must delay this until the view is
+	// realized so the parent view can be realized first.
+	gtkutil.OnFirstMap(v, func() {
+		lastOpen.Get(func(id discord.ChannelID) {
+			// Only restore selection if we're not already selecting something.
+			if v.list.SelectedRow() == nil {
+				v.SelectChannel(id)
+			}
+		})
 	})
 
 	return &v

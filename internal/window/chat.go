@@ -19,9 +19,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-const lastOpenKey = "last-open-channel-state"
-
-var lastOpenStateKey = app.NewStateKey[discord.ChannelID](lastOpenKey)
+var lastOpenKey = app.NewSingleStateKey[discord.GuildID]("last-guild-state")
 
 type ChatPage struct {
 	*adw.OverlaySplitView
@@ -30,7 +28,7 @@ type ChatPage struct {
 	RightChild *gtk.Stack
 
 	prevView gtk.Widgetter
-	lastOpen *app.TypedState[discord.ChannelID]
+	lastOpen *app.TypedSingleState[discord.GuildID]
 
 	ctx         context.Context
 	placeholder gtk.Widgetter
@@ -56,7 +54,7 @@ var chatPageCSS = cssutil.Applier("window-chatpage", `
 func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	p := ChatPage{
 		ctx:      ctx,
-		lastOpen: lastOpenStateKey.Acquire(ctx),
+		lastOpen: lastOpenKey.Acquire(ctx),
 	}
 	p.Left = sidebar.NewSidebar(ctx, (*sidebarChatPage)(&p), &p)
 	p.Left.SetHAlign(gtk.AlignStart)
@@ -163,19 +161,20 @@ func (p *ChatPage) SwitchToMessages() {
 
 	p.SwitchToPlaceholder()
 
-	p.lastOpen.Exists(lastOpenKey, func(exists bool) {
+	p.lastOpen.Exists(func(exists bool) {
 		if !exists {
 			// Open DMs if there is no last opened channel.
 			p.OpenDMs()
 			return
 		}
 		// Restore the last opened channel if there is one.
-		p.lastOpen.Get(lastOpenKey, p.OpenChannel)
+		p.lastOpen.Get(p.OpenGuild)
 	})
 }
 
 // OpenDMs opens the DMs page.
 func (p *ChatPage) OpenDMs() {
+	p.lastOpen.Set(0)
 	p.SwitchToPlaceholder()
 	p.Left.OpenDMs()
 }
@@ -198,12 +197,11 @@ func (p *ChatPage) OpenChannel(chID discord.ChannelID) {
 
 	view := messages.NewView(p.ctx, chID)
 	p.switchTo(view)
-
-	p.lastOpen.Set(lastOpenKey, chID)
 }
 
 // OpenGuild opens the guild with the given ID.
 func (p *ChatPage) OpenGuild(guildID discord.GuildID) {
+	p.lastOpen.Set(guildID)
 	p.SwitchToPlaceholder()
 	p.Left.SelectGuild(guildID)
 }

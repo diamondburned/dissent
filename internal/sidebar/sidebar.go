@@ -194,17 +194,17 @@ func (s *Sidebar) OpenDMs() *direct.ChannelView {
 }
 
 func (s *Sidebar) openGuild(guildID discord.GuildID) *channels.View {
-	s.DMView.Unselect()
-
-	if chs, ok := s.current.w.(*channels.View); ok && chs.GuildID() == guildID {
+	chs, ok := s.current.w.(*channels.View)
+	if ok && chs.GuildID() == guildID {
 		// We're already there.
 		return chs
 	}
 
 	s.ctrl.CloseGuild(true)
+	s.DMView.Unselect()
 	s.removeCurrent()
 
-	chs := channels.NewView(s.ctx, s.opener, guildID)
+	chs = channels.NewView(s.ctx, s.opener, guildID)
 	chs.SetVExpand(true)
 	s.current.w = chs
 

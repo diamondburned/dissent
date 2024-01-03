@@ -8,6 +8,7 @@ import (
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
+	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
@@ -27,6 +28,8 @@ import (
 //    })
 //    ch.Invalidate()
 //
+
+var lastOpenKey = app.NewStateKey[discord.ChannelID]("guild-last-open")
 
 const ChannelsWidth = bannerWidth
 
@@ -197,6 +200,8 @@ func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
 	v.selection.SetAutoselect(false)
 	v.selection.SetCanUnselect(true)
 
+	lastOpen := lastOpenKey.Acquire(ctx)
+
 	v.selection.ConnectSelectionChanged(func(position, nItems uint) {
 		item := v.selection.SelectedItem()
 		if item == nil {
@@ -224,6 +229,9 @@ func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
 
 		v.selectID = 0
 		ctrl.OpenChannel(chID)
+
+		// Persist the last channel we opened.
+		lastOpen.Set(guildID.String(), chID)
 
 		row := v.model.Row(v.selection.Selected())
 		row.SetExpanded(true)
@@ -263,6 +271,17 @@ func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
 	v.ToolbarView.AddTopBar(v.Header)
 	v.ToolbarView.SetContent(v.Scroll)
 	v.ToolbarView.SetFocusChild(v.Scroll)
+
+	// Restore the selection from the state. We must delay this until the view
+	// is realized so the parent view has time to finish loading.
+	gtkutil.OnFirstMap(v, func() {
+		lastOpen.Get(guildID.String(), func(ch discord.ChannelID) {
+			// Only restore selection if we've not already selected something.
+			if v.selection.SelectedItem() != nil {
+				v.SelectChannel(ch)
+			}
+		})
+	})
 
 	viewCSS(v)
 	return &v
