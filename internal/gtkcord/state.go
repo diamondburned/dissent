@@ -434,7 +434,7 @@ func InjectSizeUnscaled(urlstr string, size int) string {
 
 func roundSize(size int) int {
 	// Round size up to the nearest power of 2.
-	return int(math.Pow(math.Ceil(math.Log2(float64(size))), 2))
+	return int(math.Pow(2, math.Ceil(math.Log2(float64(size)))))
 }
 
 // EmojiURL returns a sized emoji URL.
