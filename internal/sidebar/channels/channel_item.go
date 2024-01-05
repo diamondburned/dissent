@@ -363,6 +363,7 @@ func newChannelItemForum(ch *discord.Channel, row *gtk.TreeListRow) gtk.Widgette
 	expander := gtk.NewTreeExpander()
 	expander.AddCSSClass("channel-item")
 	expander.AddCSSClass("channel-item-forum")
+	expander.SetHExpand(true)
 	expander.SetListRow(row)
 	expander.SetChild(label)
 
@@ -403,6 +404,7 @@ func newChannelItemCategory(ch *discord.Channel, row *gtk.TreeListRow, reveal *a
 	expander := gtk.NewTreeExpander()
 	expander.AddCSSClass("channel-item")
 	expander.AddCSSClass("channel-item-category")
+	expander.SetHExpand(true)
 	expander.SetListRow(row)
 	expander.SetChild(label)
 
