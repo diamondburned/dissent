@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html"
 	"log"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
@@ -431,10 +432,9 @@ func InjectSizeUnscaled(urlstr string, size int) string {
 	return u.String()
 }
 
-// https://math.stackexchange.com/a/291494/963524
 func roundSize(size int) int {
-	const mult = 16
-	return ((size - 1) | (mult - 1)) + 1
+	// Round size up to the nearest power of 2.
+	return int(math.Pow(math.Ceil(math.Log2(float64(size))), 2))
 }
 
 // EmojiURL returns a sized emoji URL.
