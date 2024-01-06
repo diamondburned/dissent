@@ -10,8 +10,8 @@
 ![Flathub download count](https://img.shields.io/flathub/downloads/so.libdb.gtkcord4?logo=flatpak&logoColor=orange&label=Flatpak%20Installs&color=orange)
 ![SourceForge download count](https://img.shields.io/sourceforge/dt/gtkcord4.mirror?label=SourceForge%20Downloads&logo=sourceforge&color=orange)
 [![Nightly release status](https://img.shields.io/github/deployments/diamondburned/gtkcord4/Nightly%20release?logo=github&label=Nightly%20Build)](https://github.com/diamondburned/gtkcord4/deployments/Nightly%20release)
+[![Stable release status](https://img.shields.io/github/deployments/diamondburned/gtkcord4/Stable%20release?logo=github&label=Stable%20Build)](https://github.com/diamondburned/gtkcord4/deployments/Stable%20release)
 ![Latest release](https://img.shields.io/github/v/tag/diamondburned/gtkcord4?filter=!nightly&label=Latest%20Release&color=blue)
-<!-- [![Stable release status](https://img.shields.io/github/deployments/diamondburned/gtkcord4/Stable%20release?logo=github&label=Stable%20Build)](https://github.com/diamondburned/gtkcord4/deployments/Stable%20release) -->
 
 <img src="./.github/screenshot4.png" alt="Screenshot" width="800">
 
