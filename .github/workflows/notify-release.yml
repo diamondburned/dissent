@@ -1,0 +1,20 @@
+name: Update issue for upcoming release
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+  issues:
+    types: [closed]
+  schedule:
+    - cron: '30 8 * * *'
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - name: Notify release
+        uses: nearform-actions/github-action-notify-release@v1
+        with:
+          notify-after: 14d
