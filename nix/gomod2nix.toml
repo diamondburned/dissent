@@ -17,8 +17,8 @@ schema = 3
     version = "v3.3.5-0.20231228032010-9809321f6ff4"
     hash = "sha256-HwK2mBYxGs8/1ZK51HJboJYDobGzEwBse14siQAqmMk="
   [mod."github.com/diamondburned/chatkit"]
-    version = "v0.0.0-20231117102020-f172e4a1e35d"
-    hash = "sha256-4enkipshShwRuhldVqYSFDaS9qvzOYL/hCregZlHM/c="
+    version = "v0.0.0-20240106113153-4e4c83fb3925"
+    hash = "sha256-wnSmzzc1MzLZqHMB4qc/iiQL9Nt4J7H3MfpTD6fgvyw="
   [mod."github.com/diamondburned/gotk4-adwaita/pkg"]
     version = "v0.0.0-20231226035729-503b3cb0406c"
     hash = "sha256-KRn8dqQ0HUrzR7S/83BL2r8X+76KFlzbwjEMtLaW8i8="
