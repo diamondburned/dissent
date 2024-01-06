@@ -83,8 +83,14 @@ var _ = cssutil.WriteCSS(`
 	.channel-item {
 		padding: 0.35em 0;
 	}
-	.channel-item image {
-		margin: 0 0.65em;
+	.channel-item :first-child {
+		min-width: 2.5em;
+		margin: 0;
+	}
+	.channel-item expander + * {
+		/* Weird workaround because GTK is adding extra padding here for some
+		 * reason. */
+		margin-left: -0.35em;
 	}
 	.channel-item-muted {
 		opacity: 0.35;
@@ -306,6 +312,11 @@ var _ = cssutil.WriteCSS(`
 	.channel-item-mention .channel-item-thread {
 		opacity: 1;
 	}
+	.channel-item-nsfw-indicator {
+		font-size: 0.75em;
+		font-weight: bold;
+		margin-right: 0.75em;
+	}
 `)
 
 func newChannelItemText(ch *discord.Channel) gtk.Widgetter {
@@ -319,6 +330,17 @@ func newChannelItemText(ch *discord.Channel) gtk.Widgetter {
 		icon.SetFromIconName("thread-branch-symbolic")
 	}
 
+	iconFrame := gtk.NewOverlay()
+	iconFrame.SetChild(icon)
+
+	if ch.NSFW {
+		nsfwIndicator := gtk.NewLabel("!")
+		nsfwIndicator.AddCSSClass("channel-item-nsfw-indicator")
+		nsfwIndicator.SetHAlign(gtk.AlignEnd)
+		nsfwIndicator.SetVAlign(gtk.AlignEnd)
+		iconFrame.AddOverlay(nsfwIndicator)
+	}
+
 	label := gtk.NewLabel(ch.Name)
 	label.SetEllipsize(pango.EllipsizeEnd)
 	label.SetXAlign(0)
@@ -326,7 +348,7 @@ func newChannelItemText(ch *discord.Channel) gtk.Widgetter {
 
 	box := gtk.NewBox(gtk.OrientationHorizontal, 0)
 	box.AddCSSClass("channel-item")
-	box.Append(icon)
+	box.Append(iconFrame)
 	box.Append(label)
 
 	switch ch.Type {
@@ -344,10 +366,6 @@ func newChannelItemText(ch *discord.Channel) gtk.Widgetter {
 var _ = cssutil.WriteCSS(`
 	.channel-item-forum {
 		padding: 0.35em 0;
-	}
-	.channel-item-forum expander {
-		margin-left: 0.65em;
-		margin-right: 0.35em;
 	}
 	.channel-item-forum label {
 		padding: 0;
@@ -381,10 +399,7 @@ var _ = cssutil.WriteCSS(`
 		background: none;
 	}
 	.channel-item-category {
-		padding: 0.4em;
-	}
-	.channel-item-category expander {
-		margin: 0 0.3em;
+		padding: 0.4em 0;
 	}
 	.channel-item-category label {
 		margin-bottom: -0.2em;
