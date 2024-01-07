@@ -57,3 +57,22 @@ To compile from scratch, run
 ```sh
 go install -v github.com/diamondburned/gtkcord4@latest
 ```
+
+## Logging In
+
+To log into gtkcord4, you need to get your user token:
+
+1. Press <kbd>F12</kbd> with Discord open (to open the Inspector).
+2. Go to the Network tab then press <kbd>F5</kbd> to refresh the page.
+3. Search `discord api` then look for the `Authorization` header in the right
+   column.
+4. Copy its value (the token) into the Token field, then click Login.
+
+> [!WARNING]
+> Logging in using username/email and password is strongly discouraged. This
+> method is untested and may cause your account to be banned! Prefer using the
+> token method above.
+
+> [!NOTE]
+> Using an unofficial client at all is against Discord's Terms of Service and
+> may cause your account to be banned! Use at your own risk!
