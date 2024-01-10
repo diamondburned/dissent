@@ -202,7 +202,7 @@ func bindChannelItem(state channelItemState, item *gtk.ListItem, row *gtk.TreeLi
 
 var readCSSClasses = map[ningen.UnreadIndication]string{
 	ningen.ChannelUnread:    "channel-item-unread",
-	ningen.ChannelMentioned: "channel-item-mention",
+	ningen.ChannelMentioned: "channel-item-mentioned",
 }
 
 const channelMutedClass = "channel-item-muted"
