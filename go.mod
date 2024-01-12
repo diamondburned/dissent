@@ -7,7 +7,7 @@ require (
 	github.com/diamondburned/arikawa/v3 v3.3.5-0.20231228032010-9809321f6ff4
 	github.com/diamondburned/chatkit v0.0.0-20240106113153-4e4c83fb3925
 	github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20231226035729-503b3cb0406c
-	github.com/diamondburned/gotk4/pkg v0.0.6-0.20231117083507-eb41da62b149
+	github.com/diamondburned/gotk4/pkg v0.1.1-0.20240111235054-c873a85ba879
 	github.com/diamondburned/gotkit v0.0.0-20240103071019-0395decac74f
 	github.com/diamondburned/ningen/v3 v3.0.1-0.20240102085723-970026175e1a
 	github.com/dustin/go-humanize v1.0.0
@@ -31,7 +31,7 @@ require (
 	github.com/yalue/merged_fs v1.2.3 // indirect
 	github.com/zalando/go-keyring v0.2.1 // indirect
 	go4.org v0.0.0-20200411211856-f5505b9728dd // indirect
-	go4.org/unsafe/assume-no-moving-gc v0.0.0-20230525183740-e7c30c78aeb2 // indirect
+	go4.org/unsafe/assume-no-moving-gc v0.0.0-20231121144256-b99613f794b6 // indirect
 	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/image v0.0.0-20220902085622-e7cb96979f69 // indirect
 	golang.org/x/sync v0.1.0 // indirect
