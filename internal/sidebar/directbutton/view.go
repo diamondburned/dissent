@@ -128,9 +128,7 @@ func (v *View) update(unreads map[discord.ChannelID]channelUnreadStatus) {
 	}
 
 	// Purge all buttons off the widget.
-	for _, button := range v.mentioned.Buttons {
-		v.Remove(button)
-	}
+	gtkutil.RemoveChildren(v)
 
 	// Delete unused buttons.
 	for id := range v.mentioned.Buttons {
@@ -154,6 +152,7 @@ func (v *View) update(unreads map[discord.ChannelID]channelUnreadStatus) {
 	})
 
 	// Append the buttons back to the widget.
+	v.Append(v.DM)
 	for _, id := range v.mentioned.IDs {
 		v.Append(v.mentioned.Buttons[id])
 	}
