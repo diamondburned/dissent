@@ -23,8 +23,8 @@ schema = 3
     version = "v0.0.0-20231226035729-503b3cb0406c"
     hash = "sha256-KRn8dqQ0HUrzR7S/83BL2r8X+76KFlzbwjEMtLaW8i8="
   [mod."github.com/diamondburned/gotk4/pkg"]
-    version = "v0.0.6-0.20231117083507-eb41da62b149"
-    hash = "sha256-iFiL0z0DW6vP2si8YEk6AUGFuF7E4pFlGzDT2uCX+0A="
+    version = "v0.1.1-0.20240111235054-c873a85ba879"
+    hash = "sha256-4ep/Esdd0B9wwD4tbZAnxKhULQqdTlF7asFMqQkppfQ="
   [mod."github.com/diamondburned/gotkit"]
     version = "v0.0.0-20240103071019-0395decac74f"
     hash = "sha256-baeA7qCPASMXIpa5cOGIKr4iuA6Fc9YEb53zh9p0dWk="
@@ -77,8 +77,8 @@ schema = 3
     version = "v0.0.0-20200411211856-f5505b9728dd"
     hash = "sha256-UxbUjyr/bArM+3XAQfQ58XBbePvUdZ31EiQkCfXl/i0="
   [mod."go4.org/unsafe/assume-no-moving-gc"]
-    version = "v0.0.0-20230525183740-e7c30c78aeb2"
-    hash = "sha256-IDQleFabPVMsuiCrYNPBNNDOvl+JrKQTrsmbZy4vtlA="
+    version = "v0.0.0-20231121144256-b99613f794b6"
+    hash = "sha256-p0bcawoazS5r49P8Ru0anJ5crNB0+3xGtzZNpCAe3gI="
   [mod."golang.org/x/crypto"]
     version = "v0.17.0"
     hash = "sha256-/vzBaeD/Ymyc7cpjBvSfJfuZ57zWa9LOaZM7b33eIx0="
