@@ -103,6 +103,8 @@ type View struct {
 	typers        []typer
 	typingHandler glib.SourceHandle
 
+	chooser *gtk.FileChooserNative
+
 	state struct {
 		id       discord.MessageID
 		editing  bool
@@ -348,20 +350,26 @@ func (v *View) resetAction() {
 }
 
 func (v *View) upload() {
-	chooser := gtk.NewFileChooserNative(
+	// From GTK's documentation:
+	//   Note that unlike GtkDialog, GtkNativeDialog objects are not toplevel
+	//   widgets, and GTK does not keep them alive. It is your responsibility to
+	//   keep a reference until you are done with the object.
+	v.chooser = gtk.NewFileChooserNative(
 		"Upload Files",
 		app.GTKWindowFromContext(v.ctx),
 		gtk.FileChooserActionOpen,
 		"Upload", "Cancel",
 	)
-	chooser.SetSelectMultiple(true)
-	chooser.SetModal(true)
-	chooser.ConnectResponse(func(resp int) {
+	v.chooser.SetSelectMultiple(true)
+	v.chooser.SetModal(true)
+	v.chooser.ConnectResponse(func(resp int) {
 		if resp == int(gtk.ResponseAccept) {
-			v.addFiles(chooser.Files())
+			v.addFiles(v.chooser.Files())
 		}
+		v.chooser.Destroy()
+		v.chooser = nil
 	})
-	chooser.Show()
+	v.chooser.Show()
 }
 
 func (v *View) addFiles(list gio.ListModeller) {
