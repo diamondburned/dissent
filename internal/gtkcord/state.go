@@ -111,7 +111,7 @@ func Wrap(state *state.State) *State {
 		log.Printf("state error: %v", err)
 	}
 
-	dumpRawEvents(state)
+	// dumpRawEvents(state)
 	ningen := ningen.FromState(state)
 	return &State{
 		MainThreadHandler: NewMainThreadHandler(ningen.Handler),
