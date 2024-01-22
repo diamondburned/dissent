@@ -23,7 +23,7 @@ func NewPopoverController(parent gtk.Widgetter, initFn func(*gtk.Popover)) *Popo
 }
 
 // Popup pops up the popover.
-func (p *PopoverController) Popup() {
+func (p *PopoverController) Popup() *gtk.Popover {
 	if p.popover != nil {
 		if p.hideTimeout != 0 {
 			glib.SourceRemove(p.hideTimeout)
@@ -34,14 +34,16 @@ func (p *PopoverController) Popup() {
 		p.initPopover(p.popover)
 
 		p.popover.Popup()
-		return
+		return p.popover
 	}
 
 	p.popover = gtk.NewPopover()
 	p.popover.SetCSSClasses(nil)
 	p.popover.SetParent(p.parent)
 	p.initPopover(p.popover)
+
 	p.popover.Popup()
+	return p.popover
 }
 
 // Popdown pops down the popover.

@@ -111,7 +111,7 @@ func Wrap(state *state.State) *State {
 		log.Printf("state error: %v", err)
 	}
 
-	// dumpRawEvents(state)
+	dumpRawEvents(state)
 	ningen := ningen.FromState(state)
 	return &State{
 		MainThreadHandler: NewMainThreadHandler(ningen.Handler),
@@ -243,15 +243,30 @@ func (s *State) BindWidget(w gtk.Widgetter, fn func(gateway.Event), filters ...g
 // AddHandlerForWidget replaces BindWidget and provides a way to bind a handler
 // that only receives events as long as the widget is mapped. As soon as the
 // widget is unmapped, the handler is unbound.
-func (s *State) AddHandlerForWidget(w gtk.Widgetter, fn any) {
+func (s *State) AddHandlerForWidget(w gtk.Widgetter, fn any) func() {
 	var unbind func()
 	ww := gtk.BaseWidget(w)
-	ww.ConnectMap(func() {
-		unbind = s.AddHandler(fn)
-	})
-	ww.ConnectUnmap(func() {
-		unbind()
-	})
+	sigs := []glib.SignalHandle{
+		ww.ConnectMap(func() {
+			unbind = s.AddHandler(fn)
+		}),
+		ww.ConnectUnmap(func() {
+			if unbind != nil {
+				unbind()
+				unbind = nil
+			}
+		}),
+	}
+	return func() {
+		if unbind != nil {
+			unbind()
+			unbind = nil
+		}
+		for _, sig := range sigs {
+			ww.HandlerDisconnect(sig)
+		}
+		sigs = nil
+	}
 }
 
 // AuthorMarkup renders the markup for the message author's name. It makes no
