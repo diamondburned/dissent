@@ -3,7 +3,14 @@ package hoverpopover
 import (
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
+	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 )
+
+var _ = cssutil.WriteCSS(`
+	.popover-label {
+		padding: 0 0.25em;
+	}
+`)
 
 // MarkupHoverPopover is a struct that represents a hover popover
 // that is displayed when the user hovers over a widget. The popover
@@ -70,6 +77,7 @@ func (p *MarkupHoverPopover) initPopover(popover *gtk.Popover) {
 	current := &MarkupHoverPopoverWidget{Popover: popover}
 
 	current.Label = gtk.NewLabel("")
+	current.Label.AddCSSClass("popover-label")
 	current.Label.AddCSSClass("hover-popover-label")
 
 	current.AddCSSClass("hover-popover")
