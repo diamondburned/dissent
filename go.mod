@@ -2,6 +2,8 @@ module github.com/diamondburned/gtkcord4
 
 go 1.18
 
+replace github.com/diamondburned/ningen/v3 => ../../ningen
+
 require (
 	github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8
 	github.com/diamondburned/arikawa/v3 v3.3.5-0.20240107031703-10d36264291a
