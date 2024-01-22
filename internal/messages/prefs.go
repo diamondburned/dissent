@@ -50,6 +50,18 @@ var maxImageHeight = prefs.NewInt(gtkcord.EmbedImgHeight, prefs.IntMeta{
 	Max:         2000,
 })
 
+var redactMessages = prefs.NewBool(false, prefs.PropMeta{
+	Name:        "Redact Messages",
+	Section:     "Messages",
+	Description: "Redact instead of deleting messages. This will replace the message content with a redacted message.",
+})
+
+var showSummaries = prefs.NewBool(true, prefs.PropMeta{
+	Name:        "Show Summaries",
+	Section:     "Messages",
+	Description: "Show message summaries as they come.",
+})
+
 func init() {
 	prefs.RegisterProp((*blockedUsersPrefs)(nil))
 	prefs.Order((*blockedUsersPrefs)(nil), showBlockedMessages)

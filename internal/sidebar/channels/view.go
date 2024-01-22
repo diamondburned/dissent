@@ -200,6 +200,25 @@ func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
 	v.selection.SetAutoselect(false)
 	v.selection.SetCanUnselect(true)
 
+	v.Child.View = gtk.NewListView(v.selection, newChannelItemFactory(ctx, v.model.TreeListModel))
+	v.Child.View.SetSizeRequest(bannerWidth, -1)
+	v.Child.View.AddCSSClass("channels-viewtree")
+	v.Child.View.SetVExpand(true)
+	v.Child.View.SetHExpand(true)
+
+	v.Child.Box = gtk.NewBox(gtk.OrientationVertical, 0)
+	v.Child.Box.SetVExpand(true)
+	v.Child.Box.Append(v.Child.Banner)
+	v.Child.Box.Append(v.Child.View)
+	v.Child.Box.SetFocusChild(v.Child.View)
+
+	viewport.SetChild(v.Child)
+	viewport.SetFocusChild(v.Child)
+
+	v.ToolbarView.AddTopBar(v.Header)
+	v.ToolbarView.SetContent(v.Scroll)
+	v.ToolbarView.SetFocusChild(v.Scroll)
+
 	lastOpen := lastOpenKey.Acquire(ctx)
 
 	v.selection.ConnectSelectionChanged(func(position, nItems uint) {
@@ -252,25 +271,6 @@ func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
 			v.selectID = 0
 		}
 	})
-
-	v.Child.View = gtk.NewListView(v.selection, newChannelItemFactory(ctx, v.model.TreeListModel))
-	v.Child.View.SetSizeRequest(bannerWidth, -1)
-	v.Child.View.AddCSSClass("channels-viewtree")
-	v.Child.View.SetVExpand(true)
-	v.Child.View.SetHExpand(true)
-
-	v.Child.Box = gtk.NewBox(gtk.OrientationVertical, 0)
-	v.Child.Box.SetVExpand(true)
-	v.Child.Box.Append(v.Child.Banner)
-	v.Child.Box.Append(v.Child.View)
-	v.Child.Box.SetFocusChild(v.Child.View)
-
-	viewport.SetChild(v.Child)
-	viewport.SetFocusChild(v.Child)
-
-	v.ToolbarView.AddTopBar(v.Header)
-	v.ToolbarView.SetContent(v.Scroll)
-	v.ToolbarView.SetFocusChild(v.Scroll)
 
 	// Restore the selection from the state. We must delay this until the view
 	// is realized so the parent view has time to finish loading.

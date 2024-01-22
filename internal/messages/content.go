@@ -315,6 +315,13 @@ func (c *Content) append(w gtk.Widgetter) {
 	c.child = append(c.child, w)
 }
 
+func (c *Content) SetCustomChild(child ...gtk.Widgetter) {
+	c.clear()
+	for _, w := range child {
+		c.append(w)
+	}
+}
+
 func (c *Content) clear() {
 	for i, child := range c.child {
 		c.Box.Remove(child)

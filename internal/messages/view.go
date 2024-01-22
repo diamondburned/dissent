@@ -75,6 +75,8 @@ type View struct {
 	chName  string
 	guildID discord.GuildID
 
+	summaries map[discord.Snowflake]messageSummaryWidget
+
 	state struct {
 		row      *gtk.ListBoxRow
 		editing  bool
@@ -348,6 +350,13 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 			for i := range ev.Members {
 				v.updateMember(&ev.Members[i])
 			}
+
+		case *gateway.ConversationSummaryUpdateEvent:
+			if ev.ChannelID != v.chID {
+				return
+			}
+
+			v.updateSummaries(ev.Summaries)
 		}
 	})
 
@@ -364,45 +373,7 @@ func (v *View) HeaderButtons() gtk.Widgetter {
 	box := gtk.NewBox(gtk.OrientationHorizontal, 0)
 	box.AddCSSClass("message-header-buttons")
 
-	summariesButton := hoverpopover.NewPopoverButton(func(popover *gtk.Popover) {
-		popover.AddCSSClass("message-summaries-popover")
-		state := gtkcord.FromContext(v.ctx)
-
-		summaries := state.SummaryState.Summaries(v.chID)
-		if len(summaries) == 0 {
-			placeholder := gtk.NewLabel(locale.Get("No message summaries available."))
-			placeholder.AddCSSClass("message-summaries-placeholder")
-
-			popover.SetChild(placeholder)
-			return
-		}
-
-		list := gtk.NewListBox()
-		list.AddCSSClass("message-summaries-list")
-
-		for _, summary := range summaries {
-			label := gtk.NewLabel("")
-			label.SetXAlign(0)
-			label.SetWrap(true)
-			label.SetWrapMode(pango.WrapWordChar)
-			label.SetMaxWidthChars(100)
-			label.SetMarkup(fmt.Sprintf(
-				"<b>%s</b>\n<small>%s</small>",
-				html.EscapeString(summary.Topic),
-				html.EscapeString(summary.ShortSummary),
-			))
-
-			// TODO: add little user icons for participants.
-			// we should probably use a grid for that.
-
-			row := gtk.NewListBoxRow()
-			row.SetSelectable(false)
-			row.SetChild(label)
-
-			// TODO: scroll to message on click.
-			list.Append(row)
-		}
-	})
+	summariesButton := hoverpopover.NewPopoverButton(v.initSummariesPopover)
 	summariesButton.SetIconName("speaker-notes-symbolic")
 	summariesButton.SetTooltipText(locale.Get("Message Summaries"))
 	box.Append(summariesButton)
@@ -412,7 +383,7 @@ func (v *View) HeaderButtons() gtk.Widgetter {
 		summariesButton.SetSensitive(false)
 		var unbind func()
 		unbind = state.AddHandlerForWidget(summariesButton, func(ev *gateway.ConversationSummaryUpdateEvent) {
-			if ev.ChannelID == v.chID {
+			if ev.ChannelID == v.chID && len(ev.Summaries) > 0 {
 				summariesButton.SetSensitive(true)
 				unbind()
 			}
@@ -424,6 +395,7 @@ func (v *View) HeaderButtons() gtk.Widgetter {
 		popover.SetPosition(gtk.PosBottom)
 
 		label := gtk.NewLabel("")
+		label.AddCSSClass("popover-label")
 		popover.SetChild(label)
 
 		state := gtkcord.FromContext(v.ctx)
@@ -444,7 +416,9 @@ func (v *View) HeaderButtons() gtk.Widgetter {
 		}
 
 		if ch.Topic != "" {
-			markup += "\n" + html.EscapeString(ch.Topic)
+			markup += fmt.Sprintf(
+				"\n<small>%s</small>",
+				html.EscapeString(ch.Topic))
 		} else {
 			markup += fmt.Sprintf(
 				"\n<i><small>%s</small></i>",
@@ -483,6 +457,28 @@ func (v *View) ChannelName() string {
 	return v.chName
 }
 
+// messageSummaries returns the message summaries for the channel that the
+// message view is displaying for. If showSummaries is false, then nil is
+// returned.
+func (v *View) messageSummaries() map[discord.MessageID]gateway.ConversationSummary {
+	if !showSummaries.Value() {
+		return nil
+	}
+
+	state := gtkcord.FromContext(v.ctx)
+	summaries := state.SummaryState.Summaries(v.chID)
+	if len(summaries) == 0 {
+		return nil
+	}
+
+	summariesMap := make(map[discord.MessageID]gateway.ConversationSummary, len(summaries))
+	for _, summary := range summaries {
+		summariesMap[summary.EndID] = summary
+	}
+
+	return summariesMap
+}
+
 func (v *View) load() {
 	log.Println("loading message view for", v.chID)
 
@@ -507,9 +503,14 @@ func (v *View) load() {
 			v.setPageToMain()
 			v.Scroll.ScrollToBottom()
 
+			summariesMap := v.messageSummaries()
+
 			for _, msg := range v.filterIgnoredMessages(msgs) {
 				w := v.upsertMessage(msg.ID, newMessageInfo(&msg), 0)
 				w.Update(&gateway.MessageCreateEvent{Message: msg})
+				if summary, ok := summariesMap[msg.ID]; ok {
+					v.appendSummary(summary)
+				}
 			}
 		}
 	})
@@ -539,6 +540,8 @@ func (v *View) loadMore() {
 			infos[i] = newMessageInfo(&msgs[i])
 		}
 
+		summariesMap := v.messageSummaries()
+
 		for i, msg := range msgs {
 			flags := 0 |
 				upsertFlagOverrideCollapse |
@@ -552,6 +555,12 @@ func (v *View) loadMore() {
 				if shouldBeCollapsed(curr, last) {
 					flags |= upsertFlagCollapsed
 				}
+			}
+
+			// These messages are prepended, so we insert the "end summary" of
+			// the message before it.
+			if summary, ok := summariesMap[msg.ID]; ok {
+				v.appendSummary(summary)
 			}
 
 			w := v.upsertMessage(msg.ID, infos[i], flags)
@@ -684,6 +693,20 @@ func (v *View) upsertMessageKeyed(key messageKey, info messageInfo, flags upsert
 		return msg.message
 	}
 
+	msg := v.createMessageKeyed(key, info, flags)
+	v.msgs[key] = msg
+
+	if flags&upsertFlagPrepend != 0 {
+		v.List.Prepend(msg.ListBoxRow)
+	} else {
+		v.List.Append(msg.ListBoxRow)
+	}
+
+	v.List.SetFocusChild(msg.ListBoxRow)
+	return msg.message
+}
+
+func (v *View) createMessageKeyed(key messageKey, info messageInfo, flags upsertFlags) messageRow {
 	var message Message
 	if flags&upsertFlagCollapsed != 0 {
 		message = NewCollapsedMessage(v.ctx, v)
@@ -696,27 +719,18 @@ func (v *View) upsertMessageKeyed(key messageKey, info messageInfo, flags upsert
 	row.SetName(string(key))
 	row.SetChild(message)
 
-	if flags&upsertFlagPrepend != 0 {
-		v.List.Prepend(row)
-	} else {
-		v.List.Append(row)
-	}
-	v.List.SetFocusChild(row)
-
-	v.msgs[key] = messageRow{
+	return messageRow{
 		ListBoxRow: row,
 		message:    message,
 		info:       info,
 	}
-
-	return message
 }
 
 // resetMessage resets the message with the given messageRow.
 // Its main point is to re-evaluate the collapsed state of the message.
 func (v *View) resetMessage(key messageKey) {
 	row, ok := v.msgs[key]
-	if !ok {
+	if !ok || row.message == nil {
 		return
 	}
 
@@ -739,11 +753,31 @@ func (v *View) resetMessage(key messageKey) {
 
 func (v *View) deleteMessage(id discord.MessageID) {
 	key := messageKeyID(id)
+	v.deleteMessageKeyed(key)
+}
 
+func (v *View) deleteMessageKeyed(key messageKey) {
 	msg, ok := v.msgs[key]
-	if ok {
-		msg.message.Redact()
+	if !ok {
+		return
 	}
+
+	if redactMessages.Value() && msg.message != nil {
+		msg.message.Redact()
+		return
+	}
+
+	ix := msg.Index()
+	if ix != len(v.msgs)-1 {
+		nextRow := v.List.RowAtIndex(ix + 1)
+		nextKey := messageKeyRow(nextRow)
+
+		// Reset this message after popping ours off the list.
+		defer v.resetMessage(nextKey)
+	}
+
+	v.List.Remove(msg)
+	delete(v.msgs, key)
 }
 
 func (v *View) shouldBeCollapsed(info messageInfo) bool {
@@ -835,7 +869,7 @@ func (v *View) updateMember(member *discord.Member) {
 
 func (v *View) updateMessageReactions(id discord.MessageID) {
 	widget, ok := v.msgs[messageKeyID(id)]
-	if !ok {
+	if !ok || widget.message == nil {
 		return
 	}
 
@@ -984,7 +1018,7 @@ func (v *View) ReplyTo(id discord.MessageID) {
 	v.stopEditingOrReplying()
 
 	msg, ok := v.msgs[messageKeyID(id)]
-	if !ok || msg.message.Message() == nil {
+	if !ok || msg.message == nil || msg.message.Message() == nil {
 		return
 	}
 
@@ -1000,7 +1034,7 @@ func (v *View) Edit(id discord.MessageID) {
 	v.stopEditingOrReplying()
 
 	msg, ok := v.msgs[messageKeyID(id)]
-	if !ok || msg.message.Message() == nil {
+	if !ok || msg.message == nil || msg.message.Message() == nil {
 		return
 	}
 
