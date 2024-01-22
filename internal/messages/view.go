@@ -485,7 +485,7 @@ func (v *View) load() {
 	v.LoadablePage.SetLoading()
 	v.unload()
 
-	state := gtkcord.FromContext(v.ctx)
+	state := gtkcord.FromContext(v.ctx).Online()
 
 	gtkutil.Async(v.ctx, func() func() {
 		msgs, err := state.Messages(v.chID, 15)
@@ -527,7 +527,7 @@ func (v *View) loadMore() {
 	log.Println("loading more messages for", v.chID)
 
 	ctx := v.ctx
-	state := gtkcord.FromContext(ctx)
+	state := gtkcord.FromContext(ctx).Online()
 
 	prevScrollVal := v.Scroll.VAdjustment().Value()
 	prevScrollMax := v.Scroll.VAdjustment().Upper()
@@ -767,13 +767,12 @@ func (v *View) deleteMessageKeyed(key messageKey) {
 		return
 	}
 
-	ix := msg.Index()
-	if ix != len(v.msgs)-1 {
-		nextRow := v.List.RowAtIndex(ix + 1)
-		nextKey := messageKeyRow(nextRow)
-
-		// Reset this message after popping ours off the list.
-		defer v.resetMessage(nextKey)
+	// Just be really safe.
+	if key, ok := v.nextMessageKey(msg); ok {
+		defer v.resetMessage(key)
+	}
+	if key, ok := v.prevMessageKey(msg); ok {
+		defer v.resetMessage(key)
 	}
 
 	v.List.Remove(msg)
@@ -781,8 +780,21 @@ func (v *View) deleteMessageKeyed(key messageKey) {
 }
 
 func (v *View) shouldBeCollapsed(info messageInfo) bool {
-	last, ok := v.lastMessage()
-	return ok && shouldBeCollapsed(info, last.info)
+	var last messageRow
+	var lastOK bool
+	if curr, ok := v.msgs[messageKeyID(info.id)]; ok {
+		prev, ok := v.prevMessageKey(curr)
+		if ok {
+			last, lastOK = v.msgs[prev]
+		}
+	}
+	if !lastOK {
+		last, lastOK = v.lastMessage()
+	}
+	if !lastOK {
+		return false
+	}
+	return shouldBeCollapsed(info, last.info)
 }
 
 func shouldBeCollapsed(curr, last messageInfo) bool {
@@ -791,6 +803,22 @@ func shouldBeCollapsed(curr, last messageInfo) bool {
 		last.author == curr.author &&
 		// within the last 10 minutes
 		last.timestamp.Time().Add(10*time.Minute).After(curr.timestamp.Time())
+}
+
+func (v *View) nextMessageKey(row messageRow) (messageKey, bool) {
+	next, _ := row.NextSibling().(*gtk.ListBoxRow)
+	if next != nil {
+		return messageKeyRow(next), true
+	}
+	return "", false
+}
+
+func (v *View) prevMessageKey(row messageRow) (messageKey, bool) {
+	prev, _ := row.PrevSibling().(*gtk.ListBoxRow)
+	if prev != nil {
+		return messageKeyRow(prev), true
+	}
+	return "", false
 }
 
 func (v *View) lastMessage() (messageRow, bool) {
@@ -968,6 +996,7 @@ func (v *View) SendMessage(msg composer.SendingMessage) {
 			})
 		}
 
+		state := state.Online()
 		_, err := state.SendMessageComplex(m.ChannelID, sendData)
 
 		return func() {

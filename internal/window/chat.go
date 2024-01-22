@@ -33,6 +33,8 @@ type ChatPage struct {
 
 	ctx         context.Context
 	placeholder gtk.Widgetter
+
+	openedChID discord.ChannelID
 }
 
 type chatPageView struct {
@@ -115,7 +117,7 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	w.AddBreakpoint(breakpoint)
 
 	setStatus := func(status discord.Status) {
-		state := gtkcord.FromContext(ctx)
+		state := gtkcord.FromContext(ctx).Online()
 		if err := state.SetStatus(status, nil); err != nil {
 			app.Error(ctx, errors.Wrap(err, "invalid status"))
 		}
@@ -148,6 +150,8 @@ func (p *ChatPage) ShowQuickSwitcher() {
 
 // SwitchToPlaceholder switches to the empty placeholder view.
 func (p *ChatPage) SwitchToPlaceholder() {
+	p.openedChID = 0
+
 	win := app.WindowFromContext(p.ctx)
 	win.SetTitle("")
 
@@ -188,11 +192,16 @@ func (p *ChatPage) OpenDMs() {
 // OpenChannel opens the channel with the given ID. Use this method to direct
 // the user to a new channel when they request to, e.g. through a notification.
 func (p *ChatPage) OpenChannel(chID discord.ChannelID) {
-	p.SwitchToPlaceholder()
-
 	if !chID.IsValid() {
+		p.SwitchToPlaceholder()
 		return
 	}
+
+	if p.openedChID == chID {
+		return
+	}
+
+	p.openedChID = chID
 
 	p.Left.SelectChannel(chID)
 

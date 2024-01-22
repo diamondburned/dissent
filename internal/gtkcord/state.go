@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
@@ -156,6 +157,20 @@ func dumpRawEvents(state *state.State) {
 // InjectState injects the given state to a new context.
 func InjectState(ctx context.Context, state *State) context.Context {
 	return context.WithValue(ctx, stateKey, state)
+}
+
+// Offline creates a copy of State with a new offline state.
+func (s *State) Offline() *State {
+	s2 := *s
+	s2.State = s.State.Offline()
+	return &s2
+}
+
+// Online creates a copy of State with a new online state.
+func (s *State) Online() *State {
+	s2 := *s
+	s2.State = s.State.Online()
+	return &s2
 }
 
 // WithContext creates a copy of State with a new context.
@@ -406,6 +421,15 @@ func (s *State) MessagePreview(msg *discord.Message) string {
 	}
 
 	return ""
+}
+
+// Channel returns the channel with the given ID.
+func (s *State) Channel(id discord.ChannelID) (*discord.Channel, error) {
+	if !id.IsValid() {
+		log.Println("detected invalid channel ID call:", string(debug.Stack()))
+		return nil, fmt.Errorf("invalid channel ID")
+	}
+	return s.State.Channel(id)
 }
 
 // InjectAvatarSize calls InjectSize with size being 64px.

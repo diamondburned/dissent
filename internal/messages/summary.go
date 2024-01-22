@@ -12,7 +12,6 @@ import (
 	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
-	"github.com/diamondburned/ningen/v3"
 )
 
 var summaryCSS = cssutil.Applier("message-summary-row", `
@@ -142,7 +141,7 @@ type summaryMarkups struct {
 	body   string
 }
 
-func formatSummary(state *ningen.State, guildID discord.GuildID, summary gateway.ConversationSummary) summaryMarkups {
+func formatSummary(state *gtkcord.State, guildID discord.GuildID, summary gateway.ConversationSummary) summaryMarkups {
 	var markups summaryMarkups
 
 	if len(summary.People) > 0 {
