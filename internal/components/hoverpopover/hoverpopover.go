@@ -1,8 +1,6 @@
 package hoverpopover
 
 import (
-	"log"
-
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 )
@@ -16,11 +14,9 @@ import (
 // the user hovers over a widget. They are automatically destroyed
 // a moment after the user stops hovering over the widget.
 type MarkupHoverPopover struct {
-	parent      *gtk.Widget
-	hover       *gtk.EventControllerMotion
-	current     *MarkupHoverPopoverWidget // nil if not shown
-	initFn      func(*MarkupHoverPopoverWidget)
-	hideTimeout glib.SourceHandle
+	hover      *gtk.EventControllerMotion
+	controller *PopoverController
+	initFn     func(*MarkupHoverPopoverWidget)
 }
 
 // MarkupHoverPopoverWidget is a struct that represents a popover
@@ -38,86 +34,51 @@ var markupHoverPopoverClasses = []string{
 // NewMarkupHoverPopover creates a new MarkupHoverPopover.
 func NewMarkupHoverPopover(parent gtk.Widgetter, initFn func(*MarkupHoverPopoverWidget)) *MarkupHoverPopover {
 	p := &MarkupHoverPopover{
-		parent: gtk.BaseWidget(parent),
 		initFn: initFn,
 	}
+	p.controller = NewPopoverController(parent, p.initPopover)
 
-	// TODO: this has potential issues when we unfocus a window.
-	// Consider additional checks.
 	p.hover = gtk.NewEventControllerMotion()
-	p.hover.ConnectEnter(func(_, _ float64) { p.showPopover() })
-	p.hover.ConnectLeave(func() { p.hidePopover() })
+	p.hover.ConnectEnter(func(_, _ float64) { p.controller.Popup() })
+	p.hover.ConnectLeave(func() { p.controller.Popdown() })
 
-	p.parent.AddController(p.hover)
+	parentWidget := gtk.BaseWidget(parent)
+	parentWidget.AddController(p.hover)
 
 	var windowSignal glib.SignalHandle
 	onMap := func() {
-		window := p.parent.Root().CastType(gtk.GTypeWindow).(*gtk.Window)
+		window := parentWidget.Root().CastType(gtk.GTypeWindow).(*gtk.Window)
 		windowSignal = window.NotifyProperty("is-active", func() {
-			if p.current != nil && !window.IsActive() {
-				p.hidePopover()
+			if p.controller.IsPoppedUp() && !window.IsActive() {
+				p.controller.Popdown()
 			}
 		})
 	}
-	p.parent.ConnectMap(onMap)
-	p.parent.ConnectUnmap(func() {
-		p.parent.HandlerDisconnect(windowSignal)
+	parentWidget.ConnectMap(onMap)
+	parentWidget.ConnectUnmap(func() {
+		parentWidget.HandlerDisconnect(windowSignal)
 		windowSignal = 0
 	})
-	if p.parent.Mapped() {
+	if parentWidget.Mapped() {
 		onMap()
 	}
 
 	return p
 }
 
-func (p *MarkupHoverPopover) showPopover() {
-	if p.current != nil {
-		// If we already have a background hide timeout, remove it.
-		if p.hideTimeout != 0 {
-			glib.SourceRemove(p.hideTimeout)
-			p.hideTimeout = 0
-		}
+func (p *MarkupHoverPopover) initPopover(popover *gtk.Popover) {
+	current := &MarkupHoverPopoverWidget{Popover: popover}
 
-		p.current.Popup()
-		return
-	}
+	current.Label = gtk.NewLabel("")
+	current.Label.AddCSSClass("hover-popover-label")
 
-	p.current = &MarkupHoverPopoverWidget{}
+	current.AddCSSClass("hover-popover")
+	current.AddCSSClass("hover-popover-markup")
+	current.SetAutohide(false)
+	current.SetMnemonicsVisible(false)
+	current.SetCanFocus(false)
+	current.SetCanTarget(false)
+	current.SetChild(current.Label)
 
-	p.current.Label = gtk.NewLabel("")
-	p.current.Label.AddCSSClass("hover-popover-label")
-
-	p.current.Popover = gtk.NewPopover()
-	p.current.AddCSSClass("hover-popover")
-	p.current.AddCSSClass("hover-popover-markup")
-	p.current.SetParent(p.parent)
-	p.current.SetAutohide(false)
-	p.current.SetMnemonicsVisible(false)
-	p.current.SetCanFocus(false)
-	p.current.SetCanTarget(false)
-	p.current.SetChild(p.current.Label)
-
-	p.initFn(p.current)
-	p.current.Popup()
-}
-
-func (p *MarkupHoverPopover) hidePopover() {
-	if p.current == nil {
-		log.Println("hidePopover: current is nil when leaving hover")
-		return
-	}
-
-	p.current.Popover.Popdown()
-
-	if p.hideTimeout != 0 {
-		// We've already set a timeout, so don't set another one.
-		return
-	}
-
-	p.hideTimeout = glib.TimeoutSecondsAddPriority(3, glib.PriorityLow, func() {
-		p.current.Popover.Unparent()
-		p.current = nil
-		p.hideTimeout = 0
-	})
+	p.initFn(current)
 }

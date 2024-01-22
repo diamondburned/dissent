@@ -23,15 +23,21 @@ var lastOpenKey = app.NewSingleStateKey[discord.GuildID]("last-guild-state")
 
 type ChatPage struct {
 	*adw.OverlaySplitView
-	Left       *sidebar.Sidebar
-	RightLabel *gtk.Label
-	RightChild *gtk.Stack
+	Left        *sidebar.Sidebar
+	RightHeader *adw.HeaderBar
+	RightLabel  *gtk.Label
+	RightChild  *gtk.Stack
 
-	prevView gtk.Widgetter
+	prevView chatPageView
 	lastOpen *app.TypedSingleState[discord.GuildID]
 
 	ctx         context.Context
 	placeholder gtk.Widgetter
+}
+
+type chatPageView struct {
+	body   gtk.Widgetter
+	header gtk.Widgetter
 }
 
 var chatPageCSS = cssutil.Applier("window-chatpage", `
@@ -68,13 +74,13 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	back := backbutton.New()
 	back.SetTransitionType(gtk.RevealerTransitionTypeSlideRight)
 
-	rightHeader := adw.NewHeaderBar()
-	rightHeader.AddCSSClass("right-header")
-	rightHeader.SetShowEndTitleButtons(true)
-	rightHeader.SetShowBackButton(false) // this is useless with OverlaySplitView
-	rightHeader.SetShowTitle(false)
-	rightHeader.PackStart(back)
-	rightHeader.PackStart(p.RightLabel)
+	p.RightHeader = adw.NewHeaderBar()
+	p.RightHeader.AddCSSClass("right-header")
+	p.RightHeader.SetShowEndTitleButtons(true)
+	p.RightHeader.SetShowBackButton(false) // this is useless with OverlaySplitView
+	p.RightHeader.SetShowTitle(false)
+	p.RightHeader.PackStart(back)
+	p.RightHeader.PackStart(p.RightLabel)
 
 	p.placeholder = newEmptyMessagePlaceholer()
 
@@ -88,7 +94,7 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 
 	rightBox := adw.NewToolbarView()
 	rightBox.SetHExpand(true)
-	rightBox.AddTopBar(rightHeader)
+	rightBox.AddTopBar(p.RightHeader)
 	rightBox.SetContent(p.RightChild)
 	rightBox.SetTopBarStyle(adw.ToolbarFlat)
 
@@ -146,14 +152,14 @@ func (p *ChatPage) SwitchToPlaceholder() {
 	win.SetTitle("")
 
 	p.RightLabel.SetText("")
-	p.switchTo(nil)
+	p.switchTo(nil, nil)
 	p.RightChild.SetVisibleChild(p.placeholder)
 }
 
 // SwitchToMessages reopens a new message page of the same channel ID if the
 // user is opening one. Otherwise, the placeholder is seen.
 func (p *ChatPage) SwitchToMessages() {
-	view, ok := p.prevView.(*messages.View)
+	view, ok := p.prevView.body.(*messages.View)
 	if ok {
 		p.OpenChannel(view.ChannelID())
 		return
@@ -196,7 +202,7 @@ func (p *ChatPage) OpenChannel(chID discord.ChannelID) {
 	win.SetTitle(gtkcord.ChannelNameFromID(p.ctx, chID))
 
 	view := messages.NewView(p.ctx, chID)
-	p.switchTo(view)
+	p.switchTo(view, view.HeaderButtons())
 }
 
 // OpenGuild opens the guild with the given ID.
@@ -206,26 +212,33 @@ func (p *ChatPage) OpenGuild(guildID discord.GuildID) {
 	p.Left.SelectGuild(guildID)
 }
 
-func (p *ChatPage) switchTo(w gtk.Widgetter) {
+func (p *ChatPage) switchTo(body, header gtk.Widgetter) {
 	old := p.prevView
-	p.prevView = w
+	p.prevView = chatPageView{body, header}
 
-	if w != nil {
-		p.RightChild.AddChild(w)
-		p.RightChild.SetVisibleChild(w)
+	if body != nil {
+		p.RightChild.AddChild(body)
+		p.RightChild.SetVisibleChild(body)
 
-		base := gtk.BaseWidget(w)
+		base := gtk.BaseWidget(body)
 		base.GrabFocus()
 	}
 
-	if old == nil {
+	if header != nil {
+		p.RightHeader.PackEnd(header)
+	}
+
+	if old == (chatPageView{}) {
 		return
 	}
+
+	// Remove the header widget right away. We don't have transitions for it.
+	p.RightHeader.Remove(old.header)
 
 	gtkutil.NotifyProperty(p.RightChild, "transition-running", func() bool {
 		// Remove the widget when the transition is done.
 		if !p.RightChild.TransitionRunning() {
-			p.RightChild.Remove(old)
+			p.RightChild.Remove(old.body)
 
 			// Hack: destroy everything!
 			// log.Println("destroying previous message view")

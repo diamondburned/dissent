@@ -3,6 +3,7 @@ package messages
 import (
 	"context"
 	"fmt"
+	"html"
 	"log"
 	"sort"
 	"time"
@@ -16,11 +17,13 @@ import (
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
+	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/components/autoscroll"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
+	"github.com/diamondburned/gtkcord4/internal/components/hoverpopover"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/diamondburned/gtkcord4/internal/messages/composer"
 	"github.com/pkg/errors"
@@ -352,6 +355,64 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 
 	viewCSS(v)
 	return v
+}
+
+// HeaderButtons returns the header buttons widget for the message view.
+// This widget is kept on the header bar for as long as the message view is
+// active.
+func (v *View) HeaderButtons() gtk.Widgetter {
+	box := gtk.NewBox(gtk.OrientationHorizontal, 0)
+	box.AddCSSClass("message-header-buttons")
+
+	infoButton := gtk.NewButton()
+	infoButton.SetIconName("dialog-information-symbolic")
+	infoButton.SetTooltipText(locale.Get("Channel Info"))
+
+	infoPopover := hoverpopover.NewPopoverController(infoButton, func(popover *gtk.Popover) {
+		popover.AddCSSClass("message-channel-info-popover")
+		popover.SetPosition(gtk.PosBottom)
+
+		label := gtk.NewLabel("")
+		popover.SetChild(label)
+
+		state := gtkcord.FromContext(v.ctx)
+		ch, _ := state.Offline().Channel(v.chID)
+		if ch == nil {
+			label.SetText(locale.Get("Channel information unavailable."))
+			return
+		}
+
+		markup := fmt.Sprintf(
+			`<b>%s</b>`,
+			html.EscapeString(ch.Name))
+
+		if ch.NSFW {
+			markup += fmt.Sprintf(
+				"\n<i><small>%s</small></i>",
+				locale.Get("This channel is NSFW."))
+		}
+
+		if ch.Topic != "" {
+			markup += "\n" + html.EscapeString(ch.Topic)
+		} else {
+			markup += fmt.Sprintf(
+				"\n<i><small>%s</small></i>",
+				locale.Get("No topic set."))
+		}
+
+		label.SetSizeRequest(100, -1)
+		label.SetMaxWidthChars(100)
+		label.SetWrap(true)
+		label.SetWrapMode(pango.WrapWordChar)
+		label.SetJustify(gtk.JustifyLeft)
+		label.SetXAlign(0)
+		label.SetMarkup(markup)
+	})
+
+	infoButton.ConnectClicked(func() { infoPopover.Popup() })
+	box.Append(infoButton)
+
+	return box
 }
 
 // GuildID returns the guild ID of the channel that the message view is
