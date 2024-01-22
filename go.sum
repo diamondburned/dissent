@@ -43,8 +43,6 @@ github.com/diamondburned/gotk4/pkg v0.1.1-0.20240117035306-132b31b11a5f h1:o1neE
 github.com/diamondburned/gotk4/pkg v0.1.1-0.20240117035306-132b31b11a5f/go.mod h1:rffNmHJknEj3Izr7P6x0F536G4fMsD5mgLjnNzyI9To=
 github.com/diamondburned/gotkit v0.0.0-20240103071019-0395decac74f h1:BEeEARs57nLzMFzZ+/63UzvK+YceW/mTt41LX5+lZZE=
 github.com/diamondburned/gotkit v0.0.0-20240103071019-0395decac74f/go.mod h1:sRA9aDaFI0h2EbGafVSNw8jDOgqj+DPJKwmwvVZMDVI=
-github.com/diamondburned/ningen/v3 v3.0.1-0.20240116234629-25ffc5d23cae h1:0xx+fo6nDqwZJW7ju5lqiRcUR7KwR0ySZyfT2a5eXac=
-github.com/diamondburned/ningen/v3 v3.0.1-0.20240116234629-25ffc5d23cae/go.mod h1:yMpvuQBxIzSf2grJg3KcBWle8m3jcuZ9Ij/sTv7XSF4=
 github.com/diamondburned/ningen/v3 v3.0.1-0.20240122034629-9c658db8ad77 h1:8vNuvokATXS1dXlaTSOJ9vydI+C8xkbFOR5BKGwKAUk=
 github.com/diamondburned/ningen/v3 v3.0.1-0.20240122034629-9c658db8ad77/go.mod h1:aRTBRHaAPjg3Gz5zQxuLiKVQhjiUeA2mzDg+QqKT0O0=
 github.com/dlclark/regexp2 v1.4.0 h1:F1rxgk7p4uKjwIQxBs9oAXe5CqrXlCduYEJvrF4u93E=

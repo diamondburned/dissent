@@ -14,8 +14,8 @@ schema = 3
     version = "v0.0.2-0.20221227093656-fa139be203a8"
     hash = "sha256-xIerrbYQf6FPbbRd60OnBStIJMl6mg/Qvl+LTmRbyIw="
   [mod."github.com/diamondburned/arikawa/v3"]
-    version = "v3.3.5-0.20231228032010-9809321f6ff4"
-    hash = "sha256-HwK2mBYxGs8/1ZK51HJboJYDobGzEwBse14siQAqmMk="
+    version = "v3.3.5-0.20240107031703-10d36264291a"
+    hash = "sha256-rfNaYKUdy5eD5Hss+h2+FaVK5DFUclCYrSuscf6nkYQ="
   [mod."github.com/diamondburned/chatkit"]
     version = "v0.0.0-20240106113153-4e4c83fb3925"
     hash = "sha256-wnSmzzc1MzLZqHMB4qc/iiQL9Nt4J7H3MfpTD6fgvyw="
@@ -23,14 +23,14 @@ schema = 3
     version = "v0.0.0-20231226035729-503b3cb0406c"
     hash = "sha256-KRn8dqQ0HUrzR7S/83BL2r8X+76KFlzbwjEMtLaW8i8="
   [mod."github.com/diamondburned/gotk4/pkg"]
-    version = "v0.1.1-0.20240111235054-c873a85ba879"
-    hash = "sha256-4ep/Esdd0B9wwD4tbZAnxKhULQqdTlF7asFMqQkppfQ="
+    version = "v0.1.1-0.20240117035306-132b31b11a5f"
+    hash = "sha256-DHp0r+ZzXjcTBq6EsVLA2vUj6jC5dsFQmOZz0KieJUo="
   [mod."github.com/diamondburned/gotkit"]
     version = "v0.0.0-20240103071019-0395decac74f"
     hash = "sha256-baeA7qCPASMXIpa5cOGIKr4iuA6Fc9YEb53zh9p0dWk="
   [mod."github.com/diamondburned/ningen/v3"]
-    version = "v3.0.1-0.20240102085723-970026175e1a"
-    hash = "sha256-3QB+SFsyw/4ZVCXeH2nLEPePOzIB1mYeH7MB+6DjTSs="
+    version = "v3.0.1-0.20240122034629-9c658db8ad77"
+    hash = "sha256-Axc7LDKYV0tEzzDA/G837mgLNxC3lGQfEck5+G/ZgJk="
   [mod."github.com/dlclark/regexp2"]
     version = "v1.4.0"
     hash = "sha256-Pk/S2x2rX7xnGFLyoHEw09CoNQimvz/msdPRsxLaLsc="
