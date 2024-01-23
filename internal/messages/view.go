@@ -369,75 +369,76 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 // HeaderButtons returns the header buttons widget for the message view.
 // This widget is kept on the header bar for as long as the message view is
 // active.
-func (v *View) HeaderButtons() gtk.Widgetter {
-	box := gtk.NewBox(gtk.OrientationHorizontal, 0)
-	box.AddCSSClass("message-header-buttons")
+func (v *View) HeaderButtons() []gtk.Widgetter {
+	var buttons []gtk.Widgetter
 
-	summariesButton := hoverpopover.NewPopoverButton(v.initSummariesPopover)
-	summariesButton.SetIconName("speaker-notes-symbolic")
-	summariesButton.SetTooltipText(locale.Get("Message Summaries"))
-	box.Append(summariesButton)
-
-	state := gtkcord.FromContext(v.ctx)
-	if len(state.SummaryState.Summaries(v.chID)) == 0 {
-		summariesButton.SetSensitive(false)
-		var unbind func()
-		unbind = state.AddHandlerForWidget(summariesButton, func(ev *gateway.ConversationSummaryUpdateEvent) {
-			if ev.ChannelID == v.chID && len(ev.Summaries) > 0 {
-				summariesButton.SetSensitive(true)
-				unbind()
-			}
-		})
-	}
-
-	infoButton := hoverpopover.NewPopoverButton(func(popover *gtk.Popover) {
-		popover.AddCSSClass("message-channel-info-popover")
-		popover.SetPosition(gtk.PosBottom)
-
-		label := gtk.NewLabel("")
-		label.AddCSSClass("popover-label")
-		popover.SetChild(label)
+	if v.guildID.IsValid() {
+		summariesButton := hoverpopover.NewPopoverButton(v.initSummariesPopover)
+		summariesButton.SetIconName("speaker-notes-symbolic")
+		summariesButton.SetTooltipText(locale.Get("Message Summaries"))
+		buttons = append(buttons, summariesButton)
 
 		state := gtkcord.FromContext(v.ctx)
-		ch, _ := state.Offline().Channel(v.chID)
-		if ch == nil {
-			label.SetText(locale.Get("Channel information unavailable."))
-			return
+		if len(state.SummaryState.Summaries(v.chID)) == 0 {
+			summariesButton.SetSensitive(false)
+			var unbind func()
+			unbind = state.AddHandlerForWidget(summariesButton, func(ev *gateway.ConversationSummaryUpdateEvent) {
+				if ev.ChannelID == v.chID && len(ev.Summaries) > 0 {
+					summariesButton.SetSensitive(true)
+					unbind()
+				}
+			})
 		}
 
-		markup := fmt.Sprintf(
-			`<b>%s</b>`,
-			html.EscapeString(ch.Name))
+		infoButton := hoverpopover.NewPopoverButton(func(popover *gtk.Popover) {
+			popover.AddCSSClass("message-channel-info-popover")
+			popover.SetPosition(gtk.PosBottom)
 
-		if ch.NSFW {
-			markup += fmt.Sprintf(
-				"\n<i><small>%s</small></i>",
-				locale.Get("This channel is NSFW."))
-		}
+			label := gtk.NewLabel("")
+			label.AddCSSClass("popover-label")
+			popover.SetChild(label)
 
-		if ch.Topic != "" {
-			markup += fmt.Sprintf(
-				"\n<small>%s</small>",
-				html.EscapeString(ch.Topic))
-		} else {
-			markup += fmt.Sprintf(
-				"\n<i><small>%s</small></i>",
-				locale.Get("No topic set."))
-		}
+			state := gtkcord.FromContext(v.ctx)
+			ch, _ := state.Offline().Channel(v.chID)
+			if ch == nil {
+				label.SetText(locale.Get("Channel information unavailable."))
+				return
+			}
 
-		label.SetSizeRequest(100, -1)
-		label.SetMaxWidthChars(100)
-		label.SetWrap(true)
-		label.SetWrapMode(pango.WrapWordChar)
-		label.SetJustify(gtk.JustifyLeft)
-		label.SetXAlign(0)
-		label.SetMarkup(markup)
-	})
-	infoButton.SetIconName("dialog-information-symbolic")
-	infoButton.SetTooltipText(locale.Get("Channel Info"))
-	box.Append(infoButton)
+			markup := fmt.Sprintf(
+				`<b>%s</b>`,
+				html.EscapeString(ch.Name))
 
-	return box
+			if ch.NSFW {
+				markup += fmt.Sprintf(
+					"\n<i><small>%s</small></i>",
+					locale.Get("This channel is NSFW."))
+			}
+
+			if ch.Topic != "" {
+				markup += fmt.Sprintf(
+					"\n<small>%s</small>",
+					html.EscapeString(ch.Topic))
+			} else {
+				markup += fmt.Sprintf(
+					"\n<i><small>%s</small></i>",
+					locale.Get("No topic set."))
+			}
+
+			label.SetSizeRequest(100, -1)
+			label.SetMaxWidthChars(100)
+			label.SetWrap(true)
+			label.SetWrapMode(pango.WrapWordChar)
+			label.SetJustify(gtk.JustifyLeft)
+			label.SetXAlign(0)
+			label.SetMarkup(markup)
+		})
+		infoButton.SetIconName("dialog-information-symbolic")
+		infoButton.SetTooltipText(locale.Get("Channel Info"))
+		buttons = append(buttons, infoButton)
+	}
+
+	return buttons
 }
 
 // GuildID returns the guild ID of the channel that the message view is

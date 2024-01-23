@@ -58,7 +58,7 @@ func (p *PopoverController) Popdown() {
 		return
 	}
 
-	p.hideTimeout = glib.TimeoutSecondsAddPriority(3, glib.PriorityLow, func() {
+	p.hideTimeout = glib.TimeoutSecondsAdd(3, func() {
 		p.popover.Unparent()
 		p.popover = nil
 		p.hideTimeout = 0

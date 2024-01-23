@@ -28,7 +28,7 @@ type ChatPage struct {
 	RightLabel  *gtk.Label
 	RightChild  *gtk.Stack
 
-	prevView chatPageView
+	prevView *chatPageView
 	lastOpen *app.TypedSingleState[discord.GuildID]
 
 	ctx         context.Context
@@ -38,8 +38,8 @@ type ChatPage struct {
 }
 
 type chatPageView struct {
-	body   gtk.Widgetter
-	header gtk.Widgetter
+	body          gtk.Widgetter
+	headerButtons []gtk.Widgetter
 }
 
 var chatPageCSS = cssutil.Applier("window-chatpage", `
@@ -221,9 +221,9 @@ func (p *ChatPage) OpenGuild(guildID discord.GuildID) {
 	p.Left.SelectGuild(guildID)
 }
 
-func (p *ChatPage) switchTo(body, header gtk.Widgetter) {
+func (p *ChatPage) switchTo(body gtk.Widgetter, headerButtons []gtk.Widgetter) {
 	old := p.prevView
-	p.prevView = chatPageView{body, header}
+	p.prevView = &chatPageView{body, headerButtons}
 
 	if body != nil {
 		p.RightChild.AddChild(body)
@@ -233,16 +233,20 @@ func (p *ChatPage) switchTo(body, header gtk.Widgetter) {
 		base.GrabFocus()
 	}
 
-	if header != nil {
-		p.RightHeader.PackEnd(header)
+	if len(headerButtons) > 0 {
+		for i := len(headerButtons) - 1; i >= 0; i-- {
+			p.RightHeader.PackEnd(headerButtons[i])
+		}
 	}
 
-	if old == (chatPageView{}) {
+	if old == nil {
 		return
 	}
 
 	// Remove the header widget right away. We don't have transitions for it.
-	p.RightHeader.Remove(old.header)
+	for _, button := range old.headerButtons {
+		p.RightHeader.Remove(button)
+	}
 
 	gtkutil.NotifyProperty(p.RightChild, "transition-running", func() bool {
 		// Remove the widget when the transition is done.
