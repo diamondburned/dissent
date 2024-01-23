@@ -452,7 +452,7 @@ func (v *View) edit() {
 	editingID := v.state.id
 	text, _ := v.commit()
 
-	state := gtkcord.FromContext(v.ctx)
+	state := gtkcord.FromContext(v.ctx).Online()
 
 	go func() {
 		_, err := state.EditMessage(v.chID, editingID, text)
