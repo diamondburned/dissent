@@ -251,7 +251,7 @@ func (r *contentReaction) invalidateUsers(done func()) {
 	tooltip := r.tooltip
 
 	gtkutil.Async(r.reactions.ctx, func() func() {
-		client := gtkcord.FromContext(r.reactions.ctx)
+		client := gtkcord.FromContext(r.reactions.ctx).Online()
 
 		u, err := client.Reactions(
 			r.reactions.parent.view.ChannelID(),
