@@ -11,8 +11,10 @@ import (
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/app"
+	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/imgutil"
+	"github.com/diamondburned/gtkcord4/internal/components/hoverpopover"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/diamondburned/gtkcord4/internal/signaling"
 	"github.com/diamondburned/ningen/v3"
@@ -155,6 +157,31 @@ func bindChannelItem(state channelItemState, item *gtk.ListItem, row *gtk.TreeLi
 
 	i.child.Box = gtk.NewBox(gtk.OrientationHorizontal, 0)
 	i.child.Box.Append(i.child.indicator)
+
+	hoverpopover.NewMarkupHoverPopover(i.child.Box, func(w *hoverpopover.MarkupHoverPopoverWidget) bool {
+		summary := i.state.SummaryState.LastSummary(i.chID)
+		if summary == nil {
+			return false
+		}
+
+		window := app.GTKWindowFromContext(i.state.Context())
+		if window.Width() > 600 {
+			w.SetPosition(gtk.PosRight)
+		} else {
+			w.SetPosition(gtk.PosBottom)
+		}
+
+		w.Label.SetEllipsize(pango.EllipsizeEnd)
+		w.Label.SetSingleLineMode(true)
+		w.Label.SetMaxWidthChars(50)
+		w.Label.SetMarkup(fmt.Sprintf(
+			"<b>%s</b>%s",
+			locale.Get("Chatting about: "),
+			summary.Topic,
+		))
+
+		return true
+	})
 
 	i.item.SetChild(i.child.Box)
 

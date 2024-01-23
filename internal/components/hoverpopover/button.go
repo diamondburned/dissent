@@ -12,7 +12,7 @@ type PopoverButton struct {
 }
 
 // NewPopoverButton creates a new PopoverButton.
-func NewPopoverButton(initFn func(*gtk.Popover)) *PopoverButton {
+func NewPopoverButton(initFn func(*gtk.Popover) bool) *PopoverButton {
 	b := &PopoverButton{ToggleButton: gtk.NewToggleButton()}
 	controller := NewPopoverController(b.ToggleButton, initFn)
 	b.ConnectClicked(func() {

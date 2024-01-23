@@ -23,7 +23,7 @@ var _ = cssutil.WriteCSS(`
 type MarkupHoverPopover struct {
 	hover      *gtk.EventControllerMotion
 	controller *PopoverController
-	initFn     func(*MarkupHoverPopoverWidget)
+	initFn     func(*MarkupHoverPopoverWidget) bool
 }
 
 // MarkupHoverPopoverWidget is a struct that represents a popover
@@ -39,7 +39,7 @@ var markupHoverPopoverClasses = []string{
 }
 
 // NewMarkupHoverPopover creates a new MarkupHoverPopover.
-func NewMarkupHoverPopover(parent gtk.Widgetter, initFn func(*MarkupHoverPopoverWidget)) *MarkupHoverPopover {
+func NewMarkupHoverPopover(parent gtk.Widgetter, initFn func(*MarkupHoverPopoverWidget) bool) *MarkupHoverPopover {
 	p := &MarkupHoverPopover{
 		initFn: initFn,
 	}
@@ -73,7 +73,7 @@ func NewMarkupHoverPopover(parent gtk.Widgetter, initFn func(*MarkupHoverPopover
 	return p
 }
 
-func (p *MarkupHoverPopover) initPopover(popover *gtk.Popover) {
+func (p *MarkupHoverPopover) initPopover(popover *gtk.Popover) bool {
 	current := &MarkupHoverPopoverWidget{Popover: popover}
 
 	current.Label = gtk.NewLabel("")
@@ -88,5 +88,5 @@ func (p *MarkupHoverPopover) initPopover(popover *gtk.Popover) {
 	current.SetCanTarget(false)
 	current.SetChild(current.Label)
 
-	p.initFn(current)
+	return p.initFn(current)
 }

@@ -38,11 +38,12 @@ func NewGuild(ctx context.Context, ctrl GuildController, id discord.GuildID) *Gu
 		ctrl.OpenGuild(id)
 	})
 
-	g.popover = hoverpopover.NewMarkupHoverPopover(g.Button, func(w *hoverpopover.MarkupHoverPopoverWidget) {
+	g.popover = hoverpopover.NewMarkupHoverPopover(g.Button, func(w *hoverpopover.MarkupHoverPopoverWidget) bool {
 		w.AddCSSClass("guild-name-popover")
 		w.SetPosition(gtk.PosRight)
 		w.Label.AddCSSClass("guild-name")
 		w.Label.SetText(g.name)
+		return true
 	})
 
 	g.SetUnavailable()

@@ -390,7 +390,7 @@ func (v *View) HeaderButtons() []gtk.Widgetter {
 			})
 		}
 
-		infoButton := hoverpopover.NewPopoverButton(func(popover *gtk.Popover) {
+		infoButton := hoverpopover.NewPopoverButton(func(popover *gtk.Popover) bool {
 			popover.AddCSSClass("message-channel-info-popover")
 			popover.SetPosition(gtk.PosBottom)
 
@@ -402,7 +402,7 @@ func (v *View) HeaderButtons() []gtk.Widgetter {
 			ch, _ := state.Offline().Channel(v.chID)
 			if ch == nil {
 				label.SetText(locale.Get("Channel information unavailable."))
-				return
+				return true
 			}
 
 			markup := fmt.Sprintf(
@@ -432,6 +432,7 @@ func (v *View) HeaderButtons() []gtk.Widgetter {
 			label.SetJustify(gtk.JustifyLeft)
 			label.SetXAlign(0)
 			label.SetMarkup(markup)
+			return true
 		})
 		infoButton.SetIconName("dialog-information-symbolic")
 		infoButton.SetTooltipText(locale.Get("Channel Info"))

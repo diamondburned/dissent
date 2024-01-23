@@ -10,12 +10,12 @@ import (
 type PopoverController struct {
 	parent      *gtk.Widget
 	popover     *gtk.Popover
-	initPopover func(*gtk.Popover)
+	initPopover func(*gtk.Popover) bool
 	hideTimeout glib.SourceHandle
 }
 
 // NewPopoverController creates a new PopoverController.
-func NewPopoverController(parent gtk.Widgetter, initFn func(*gtk.Popover)) *PopoverController {
+func NewPopoverController(parent gtk.Widgetter, initFn func(*gtk.Popover) bool) *PopoverController {
 	return &PopoverController{
 		parent:      gtk.BaseWidget(parent),
 		initPopover: initFn,
@@ -25,13 +25,15 @@ func NewPopoverController(parent gtk.Widgetter, initFn func(*gtk.Popover)) *Popo
 // Popup pops up the popover.
 func (p *PopoverController) Popup() *gtk.Popover {
 	if p.popover != nil {
+		p.popover.SetCSSClasses(nil)
+		if !p.initPopover(p.popover) {
+			return nil
+		}
+
 		if p.hideTimeout != 0 {
 			glib.SourceRemove(p.hideTimeout)
 			p.hideTimeout = 0
 		}
-
-		p.popover.SetCSSClasses(nil)
-		p.initPopover(p.popover)
 
 		p.popover.Popup()
 		return p.popover
@@ -39,9 +41,13 @@ func (p *PopoverController) Popup() *gtk.Popover {
 
 	p.popover = gtk.NewPopover()
 	p.popover.SetCSSClasses(nil)
-	p.popover.SetParent(p.parent)
-	p.initPopover(p.popover)
 
+	if !p.initPopover(p.popover) {
+		p.popover = nil
+		return nil
+	}
+
+	p.popover.SetParent(p.parent)
 	p.popover.Popup()
 	return p.popover
 }

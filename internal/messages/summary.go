@@ -228,7 +228,7 @@ var _ = cssutil.WriteCSS(`
 	}
 `)
 
-func (v *View) initSummariesPopover(popover *gtk.Popover) {
+func (v *View) initSummariesPopover(popover *gtk.Popover) bool {
 	popover.AddCSSClass("message-summaries-popover")
 	popover.SetOverflow(gtk.OverflowHidden)
 	state := gtkcord.FromContext(v.ctx).Offline()
@@ -239,7 +239,7 @@ func (v *View) initSummariesPopover(popover *gtk.Popover) {
 		placeholder.AddCSSClass("message-summaries-placeholder")
 
 		popover.SetChild(placeholder)
-		return
+		return true
 	}
 
 	list := gtk.NewBox(gtk.OrientationVertical, 0)
@@ -291,4 +291,5 @@ func (v *View) initSummariesPopover(popover *gtk.Popover) {
 	scroll.SetChild(list)
 
 	popover.SetChild(scroll)
+	return true
 }
