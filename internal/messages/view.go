@@ -751,6 +751,30 @@ func (v *View) resetMessage(key messageKey) {
 	v.msgs[key] = row
 }
 
+// surroundingMessagesResetter creates a function that resets the messages
+// surrounding the given message.
+func (v *View) surroundingMessagesResetter(key messageKey) func() {
+	msg, ok := v.msgs[key]
+	if !ok {
+		return func() {}
+	}
+
+	// Just be really safe.
+	resets := make([]func(), 0, 2)
+	if key, ok := v.nextMessageKey(msg); ok {
+		resets = append(resets, func() { v.resetMessage(key) })
+	}
+	if key, ok := v.prevMessageKey(msg); ok {
+		resets = append(resets, func() { v.resetMessage(key) })
+	}
+
+	return func() {
+		for _, reset := range resets {
+			reset()
+		}
+	}
+}
+
 func (v *View) deleteMessage(id discord.MessageID) {
 	key := messageKeyID(id)
 	v.deleteMessageKeyed(key)
@@ -767,13 +791,8 @@ func (v *View) deleteMessageKeyed(key messageKey) {
 		return
 	}
 
-	// Just be really safe.
-	if key, ok := v.nextMessageKey(msg); ok {
-		defer v.resetMessage(key)
-	}
-	if key, ok := v.prevMessageKey(msg); ok {
-		defer v.resetMessage(key)
-	}
+	reset := v.surroundingMessagesResetter(key)
+	defer reset()
 
 	v.List.Remove(msg)
 	delete(v.msgs, key)
@@ -791,7 +810,7 @@ func (v *View) shouldBeCollapsed(info messageInfo) bool {
 	if !lastOK {
 		last, lastOK = v.lastMessage()
 	}
-	if !lastOK {
+	if !lastOK || last.message == nil {
 		return false
 	}
 	return shouldBeCollapsed(info, last.info)

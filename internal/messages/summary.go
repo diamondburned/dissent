@@ -111,7 +111,17 @@ func (v *View) appendSummary(summary gateway.ConversationSummary) messageKey {
 
 		v.summaries[summary.ID] = sw
 		v.msgs[sw.key] = messageRow{ListBoxRow: row}
-		v.List.Append(row)
+
+		refMsg, ok := v.msgs[messageKeyID(summary.EndID)]
+		if ok {
+			ix := refMsg.Index()
+			v.List.Insert(row, ix)
+
+			reset := v.surroundingMessagesResetter(sw.key)
+			reset()
+		} else {
+			v.List.Append(row)
+		}
 	}
 
 	state := gtkcord.FromContext(v.ctx).Offline()
@@ -194,10 +204,16 @@ func formatSummary(state *gtkcord.State, guildID discord.GuildID, summary gatewa
 }
 
 var _ = cssutil.WriteCSS(`
-	.message-summaries-list row:not(:first-child):not(:last-child) {
+	.message-summaries-popover list {
+		background-color: transparent;
+	}
+	.message-summary-item {
 		margin: 0.25em 0;
 	}
-	.message-summaries-list row label:nth-child(2) {
+	.message-summary-item:not(:first-child):not(:last-child) {
+		margin: 0.5em 0;
+	}
+	.message-summary-item label:nth-child(2) {
 		margin-top: 0.1em;
 	}
 `)
@@ -215,15 +231,15 @@ func (v *View) initSummariesPopover(popover *gtk.Popover) {
 		return
 	}
 
-	list := gtk.NewListBox()
+	list := gtk.NewBox(gtk.OrientationVertical, 0)
 	list.AddCSSClass("message-summaries-list")
-	popover.SetChild(list)
+	list.SetHExpand(true)
 
 	for _, summary := range summaries {
 		markups := formatSummary(state, v.guildID, summary)
 
 		header := gtk.NewLabel(fmt.Sprintf(
-			`<span size="x-small" weight="light">%s</span>`+"\n%s",
+			`<span size="x-small">%s</span>`+"\n%s",
 			locale.TimeAgo(summary.EndID.Time()),
 			markups.header,
 		))
@@ -237,25 +253,31 @@ func (v *View) initSummariesPopover(popover *gtk.Popover) {
 		for _, label := range []*gtk.Label{header, bottom} {
 			label.AddCSSClass("popover-label")
 			label.SetXAlign(0)
+			label.SetHExpand(true)
 			label.SetWrap(true)
 			label.SetWrapMode(pango.WrapWordChar)
-			label.SetMaxWidthChars(100)
 			label.SetUseMarkup(true)
 		}
 
 		box := gtk.NewBox(gtk.OrientationVertical, 0)
-		box.SetHExpand(true)
+		box.AddCSSClass("message-summary-item")
 		box.Append(header)
 		box.Append(bottom)
 
 		// TODO: add little user icons for participants.
 		// we should probably use a grid for that.
 
-		row := gtk.NewListBoxRow()
-		row.SetSelectable(false)
-		row.SetChild(box)
-
 		// TODO: scroll to message on click.
-		list.Append(row)
+		list.Append(box)
 	}
+
+	scroll := gtk.NewScrolledWindow()
+	scroll.SetPropagateNaturalWidth(true)
+	scroll.SetPropagateNaturalHeight(true)
+	scroll.SetMaxContentHeight(500)
+	scroll.SetMaxContentWidth(300)
+	scroll.SetPolicy(gtk.PolicyNever, gtk.PolicyAutomatic)
+	scroll.SetChild(list)
+
+	popover.SetChild(scroll)
 }
