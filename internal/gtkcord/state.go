@@ -80,7 +80,7 @@ type State struct {
 func FromContext(ctx context.Context) *State {
 	state, _ := ctx.Value(stateKey).(*State)
 	if state != nil {
-		return state.WithContext(ctx)
+		return state.WithContext(ctx).Offline()
 	}
 	return nil
 }
@@ -112,7 +112,7 @@ func Wrap(state *state.State) *State {
 		log.Printf("state error: %v", err)
 	}
 
-	// dumpRawEvents(state)
+	dumpRawEvents(state)
 	ningen := ningen.FromState(state)
 	return &State{
 		MainThreadHandler: NewMainThreadHandler(ningen.Handler),
