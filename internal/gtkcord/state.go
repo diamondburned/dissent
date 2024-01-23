@@ -80,7 +80,7 @@ type State struct {
 func FromContext(ctx context.Context) *State {
 	state, _ := ctx.Value(stateKey).(*State)
 	if state != nil {
-		return state.WithContext(ctx).Offline()
+		return state.WithContext(ctx)
 	}
 	return nil
 }
