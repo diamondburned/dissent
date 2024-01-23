@@ -89,14 +89,13 @@ func FromContext(ctx context.Context) *State {
 func Wrap(state *state.State) *State {
 	c := state.Client.Client
 	c.OnRequest = append(c.OnRequest, func(r httpdriver.Request) error {
-		req := (*http.Request)(r.(*httpdriver.DefaultRequest))
-		log.Println("Discord API:", req.Method, req.URL.Path)
+		// req := (*http.Request)(r.(*httpdriver.DefaultRequest))
+		// log.Println("Discord API:", req.Method, req.URL.Path)
 		return nil
 	})
 	c.OnResponse = append(c.OnResponse, func(dreq httpdriver.Request, dresp httpdriver.Response) error {
 		req := (*http.Request)(dreq.(*httpdriver.DefaultRequest))
 		if dresp == nil {
-			log.Println("Discord API:", req.Method, req.URL.Path, "nil response")
 			return nil
 		}
 
