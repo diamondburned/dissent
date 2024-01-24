@@ -46,8 +46,40 @@ func NewMarkupHoverPopover(parent gtk.Widgetter, initFn func(*MarkupHoverPopover
 	p.controller = NewPopoverController(parent, p.initPopover)
 
 	p.hover = gtk.NewEventControllerMotion()
-	p.hover.ConnectEnter(func(_, _ float64) { p.controller.Popup() })
-	p.hover.ConnectLeave(func() { p.controller.Popdown() })
+
+	// Implement a very primitive delay. This is to prevent the popover
+	// from popping up when the user is scrolling on a touchpad.
+	var delayID glib.SourceHandle
+	var hovered bool
+	const hoverDelay = 100 // ms
+
+	p.hover.ConnectEnter(func(_, _ float64) {
+		hovered = true
+
+		if delayID != 0 {
+			return
+		}
+
+		delayID = glib.TimeoutAdd(hoverDelay, func() {
+			delayID = 0
+
+			if hovered {
+				p.controller.Popup()
+			}
+		})
+	})
+
+	p.hover.ConnectLeave(func() {
+		hovered = false
+
+		if delayID != 0 {
+			glib.SourceRemove(delayID)
+			delayID = 0
+			return
+		}
+
+		p.controller.Popdown()
+	})
 
 	parentWidget := gtk.BaseWidget(parent)
 	parentWidget.AddController(p.hover)
