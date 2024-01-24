@@ -51,7 +51,13 @@ func (v *View) updateSummaries(summaries []gateway.ConversationSummary) {
 	}
 }
 
-func (v *View) appendSummary(summary gateway.ConversationSummary) messageKey {
+func (v *View) appendSummary(summary gateway.ConversationSummary) (messageKey, bool) {
+	// Skip this summary if the EndID isn't in the current channel.
+	endMsg, ok := v.msgs[messageKeyID(summary.EndID)]
+	if !ok {
+		return "", false
+	}
+
 	if v.summaries == nil {
 		v.summaries = make(map[discord.Snowflake]messageSummaryWidget, 2)
 	}
@@ -111,17 +117,10 @@ func (v *View) appendSummary(summary gateway.ConversationSummary) messageKey {
 
 		v.summaries[summary.ID] = sw
 		v.msgs[sw.key] = messageRow{ListBoxRow: row}
+		v.List.Insert(row, endMsg.Index())
 
-		refMsg, ok := v.msgs[messageKeyID(summary.EndID)]
-		if ok {
-			ix := refMsg.Index()
-			v.List.Insert(row, ix)
-
-			reset := v.surroundingMessagesResetter(sw.key)
-			reset()
-		} else {
-			v.List.Append(row)
-		}
+		reset := v.surroundingMessagesResetter(sw.key)
+		reset()
 	}
 
 	state := gtkcord.FromContext(v.ctx).Offline()
@@ -142,7 +141,7 @@ func (v *View) appendSummary(summary gateway.ConversationSummary) messageKey {
 	sw.title.SetMarkup(markups.title)
 	sw.body.SetMarkup(markups.body)
 
-	return sw.key
+	return sw.key, true
 }
 
 type summaryMarkups struct {

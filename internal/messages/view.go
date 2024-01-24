@@ -808,8 +808,8 @@ func (v *View) shouldBeCollapsed(info messageInfo) bool {
 		if ok {
 			last, lastOK = v.msgs[prev]
 		}
-	}
-	if !lastOK {
+	} else {
+		// Assume we're about to append a new message.
 		last, lastOK = v.lastMessage()
 	}
 	if !lastOK || last.message == nil {
