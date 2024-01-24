@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
-	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
@@ -420,15 +419,6 @@ func (s *State) MessagePreview(msg *discord.Message) string {
 	}
 
 	return ""
-}
-
-// Channel returns the channel with the given ID.
-func (s *State) Channel(id discord.ChannelID) (*discord.Channel, error) {
-	if !id.IsValid() {
-		log.Println("detected invalid channel ID call:", string(debug.Stack()))
-		return nil, fmt.Errorf("invalid channel ID")
-	}
-	return s.State.Channel(id)
 }
 
 // InjectAvatarSize calls InjectSize with size being 64px.
