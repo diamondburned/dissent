@@ -11,6 +11,7 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
+	"github.com/diamondburned/gtkcord4/internal/sidebar/sidebutton"
 	"github.com/diamondburned/ningen/v3"
 	"github.com/diamondburned/ningen/v3/states/read"
 )
@@ -159,6 +160,14 @@ func (v *View) update(unreads map[discord.ChannelID]channelUnreadStatus) {
 }
 
 func (v *View) Unselect() {
-	v.DM.Pill.State = 0
+	v.SetSelected(false)
+}
+
+func (v *View) SetSelected(selected bool) {
+	if selected {
+		v.DM.Pill.State = sidebutton.PillActive
+	} else {
+		v.DM.Pill.State = sidebutton.PillDisabled
+	}
 	v.DM.Pill.Invalidate()
 }

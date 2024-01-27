@@ -179,8 +179,10 @@ func (s *Sidebar) OpenDMs() *direct.ChannelView {
 		return direct
 	}
 
-	s.ctrl.CloseGuild(true)
 	s.unselect()
+	s.ctrl.CloseGuild(true)
+
+	s.DMView.SetSelected(true)
 
 	direct := direct.NewChannelView(s.ctx, s.opener)
 	direct.SetVExpand(true)
@@ -200,8 +202,10 @@ func (s *Sidebar) openGuild(guildID discord.GuildID) *channels.View {
 		return chs
 	}
 
-	s.ctrl.CloseGuild(true)
 	s.unselect()
+	s.ctrl.CloseGuild(true)
+
+	s.Guilds.SetSelectedGuild(guildID)
 
 	chs = channels.NewView(s.ctx, s.opener, guildID)
 	chs.SetVExpand(true)
@@ -220,6 +224,12 @@ func (s *Sidebar) unselect() {
 	s.removeCurrent()
 }
 
+// Unselect unselects the current guild or channel.
+func (s *Sidebar) Unselect() {
+	s.unselect()
+	s.Right.SetVisibleChild(s.placeholder)
+}
+
 // SelectGuild selects the guild with the given ID.
 // This function acts the same as if the user clicked on the channel, meaning it
 // funnels down to a single widget that then floats up to the controller.
@@ -232,15 +242,6 @@ func (s *Sidebar) SelectGuild(guildID discord.GuildID) {
 // This function acts the same as if the user clicked on the channel, meaning it
 // funnels down to a single widget that then floats up to the controller.
 func (s *Sidebar) SelectChannel(chID discord.ChannelID) {
-	if !chID.IsValid() {
-		s.Guilds.Unselect()
-
-		s.unselect()
-		s.Right.SetVisibleChild(s.placeholder)
-
-		return
-	}
-
 	state := gtkcord.FromContext(s.ctx)
 	ch, _ := state.Cabinet.Channel(chID)
 	if ch == nil {

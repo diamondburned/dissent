@@ -85,9 +85,7 @@ func NewButton(ctx context.Context, open func()) *Button {
 	g.Button.SetHAlign(gtk.AlignCenter)
 	g.Button.SetChild(g.IconOverlay)
 	g.Button.ConnectClicked(func() {
-		g.Pill.State = PillActive
-		g.Pill.Invalidate()
-
+		g.SetSelected(true)
 		open()
 	})
 

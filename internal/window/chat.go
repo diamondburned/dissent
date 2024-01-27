@@ -34,8 +34,10 @@ type ChatPage struct {
 	RightHeader *adw.HeaderBar
 	RightLabel  *gtk.Label
 
-	tabView  *adw.TabView
-	lastOpen *app.TypedSingleState[discord.GuildID]
+	tabView *adw.TabView
+
+	lastOpen  *app.TypedSingleState[discord.GuildID]
+	lastGuild discord.GuildID
 
 	// lastButtons keeps tracks of the header buttons of the previous view.
 	// On view change, these buttons will be removed.
@@ -183,9 +185,18 @@ func (p *ChatPage) SwitchToMessages() {
 
 // OpenDMs opens the DMs page.
 func (p *ChatPage) OpenDMs() {
+	p.lastGuild = 0
 	p.lastOpen.Set(0)
 	p.SwitchToPlaceholder()
 	p.Left.OpenDMs()
+}
+
+// OpenGuild opens the guild with the given ID.
+func (p *ChatPage) OpenGuild(guildID discord.GuildID) {
+	p.lastGuild = guildID
+	p.lastOpen.Set(guildID)
+	p.SwitchToPlaceholder()
+	p.Left.SelectGuild(guildID)
 }
 
 // OpenChannel opens the channel with the given ID. Use this method to direct
@@ -251,13 +262,14 @@ func (p *ChatPage) onActiveTabChange() {
 	}
 	p.lastButtons = nil
 
+	var tab *chatTab
 	var chID discord.ChannelID
 	var title string
 
 	if activePage := p.tabView.SelectedPage(); activePage != nil {
 		title = activePage.Title()
 
-		tab := p.tabs[activePage.Native()]
+		tab = p.tabs[activePage.Native()]
 		if tab == nil {
 			// Ignore this. It's possible that we're still initializing.
 			return
@@ -276,7 +288,17 @@ func (p *ChatPage) onActiveTabChange() {
 	}
 
 	// Update the left guild list and channel list.
-	p.Left.SelectChannel(chID)
+	if chID.IsValid() {
+		p.Left.SelectChannel(chID)
+	} else {
+		// Hack to ensure that the guild item is selected when we have no
+		// channel on display.
+		if p.lastGuild.IsValid() {
+			p.Left.Guilds.SetSelectedGuild(p.lastGuild)
+		} else {
+			p.Left.Unselect()
+		}
+	}
 
 	// Update the displaying window title.
 	var chName string
@@ -289,13 +311,6 @@ func (p *ChatPage) onActiveTabChange() {
 
 	win := app.WindowFromContext(p.ctx)
 	win.SetTitle(title)
-}
-
-// OpenGuild opens the guild with the given ID.
-func (p *ChatPage) OpenGuild(guildID discord.GuildID) {
-	p.lastOpen.Set(guildID)
-	p.SwitchToPlaceholder()
-	p.Left.SelectGuild(guildID)
 }
 
 type chatTab struct {
@@ -343,6 +358,7 @@ func (t *chatTab) switchToChannel(id discord.ChannelID) bool {
 
 	if id.IsValid() {
 		t.messageView = messages.NewView(t.ctx, id)
+
 		t.Stack.AddChild(t.messageView)
 		t.Stack.SetVisibleChild(t.messageView)
 
