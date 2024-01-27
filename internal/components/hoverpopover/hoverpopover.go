@@ -85,22 +85,27 @@ func NewMarkupHoverPopover(parent gtk.Widgetter, initFn func(*MarkupHoverPopover
 	parentWidget.AddController(p.hover)
 
 	var windowSignal glib.SignalHandle
-	onMap := func() {
-		window := parentWidget.Root().CastType(gtk.GTypeWindow).(*gtk.Window)
-		windowSignal = window.NotifyProperty("is-active", func() {
-			if p.controller.IsPoppedUp() && !window.IsActive() {
-				p.controller.Popdown()
-			}
-		})
+	var window *gtk.Window
+
+	attachWindow := func() {
+		if window != nil {
+			window.HandlerDisconnect(windowSignal)
+			window = nil
+		}
+
+		root := parentWidget.Root()
+		if root != nil {
+			window = root.CastType(gtk.GTypeWindow).(*gtk.Window)
+			windowSignal = window.NotifyProperty("is-active", func() {
+				if p.controller.IsPoppedUp() && !window.IsActive() {
+					p.controller.Popdown()
+				}
+			})
+		}
 	}
-	parentWidget.ConnectMap(onMap)
-	parentWidget.ConnectUnmap(func() {
-		parentWidget.HandlerDisconnect(windowSignal)
-		windowSignal = 0
-	})
-	if parentWidget.Mapped() {
-		onMap()
-	}
+
+	parentWidget.NotifyProperty("root", attachWindow)
+	attachWindow()
 
 	return p
 }
