@@ -2,10 +2,12 @@ package window
 
 import (
 	"context"
+	"strings"
 
 	"github.com/diamondburned/adaptive"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
+	"github.com/diamondburned/gotk4/pkg/gio/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/app"
@@ -21,20 +23,26 @@ import (
 
 var lastOpenKey = app.NewSingleStateKey[discord.GuildID]("last-guild-state")
 
+// TODO: refactor this to support TabOverview. We do this by refactoring Sidebar
+// out completely and merging it into ChatPage. We can then get rid of the logic
+// to keep the Sidebar in sync with the ChatPage, since each tab will have its
+// own Sidebar.
+
 type ChatPage struct {
 	*adw.OverlaySplitView
 	Left        *sidebar.Sidebar
 	RightHeader *adw.HeaderBar
 	RightLabel  *gtk.Label
-	RightChild  *gtk.Stack
 
-	prevView *chatPageView
+	tabView  *adw.TabView
 	lastOpen *app.TypedSingleState[discord.GuildID]
 
-	ctx         context.Context
-	placeholder gtk.Widgetter
+	// lastButtons keeps tracks of the header buttons of the previous view.
+	// On view change, these buttons will be removed.
+	lastButtons []gtk.Widgetter
 
-	openedChID discord.ChannelID
+	tabs map[uintptr]*chatTab // K: *adw.TabPage
+	ctx  context.Context
 }
 
 type chatPageView struct {
@@ -62,8 +70,15 @@ var chatPageCSS = cssutil.Applier("window-chatpage", `
 func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	p := ChatPage{
 		ctx:      ctx,
+		tabs:     make(map[uintptr]*chatTab),
 		lastOpen: lastOpenKey.Acquire(ctx),
 	}
+
+	p.tabView = adw.NewTabView()
+	p.tabView.AddCSSClass("window-chatpage-tabview")
+	p.tabView.SetDefaultIcon(gio.NewThemedIcon("channel-symbolic"))
+	p.tabView.NotifyProperty("selected-page", p.onActiveTabChange)
+
 	p.Left = sidebar.NewSidebar(ctx, (*sidebarChatPage)(&p), &p)
 	p.Left.SetHAlign(gtk.AlignStart)
 
@@ -76,6 +91,10 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	back := backbutton.New()
 	back.SetTransitionType(gtk.RevealerTransitionTypeSlideRight)
 
+	newTabButton := gtk.NewButtonFromIconName("list-add-symbolic")
+	newTabButton.SetTooltipText("Open a New Tab")
+	newTabButton.ConnectClicked(func() { p.newTab() })
+
 	p.RightHeader = adw.NewHeaderBar()
 	p.RightHeader.AddCSSClass("right-header")
 	p.RightHeader.SetShowEndTitleButtons(true)
@@ -83,22 +102,19 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	p.RightHeader.SetShowTitle(false)
 	p.RightHeader.PackStart(back)
 	p.RightHeader.PackStart(p.RightLabel)
+	p.RightHeader.PackEnd(newTabButton)
 
-	p.placeholder = newEmptyMessagePlaceholer()
-
-	p.RightChild = gtk.NewStack()
-	p.RightChild.AddCSSClass("window-message-page")
-	p.RightChild.SetVExpand(true)
-	p.RightChild.AddChild(p.placeholder)
-	p.RightChild.SetVisibleChild(p.placeholder)
-	p.RightChild.SetTransitionType(gtk.StackTransitionTypeCrossfade)
-	p.SwitchToPlaceholder()
+	tabBar := adw.NewTabBar()
+	tabBar.AddCSSClass("window-chatpage-tabbar")
+	tabBar.SetView(p.tabView)
+	tabBar.SetAutohide(true)
 
 	rightBox := adw.NewToolbarView()
+	rightBox.SetTopBarStyle(adw.ToolbarFlat)
 	rightBox.SetHExpand(true)
 	rightBox.AddTopBar(p.RightHeader)
-	rightBox.SetContent(p.RightChild)
-	rightBox.SetTopBarStyle(adw.ToolbarFlat)
+	rightBox.AddTopBar(tabBar)
+	rightBox.SetContent(p.tabView)
 
 	p.OverlaySplitView = adw.NewOverlaySplitView()
 	p.OverlaySplitView.SetSidebar(p.Left)
@@ -135,14 +151,6 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	return &p
 }
 
-func newEmptyMessagePlaceholer() gtk.Widgetter {
-	status := adaptive.NewStatusPage()
-	status.SetIconName("chat-bubbles-empty-symbolic")
-	status.Icon.SetOpacity(0.45)
-
-	return status
-}
-
 // ShowQuickSwitcher shows the Quick Switcher dialog.
 func (p *ChatPage) ShowQuickSwitcher() {
 	quickswitcher.ShowDialog(p.ctx, (*quickSwitcherChatPage)(p))
@@ -150,26 +158,17 @@ func (p *ChatPage) ShowQuickSwitcher() {
 
 // SwitchToPlaceholder switches to the empty placeholder view.
 func (p *ChatPage) SwitchToPlaceholder() {
-	p.openedChID = 0
+	tab := p.currentTab()
+	tab.switchToPlaceholder()
 
-	win := app.WindowFromContext(p.ctx)
-	win.SetTitle("")
-
-	p.RightLabel.SetText("")
-	p.switchTo(nil, nil)
-	p.RightChild.SetVisibleChild(p.placeholder)
+	p.onActiveTabChange()
 }
 
 // SwitchToMessages reopens a new message page of the same channel ID if the
 // user is opening one. Otherwise, the placeholder is seen.
 func (p *ChatPage) SwitchToMessages() {
-	view, ok := p.prevView.body.(*messages.View)
-	if ok {
-		p.OpenChannel(view.ChannelID())
-		return
-	}
-
-	p.SwitchToPlaceholder()
+	tab := p.currentTab()
+	tab.switchToPlaceholder()
 
 	p.lastOpen.Exists(func(exists bool) {
 		if !exists {
@@ -192,26 +191,104 @@ func (p *ChatPage) OpenDMs() {
 // OpenChannel opens the channel with the given ID. Use this method to direct
 // the user to a new channel when they request to, e.g. through a notification.
 func (p *ChatPage) OpenChannel(chID discord.ChannelID) {
-	if !chID.IsValid() {
-		p.SwitchToPlaceholder()
-		return
+	tab := p.currentTab()
+	tab.switchToChannel(chID)
+
+	page := p.tabView.Page(tab)
+	updateTabInfo(p.ctx, page, chID)
+
+	p.onActiveTabChange()
+}
+
+func updateTabInfo(ctx context.Context, page *adw.TabPage, chID discord.ChannelID) {
+	if chID.IsValid() {
+		page.SetIcon(gio.NewThemedIcon("channel-symbolic"))
+
+		title := gtkcord.WindowTitleFromID(ctx, chID)
+		// We don't actually want the prefixing # because we already have the
+		// tab icon.
+		title = strings.TrimPrefix(title, "#")
+		page.SetTitle(title)
+	} else {
+		page.SetIcon(nil)
+		page.SetTitle("New Tab")
+	}
+}
+
+// currentTab returns the current tab. If there is no tab, then it creates one.
+func (p *ChatPage) currentTab() *chatTab {
+	var tab *chatTab
+
+	page := p.tabView.SelectedPage()
+	if page != nil {
+		// We already have a tab.
+		// Ensure our window gets updated by the end.
+		tab = p.tabs[page.Native()]
+	} else {
+		// We don't have an active tab right now. Create one.
+		tab = p.newTab()
 	}
 
-	if p.openedChID == chID {
-		return
+	return tab
+}
+
+func (p *ChatPage) newTab() *chatTab {
+	tab := newChatTab(p.ctx)
+
+	page := p.tabView.Append(tab)
+	updateTabInfo(p.ctx, page, 0)
+
+	p.tabs[page.Native()] = tab
+	p.tabView.SetSelectedPage(page)
+
+	return tab
+}
+
+func (p *ChatPage) onActiveTabChange() {
+	// Remove the previous header buttons.
+	for _, button := range p.lastButtons {
+		p.RightHeader.Remove(button)
+	}
+	p.lastButtons = nil
+
+	var chID discord.ChannelID
+	var title string
+
+	if activePage := p.tabView.SelectedPage(); activePage != nil {
+		title = activePage.Title()
+
+		tab := p.tabs[activePage.Native()]
+		if tab == nil {
+			// Ignore this. It's possible that we're still initializing.
+			return
+		}
+
+		chID = tab.channelID()
+
+		// Add the new header buttons.
+		if tab.messageView != nil {
+			p.lastButtons = tab.messageView.HeaderButtons()
+			for i := len(p.lastButtons) - 1; i >= 0; i-- {
+				button := p.lastButtons[i]
+				p.RightHeader.PackEnd(button)
+			}
+		}
 	}
 
-	p.openedChID = chID
-
+	// Update the left guild list and channel list.
 	p.Left.SelectChannel(chID)
 
-	p.RightLabel.SetText(gtkcord.ChannelNameFromID(p.ctx, chID))
+	// Update the displaying window title.
+	var chName string
+	if chID.IsValid() {
+		chName = gtkcord.ChannelNameFromID(p.ctx, chID)
+	}
+
+	// Update the window titles.
+	p.RightLabel.SetText(chName)
 
 	win := app.WindowFromContext(p.ctx)
-	win.SetTitle(gtkcord.ChannelNameFromID(p.ctx, chID))
-
-	view := messages.NewView(p.ctx, chID)
-	p.switchTo(view, view.HeaderButtons())
+	win.SetTitle(title)
 }
 
 // OpenGuild opens the guild with the given ID.
@@ -221,46 +298,81 @@ func (p *ChatPage) OpenGuild(guildID discord.GuildID) {
 	p.Left.SelectGuild(guildID)
 }
 
-func (p *ChatPage) switchTo(body gtk.Widgetter, headerButtons []gtk.Widgetter) {
-	old := p.prevView
-	p.prevView = &chatPageView{body, headerButtons}
+type chatTab struct {
+	*gtk.Stack
+	placeholder gtk.Widgetter
+	messageView *messages.View // nilable
+	ctx         context.Context
+}
 
-	if body != nil {
-		p.RightChild.AddChild(body)
-		p.RightChild.SetVisibleChild(body)
+func newChatTab(ctx context.Context) *chatTab {
+	var t chatTab
+	t.ctx = ctx
+	t.placeholder = newEmptyMessagePlaceholder()
 
-		base := gtk.BaseWidget(body)
-		base.GrabFocus()
+	t.Stack = gtk.NewStack()
+	t.Stack.AddCSSClass("window-message-page")
+	t.Stack.SetTransitionType(gtk.StackTransitionTypeCrossfade)
+	t.Stack.AddChild(t.placeholder)
+	t.Stack.SetVisibleChild(t.placeholder)
+
+	return &t
+}
+
+func (t *chatTab) alreadyOpens(id discord.ChannelID) bool {
+	return t.channelID() == id
+}
+
+func (t *chatTab) channelID() discord.ChannelID {
+	if t.messageView == nil {
+		return 0
 	}
+	return t.messageView.ChannelID()
+}
 
-	if len(headerButtons) > 0 {
-		for i := len(headerButtons) - 1; i >= 0; i-- {
-			p.RightHeader.PackEnd(headerButtons[i])
-		}
-	}
+func (t *chatTab) switchToPlaceholder() bool {
+	return t.switchToChannel(0)
+}
 
-	if old == nil {
-		return
-	}
-
-	// Remove the header widget right away. We don't have transitions for it.
-	for _, button := range old.headerButtons {
-		p.RightHeader.Remove(button)
-	}
-
-	gtkutil.NotifyProperty(p.RightChild, "transition-running", func() bool {
-		// Remove the widget when the transition is done.
-		if !p.RightChild.TransitionRunning() {
-			p.RightChild.Remove(old.body)
-
-			// Hack: destroy everything!
-			// log.Println("destroying previous message view")
-			// gtkutil.RecursiveUnfuck(old)
-
-			return true
-		}
+func (t *chatTab) switchToChannel(id discord.ChannelID) bool {
+	if t.alreadyOpens(id) {
 		return false
-	})
+	}
+
+	old := t.messageView
+
+	if id.IsValid() {
+		t.messageView = messages.NewView(t.ctx, id)
+		t.Stack.AddChild(t.messageView)
+		t.Stack.SetVisibleChild(t.messageView)
+
+		viewWidget := gtk.BaseWidget(t.messageView)
+		viewWidget.GrabFocus()
+	} else {
+		t.messageView = nil
+		t.Stack.SetVisibleChild(t.placeholder)
+	}
+
+	if old != nil {
+		gtkutil.NotifyProperty(t.Stack, "transition-running", func() bool {
+			if !t.Stack.TransitionRunning() {
+				t.Stack.Remove(old)
+				return true
+			}
+			return false
+		})
+	}
+
+	return true
+}
+
+func newEmptyMessagePlaceholder() gtk.Widgetter {
+	status := adaptive.NewStatusPage()
+	status.SetIconName("chat-bubbles-empty-symbolic")
+	status.Icon.SetOpacity(0.45)
+	status.Icon.SetIconSize(gtk.IconSizeLarge)
+
+	return status
 }
 
 // sidebarChatPage implements SidebarController.

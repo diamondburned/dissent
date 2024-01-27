@@ -100,6 +100,11 @@ func (f *Folder) Unselect() {
 	f.setGuildOpen(false)
 }
 
+// SetSelected sets the folder's selected state.
+func (f *Folder) SetSelected(selected bool) {
+	f.setGuildOpen(selected)
+}
+
 func (f *Folder) setGuildOpen(open bool) {
 	f.open = open
 

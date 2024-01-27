@@ -118,7 +118,16 @@ func (g *Button) Activate() bool {
 // Unselect unselects the guild visually. This is mostly used by the parent
 // widget for list-keeping.
 func (g *Button) Unselect() {
-	g.Pill.State = PillDisabled
+	g.SetSelected(false)
+}
+
+// SetSelected sets the button's selected state.
+func (g *Button) SetSelected(selected bool) {
+	if selected {
+		g.Pill.State = PillActive
+	} else {
+		g.Pill.State = PillDisabled
+	}
 	g.Pill.Invalidate()
 }
 

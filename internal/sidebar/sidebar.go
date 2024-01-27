@@ -41,6 +41,7 @@ type Sidebar struct {
 		w gtk.Widgetter
 		// id discord.GuildID
 	}
+	placeholder gtk.Widgetter
 
 	ctx    context.Context
 	ctrl   Controller
@@ -99,14 +100,14 @@ func NewSidebar(ctx context.Context, ctrl Controller, opener Opener) *Sidebar {
 	s.Left.Append(leftCtrl)
 	s.Left.Append(leftScroll)
 
-	s.current.w = gtk.NewWindowHandle()
+	s.placeholder = gtk.NewWindowHandle()
 
 	s.Right = gtk.NewStack()
 	s.Right.SetSizeRequest(channels.ChannelsWidth, -1)
 	s.Right.SetVExpand(true)
 	s.Right.SetHExpand(true)
-	s.Right.AddChild(s.current.w)
-	s.Right.SetVisibleChild(s.current.w)
+	s.Right.AddChild(s.placeholder)
+	s.Right.SetVisibleChild(s.placeholder)
 	s.Right.SetTransitionType(gtk.StackTransitionTypeCrossfade)
 
 	userBar := newUserBar(ctx, []gtkutil.PopoverMenuItem{
@@ -179,8 +180,7 @@ func (s *Sidebar) OpenDMs() *direct.ChannelView {
 	}
 
 	s.ctrl.CloseGuild(true)
-	s.Guilds.Unselect()
-	s.removeCurrent()
+	s.unselect()
 
 	direct := direct.NewChannelView(s.ctx, s.opener)
 	direct.SetVExpand(true)
@@ -201,8 +201,7 @@ func (s *Sidebar) openGuild(guildID discord.GuildID) *channels.View {
 	}
 
 	s.ctrl.CloseGuild(true)
-	s.DMView.Unselect()
-	s.removeCurrent()
+	s.unselect()
 
 	chs = channels.NewView(s.ctx, s.opener, guildID)
 	chs.SetVExpand(true)
@@ -216,20 +215,40 @@ func (s *Sidebar) openGuild(guildID discord.GuildID) *channels.View {
 	return chs
 }
 
+func (s *Sidebar) unselect() {
+	s.Guilds.Unselect()
+	s.removeCurrent()
+}
+
 // SelectGuild selects the guild with the given ID.
+// This function acts the same as if the user clicked on the channel, meaning it
+// funnels down to a single widget that then floats up to the controller.
 func (s *Sidebar) SelectGuild(guildID discord.GuildID) {
 	s.Guilds.SelectGuild(guildID)
 }
 
 // SelectChannel selects and activates the channel with the given ID. It ensures
 // that the sidebar is at the right place then activates the controller.
+// This function acts the same as if the user clicked on the channel, meaning it
+// funnels down to a single widget that then floats up to the controller.
 func (s *Sidebar) SelectChannel(chID discord.ChannelID) {
+	if !chID.IsValid() {
+		s.Guilds.Unselect()
+
+		s.unselect()
+		s.Right.SetVisibleChild(s.placeholder)
+
+		return
+	}
+
 	state := gtkcord.FromContext(s.ctx)
 	ch, _ := state.Cabinet.Channel(chID)
 	if ch == nil {
 		log.Println("sidebar: channel with ID", chID, "not found")
 		return
 	}
+
+	s.Guilds.SetSelectedGuild(ch.GuildID)
 
 	if ch.GuildID.IsValid() {
 		guild := s.openGuild(ch.GuildID)
@@ -250,9 +269,5 @@ func (s *guildsSidebar) OpenGuild(guildID discord.GuildID) {
 // CloseGuild implements guilds.Controller.
 func (s *guildsSidebar) CloseGuild(permanent bool) {
 	s.ctrl.CloseGuild(permanent)
-	s.removeCurrent()
-}
-
-func (s *guildsSidebar) removeCurrent() {
-	(*Sidebar)(s).removeCurrent()
+	(*Sidebar)(s).unselect()
 }

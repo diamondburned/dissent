@@ -217,6 +217,10 @@ func (s *State) BindWidget(w gtk.Widgetter, fn func(gateway.Event), filters ...g
 
 	var unbind func()
 	bind := func() {
+		if unbind != nil {
+			return
+		}
+
 		w := ref.Get()
 		log.Printf("State: WidgetHandler: binding to %T...", w)
 
@@ -239,17 +243,19 @@ func (s *State) BindWidget(w gtk.Widgetter, fn func(gateway.Event), filters ...g
 		})
 	}
 
+	bind()
+
 	base := gtk.BaseWidget(w)
-	if base.Realized() {
-		bind()
-	}
-
-	base.ConnectRealize(bind)
-	base.ConnectUnrealize(func() {
-		log.Printf("State: WidgetHandler: unbinding from %T...", w)
-
-		unbind()
-		unbind = nil
+	base.NotifyProperty("parent", func() {
+		if unbind != nil {
+			unbind()
+			unbind = nil
+		}
+		if base.Parent() != nil {
+			bind()
+		} else {
+			log.Printf("State: WidgetHandler: unbinding from %T...", w)
+		}
 	})
 }
 
@@ -257,29 +263,22 @@ func (s *State) BindWidget(w gtk.Widgetter, fn func(gateway.Event), filters ...g
 // that only receives events as long as the widget is mapped. As soon as the
 // widget is unmapped, the handler is unbound.
 func (s *State) AddHandlerForWidget(w gtk.Widgetter, fn any) func() {
-	var unbind func()
-	ww := gtk.BaseWidget(w)
-	sigs := []glib.SignalHandle{
-		ww.ConnectMap(func() {
-			unbind = s.AddHandler(fn)
-		}),
-		ww.ConnectUnmap(func() {
-			if unbind != nil {
-				unbind()
-				unbind = nil
-			}
-		}),
-	}
-	return func() {
+	unbind := s.AddHandler(fn)
+
+	base := gtk.BaseWidget(w)
+	base.NotifyProperty("parent", func() {
 		if unbind != nil {
 			unbind()
 			unbind = nil
 		}
-		for _, sig := range sigs {
-			ww.HandlerDisconnect(sig)
+		if base.Parent() != nil {
+			unbind = s.AddHandler(fn)
+		} else {
+			log.Printf("gtkcord: AddHandlerForWidget: widget unparented, unbinding handler from %T", w)
 		}
-		sigs = nil
-	}
+	})
+
+	return unbind
 }
 
 // AuthorMarkup renders the markup for the message author's name. It makes no
@@ -468,6 +467,26 @@ func roundSize(size int) int {
 // EmojiURL returns a sized emoji URL.
 func EmojiURL(emojiID string, gif bool) string {
 	return InjectSize(discordmd.EmojiURL(emojiID, gif), 64)
+}
+
+// WindowTitleFromID returns the window title from the channel with the given
+// ID.
+func WindowTitleFromID(ctx context.Context, id discord.ChannelID) string {
+	state := FromContext(ctx)
+	ch, _ := state.Cabinet.Channel(id)
+	if ch == nil {
+		return ""
+	}
+
+	title := ChannelName(ch)
+	if ch.GuildID.IsValid() {
+		guild, _ := state.Cabinet.Guild(ch.GuildID)
+		if guild != nil {
+			title += " - " + guild.Name
+		}
+	}
+
+	return title
 }
 
 // ChannelNameFromID returns the channel's name in plain text from the channel

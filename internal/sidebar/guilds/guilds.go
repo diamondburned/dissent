@@ -48,11 +48,6 @@ type View struct {
 	ctrl Controller
 }
 
-type currentGuild struct {
-	guild  *Guild
-	folder *Folder
-}
-
 var viewCSS = cssutil.Applier("guild-view", `
 	.guild-view {
 		margin: 4px 0;
@@ -333,12 +328,12 @@ func (v *View) eachGuild(f func(*Guild) (stop bool)) {
 	}
 }
 
-// SelectGuild selects the guild with the given ID. If the guild is not known,
-// then the sidebar's guild view is closed.
-func (v *View) SelectGuild(id discord.GuildID) {
-	guild := (*View)(v).Guild(id)
+// SetSelectedGuild sets the selected guild. It does not propagate the selection
+// to the sidebar.
+func (v *View) SetSelectedGuild(id discord.GuildID) {
+	guild := v.Guild(id)
 	if guild == nil {
-		v.ctrl.CloseGuild(true)
+		v.Unselect()
 		return
 	}
 
@@ -348,25 +343,31 @@ func (v *View) SelectGuild(id discord.GuildID) {
 	}
 
 	if current != v.current {
-		(*View)(v).Unselect()
+		v.Unselect()
 		v.current = current
+		v.current.SetSelected(true)
+	}
+}
+
+// SelectGuild selects the guild with the given ID. If the guild is not known,
+// then the sidebar's guild view is closed.
+func (v *View) SelectGuild(id discord.GuildID) {
+	guild := v.Guild(id)
+	if guild == nil {
+		v.ctrl.CloseGuild(true)
+		v.Unselect()
+		return
 	}
 
+	v.SetSelectedGuild(id)
 	v.ctrl.OpenGuild(id)
 }
 
 // Unselect unselects any guilds inside this guild view. Use this when the
 // window is showing a channel that's not from any guild.
 func (v *View) Unselect() {
-	if v.current.folder != nil {
-		v.current.folder.Unselect()
-		v.current.folder = nil
-	}
-
-	if v.current.guild != nil {
-		v.current.guild.Unselect()
-		v.current.guild = nil
-	}
+	v.current.Unselect()
+	v.current = currentGuild{}
 }
 
 // saveSelection saves the current guild selection to be restored later using
@@ -379,6 +380,24 @@ func (v *View) saveSelection() (restore func()) {
 
 	guildID := v.current.guild.id
 	return func() { v.SelectGuild(guildID) }
+}
+
+type currentGuild struct {
+	guild  *Guild
+	folder *Folder
+}
+
+func (c currentGuild) Unselect() {
+	c.SetSelected(false)
+}
+
+func (c currentGuild) SetSelected(selected bool) {
+	if c.folder != nil {
+		c.folder.SetSelected(selected)
+	}
+	if c.guild != nil {
+		c.guild.SetSelected(selected)
+	}
 }
 
 type guildController View

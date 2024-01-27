@@ -26,7 +26,10 @@ func NewPopoverButton(initFn func(*gtk.Popover) bool) *PopoverButton {
 		var closedSignal glib.SignalHandle
 		closedSignal = popover.ConnectClosed(func() {
 			b.SetActive(false)
-			popover.HandlerDisconnect(closedSignal)
+			if closedSignal != 0 {
+				popover.HandlerDisconnect(closedSignal)
+				closedSignal = 0
+			}
 		})
 	})
 	return b

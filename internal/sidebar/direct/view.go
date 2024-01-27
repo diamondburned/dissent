@@ -114,6 +114,7 @@ func NewChannelView(ctx context.Context, ctrl Opener) *ChannelView {
 	v.searchBar.SetChild(v.searchEntry)
 
 	v.box = adw.NewToolbarView()
+	v.box.SetTopBarStyle(adw.ToolbarFlat)
 	v.box.SetContent(v.scroll)
 	v.box.AddTopBar(v.searchBar)
 

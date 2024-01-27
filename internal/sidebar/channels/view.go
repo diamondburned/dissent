@@ -149,6 +149,7 @@ func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
 	}
 
 	v.ToolbarView = adw.NewToolbarView()
+	v.ToolbarView.SetTopBarStyle(adw.ToolbarFlat)
 	v.ToolbarView.SetExtendContentToTopEdge(true) // basically act like an overlay
 
 	// Bind the context to cancel when we're hidden.
