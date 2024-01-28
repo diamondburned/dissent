@@ -221,6 +221,7 @@ func (s *Sidebar) openGuild(guildID discord.GuildID) *channels.View {
 
 func (s *Sidebar) unselect() {
 	s.Guilds.Unselect()
+	s.DMView.Unselect()
 	s.removeCurrent()
 }
 
