@@ -179,6 +179,8 @@ func (p *ChatPage) SwitchToMessages() {
 		p.lastOpen.Get(func(id discord.GuildID) {
 			if id.IsValid() {
 				p.OpenGuild(id)
+			} else {
+				p.OpenDMs()
 			}
 		})
 	})
