@@ -29,7 +29,7 @@ var dmButtonCSS = cssutil.Applier("sidebar-dm-button-overlay", `
 	}
 `)
 
-func NewButton(ctx context.Context, open func()) *Button {
+func NewButton(ctx context.Context) *Button {
 	b := Button{ctx: ctx}
 
 	icon := gtk.NewImageFromIconName("chat-bubbles-empty-symbolic")
@@ -45,7 +45,8 @@ func NewButton(ctx context.Context, open func()) *Button {
 		b.Pill.State = sidebutton.PillActive
 		b.Pill.Invalidate()
 
-		open()
+		parent := gtk.BaseWidget(b.Button.Parent())
+		parent.ActivateAction("win.open-dms", nil)
 	})
 
 	b.Pill = sidebutton.NewPill()

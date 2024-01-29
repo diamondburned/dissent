@@ -31,7 +31,6 @@ type Folder struct {
 	Guilds   []*Guild
 
 	ctx  context.Context
-	ctrl GuildController
 	open bool
 
 	// TODO: if we ever track the unread indicator, then our unread container
@@ -63,10 +62,9 @@ var folderCSS = cssutil.Applier("guild-folder", `
 `)
 
 // NewFolder creates a new Folder.
-func NewFolder(ctx context.Context, ctrl GuildController) *Folder {
+func NewFolder(ctx context.Context) *Folder {
 	f := Folder{
-		ctx:  ctx,
-		ctrl: ctrl,
+		ctx: ctx,
 	}
 
 	f.Button.Folder = NewFolderButton(ctx)
@@ -149,7 +147,7 @@ func (f *Folder) Set(folder *gateway.GuildFolder) {
 	f.Guilds = make([]*Guild, len(folder.GuildIDs))
 
 	for i, id := range folder.GuildIDs {
-		g := NewGuild(f.ctx, (*guildControllerFolder)(f), id)
+		g := NewGuild(f.ctx, id)
 		g.SetParentFolder(f)
 
 		f.Guilds[i] = g
@@ -207,11 +205,4 @@ func (f *Folder) InvalidateUnread() {
 	}
 
 	f.Button.Folder.Mentions.SetCount(mentions)
-}
-
-type guildControllerFolder Folder
-
-func (f *guildControllerFolder) OpenGuild(id discord.GuildID) {
-	(*Folder)(f).setGuildOpen(true)
-	f.ctrl.OpenGuild(id)
 }

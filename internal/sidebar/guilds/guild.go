@@ -12,10 +12,6 @@ import (
 	"github.com/diamondburned/ningen/v3"
 )
 
-type GuildController interface {
-	GuildOpener
-}
-
 // Guild is a widget showing a single guild icon.
 type Guild struct {
 	*sidebutton.Button
@@ -32,10 +28,11 @@ var guildCSS = cssutil.Applier("guild-guild", `
 	}
 `)
 
-func NewGuild(ctx context.Context, ctrl GuildController, id discord.GuildID) *Guild {
+func NewGuild(ctx context.Context, id discord.GuildID) *Guild {
 	g := &Guild{ctx: ctx, id: id}
 	g.Button = sidebutton.NewButton(ctx, func() {
-		ctrl.OpenGuild(id)
+		parent := gtk.BaseWidget(g.Button.Parent())
+		parent.ActivateAction("win.open-guild", gtkcord.NewGuildIDVariant(id))
 	})
 
 	g.popover = hoverpopover.NewMarkupHoverPopover(g.Button, func(w *hoverpopover.MarkupHoverPopoverWidget) bool {

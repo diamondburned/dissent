@@ -23,21 +23,6 @@ type ViewChild interface {
 	viewChild()
 }
 
-// GuildOpener is an interface having an OpenGuild method.
-type GuildOpener interface {
-	// OpenGuild opens the given guild.
-	OpenGuild(discord.GuildID)
-}
-
-// Controller is the praent controller that View controls.
-type Controller interface {
-	GuildOpener
-	// CloseGuild is called by View if the guild no longer becomes available. If
-	// permanent is true, then the UI must be redirected to the homepage,
-	// otherwise, a loading screen is fine.
-	CloseGuild(permanent bool)
-}
-
 // View contains a list of guilds and folders.
 type View struct {
 	*gtk.Box
@@ -45,8 +30,7 @@ type View struct {
 
 	current currentGuild
 
-	ctx  context.Context
-	ctrl Controller
+	ctx context.Context
 }
 
 var viewCSS = cssutil.Applier("guild-view", `
@@ -59,10 +43,9 @@ var viewCSS = cssutil.Applier("guild-view", `
 `)
 
 // NewView creates a new View.
-func NewView(ctx context.Context, ctrl Controller) *View {
+func NewView(ctx context.Context) *View {
 	v := View{
-		ctx:  ctx,
-		ctrl: ctrl,
+		ctx: ctx,
 	}
 
 	v.Box = gtk.NewBox(gtk.OrientationVertical, 0)
@@ -101,11 +84,18 @@ func NewView(ctx context.Context, ctrl Controller) *View {
 			if ev.Unavailable {
 				if guild := v.Guild(ev.ID); guild != nil {
 					guild.SetUnavailable()
-					ctrl.CloseGuild(false)
+
+					parent := gtk.BaseWidget(guild.Parent())
+					parent.ActivateAction("win.reset-view", nil)
 					return
 				}
 			}
-			v.RemoveGuild(ev.ID)
+
+			guild := v.RemoveGuild(ev.ID)
+			if guild != nil && guild.IsSelected() {
+				parent := gtk.BaseWidget(guild.Parent())
+				parent.ActivateAction("win.reset-view", nil)
+			}
 		}
 	})
 
@@ -174,7 +164,7 @@ func (v *View) Invalidate() {
 					continue
 				}
 
-				g := NewGuild(v.ctx, (*guildController)(v), guild.ID)
+				g := NewGuild(v.ctx, guild.ID)
 				g.Update(&guilds[i])
 
 				// Prepend the guild.
@@ -194,14 +184,14 @@ func (v *View) SetFolders(folders []gateway.GuildFolder) {
 	for i, folder := range folders {
 		if len(folder.GuildIDs) == 1 {
 			// Contains a single guild, so we just unbox it.
-			g := NewGuild(v.ctx, (*guildController)(v), folder.GuildIDs[0])
+			g := NewGuild(v.ctx, folder.GuildIDs[0])
 			g.Invalidate()
 
 			v.append(g)
 			continue
 		}
 
-		f := NewFolder(v.ctx, (*guildController)(v))
+		f := NewFolder(v.ctx)
 		f.Set(&folders[i])
 
 		v.append(f)
@@ -210,7 +200,7 @@ func (v *View) SetFolders(folders []gateway.GuildFolder) {
 
 // AddGuild prepends a single guild into the view.
 func (v *View) AddGuild(guild *discord.Guild) {
-	g := NewGuild(v.ctx, (*guildController)(v), guild.ID)
+	g := NewGuild(v.ctx, guild.ID)
 	g.Update(guild)
 
 	v.Box.Prepend(g)
@@ -218,14 +208,10 @@ func (v *View) AddGuild(guild *discord.Guild) {
 }
 
 // RemoveGuild removes the given guild.
-func (v *View) RemoveGuild(id discord.GuildID) {
+func (v *View) RemoveGuild(id discord.GuildID) *Guild {
 	guild := v.Guild(id)
 	if guild == nil {
-		return
-	}
-
-	if guild.IsSelected() {
-		v.ctrl.CloseGuild(true)
+		return nil
 	}
 
 	if folder := guild.ParentFolder(); folder != nil {
@@ -236,6 +222,8 @@ func (v *View) RemoveGuild(id discord.GuildID) {
 	} else {
 		v.remove(guild)
 	}
+
+	return guild
 }
 
 // SetGuildsFromIDs calls SetGuilds with guilds fetched from the state by the
@@ -247,7 +235,7 @@ func (v *View) SetGuildsFromIDs(guildIDs []discord.GuildID) {
 	v.clear()
 
 	for _, id := range guildIDs {
-		g := NewGuild(v.ctx, (*guildController)(v), id)
+		g := NewGuild(v.ctx, id)
 		g.Invalidate()
 
 		v.append(g)
@@ -262,7 +250,7 @@ func (v *View) SetGuilds(guilds []discord.Guild) {
 	v.clear()
 
 	for i, guild := range guilds {
-		g := NewGuild(v.ctx, (*guildController)(v), guild.ID)
+		g := NewGuild(v.ctx, guild.ID)
 		g.Update(&guilds[i])
 
 		v.append(g)
@@ -297,6 +285,14 @@ func (v *View) clear() {
 		v.Box.Remove(child)
 	}
 	v.Children = nil
+}
+
+// SelectedGuildID returns the selected guild ID, if any.
+func (v *View) SelectedGuildID() discord.GuildID {
+	if v.current.guild == nil {
+		return 0
+	}
+	return v.current.guild.id
 }
 
 // Guild finds a guild inside View by its ID.
@@ -351,20 +347,6 @@ func (v *View) SetSelectedGuild(id discord.GuildID) {
 	}
 }
 
-// SelectGuild selects the guild with the given ID. If the guild is not known,
-// then the sidebar's guild view is closed.
-func (v *View) SelectGuild(id discord.GuildID) {
-	guild := v.Guild(id)
-	if guild == nil {
-		v.ctrl.CloseGuild(true)
-		v.Unselect()
-		return
-	}
-
-	v.SetSelectedGuild(id)
-	v.ctrl.OpenGuild(id)
-}
-
 // Unselect unselects any guilds inside this guild view. Use this when the
 // window is showing a channel that's not from any guild.
 func (v *View) Unselect() {
@@ -381,7 +363,10 @@ func (v *View) saveSelection() (restore func()) {
 	}
 
 	guildID := v.current.guild.id
-	return func() { v.SelectGuild(guildID) }
+	return func() {
+		parent := gtk.BaseWidget(v.Parent())
+		parent.ActivateAction("win.open-guild", gtkcord.NewGuildIDVariant(guildID))
+	}
 }
 
 type currentGuild struct {
@@ -400,10 +385,4 @@ func (c currentGuild) SetSelected(selected bool) {
 	if c.guild != nil {
 		c.guild.SetSelected(selected)
 	}
-}
-
-type guildController View
-
-func (v *guildController) OpenGuild(id discord.GuildID) {
-	(*View)(v).SelectGuild(id)
 }

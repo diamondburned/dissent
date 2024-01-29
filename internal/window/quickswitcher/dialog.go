@@ -3,7 +3,6 @@ package quickswitcher
 import (
 	"context"
 
-	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/gotk4/pkg/gdk/v4"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/app"
@@ -12,7 +11,7 @@ import (
 // Dialog is a Quick Switcher dialog.
 type Dialog struct {
 	*gtk.Dialog
-	ctrl Controller
+	QuickSwitcher *QuickSwitcher
 }
 
 const dialogFlags = 0 |
@@ -21,17 +20,16 @@ const dialogFlags = 0 |
 	gtk.DialogUseHeaderBar
 
 // ShowDialog shows a new Quick Switcher dialog.
-func ShowDialog(ctx context.Context, ctrl Controller) {
-	d := NewDialog(ctx, ctrl)
+func ShowDialog(ctx context.Context) {
+	d := NewDialog(ctx)
 	d.Show()
 }
 
 // NewDialog creates a new Quick Switcher dialog.
-func NewDialog(ctx context.Context, ctrl Controller) *Dialog {
-	d := Dialog{ctrl: ctrl}
+func NewDialog(ctx context.Context) *Dialog {
+	qs := NewQuickSwitcher(ctx)
 
-	qs := NewQuickSwitcher(ctx, (*dialogControlling)(&d))
-
+	d := Dialog{QuickSwitcher: qs}
 	d.Dialog = gtk.NewDialogWithFlags(
 		app.FromContext(ctx).SuffixedTitle("Quick Switcher"),
 		app.GTKWindowFromContext(ctx),
@@ -68,16 +66,4 @@ func NewDialog(ctx context.Context, ctrl Controller) *Dialog {
 	}
 
 	return &d
-}
-
-type dialogControlling Dialog
-
-func (d *dialogControlling) OpenGuild(id discord.GuildID) {
-	(*Dialog)(d).ctrl.OpenGuild(id)
-	(*Dialog)(d).Close()
-}
-
-func (d *dialogControlling) OpenChannel(id discord.ChannelID) {
-	(*Dialog)(d).ctrl.OpenChannel(id)
-	(*Dialog)(d).Close()
 }

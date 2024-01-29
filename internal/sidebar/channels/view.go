@@ -33,11 +33,6 @@ var lastOpenKey = app.NewStateKey[discord.ChannelID]("guild-last-open")
 
 const ChannelsWidth = bannerWidth
 
-// Opener is the parent controller that View controls.
-type Opener interface {
-	OpenChannel(discord.ChannelID)
-}
-
 // View holds the entire channel sidebar containing all the categories, channels
 // and threads.
 type View struct {
@@ -55,8 +50,7 @@ type View struct {
 		View   *gtk.ListView
 	}
 
-	ctx  gtkutil.Cancellable
-	ctrl Opener
+	ctx gtkutil.Cancellable
 
 	model     *modelManager
 	selection *gtk.SingleSelection
@@ -138,12 +132,11 @@ var viewCSS = cssutil.Applier("channels-view", `
 `)
 
 // NewView creates a new View.
-func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
+func NewView(ctx context.Context, guildID discord.GuildID) *View {
 	state := gtkcord.FromContext(ctx)
 	state.MemberState.Subscribe(guildID)
 
 	v := View{
-		ctrl:    ctrl,
 		model:   newModelManager(state, guildID),
 		guildID: guildID,
 	}
@@ -220,16 +213,22 @@ func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
 	v.ToolbarView.SetContent(v.Scroll)
 	v.ToolbarView.SetFocusChild(v.Scroll)
 
-	lastOpen := lastOpenKey.Acquire(ctx)
+	lastOpenState := lastOpenKey.Acquire(ctx)
+	var lastOpen discord.ChannelID
 
 	v.selection.ConnectSelectionChanged(func(position, nItems uint) {
 		item := v.selection.SelectedItem()
 		if item == nil {
-			ctrl.OpenChannel(0)
+			// ctrl.OpenChannel(0)
 			return
 		}
 
 		chID := channelIDFromItem(item)
+
+		if lastOpen == chID {
+			return
+		}
+		lastOpen = chID
 
 		ch, _ := state.Cabinet.Channel(chID)
 		if ch == nil {
@@ -248,13 +247,15 @@ func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
 		log.Printf("channels.View: selected channel %d", chID)
 
 		v.selectID = 0
-		ctrl.OpenChannel(chID)
 
 		// Persist the last channel we opened.
-		lastOpen.Set(guildID.String(), chID)
+		lastOpenState.Set(guildID.String(), chID)
 
 		row := v.model.Row(v.selection.Selected())
 		row.SetExpanded(true)
+
+		parent := gtk.BaseWidget(v.Child.View.Parent())
+		parent.ActivateAction("win.open-channel", gtkcord.NewChannelIDVariant(chID))
 	})
 
 	// Bind to a signal that selects any channel that we need to be selected.
@@ -276,7 +277,7 @@ func NewView(ctx context.Context, ctrl Opener, guildID discord.GuildID) *View {
 	// Restore the selection from the state. We must delay this until the view
 	// is realized so the parent view has time to finish loading.
 	gtkutil.OnFirstMap(v, func() {
-		lastOpen.Get(guildID.String(), func(ch discord.ChannelID) {
+		lastOpenState.Get(guildID.String(), func(ch discord.ChannelID) {
 			// Only restore selection if we've not already selected something.
 			if v.selection.SelectedItem() != nil {
 				v.SelectChannel(ch)

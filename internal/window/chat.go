@@ -7,6 +7,7 @@ import (
 	"github.com/diamondburned/adaptive"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
+	"github.com/diamondburned/gotk4/pkg/gdk/v4"
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
@@ -18,7 +19,6 @@ import (
 	"github.com/diamondburned/gtkcord4/internal/sidebar"
 	"github.com/diamondburned/gtkcord4/internal/window/backbutton"
 	"github.com/diamondburned/gtkcord4/internal/window/quickswitcher"
-	"github.com/pkg/errors"
 )
 
 var lastOpenKey = app.NewSingleStateKey[discord.GuildID]("last-guild-state")
@@ -30,11 +30,12 @@ var lastOpenKey = app.NewSingleStateKey[discord.GuildID]("last-guild-state")
 
 type ChatPage struct {
 	*adw.OverlaySplitView
-	Left        *sidebar.Sidebar
+	Sidebar     *sidebar.Sidebar
 	RightHeader *adw.HeaderBar
-	RightLabel  *gtk.Label
+	RightTitle  *gtk.Label
 
-	tabView *adw.TabView
+	tabView       *adw.TabView
+	quickswitcher *quickswitcher.Dialog
 
 	lastOpen  *app.TypedSingleState[discord.GuildID]
 	lastGuild discord.GuildID
@@ -71,24 +72,30 @@ var chatPageCSS = cssutil.Applier("window-chatpage", `
 
 func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	p := ChatPage{
-		ctx:      ctx,
-		tabs:     make(map[uintptr]*chatTab),
-		lastOpen: lastOpenKey.Acquire(ctx),
+		ctx:           ctx,
+		tabs:          make(map[uintptr]*chatTab),
+		lastOpen:      lastOpenKey.Acquire(ctx),
+		quickswitcher: quickswitcher.NewDialog(ctx),
 	}
 
 	p.tabView = adw.NewTabView()
 	p.tabView.AddCSSClass("window-chatpage-tabview")
 	p.tabView.SetDefaultIcon(gio.NewThemedIcon("channel-symbolic"))
 	p.tabView.NotifyProperty("selected-page", p.onActiveTabChange)
+	p.tabView.ConnectClosePage(func(page *adw.TabPage) bool {
+		_, ok := p.tabs[page.Native()]
+		p.tabView.ClosePageFinish(page, ok)
+		return gdk.EVENT_STOP
+	})
 
-	p.Left = sidebar.NewSidebar(ctx, (*sidebarChatPage)(&p), &p)
-	p.Left.SetHAlign(gtk.AlignStart)
+	p.Sidebar = sidebar.NewSidebar(ctx)
+	p.Sidebar.SetHAlign(gtk.AlignStart)
 
-	p.RightLabel = gtk.NewLabel("")
-	p.RightLabel.AddCSSClass("right-header-label")
-	p.RightLabel.SetXAlign(0)
-	p.RightLabel.SetHExpand(true)
-	p.RightLabel.SetEllipsize(pango.EllipsizeEnd)
+	p.RightTitle = gtk.NewLabel("")
+	p.RightTitle.AddCSSClass("right-header-label")
+	p.RightTitle.SetXAlign(0)
+	p.RightTitle.SetHExpand(true)
+	p.RightTitle.SetEllipsize(pango.EllipsizeEnd)
 
 	back := backbutton.New()
 	back.SetTransitionType(gtk.RevealerTransitionTypeSlideRight)
@@ -103,7 +110,7 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	p.RightHeader.SetShowBackButton(false) // this is useless with OverlaySplitView
 	p.RightHeader.SetShowTitle(false)
 	p.RightHeader.PackStart(back)
-	p.RightHeader.PackStart(p.RightLabel)
+	p.RightHeader.PackStart(p.RightTitle)
 	p.RightHeader.PackEnd(newTabButton)
 
 	tabBar := adw.NewTabBar()
@@ -119,7 +126,7 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	rightBox.SetContent(p.tabView)
 
 	p.OverlaySplitView = adw.NewOverlaySplitView()
-	p.OverlaySplitView.SetSidebar(p.Left)
+	p.OverlaySplitView.SetSidebar(p.Sidebar)
 	p.OverlaySplitView.SetSidebarPosition(gtk.PackStart)
 	p.OverlaySplitView.SetContent(rightBox)
 	p.OverlaySplitView.SetEnableHideGesture(true)
@@ -134,29 +141,16 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	breakpoint.AddSetter(p.OverlaySplitView, "collapsed", true)
 	w.AddBreakpoint(breakpoint)
 
-	setStatus := func(status discord.Status) {
-		state := gtkcord.FromContext(ctx).Online()
-		if err := state.SetStatus(status, nil); err != nil {
-			app.Error(ctx, errors.Wrap(err, "invalid status"))
-		}
-	}
-
-	gtkutil.BindActionMap(p, map[string]func(){
-		"discord.show-qs":       p.ShowQuickSwitcher,
-		"discord.set-online":    func() { setStatus(discord.OnlineStatus) },
-		"discord.set-idle":      func() { setStatus(discord.IdleStatus) },
-		"discord.set-dnd":       func() { setStatus(discord.DoNotDisturbStatus) },
-		"discord.set-invisible": func() { setStatus(discord.InvisibleStatus) },
-	})
-
 	chatPageCSS(p)
 	return &p
 }
 
-// ShowQuickSwitcher shows the Quick Switcher dialog.
-func (p *ChatPage) ShowQuickSwitcher() {
-	quickswitcher.ShowDialog(p.ctx, (*quickSwitcherChatPage)(p))
-}
+// OpenQuickSwitcher opens the Quick Switcher dialog.
+func (p *ChatPage) OpenQuickSwitcher() { p.quickswitcher.Show() }
+
+// ResetView switches out of any channel view and into the placeholder view.
+// This method is used when the guild becomes unavailable.
+func (p *ChatPage) ResetView() { p.SwitchToPlaceholder() }
 
 // SwitchToPlaceholder switches to the empty placeholder view.
 func (p *ChatPage) SwitchToPlaceholder() {
@@ -188,7 +182,7 @@ func (p *ChatPage) OpenDMs() {
 	p.lastGuild = 0
 	p.lastOpen.Set(0)
 	p.SwitchToPlaceholder()
-	p.Left.OpenDMs()
+	p.Sidebar.OpenDMs()
 }
 
 // OpenGuild opens the guild with the given ID.
@@ -196,7 +190,7 @@ func (p *ChatPage) OpenGuild(guildID discord.GuildID) {
 	p.lastGuild = guildID
 	p.lastOpen.Set(guildID)
 	p.SwitchToPlaceholder()
-	p.Left.SelectGuild(guildID)
+	p.Sidebar.SetSelectedGuild(guildID)
 }
 
 // OpenChannel opens the channel with the given ID. Use this method to direct
@@ -289,14 +283,17 @@ func (p *ChatPage) onActiveTabChange() {
 
 	// Update the left guild list and channel list.
 	if chID.IsValid() {
-		p.Left.SelectChannel(chID)
+		// TODO: it really has to get rid of this SelectChannel call...
+		// It's really hard for it to try and have a SetSelectedChannel function
+		// because of how the SelectionChanged signal works.
+		p.Sidebar.SelectChannel(chID)
 	} else {
 		// Hack to ensure that the guild item is selected when we have no
 		// channel on display.
 		if p.lastGuild.IsValid() {
-			p.Left.Guilds.SetSelectedGuild(p.lastGuild)
+			p.Sidebar.SetSelectedGuild(p.lastGuild)
 		} else {
-			p.Left.Unselect()
+			p.Sidebar.Unselect()
 		}
 	}
 
@@ -307,7 +304,7 @@ func (p *ChatPage) onActiveTabChange() {
 	}
 
 	// Update the window titles.
-	p.RightLabel.SetText(chName)
+	p.RightTitle.SetText(chName)
 
 	win := app.WindowFromContext(p.ctx)
 	win.SetTitle(title)
@@ -389,21 +386,4 @@ func newEmptyMessagePlaceholder() gtk.Widgetter {
 	status.Icon.SetIconSize(gtk.IconSizeLarge)
 
 	return status
-}
-
-// sidebarChatPage implements SidebarController.
-type sidebarChatPage ChatPage
-
-func (p *sidebarChatPage) CloseGuild(permanent bool) {
-	(*ChatPage)(p).SwitchToPlaceholder()
-}
-
-type quickSwitcherChatPage ChatPage
-
-func (p *quickSwitcherChatPage) OpenChannel(chID discord.ChannelID) {
-	(*ChatPage)(p).OpenChannel(chID)
-}
-
-func (p *quickSwitcherChatPage) OpenGuild(guildID discord.GuildID) {
-	(*ChatPage)(p).OpenGuild(guildID)
 }

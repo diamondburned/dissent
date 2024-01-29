@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/diamondburned/gtkcord4/internal/sidebar/sidebutton"
@@ -19,9 +20,12 @@ type ChannelButton struct {
 var channelCSS = cssutil.Applier("dmbutton-channel", `
 `)
 
-func NewChannelButton(ctx context.Context, id discord.ChannelID, opener Opener) *ChannelButton {
+func NewChannelButton(ctx context.Context, id discord.ChannelID) *ChannelButton {
 	ch := ChannelButton{id: id}
-	ch.Button = sidebutton.NewButton(ctx, func() { opener.OpenChannel(id) })
+	ch.Button = sidebutton.NewButton(ctx, func() {
+		parent := gtk.BaseWidget(ch.Button.Parent())
+		parent.ActivateAction("win.open-channel", gtkcord.NewChannelIDVariant(id))
+	})
 	channelCSS(ch)
 	return &ch
 }

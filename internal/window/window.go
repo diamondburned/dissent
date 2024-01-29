@@ -2,13 +2,20 @@ package window
 
 import (
 	"context"
+	"log"
 
+	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
+	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/app/prefs"
+	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
+	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/diamondburned/gtkcord4/internal/window/login"
+	"github.com/diamondburned/gtkcord4/internal/window/quickswitcher"
+	"github.com/pkg/errors"
 )
 
 var useDiscordColorScheme = prefs.NewBool(true, prefs.PropMeta{
@@ -94,11 +101,46 @@ func (w *Window) Context() context.Context {
 	return w.ctx
 }
 
+// init is called after the state context is hooked.
+func (w *Window) init() {
+	w.Chat = NewChatPage(w.ctx, w)
+	w.Stack.AddChild(w.Chat)
+
+	// It's not happy with how this requires a check for ChatPage, but it makes
+	// sense why these actions are bounded to Window and not ChatPage. Maybe?
+	// This requires long and hard thinking, which is simply too much for its
+	// brain.
+
+	gtkutil.AddActions(w, map[string]func(){
+		"set-online":     func() { w.setStatus(discord.OnlineStatus) },
+		"set-idle":       func() { w.setStatus(discord.IdleStatus) },
+		"set-dnd":        func() { w.setStatus(discord.DoNotDisturbStatus) },
+		"set-invisible":  func() { w.setStatus(discord.InvisibleStatus) },
+		"open-dms":       func() { w.useChatPage((*ChatPage).OpenDMs) },
+		"reset-view":     func() { w.useChatPage((*ChatPage).ResetView) },
+		"quick-switcher": func() { w.useChatPage((*ChatPage).OpenQuickSwitcher) },
+	})
+
+	gtkutil.AddActionCallbacks(w, map[string]gtkutil.ActionCallback{
+		"open-channel": {
+			ArgType: gtkcord.SnowflakeVariant,
+			Func: func(variant *glib.Variant) {
+				id := discord.ChannelID(variant.Int64())
+				w.useChatPage(func(p *ChatPage) { p.OpenChannel(id) })
+			},
+		},
+		"open-guild": {
+			ArgType: gtkcord.SnowflakeVariant,
+			Func: func(variant *glib.Variant) {
+				log.Println("opening guild")
+				id := discord.GuildID(variant.Int64())
+				w.useChatPage(func(p *ChatPage) { p.OpenGuild(id) })
+			},
+		},
+	})
+}
+
 func (w *Window) SwitchToChatPage() {
-	if w.Chat == nil {
-		w.Chat = NewChatPage(w.ctx, w)
-		w.Stack.AddChild(w.Chat)
-	}
 	w.Stack.SetVisibleChild(w.Chat)
 	w.Chat.SwitchToMessages()
 	w.SetTitle("")
@@ -111,6 +153,29 @@ func (w *Window) SwitchToLoginPage() {
 
 func (w *Window) SetLoading() {
 	panic("not implemented")
+}
+
+func (w *Window) showQuickSwitcher() {
+	w.useChatPage(func(*ChatPage) {
+		quickswitcher.ShowDialog(w.ctx)
+	})
+}
+
+func (w *Window) useChatPage(f func(*ChatPage)) {
+	if w.Chat != nil {
+		f(w.Chat)
+	}
+}
+
+func (w *Window) setStatus(status discord.Status) {
+	w.useChatPage(func(*ChatPage) {
+		state := gtkcord.FromContext(w.ctx).Online()
+		go func() {
+			if err := state.SetStatus(status, nil); err != nil {
+				app.Error(w.ctx, errors.Wrap(err, "invalid status"))
+			}
+		}()
+	})
 }
 
 var emptyHeaderCSS = cssutil.Applier("empty-header", `

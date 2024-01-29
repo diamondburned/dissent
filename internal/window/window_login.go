@@ -17,8 +17,9 @@ type loginWindow Window
 
 func (w *loginWindow) Hook(state *gtkcord.State) {
 	w.ctx = gtkcord.InjectState(w.ctx, state)
-	w.Reconnecting()
+	(*Window)(w).init()
 
+	w.Reconnecting()
 	var reconnecting glib.SourceHandle
 
 	// When the websocket closes, the screen must be changed to a busy one. The

@@ -35,11 +35,6 @@ type ChannelView struct {
 	selectID discord.ChannelID // delegate to be selected later
 }
 
-// Opener is the parent controller that ChannelView controls.
-type Opener interface {
-	OpenChannel(discord.ChannelID)
-}
-
 var _ = cssutil.WriteCSS(`
 	.direct-searchbar > revealer > box {
 		border-bottom: 0;
@@ -54,7 +49,7 @@ var _ = cssutil.WriteCSS(`
 var lastOpenKey = app.NewSingleStateKey[discord.ChannelID]("direct-last-open")
 
 // NewChannelView creates a new view.
-func NewChannelView(ctx context.Context, ctrl Opener) *ChannelView {
+func NewChannelView(ctx context.Context) *ChannelView {
 	v := ChannelView{
 		ctx:      ctx,
 		channels: make(map[discord.ChannelID]*Channel, 50),
@@ -69,7 +64,7 @@ func NewChannelView(ctx context.Context, ctrl Opener) *ChannelView {
 	v.list.SetActivateOnSingleClick(true)
 
 	var currentCh discord.ChannelID
-	lastOpen := lastOpenKey.Acquire(ctx)
+	lastOpenState := lastOpenKey.Acquire(ctx)
 
 	v.list.ConnectRowSelected(func(r *gtk.ListBoxRow) {
 		if r == nil {
@@ -86,8 +81,10 @@ func NewChannelView(ctx context.Context, ctrl Opener) *ChannelView {
 		}
 
 		currentCh = ch.id
-		lastOpen.Set(ch.id)
-		ctrl.OpenChannel(ch.id)
+		lastOpenState.Set(ch.id)
+
+		parent := gtk.BaseWidget(v.list.Parent())
+		parent.ActivateAction("win.open-channel", gtkcord.NewChannelIDVariant(ch.id))
 	})
 
 	v.scroll = gtk.NewScrolledWindow()
@@ -154,7 +151,7 @@ func NewChannelView(ctx context.Context, ctrl Opener) *ChannelView {
 	// Restore the last open channel. We must delay this until the view is
 	// realized so the parent view can be realized first.
 	gtkutil.OnFirstMap(v, func() {
-		lastOpen.Get(func(id discord.ChannelID) {
+		lastOpenState.Get(func(id discord.ChannelID) {
 			// Only restore selection if we're not already selecting something.
 			if v.list.SelectedRow() == nil {
 				v.SelectChannel(id)

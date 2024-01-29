@@ -3,7 +3,6 @@ package quickswitcher
 import (
 	"context"
 
-	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/gotk4/pkg/gdk/v4"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
@@ -11,14 +10,8 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/textutil"
+	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 )
-
-// Controller is called by QuickSwitcher to jump to channels.
-type Controller interface {
-	OpenChannel(discord.ChannelID)
-	OpenGuild(discord.GuildID)
-	// TODO: PreviousChannels() []discord.ChannelID
-}
 
 // QuickSwitcher is a search box capable of looking up guilds and channels for
 // quickly jumping to them. It replicates the Ctrl+K dialog of the desktop
@@ -26,7 +19,6 @@ type Controller interface {
 type QuickSwitcher struct {
 	*gtk.Box
 	ctx   gtkutil.Cancellable
-	ctrl  Controller
 	text  string
 	index index
 
@@ -61,10 +53,8 @@ var qsCSS = cssutil.Applier("quickswitcher", `
 `)
 
 // NewQuickSwitcher creates a new Quick Switcher instance.
-func NewQuickSwitcher(ctx context.Context, ctrl Controller) *QuickSwitcher {
-	qs := QuickSwitcher{
-		ctrl: ctrl,
-	}
+func NewQuickSwitcher(ctx context.Context) *QuickSwitcher {
+	var qs QuickSwitcher
 
 	qs.search = gtk.NewSearchEntry()
 	qs.search.AddCSSClass("quickswitcher-search")
@@ -182,12 +172,13 @@ func (qs *QuickSwitcher) do() {
 
 func (qs *QuickSwitcher) choose(n int) {
 	entry := qs.entries[n]
+	parent := gtk.BaseWidget(qs.Parent())
 
-	switch indexItem := entry.indexItem.(type) {
+	switch item := entry.indexItem.(type) {
 	case channelItem:
-		qs.ctrl.OpenChannel(indexItem.ID)
+		parent.ActivateAction("win.open-channel", gtkcord.NewChannelIDVariant(item.ID))
 	case guildItem:
-		qs.ctrl.OpenGuild(indexItem.ID)
+		parent.ActivateAction("win.open-guild", gtkcord.NewGuildIDVariant(item.ID))
 	}
 }
 

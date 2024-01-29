@@ -16,15 +16,6 @@ import (
 	"github.com/diamondburned/ningen/v3/states/read"
 )
 
-// Opener is the interface that a controller must implement to open a channel.
-// It is solely activated by user interaction.
-type Opener interface {
-	// OpenDMs opens the DMs view.
-	OpenDMs()
-	// OpenChannel opens the channel with the given ID.
-	OpenChannel(discord.ChannelID)
-}
-
 type View struct {
 	*gtk.Box
 	DM *Button
@@ -34,20 +25,17 @@ type View struct {
 		Buttons map[discord.ChannelID]*ChannelButton
 	}
 
-	ctx    context.Context
-	opener Opener
+	ctx context.Context
 }
 
 var viewCSS = cssutil.Applier("dmbutton-view", `
 `)
 
-func NewView(ctx context.Context, opener Opener) *View {
+func NewView(ctx context.Context) *View {
 	v := View{
 		Box: gtk.NewBox(gtk.OrientationVertical, 0),
-		DM:  NewButton(ctx, opener.OpenDMs),
-
-		ctx:    ctx,
-		opener: opener,
+		DM:  NewButton(ctx),
+		ctx: ctx,
 	}
 
 	v.mentioned.IDs = make([]discord.ChannelID, 0, 4)
@@ -120,7 +108,7 @@ func (v *View) update(unreads map[discord.ChannelID]channelUnreadStatus) {
 	for _, unread := range unreads {
 		button, ok := v.mentioned.Buttons[unread.Channel.ID]
 		if !ok {
-			button = NewChannelButton(v.ctx, unread.Channel.ID, v.opener)
+			button = NewChannelButton(v.ctx, unread.Channel.ID)
 			v.mentioned.Buttons[unread.Channel.ID] = button
 		}
 

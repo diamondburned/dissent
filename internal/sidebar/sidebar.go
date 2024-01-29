@@ -17,16 +17,6 @@ import (
 	"github.com/diamondburned/gtkcord4/internal/sidebar/guilds"
 )
 
-// Controller is the parent controller that Sidebar controls.
-type Controller interface {
-	CloseGuild(permanent bool)
-}
-
-type Opener interface {
-	channels.Opener
-	directbutton.Opener
-}
-
 // Sidebar is the bar on the left side of the application once it's logged in.
 type Sidebar struct {
 	*gtk.Box // horizontal
@@ -43,9 +33,7 @@ type Sidebar struct {
 	}
 	placeholder gtk.Widgetter
 
-	ctx    context.Context
-	ctrl   Controller
-	opener Opener
+	ctx context.Context
 }
 
 var sidebarCSS = cssutil.Applier("sidebar-sidebar", `
@@ -64,17 +52,15 @@ var sidebarCSS = cssutil.Applier("sidebar-sidebar", `
 `)
 
 // NewSidebar creates a new Sidebar.
-func NewSidebar(ctx context.Context, ctrl Controller, opener Opener) *Sidebar {
+func NewSidebar(ctx context.Context) *Sidebar {
 	s := Sidebar{
-		ctx:    ctx,
-		ctrl:   ctrl,
-		opener: opener,
+		ctx: ctx,
 	}
 
-	s.Guilds = guilds.NewView(ctx, (*guildsSidebar)(&s))
+	s.Guilds = guilds.NewView(ctx)
 	s.Guilds.Invalidate()
 
-	s.DMView = directbutton.NewView(ctx, opener)
+	s.DMView = directbutton.NewView(ctx)
 	s.DMView.Invalidate()
 
 	dmSeparator := gtk.NewSeparator(gtk.OrientationHorizontal)
@@ -111,13 +97,13 @@ func NewSidebar(ctx context.Context, ctrl Controller, opener Opener) *Sidebar {
 	s.Right.SetTransitionType(gtk.StackTransitionTypeCrossfade)
 
 	userBar := newUserBar(ctx, []gtkutil.PopoverMenuItem{
-		gtkutil.MenuItem("Quick Switcher", "discord.show-qs"),
+		gtkutil.MenuItem("Quick Switcher", "win.quick-switcher"),
 		gtkutil.MenuSeparator("User Settings"),
 		gtkutil.Submenu("Set _Status", []gtkutil.PopoverMenuItem{
-			gtkutil.MenuItem("_Online", "discord.set-online"),
-			gtkutil.MenuItem("_Idle", "discord.set-idle"),
-			gtkutil.MenuItem("_Do Not Disturb", "discord.set-dnd"),
-			gtkutil.MenuItem("In_visible", "discord.set-invisible"),
+			gtkutil.MenuItem("_Online", "win.set-online"),
+			gtkutil.MenuItem("_Idle", "win.set-idle"),
+			gtkutil.MenuItem("_Do Not Disturb", "win.set-dnd"),
+			gtkutil.MenuItem("In_visible", "win.set-invisible"),
 		}),
 		gtkutil.MenuSeparator(""),
 		gtkutil.MenuItem("_Preferences", "app.preferences"),
@@ -180,11 +166,9 @@ func (s *Sidebar) OpenDMs() *direct.ChannelView {
 	}
 
 	s.unselect()
-	s.ctrl.CloseGuild(true)
-
 	s.DMView.SetSelected(true)
 
-	direct := direct.NewChannelView(s.ctx, s.opener)
+	direct := direct.NewChannelView(s.ctx)
 	direct.SetVExpand(true)
 	s.current.w = direct
 
@@ -203,11 +187,9 @@ func (s *Sidebar) openGuild(guildID discord.GuildID) *channels.View {
 	}
 
 	s.unselect()
-	s.ctrl.CloseGuild(true)
-
 	s.Guilds.SetSelectedGuild(guildID)
 
-	chs = channels.NewView(s.ctx, s.opener, guildID)
+	chs = channels.NewView(s.ctx, guildID)
 	chs.SetVExpand(true)
 	s.current.w = chs
 
@@ -231,12 +213,21 @@ func (s *Sidebar) Unselect() {
 	s.Right.SetVisibleChild(s.placeholder)
 }
 
-// SelectGuild selects the guild with the given ID.
-// This function acts the same as if the user clicked on the channel, meaning it
-// funnels down to a single widget that then floats up to the controller.
-func (s *Sidebar) SelectGuild(guildID discord.GuildID) {
-	s.Guilds.SelectGuild(guildID)
+// SetSelectedGuild marks the guild with the given ID as selected.
+func (s *Sidebar) SetSelectedGuild(guildID discord.GuildID) {
+	s.Guilds.SetSelectedGuild(guildID)
+	s.openGuild(guildID)
 }
+
+// // SelectGuild selects and activates the guild with the given ID.
+// func (s *Sidebar) SelectGuild(guildID discord.GuildID) {
+// 	if s.Guilds.SelectedGuildID() != guildID {
+// 		s.Guilds.SetSelectedGuild(guildID)
+//
+// 		parent := gtk.BaseWidget(s.Parent())
+// 		parent.ActivateAction("win.open-guild", gtkcord.NewGuildIDVariant(guildID))
+// 	}
+// }
 
 // SelectChannel selects and activates the channel with the given ID. It ensures
 // that the sidebar is at the right place then activates the controller.
@@ -259,17 +250,4 @@ func (s *Sidebar) SelectChannel(chID discord.ChannelID) {
 		direct := s.OpenDMs()
 		direct.SelectChannel(chID)
 	}
-}
-
-// guildsSidebar implements guilds.Controller.
-type guildsSidebar Sidebar
-
-func (s *guildsSidebar) OpenGuild(guildID discord.GuildID) {
-	(*Sidebar)(s).openGuild(guildID)
-}
-
-// CloseGuild implements guilds.Controller.
-func (s *guildsSidebar) CloseGuild(permanent bool) {
-	s.ctrl.CloseGuild(permanent)
-	(*Sidebar)(s).unselect()
 }

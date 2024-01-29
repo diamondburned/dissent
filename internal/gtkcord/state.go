@@ -555,3 +555,26 @@ func userName(u *discord.User) string {
 	}
 	return fmt.Sprintf("%s (%s)", u.DisplayName, u.Username)
 }
+
+// SnowflakeVariant is the variant type for a [discord.Snowflake].
+var SnowflakeVariant = glib.NewVariantType("x")
+
+// NewSnowflakeVariant creates a new Snowflake variant.
+func NewSnowflakeVariant(snowflake discord.Snowflake) *glib.Variant {
+	return glib.NewVariantInt64(int64(snowflake))
+}
+
+// NewChannelIDVariant creates a new ChannelID variant.
+func NewChannelIDVariant(id discord.ChannelID) *glib.Variant {
+	return glib.NewVariantInt64(int64(id))
+}
+
+// NewGuildIDVariant creates a new GuildID variant.
+func NewGuildIDVariant(id discord.GuildID) *glib.Variant {
+	return glib.NewVariantInt64(int64(id))
+}
+
+// NewMessageIDVariant creates a new MessageID variant.
+func NewMessageIDVariant(id discord.MessageID) *glib.Variant {
+	return glib.NewVariantInt64(int64(id))
+}
