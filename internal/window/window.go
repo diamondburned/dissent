@@ -138,6 +138,10 @@ func (w *Window) initActions() {
 			},
 		},
 	})
+
+	gtkutil.AddActionShortcuts(w, map[string]string{
+		"<Ctrl>K": "win.quick-switcher",
+	})
 }
 
 func (w *Window) SwitchToChatPage() {

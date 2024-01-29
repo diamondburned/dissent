@@ -47,15 +47,13 @@ func main() {
 	m := manager{}
 	m.app = app.New(context.Background(), "so.libdb.gtkcord4", "gtkcord4")
 	m.app.AddJSONActions(map[string]interface{}{
-		"app.quick-switcher": m.openQuickSwitcher,
-		"app.open-channel":   m.openChannel,
-		"app.preferences":    func() { prefui.ShowDialog(m.win.Context()) },
-		"app.about":          func() { about.New(m.win.Context()).Present() },
-		"app.logs":           func() { logui.ShowDefaultViewer(m.win.Context()) },
-		"app.quit":           func() { m.app.Quit() },
+		"app.open-channel": m.openChannel,
+		"app.preferences":  func() { prefui.ShowDialog(m.win.Context()) },
+		"app.about":        func() { about.New(m.win.Context()).Present() },
+		"app.logs":         func() { logui.ShowDefaultViewer(m.win.Context()) },
+		"app.quit":         func() { m.app.Quit() },
 	})
 	m.app.AddActionShortcuts(map[string]string{
-		"<Ctrl>K": "app.quick-switcher",
 		"<Ctrl>Q": "app.quit",
 	})
 	m.app.ConnectActivate(func() { m.activate(m.app.Context()) })
@@ -70,10 +68,6 @@ type manager struct {
 func (m *manager) openChannel(cmd gtkcord.OpenChannelCommand) {
 	// TODO: highlight message.
 	m.win.ActivateAction("win.open-channel", gtkcord.NewChannelIDVariant(cmd.ChannelID))
-}
-
-func (m *manager) openQuickSwitcher() {
-	m.win.ActivateAction("win.quick-switcher", nil)
 }
 
 func (m *manager) activate(ctx context.Context) {
