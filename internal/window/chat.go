@@ -84,7 +84,10 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	p.tabView.NotifyProperty("selected-page", p.onActiveTabChange)
 	p.tabView.ConnectClosePage(func(page *adw.TabPage) bool {
 		_, ok := p.tabs[page.Native()]
-		p.tabView.ClosePageFinish(page, ok)
+		if ok {
+			delete(p.tabs, page.Native())
+			p.tabView.ClosePageFinish(page, true)
+		}
 		return gdk.EVENT_STOP
 	})
 
