@@ -127,51 +127,47 @@ func (v *View) Invalidate() {
 		}
 	}
 
-	gtkutil.Async(v.ctx, func() func() {
-		guilds, err := state.Guilds()
-		if err != nil {
-			app.Error(v.ctx, errors.Wrap(err, "cannot get guilds"))
-			return nil
+	guilds, err := state.Cabinet.Guilds()
+	if err != nil {
+		app.Error(v.ctx, errors.Wrap(err, "cannot get guilds"))
+		return
+	}
+
+	// Sort so that the guilds that we've joined last are at the bottom.
+	// This means we can prepend guilds as we go, and the latest one will be
+	// prepended to the top.
+	sort.Slice(guilds, func(i, j int) bool {
+		ti, ok := state.GuildState.JoinedAt(guilds[i].ID)
+		if !ok {
+			return false // put last
 		}
-
-		// Sort so that the guilds that we've joined last are at the bottom.
-		// This means we can prepend guilds as we go, and the latest one will be
-		// prepended to the top.
-		sort.Slice(guilds, func(i, j int) bool {
-			ti, ok := state.GuildState.JoinedAt(guilds[i].ID)
-			if !ok {
-				return false // put last
-			}
-			tj, ok := state.GuildState.JoinedAt(guilds[j].ID)
-			if !ok {
-				return true
-			}
-			return ti.Before(tj)
-		})
-
-		return func() {
-			// Construct a map of shownGuilds guilds, so we know to not create a
-			// guild if it's already shown.
-			shownGuilds := make(map[discord.GuildID]struct{}, 200)
-			v.eachGuild(func(g *Guild) bool {
-				shownGuilds[g.ID()] = struct{}{}
-				return false
-			})
-
-			for i, guild := range guilds {
-				_, shown := shownGuilds[guild.ID]
-				if shown {
-					continue
-				}
-
-				g := NewGuild(v.ctx, guild.ID)
-				g.Update(&guilds[i])
-
-				// Prepend the guild.
-				v.prepend(g)
-			}
+		tj, ok := state.GuildState.JoinedAt(guilds[j].ID)
+		if !ok {
+			return true
 		}
+		return ti.Before(tj)
 	})
+
+	// Construct a map of shownGuilds guilds, so we know to not create a
+	// guild if it's already shown.
+	shownGuilds := make(map[discord.GuildID]struct{}, 200)
+	v.eachGuild(func(g *Guild) bool {
+		shownGuilds[g.ID()] = struct{}{}
+		return false
+	})
+
+	for i, guild := range guilds {
+		_, shown := shownGuilds[guild.ID]
+		if shown {
+			continue
+		}
+
+		g := NewGuild(v.ctx, guild.ID)
+		g.Update(&guilds[i])
+
+		// Prepend the guild.
+		v.prepend(g)
+	}
 }
 
 // SetFolders sets the guild folders to use.
@@ -182,7 +178,7 @@ func (v *View) SetFolders(folders []gateway.GuildFolder) {
 	v.clear()
 
 	for i, folder := range folders {
-		if len(folder.GuildIDs) == 1 {
+		if folder.ID == 0 {
 			// Contains a single guild, so we just unbox it.
 			g := NewGuild(v.ctx, folder.GuildIDs[0])
 			g.Invalidate()

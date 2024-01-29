@@ -3,6 +3,7 @@ package window
 import (
 	"fmt"
 	"log"
+	"sync"
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
@@ -13,11 +14,13 @@ import (
 	"github.com/diamondburned/ningen/v3"
 )
 
-type loginWindow Window
+type loginWindow struct {
+	*Window
+	readyOnce sync.Once
+}
 
 func (w *loginWindow) Hook(state *gtkcord.State) {
 	w.ctx = gtkcord.InjectState(w.ctx, state)
-	(*Window)(w).init()
 
 	w.Reconnecting()
 	var reconnecting glib.SourceHandle
@@ -116,9 +119,13 @@ func (w *loginWindow) Reconnecting() {
 }
 
 func (w *loginWindow) Connected() {
-	(*Window)(w).SwitchToChatPage()
+	w.readyOnce.Do(func() {
+		w.initChatPage()
+		w.initActions()
+	})
+	w.Window.SwitchToChatPage()
 }
 
 func (w *loginWindow) PromptLogin() {
-	(*Window)(w).SwitchToLoginPage()
+	w.Window.SwitchToLoginPage()
 }

@@ -82,7 +82,7 @@ func NewWindow(ctx context.Context) *Window {
 		ctx: ctx,
 	}
 
-	w.Login = login.NewPage(ctx, (*loginWindow)(&w))
+	w.Login = login.NewPage(ctx, &loginWindow{Window: &w})
 	w.Login.LoadKeyring()
 
 	w.Loading = login.NewLoadingPage(ctx)
@@ -101,16 +101,16 @@ func (w *Window) Context() context.Context {
 	return w.ctx
 }
 
-// init is called after the state context is hooked.
-func (w *Window) init() {
+func (w *Window) initChatPage() {
 	w.Chat = NewChatPage(w.ctx, w)
 	w.Stack.AddChild(w.Chat)
+}
 
-	// It's not happy with how this requires a check for ChatPage, but it makes
-	// sense why these actions are bounded to Window and not ChatPage. Maybe?
-	// This requires long and hard thinking, which is simply too much for its
-	// brain.
-
+// It's not happy with how this requires a check for ChatPage, but it makes
+// sense why these actions are bounded to Window and not ChatPage. Maybe?
+// This requires long and hard thinking, which is simply too much for its
+// brain.
+func (w *Window) initActions() {
 	gtkutil.AddActions(w, map[string]func(){
 		"set-online":     func() { w.setStatus(discord.OnlineStatus) },
 		"set-idle":       func() { w.setStatus(discord.IdleStatus) },

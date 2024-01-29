@@ -149,6 +149,7 @@ func (b *FolderButton) SetIcons(guildIDs []discord.GuildID) {
 			continue
 		}
 
+		image.SetInitials(g.Name)
 		image.SetFromURL(gtkcord.InjectSize(g.IconURL(), 64))
 	}
 }
