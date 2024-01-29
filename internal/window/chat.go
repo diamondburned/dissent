@@ -176,7 +176,11 @@ func (p *ChatPage) SwitchToMessages() {
 			return
 		}
 		// Restore the last opened channel if there is one.
-		p.lastOpen.Get(p.OpenGuild)
+		p.lastOpen.Get(func(id discord.GuildID) {
+			if id.IsValid() {
+				p.OpenGuild(id)
+			}
+		})
 	})
 }
 
