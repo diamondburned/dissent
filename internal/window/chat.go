@@ -205,12 +205,27 @@ func (p *ChatPage) OpenGuild(guildID discord.GuildID) {
 // OpenChannel opens the channel with the given ID. Use this method to direct
 // the user to a new channel when they request to, e.g. through a notification.
 func (p *ChatPage) OpenChannel(chID discord.ChannelID) {
-	tab := p.currentTab()
+	var tab *chatTab
+	var switchToTab bool
+	for _, t := range p.tabs {
+		if t.alreadyOpens(chID) {
+			tab = t
+			switchToTab = true
+			break
+		}
+	}
+	if tab == nil {
+		tab = p.currentTab()
+	}
+
 	tab.switchToChannel(chID)
 
 	page := p.tabView.Page(tab)
-	updateTabInfo(p.ctx, page, chID)
+	if switchToTab {
+		p.tabView.SetSelectedPage(page)
+	}
 
+	updateTabInfo(p.ctx, page, chID)
 	p.onActiveTabChange()
 }
 
