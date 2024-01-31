@@ -2,6 +2,7 @@ package quickswitcher
 
 import (
 	"context"
+	"log"
 
 	"github.com/diamondburned/gotk4/pkg/gdk/v4"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
@@ -22,7 +23,8 @@ type QuickSwitcher struct {
 	text  string
 	index index
 
-	search *gtk.SearchEntry
+	search     *gtk.SearchEntry
+	chosenFunc func()
 
 	entryScroll *gtk.ScrolledWindow
 	entryList   *gtk.ListBox
@@ -37,7 +39,6 @@ type entry struct {
 var qsCSS = cssutil.Applier("quickswitcher", `
 	.quickswitcher-search {
 		font-size: 1.35em;
-		margin: 8px 4px;
 	}
 	.quickswitcher-search image {
 		min-width:  32px;
@@ -48,13 +49,13 @@ var qsCSS = cssutil.Applier("quickswitcher", `
 	}
 	.quickswitcher-list {
 		font-size: 1.15em;
-		margin: 12px 16px;
 	}
 `)
 
 // NewQuickSwitcher creates a new Quick Switcher instance.
 func NewQuickSwitcher(ctx context.Context) *QuickSwitcher {
 	var qs QuickSwitcher
+	qs.index.update(ctx)
 
 	qs.search = gtk.NewSearchEntry()
 	qs.search.AddCSSClass("quickswitcher-search")
@@ -91,6 +92,7 @@ func NewQuickSwitcher(ctx context.Context) *QuickSwitcher {
 	qs.entryList.SetVExpand(true)
 	qs.entryList.SetSelectionMode(gtk.SelectionSingle)
 	qs.entryList.SetActivateOnSingleClick(true)
+	qs.entryList.SetPlaceholder(qsListPlaceholder())
 	qs.entryList.ConnectRowActivated(func(row *gtk.ListBoxRow) {
 		qs.choose(row.Index())
 	})
@@ -110,15 +112,7 @@ func NewQuickSwitcher(ctx context.Context) *QuickSwitcher {
 	qs.Box.Append(qs.search)
 	qs.Box.Append(qs.entryScroll)
 
-	qs.ctx = gtkutil.WithVisibility(ctx, qs.Box)
-	qs.ctx.OnRenew(func(ctx context.Context) func() {
-		qs.entryList.SetPlaceholder(qsListLoading())
-		qs.index.update(ctx, func() {
-			qs.entryList.SetPlaceholder(qsListPlaceholder())
-		})
-		return func() {}
-	})
-
+	qs.ctx = gtkutil.WithVisibility(ctx, qs.search)
 	qs.search.SetKeyCaptureWidget(qs)
 
 	qsCSS(qs.Box)
@@ -174,12 +168,33 @@ func (qs *QuickSwitcher) choose(n int) {
 	entry := qs.entries[n]
 	parent := gtk.BaseWidget(qs.Parent())
 
+	var ok bool
 	switch item := entry.indexItem.(type) {
 	case channelItem:
-		parent.ActivateAction("win.open-channel", gtkcord.NewChannelIDVariant(item.ID))
+		ok = parent.ActivateAction("app.open-channel", gtkcord.NewChannelIDVariant(item.ID))
 	case guildItem:
-		parent.ActivateAction("win.open-guild", gtkcord.NewGuildIDVariant(item.ID))
+		ok = parent.ActivateAction("app.open-guild", gtkcord.NewGuildIDVariant(item.ID))
 	}
+	if !ok {
+		log.Println("quickswitcher: failed to activate action")
+	}
+
+	if qs.chosenFunc != nil {
+		qs.chosenFunc()
+	}
+}
+
+// ConnectChosen connects a function to be called when an entry is chosen.
+func (qs *QuickSwitcher) ConnectChosen(f func()) {
+	if qs.chosenFunc != nil {
+		add := f
+		old := qs.chosenFunc
+		f = func() {
+			old()
+			add()
+		}
+	}
+	qs.chosenFunc = f
 }
 
 func (qs *QuickSwitcher) selectEntry() bool {

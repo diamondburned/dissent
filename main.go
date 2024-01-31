@@ -7,11 +7,13 @@ import (
 
 	"github.com/diamondburned/adaptive"
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
+	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/app/prefs"
 	"github.com/diamondburned/gotkit/components/logui"
 	"github.com/diamondburned/gotkit/components/prefui"
+	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/diamondburned/gtkcord4/internal/window"
@@ -47,11 +49,14 @@ func main() {
 	m := manager{}
 	m.app = app.New(context.Background(), "so.libdb.gtkcord4", "gtkcord4")
 	m.app.AddJSONActions(map[string]interface{}{
-		"app.open-channel": m.openChannel,
-		"app.preferences":  func() { prefui.ShowDialog(m.win.Context()) },
-		"app.about":        func() { about.New(m.win.Context()).Present() },
-		"app.logs":         func() { logui.ShowDefaultViewer(m.win.Context()) },
-		"app.quit":         func() { m.app.Quit() },
+		"app.preferences": func() { prefui.ShowDialog(m.win.Context()) },
+		"app.about":       func() { about.New(m.win.Context()).Present() },
+		"app.logs":        func() { logui.ShowDefaultViewer(m.win.Context()) },
+		"app.quit":        func() { m.app.Quit() },
+	})
+	m.app.AddActionCallbacks(map[string]gtkutil.ActionCallback{
+		"app.open-channel": m.forwardSignalToWindow("open-channel", gtkcord.SnowflakeVariant),
+		"app.open-guild":   m.forwardSignalToWindow("open-guild", gtkcord.SnowflakeVariant),
 	})
 	m.app.AddActionShortcuts(map[string]string{
 		"<Ctrl>Q": "app.quit",
@@ -65,9 +70,11 @@ type manager struct {
 	win *window.Window
 }
 
-func (m *manager) openChannel(cmd gtkcord.OpenChannelCommand) {
-	// TODO: highlight message.
-	m.win.ActivateAction("win.open-channel", gtkcord.NewChannelIDVariant(cmd.ChannelID))
+func (m *manager) forwardSignalToWindow(name string, t *glib.VariantType) gtkutil.ActionCallback {
+	return gtkutil.ActionCallback{
+		ArgType: t,
+		Func:    func(args *glib.Variant) { m.win.ActivateAction(name, args) },
+	}
 }
 
 func (m *manager) activate(ctx context.Context) {

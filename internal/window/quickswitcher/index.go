@@ -9,7 +9,6 @@ import (
 	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/components/onlineimage"
-	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/imgutil"
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
@@ -227,44 +226,39 @@ type index struct {
 
 const searchLimit = 25
 
-func (idx *index) update(ctx context.Context, done func()) {
-	gtkutil.Async(ctx, func() func() {
-		state := gtkcord.FromContext(ctx)
-		items := make([]indexItem, 0, 250)
+func (idx *index) update(ctx context.Context) {
+	state := gtkcord.FromContext(ctx).Offline()
+	items := make([]indexItem, 0, 250)
 
-		dms, err := state.PrivateChannels()
+	dms, err := state.PrivateChannels()
+	if err != nil {
+		app.Error(ctx, err)
+		return
+	}
+
+	for i := range dms {
+		items = append(items, newChannelItem(state, nil, &dms[i]))
+	}
+
+	guilds, err := state.Guilds()
+	if err != nil {
+		app.Error(ctx, err)
+		return
+	}
+
+	for i, guild := range guilds {
+		chs, err := state.Channels(guild.ID, gtkcord.AllowedChannelTypes)
 		if err != nil {
-			app.Error(ctx, err)
-			return done
+			log.Print("quickswitcher: cannot populate channels for guild ", guild.Name, ": ", err)
+			continue
 		}
+		items = append(items, newGuildItem(&guilds[i]))
+		for j := range chs {
+			items = append(items, newChannelItem(state, &guilds[i], &chs[j]))
+		}
+	}
 
-		for i := range dms {
-			items = append(items, newChannelItem(state, nil, &dms[i]))
-		}
-
-		guilds, err := state.Guilds()
-		if err != nil {
-			app.Error(ctx, err)
-			return done
-		}
-
-		for i, guild := range guilds {
-			chs, err := state.Channels(guild.ID, gtkcord.AllowedChannelTypes)
-			if err != nil {
-				log.Print("quickswitcher: cannot populate channels for guild ", guild.Name, ": ", err)
-				continue
-			}
-			items = append(items, newGuildItem(&guilds[i]))
-			for j := range chs {
-				items = append(items, newChannelItem(state, &guilds[i], &chs[j]))
-			}
-		}
-
-		return func() {
-			idx.items = items
-			done()
-		}
-	})
+	idx.items = items
 }
 
 func (idx *index) search(str string) []indexItem {

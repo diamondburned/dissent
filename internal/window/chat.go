@@ -72,11 +72,13 @@ var chatPageCSS = cssutil.Applier("window-chatpage", `
 
 func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	p := ChatPage{
-		ctx:           ctx,
-		tabs:          make(map[uintptr]*chatTab),
-		lastOpen:      lastOpenKey.Acquire(ctx),
-		quickswitcher: quickswitcher.NewDialog(ctx),
+		ctx:      ctx,
+		tabs:     make(map[uintptr]*chatTab),
+		lastOpen: lastOpenKey.Acquire(ctx),
 	}
+
+	p.quickswitcher = quickswitcher.NewDialog(ctx)
+	p.quickswitcher.SetHideOnClose(true) // so we can reopen it later
 
 	p.tabView = adw.NewTabView()
 	p.tabView.AddCSSClass("window-chatpage-tabview")
