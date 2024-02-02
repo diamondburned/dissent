@@ -61,7 +61,16 @@ func NewDialog(ctx context.Context) *Dialog {
 	})
 	dialogCSS(d)
 
-	qs.ConnectChosen(func() { d.Close() })
+	// SetDestroyWithParent doesn't work for some reason, so we have to manually
+	// destroy the QuickSwitcher on transient window destroy.
+	win.ConnectCloseRequest(func() bool {
+		d.Destroy()
+		return false
+	})
+
+	qs.ConnectChosen(func() {
+		d.Close()
+	})
 
 	esc := gtk.NewEventControllerKey()
 	esc.SetName("dialog-escape")
