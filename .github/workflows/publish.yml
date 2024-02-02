@@ -290,6 +290,13 @@ jobs:
         with:
           ref: ${{ github.ref_name }}
 
+      - name: Initialize environment
+        id: init
+        run: |
+          echo "name=gtkcord4-windows-amd64-$VERSION" >> $GITHUB_OUTPUT
+        env:
+          VERSION: ${{ needs.build-init.outputs.version }}
+
       - name: Install MSYS2 environment
         uses: msys2/setup-msys2@v2
         with:
@@ -298,6 +305,8 @@ jobs:
           install: |
             git
             zip
+            tar
+            zstd
             mingw-w64-x86_64-gcc 
             mingw-w64-x86_64-pkg-config
             mingw-w64-x86_64-gtk4
@@ -347,11 +356,17 @@ jobs:
             currentCount=$newCount
           done
 
+      - name: Pack artifacts
+        run: |
+          tar --zstd -vchf "$NAME.tar.zst" result
+        env:
+          NAME: ${{ needs.build.outputs.name }}
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: gtkcord4-windows-amd64-${{ needs.build-init.outputs.version }}
-          path: result
+          name: ${{ steps.init.outputs.name }}
+          path: ${{ steps.init.outputs.name }}.tar.zst
 
   upload-release:
     name: Upload artifacts to release
