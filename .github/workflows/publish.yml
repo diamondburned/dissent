@@ -290,13 +290,6 @@ jobs:
         with:
           ref: ${{ github.ref_name }}
 
-      - name: Initialize environment
-        id: init
-        run: |
-          echo "name=gtkcord4-windows-amd64-$VERSION" >> $GITHUB_OUTPUT
-        env:
-          VERSION: ${{ needs.build-init.outputs.version }}
-
       - name: Install MSYS2 environment
         uses: msys2/setup-msys2@v2
         with:
@@ -314,6 +307,13 @@ jobs:
             mingw-w64-x86_64-gobject-introspection
             mingw-w64-x86_64-glib2
             mingw-w64-x86_64-go
+
+      - name: Initialize environment
+        id: init
+        run: |
+          echo "name=gtkcord4-windows-amd64-$VERSION" >> $GITHUB_OUTPUT
+        env:
+          VERSION: ${{ needs.build-init.outputs.version }}
 
       - name: Build
         id: build
