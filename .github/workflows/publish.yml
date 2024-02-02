@@ -305,8 +305,7 @@ jobs:
           install: |
             git
             zip
-            tar
-            zstd
+            p7zip
             mingw-w64-x86_64-gcc 
             mingw-w64-x86_64-pkg-config
             mingw-w64-x86_64-gtk4
@@ -358,7 +357,7 @@ jobs:
 
       - name: Pack artifacts
         run: |
-          tar --zstd -vchf "$NAME.tar.zst" result
+          7z a "$NAME.7z" result
         env:
           NAME: ${{ needs.build.outputs.name }}
 
@@ -366,7 +365,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.init.outputs.name }}
-          path: ${{ steps.init.outputs.name }}.tar.zst
+          path: ${{ steps.init.outputs.name }}.7z
 
   upload-release:
     name: Upload artifacts to release
