@@ -276,9 +276,86 @@ jobs:
           name: ${{ steps.build.outputs.name }}
           path: ${{ steps.build.outputs.path }}
 
+  # Action taken from getseabird/seabird:
+  # https://github.com/getseabird/seabird/blob/fd49c18b0601021a1a4b312a1d1c67b0dc7fe150/.github/workflows/release.yaml#L59
+  build-windows:
+    name: Build for Windows
+    needs: [build-init, gomod, generate]
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Install MSYS2 environment
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          release: false
+          install: |
+            git
+            zip
+            mingw-w64-x86_64-gcc 
+            mingw-w64-x86_64-pkg-config
+            mingw-w64-x86_64-gtk4
+            mingw-w64-x86_64-libadwaita
+            mingw-w64-x86_64-gtksourceview5
+            mingw-w64-x86_64-gobject-introspection
+            mingw-w64-x86_64-glib2
+            mingw-w64-x86_64-go
+
+      - name: Build
+        id: build
+        run: |
+          export PATH="/mingw64/bin:$PATH"
+          export GOROOT=/mingw64/lib/go
+          export GOPATH=/mingw64
+
+          # Build gtkcord4
+          mkdir result
+          go build -o result/gtkcord4.exe
+
+          # copyDLLs copies all required DLLs of the given binaries to the
+          # result directory.
+          copyDLLs() {
+            ldd "$@" \
+              | { grep "=> /mingw64/bin/" || true; } \
+              | cut -d ' ' -f1 \
+              | xargs -I{} cp /mingw64/bin/{} result/
+          }
+
+          # Copy all of the binary's dependencies to the result directory.
+          copyDLLs result/gtkcord4.exe
+
+          # countDLLs returns the number of DLLs in the result directory.
+          # We use this to recursively copy dependencies until no new DLLs are
+          # found.
+          countDLLs() {
+            find result -type f -name "*.dll" | wc -l
+          }
+
+          # Copy DLLs recursively until no new ones are found.
+          currentCount=$(countDLLs)
+          while true; do
+            copyDLLs result/*.dll
+
+            newCount=$(countDLLs)
+            (( newCount == currentCount )) && break
+            currentCount=$newCount
+          done
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: gtkcord4-windows-amd64-${{ needs.build-init.outputs.version }}
+          path: result
+
   upload-release:
     name: Upload artifacts to release
-    needs: [build, build-source]
+    needs: [build, build-source, build-windows]
     environment: Stable release
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
@@ -306,7 +383,7 @@ jobs:
 
   nightly-release:
     name: Update nightly release
-    needs: [build, build-source]
+    needs: [build, build-source, build-windows]
     environment: Nightly release
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
