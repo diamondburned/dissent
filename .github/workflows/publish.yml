@@ -359,7 +359,7 @@ jobs:
         run: |
           7z a "$NAME.7z" result
         env:
-          NAME: ${{ needs.build.outputs.name }}
+          NAME: ${{ steps.init.outputs.name }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
