@@ -13,7 +13,7 @@
 [![Stable release status](https://img.shields.io/github/deployments/diamondburned/gtkcord4/Stable%20release?logo=github&label=Stable%20Build)](https://github.com/diamondburned/gtkcord4/deployments/Stable%20release)
 ![Latest release](https://img.shields.io/github/v/tag/diamondburned/gtkcord4?filter=!nightly&label=Latest%20Release&color=blue)
 
-<img src="./.github/screenshot4.png" alt="Screenshot" width="800">
+<img src="./.github/screenshot5.png" alt="Screenshot" width="800">
 
 </div>
 
