@@ -23,8 +23,8 @@ schema = 3
     version = "v0.0.0-20231226035729-503b3cb0406c"
     hash = "sha256-KRn8dqQ0HUrzR7S/83BL2r8X+76KFlzbwjEMtLaW8i8="
   [mod."github.com/diamondburned/gotk4/pkg"]
-    version = "v0.1.1-0.20240206004323-42753fb74adb"
-    hash = "sha256-K5MTsFE+uk+wB+xI0U3ERM29vy2k7S2laun6IBXVVDI="
+    version = "v0.1.1-0.20240206031134-7966a062d938"
+    hash = "sha256-ofHVLHBUE5ymlLi9C0Gyhdy7s1UXbjJn1v9q/w8H8bE="
   [mod."github.com/diamondburned/gotkit"]
     version = "v0.0.0-20240129021633-217be91d2538"
     hash = "sha256-5UsxBa6KVI2TN9S29MwIydgnnDqlYFuUgugaZ6epTuw="
