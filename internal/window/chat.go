@@ -2,11 +2,14 @@ package window
 
 import (
 	"context"
+	"log"
+	"runtime/debug"
 	"strings"
 
 	"github.com/diamondburned/adaptive"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
+	"github.com/diamondburned/gotk4/pkg/core/glib"
 	"github.com/diamondburned/gotk4/pkg/gdk/v4"
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
@@ -21,7 +24,8 @@ import (
 	"github.com/diamondburned/gtkcord4/internal/window/quickswitcher"
 )
 
-var lastOpenKey = app.NewSingleStateKey[discord.GuildID]("last-guild-state")
+var lastGuildKey = app.NewSingleStateKey[discord.GuildID]("last-guild-state")
+var lastChannelKey = app.NewStateKey[discord.ChannelID]("guild-last-open")
 
 // TODO: refactor this to support TabOverview. We do this by refactoring Sidebar
 // out completely and merging it into ChatPage. We can then get rid of the logic
@@ -37,7 +41,9 @@ type ChatPage struct {
 	tabView       *adw.TabView
 	quickswitcher *quickswitcher.Dialog
 
-	lastOpen  *app.TypedSingleState[discord.GuildID]
+	lastGuildState   *app.TypedSingleState[discord.GuildID]
+	lastChannelState *app.TypedState[discord.ChannelID]
+
 	lastGuild discord.GuildID
 
 	// lastButtons keeps tracks of the header buttons of the previous view.
@@ -72,9 +78,10 @@ var chatPageCSS = cssutil.Applier("window-chatpage", `
 
 func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	p := ChatPage{
-		ctx:      ctx,
-		tabs:     make(map[uintptr]*chatTab),
-		lastOpen: lastOpenKey.Acquire(ctx),
+		ctx:              ctx,
+		tabs:             make(map[uintptr]*chatTab),
+		lastGuildState:   lastGuildKey.Acquire(ctx),
+		lastChannelState: lastChannelKey.Acquire(ctx),
 	}
 
 	p.quickswitcher = quickswitcher.NewDialog(ctx)
@@ -83,7 +90,9 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	p.tabView = adw.NewTabView()
 	p.tabView.AddCSSClass("window-chatpage-tabview")
 	p.tabView.SetDefaultIcon(gio.NewThemedIcon("channel-symbolic"))
-	p.tabView.NotifyProperty("selected-page", p.onActiveTabChange)
+	p.tabView.NotifyProperty("selected-page", func() {
+		p.onActiveTabChange(p.tabView.SelectedPage())
+	})
 	p.tabView.ConnectClosePage(func(page *adw.TabPage) bool {
 		_, ok := p.tabs[page.Native()]
 		if ok {
@@ -162,7 +171,7 @@ func (p *ChatPage) SwitchToPlaceholder() {
 	tab := p.currentTab()
 	tab.switchToPlaceholder()
 
-	p.onActiveTabChange()
+	p.onActiveTabChange(p.tabView.Page(tab))
 }
 
 // SwitchToMessages reopens a new message page of the same channel ID if the
@@ -171,14 +180,14 @@ func (p *ChatPage) SwitchToMessages() {
 	tab := p.currentTab()
 	tab.switchToPlaceholder()
 
-	p.lastOpen.Exists(func(exists bool) {
+	p.lastGuildState.Exists(func(exists bool) {
 		if !exists {
 			// Open DMs if there is no last opened channel.
 			p.OpenDMs()
 			return
 		}
 		// Restore the last opened channel if there is one.
-		p.lastOpen.Get(func(id discord.GuildID) {
+		p.lastGuildState.Get(func(id discord.GuildID) {
 			if id.IsValid() {
 				p.OpenGuild(id)
 			} else {
@@ -191,28 +200,46 @@ func (p *ChatPage) SwitchToMessages() {
 // OpenDMs opens the DMs page.
 func (p *ChatPage) OpenDMs() {
 	p.lastGuild = 0
-	p.lastOpen.Set(0)
-	p.SwitchToPlaceholder()
+	p.lastGuildState.Set(0)
 	p.Sidebar.OpenDMs()
+	p.restoreLastChannel(0)
 }
 
 // OpenGuild opens the guild with the given ID.
 func (p *ChatPage) OpenGuild(guildID discord.GuildID) {
 	p.lastGuild = guildID
-	p.lastOpen.Set(guildID)
-	p.SwitchToPlaceholder()
+	p.lastGuildState.Set(guildID)
 	p.Sidebar.SetSelectedGuild(guildID)
+	p.restoreLastChannel(guildID)
+}
+
+func (p *ChatPage) restoreLastChannel(guildID discord.GuildID) {
+	var k string
+	if guildID.IsValid() {
+		k = guildID.String()
+	}
+
+	// Allow a bit of delay for the page to finish loading.
+	glib.IdleAdd(func() {
+		p.lastChannelState.Exists(k, func(exists bool) {
+			if exists {
+				p.lastChannelState.Get(k, p.OpenChannel)
+			} else {
+				p.SwitchToPlaceholder()
+			}
+		})
+	})
 }
 
 // OpenChannel opens the channel with the given ID. Use this method to direct
 // the user to a new channel when they request to, e.g. through a notification.
 func (p *ChatPage) OpenChannel(chID discord.ChannelID) {
 	var tab *chatTab
-	var switchToTab bool
+	var reselect bool
 	for _, t := range p.tabs {
 		if t.alreadyOpens(chID) {
 			tab = t
-			switchToTab = true
+			reselect = true
 			break
 		}
 	}
@@ -223,12 +250,23 @@ func (p *ChatPage) OpenChannel(chID discord.ChannelID) {
 	tab.switchToChannel(chID)
 
 	page := p.tabView.Page(tab)
-	if switchToTab {
+	updateTabInfo(p.ctx, page, chID)
+	if reselect {
 		p.tabView.SetSelectedPage(page)
 	}
 
-	updateTabInfo(p.ctx, page, chID)
-	p.onActiveTabChange()
+	p.onActiveTabChange(page)
+
+	state := gtkcord.FromContext(p.ctx).Offline()
+	ch, _ := state.Channel(chID)
+	if ch != nil {
+		var k string
+		if ch.GuildID.IsValid() {
+			k = ch.GuildID.String()
+		}
+		// Save the last opened channel for the guild.
+		p.lastChannelState.Set(k, chID)
+	}
 }
 
 func updateTabInfo(ctx context.Context, page *adw.TabPage, chID discord.ChannelID) {
@@ -275,7 +313,7 @@ func (p *ChatPage) newTab() *chatTab {
 	return tab
 }
 
-func (p *ChatPage) onActiveTabChange() {
+func (p *ChatPage) onActiveTabChange(page *adw.TabPage) {
 	// Remove the previous header buttons.
 	for _, button := range p.lastButtons {
 		p.RightHeader.Remove(button)
@@ -286,16 +324,18 @@ func (p *ChatPage) onActiveTabChange() {
 	var chID discord.ChannelID
 	var title string
 
-	if activePage := p.tabView.SelectedPage(); activePage != nil {
-		title = activePage.Title()
+	if page != nil {
+		title = page.Title()
 
-		tab = p.tabs[activePage.Native()]
+		tab = p.tabs[page.Native()]
 		if tab == nil {
 			// Ignore this. It's possible that we're still initializing.
 			return
 		}
 
 		chID = tab.channelID()
+		log.Printf("Active tab changed to %s (%d)", title, chID)
+		log.Println(string(debug.Stack()))
 
 		// Add the new header buttons.
 		if tab.messageView != nil {
