@@ -1,12 +1,16 @@
 [Desktop Entry]
+# Translators: Application name. Keep this string as "gtkcord4"
 Name=gtkcord4
-GenericName=Discord Chat
+Version=1.0
+Type=Application
+Terminal=false
+GenericName=Discord chat client
 Comment=A Discord client in Go and GTK4
 Exec=gtkcord4
 Icon=gtkcord4
-Terminal=false
-Type=Application
-Categories=GNOME;GTK;Network;Chat;
+Categories=GNOME;GTK;Network;Chat;InstantMessaging;
+# Translators: Search terms to find this application. Do NOT translate or localize the semicolons! The list MUST also end with a semicolon!
+Keywords=Discord;chat;irc;communications;talk;
 StartupNotify=true
 DBusActivatable=true
 X-GNOME-UsesNotifications=true
