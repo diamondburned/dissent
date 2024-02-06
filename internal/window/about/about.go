@@ -10,6 +10,7 @@ import (
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/app"
+	"github.com/diamondburned/gotkit/components/logui"
 )
 
 // New creates a new about window.
@@ -37,7 +38,7 @@ func New(ctx context.Context) *adw.AboutWindow {
 	build, ok := debug.ReadBuildInfo()
 	if ok {
 		about.AddCreditSection("Dependency Authors", modAuthors(build.Deps))
-		about.SetDebugInfo(build.String())
+		about.SetDebugInfo(debugInfo(build))
 		about.SetDebugInfoFilename("gtkcord4-debuginfo")
 
 		version := buildVersion(build.Settings)
@@ -52,7 +53,19 @@ func New(ctx context.Context) *adw.AboutWindow {
 	return about
 }
 
+var customVersion string
+
+// SetVersion sets the custom version string. It overrides the version string
+// that's automatically generated from the build info.
+func SetVersion(version string) {
+	customVersion = version
+}
+
 func buildVersion(settings []debug.BuildSetting) string {
+	if customVersion != "" {
+		return customVersion
+	}
+
 	find := func(name string) string {
 		for _, setting := range settings {
 			if setting.Key == name {
@@ -99,4 +112,32 @@ func modAuthors(mods []*debug.Module) []string {
 	}
 
 	return authors
+}
+
+func debugInfo(build *debug.BuildInfo) string {
+	var s strings.Builder
+	fmt.Fprintf(&s, "Version: %s", buildVersion(build.Settings))
+	s.WriteString("\n")
+
+	s.WriteString("Build Info:\n")
+	s.WriteString(build.String())
+	s.WriteString("\n\n")
+
+	s.WriteString("Last 50 log lines:\n")
+	s.WriteString(lastNLogLines(50))
+	s.WriteString("\n\n")
+
+	return strings.TrimSpace(s.String())
+}
+
+func lastNLogLines(n int) string {
+	buffer := logui.DefaultBuffer()
+
+	lines := buffer.LineCount()
+	if lines > n {
+		lines = lines - n
+	}
+
+	iter, _ := buffer.IterAtLine(lines)
+	return buffer.Text(iter, buffer.EndIter(), false)
 }

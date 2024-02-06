@@ -31,6 +31,11 @@ func init() {
 	locale.LoadLocale(po)
 }
 
+// Version is connected to about.SetVersion.
+var Version string
+
+func init() { about.SetVersion(Version) }
+
 var _ = cssutil.WriteCSS(`
 	window.background,
 	window.background.solid-csd {
