@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
   <id>so.libdb.gtkcord4</id>
-
-  <name>gtkcord4</name>
+  <name translatable="no">gtkcord4</name>
   <summary>GTK4 Discord client in Go</summary>
-
+  <developer_name translatable="no">diamondburned</developer_name>
+  <launchable type="desktop-id">so.libdb.gtkcord4.desktop</launchable>
+  <translation type="gettext">gtkcord4</translation>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0+</project_license>
 
@@ -14,12 +15,29 @@
     </p>
   </description>
 
-  <launchable type="desktop-id">so.libdb.gtkcord4.desktop</launchable>
   <screenshots>
     <screenshot type="default">
       <image>https://raw.githubusercontent.com/diamondburned/gtkcord4/main/.github/screenshot5.png</image>
     </screenshot>
   </screenshots>
+
+  <url type="homepage">https://github.com/diamondburned/gtkcord4</url>
+  <url type="bugtracker">https://github.com/diamondburned/gtkcord4/issues</url>
+
+  <kudos>
+    <kudo>HiDpiIcon</kudo>
+    <kudo>ModernToolkit</kudo>
+  </kudos>
+
+  <recommends>
+    <control>keyboard</control>
+    <control>pointing</control>
+    <control>touch</control>
+  </recommends>
+
+  <custom>
+    <value key="Purism::form_factor">mobile</value>
+  </custom>
 
   <content_rating type="oars-1.1">
     <content_attribute id="social-chat">intense</content_attribute>
@@ -28,7 +46,11 @@
     <content_attribute id="social-contacts">intense</content_attribute>
     <content_attribute id="money-purchasing">intense</content_attribute>
   </content_rating>
+
   <releases>
+    <release version="v0.0.18" date="2024-02-06">
+      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.18</url>
+    </release>
     <release version="v0.0.17" date="2024-01-06">
       <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.17</url>
     </release>
@@ -69,7 +91,4 @@
       <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.7</url>
     </release>
   </releases>
-
-  <url type="homepage">https://github.com/diamondburned/gtkcord4</url>
-  <url type="bugtracker">https://github.com/diamondburned/gtkcord4/issues</url>
 </component>
