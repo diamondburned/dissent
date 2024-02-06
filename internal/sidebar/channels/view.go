@@ -253,7 +253,7 @@ func NewView(ctx context.Context, guildID discord.GuildID) *View {
 
 	// Bind to a signal that selects any channel that we need to be selected.
 	// This lets the channel be lazy-loaded.
-	v.selection.ConnectItemsChanged(func(_, _, _ uint) {
+	v.selection.ConnectAfter("items-changed", func() {
 		if v.selectID == 0 {
 			return
 		}
