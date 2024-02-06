@@ -2,8 +2,6 @@ package window
 
 import (
 	"context"
-	"log"
-	"runtime/debug"
 	"strings"
 
 	"github.com/diamondburned/adaptive"
@@ -334,8 +332,6 @@ func (p *ChatPage) onActiveTabChange(page *adw.TabPage) {
 		}
 
 		chID = tab.channelID()
-		log.Printf("Active tab changed to %s (%d)", title, chID)
-		log.Println(string(debug.Stack()))
 
 		// Add the new header buttons.
 		if tab.messageView != nil {
