@@ -13,6 +13,13 @@
 [![Stable release status](https://img.shields.io/github/deployments/diamondburned/gtkcord4/Stable%20release?logo=github&label=Stable%20Build)](https://github.com/diamondburned/gtkcord4/deployments/Stable%20release)
 ![Latest release](https://img.shields.io/github/v/tag/diamondburned/gtkcord4?filter=!nightly&label=Latest%20Release&color=blue)
 
+<div>
+  <a href="./.github/screenshot6/01.png"><img src="./.github/screenshot6/01.png" alt="Screenshot 1" width="200"></a>
+  <a href="./.github/screenshot6/02.png"><img src="./.github/screenshot6/02.png" alt="Screenshot 2" width="200"></a>
+  <a href="./.github/screenshot6/03.png"><img src="./.github/screenshot6/03.png" alt="Screenshot 3" width="200"></a>
+  <a href="./.github/screenshot6/04.png"><img src="./.github/screenshot6/04.png" alt="Screenshot 4" width="200"></a>
+</div>
+
 <img src="./.github/screenshot5.png" alt="Screenshot" width="800">
 
 </div>
