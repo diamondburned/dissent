@@ -4,6 +4,8 @@
 
 # gtkcord4
 
+<br>
+
 [![Go Report Card](https://goreportcard.com/badge/github.com/diamondburned/gtkcord4)](https://goreportcard.com/report/github.com/diamondburned/gtkcord4)
 [![Packaging status](https://img.shields.io/repology/repositories/gtkcord4?label=in%20repositories)](https://repology.org/project/gtkcord4/versions)
 ![GitHub download count](https://img.shields.io/github/downloads/diamondburned/gtkcord4/total?label=GitHub%20Downloads&logo=github)
@@ -13,7 +15,14 @@
 [![Stable release status](https://img.shields.io/github/deployments/diamondburned/gtkcord4/Stable%20release?logo=github&label=Stable%20Build)](https://github.com/diamondburned/gtkcord4/deployments/Stable%20release)
 ![Latest release](https://img.shields.io/github/v/tag/diamondburned/gtkcord4?filter=!nightly&label=Latest%20Release&color=blue)
 
-<img src="./.github/screenshot5.png" alt="Screenshot" width="800">
+<img src="./.github/screenshot6/03.png" alt="Screenshot 3" width="800">
+
+<div>
+  <a href="./.github/screenshot6/03.png"><img src="./.github/screenshot6/03.png" alt="Screenshot 3" width="150"></a>
+  <a href="./.github/screenshot6/01.png"><img src="./.github/screenshot6/01.png" alt="Screenshot 1" width="150"></a>
+  <a href="./.github/screenshot6/02.png"><img src="./.github/screenshot6/02.png" alt="Screenshot 2" width="150"></a>
+  <a href="./.github/screenshot6/04.png"><img src="./.github/screenshot6/04.png" alt="Screenshot 4" width="150"></a>
+</div>
 
 </div>
 
@@ -76,3 +85,4 @@ To log into gtkcord4, you need to get your user token:
 > [!NOTE]
 > Using an unofficial client at all is against Discord's Terms of Service and
 > may cause your account to be banned! Use at your own risk!
+
