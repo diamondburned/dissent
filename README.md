@@ -71,11 +71,13 @@ go install -v github.com/diamondburned/gtkcord4@latest
 
 To log into gtkcord4, you need to get your user token:
 
-1. Press <kbd>F12</kbd> with Discord open (to open the Inspector).
-2. Go to the Network tab then press <kbd>F5</kbd> to refresh the page.
-3. Search `discord api` then look for the `Authorization` header in the right
-   column.
-4. Copy its value (the token) into the Token field, then click Login.
+1. Open the Discord web app in your browser and log in.
+2. Press <kbd>F12</kbd> to open the Inspector.
+3. Go to the Network tab then press <kbd>F5</kbd> to refresh the page.
+4. In the 'Filter URLs' text box, search `discord api`.
+5. Click on any HTTP message entry and inspect its message headers. Under
+   the 'Request Headers' section, search for the `Authorization` header.
+6. Copy its value (the token) into the Token field, then click Login.
 
 > [!WARNING]
 > Logging in using username/email and password is strongly discouraged. This
