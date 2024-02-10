@@ -1,6 +1,9 @@
 schema = 3
 
 [mod]
+  [mod."github.com/KarpelesLab/weak"]
+    version = "v0.1.1"
+    hash = "sha256-VaekSfWKmcdHnfeBM5T4yG0cku3LHS5lDRNyHAloXso="
   [mod."github.com/alecthomas/chroma"]
     version = "v0.10.0"
     hash = "sha256-p721vddVTv4iv1O0/dqpdk5xF6x9iLIHcrfh8JEVnqQ="
@@ -23,8 +26,8 @@ schema = 3
     version = "v0.0.0-20231226035729-503b3cb0406c"
     hash = "sha256-KRn8dqQ0HUrzR7S/83BL2r8X+76KFlzbwjEMtLaW8i8="
   [mod."github.com/diamondburned/gotk4/pkg"]
-    version = "v0.1.1-0.20240206031134-7966a062d938"
-    hash = "sha256-ofHVLHBUE5ymlLi9C0Gyhdy7s1UXbjJn1v9q/w8H8bE="
+    version = "v0.1.1-0.20240210085006-e5bfe6119990"
+    hash = "sha256-KyaKmBbzm+xmhwHJD2sXBq/u4J4xkFjEvmhOdrtF0iQ="
   [mod."github.com/diamondburned/gotkit"]
     version = "v0.0.0-20240129021633-217be91d2538"
     hash = "sha256-5UsxBa6KVI2TN9S29MwIydgnnDqlYFuUgugaZ6epTuw="
