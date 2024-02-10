@@ -46,7 +46,7 @@ func newModelManager(state *gtkcord.State, guildID discord.GuildID) *modelManage
 func (m *modelManager) Model(chID discord.ChannelID) *gtk.StringList {
 	model := gtk.NewStringList(nil)
 
-	list := newChannelList(m.state, glib.NewWeakRef(model))
+	list := newChannelList(m.state, model)
 
 	var unbind signaling.DisconnectStack
 	list.ConnectDestroy(func() { unbind.Disconnect() })
@@ -121,14 +121,14 @@ func (m *modelManager) invalidateAll(parentID discord.ChannelID, list *channelLi
 // Because this is a set, each channel ID can only appear once.
 type channelList struct {
 	state *gtkcord.State
-	ref   *glib.WeakRef[*gtk.StringList]
+	list  *gtk.StringList
 	ids   []discord.ChannelID
 }
 
-func newChannelList(state *gtkcord.State, ref *glib.WeakRef[*gtk.StringList]) *channelList {
+func newChannelList(state *gtkcord.State, list *gtk.StringList) *channelList {
 	return &channelList{
 		state: state,
-		ref:   ref,
+		list:  list,
 		ids:   make([]discord.ChannelID, 0, 4),
 	}
 }
@@ -164,7 +164,7 @@ func (l *channelList) insertAt(ch discord.Channel, pos uint) {
 		return
 	}
 
-	list := l.ref.Get()
+	list := l.list
 	if list == nil {
 		return
 	}
@@ -180,7 +180,7 @@ func (l *channelList) Remove(chID discord.ChannelID) {
 	if i != -1 {
 		l.ids = append(l.ids[:i], l.ids[i+1:]...)
 
-		list := l.ref.Get()
+		list := l.list
 		if list != nil {
 			list.Remove(uint(i))
 		}
@@ -207,7 +207,7 @@ func (l *channelList) Index(chID discord.ChannelID) int {
 func (l *channelList) Clear() {
 	l.ids = l.ids[:0]
 
-	list := l.ref.Get()
+	list := l.list
 	if list != nil {
 		list.Splice(0, list.NItems(), nil)
 	}
@@ -215,7 +215,7 @@ func (l *channelList) Clear() {
 
 // ClearAndAppend clears the list and appends the given channels.
 func (l *channelList) ClearAndAppend(chs []discord.Channel) {
-	list := l.ref.Get()
+	list := l.list
 	if list == nil {
 		return
 	}
@@ -232,7 +232,7 @@ func (l *channelList) ClearAndAppend(chs []discord.Channel) {
 }
 
 func (l *channelList) ConnectDestroy(f func()) {
-	list := l.ref.Get()
+	list := l.list
 	if list == nil {
 		return
 	}

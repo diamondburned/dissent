@@ -322,9 +322,11 @@ jobs:
           export GOROOT=/mingw64/lib/go
           export GOPATH=/mingw64
 
-          # Build gtkcord4
           mkdir result
-          go build -o result/gtkcord4.exe
+          out=$(realpath result)
+
+          # Build gtkcord4
+          go build -o $out/gtkcord4.exe
 
           # copyDLLs copies all required DLLs of the given binaries to the
           # result directory.
@@ -332,28 +334,46 @@ jobs:
             ldd "$@" \
               | { grep "=> /mingw64/bin/" || true; } \
               | cut -d ' ' -f1 \
-              | xargs -I{} cp /mingw64/bin/{} result/
+              | xargs -I{} cp /mingw64/bin/{} $out/
           }
 
           # Copy all of the binary's dependencies to the result directory.
-          copyDLLs result/gtkcord4.exe
+          copyDLLs $out/gtkcord4.exe
 
           # countDLLs returns the number of DLLs in the result directory.
           # We use this to recursively copy dependencies until no new DLLs are
           # found.
           countDLLs() {
-            find result -type f -name "*.dll" | wc -l
+            find $out -type f -name "*.dll" | wc -l
           }
 
           # Copy DLLs recursively until no new ones are found.
           currentCount=$(countDLLs)
           while true; do
-            copyDLLs result/*.dll
+            copyDLLs $out/*.dll
 
             newCount=$(countDLLs)
             (( newCount == currentCount )) && break
             currentCount=$newCount
           done
+
+          # Copy the RSVG and GDBus stuff.
+          cp \
+            /mingw64/bin/librsvg*.dll \
+            /mingw64/bin/gdbus.exe \
+            $out
+
+          # Copy the GLib schemas and GTK resources.
+          (
+            cd /mingw64
+            cp --parents -r \
+              share/glib-2.0/schemas/gschemas.compiled \
+              share/gtk-4.0 \
+              share/gtksourceview-5 \
+              share/icons \
+              lib/gdk-pixbuf-2.0 \
+              $out
+          )
 
       - name: Pack artifacts
         run: |
