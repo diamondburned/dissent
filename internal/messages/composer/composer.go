@@ -130,7 +130,7 @@ var viewCSS = cssutil.Applier("composer-view", `
 		margin-left: 4px;
 	}
 	.composer-placeholder {
-		padding: 16px 2px;
+		padding: 12px 2px;
 		color: alpha(@theme_fg_color, 0.65);
 	}
 `)

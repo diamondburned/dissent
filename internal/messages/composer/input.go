@@ -65,7 +65,7 @@ var inputCSS = cssutil.Applier("composer-input", `
 		background-color: inherit;
 	}
 	.composer-input {
-		padding: 16px 2px;
+		padding: 12px 2px;
 		margin-top: 0px;
 	}
 	.composer-input .autocomplete-row label {

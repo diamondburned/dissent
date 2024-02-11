@@ -184,8 +184,27 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 	v.Scroll.SetPolicy(gtk.PolicyNever, gtk.PolicyAutomatic)
 	v.Scroll.SetPropagateNaturalWidth(true)
 	v.Scroll.SetPropagateNaturalHeight(true)
-	v.Scroll.OnBottomed(v.onScrollBottomed)
 	v.Scroll.SetChild(clampScroll)
+
+	v.Scroll.OnBottomed(v.onScrollBottomed)
+
+	scrollAdjustment := v.Scroll.VAdjustment()
+	scrollAdjustment.ConnectValueChanged(func() {
+		// Replicate adw.ToolbarView's behavior: if the user scrolls up, then
+		// show a small drop shadow at the bottom of the view. We're not using
+		// the actual widget, because it adds a WindowHandle at the bottom,
+		// which breaks double-clicking.
+		const undershootClass = "undershoot-bottom"
+
+		value := scrollAdjustment.Value()
+		upper := scrollAdjustment.Upper()
+		psize := scrollAdjustment.PageSize()
+		if value < upper-psize {
+			v.Scroll.AddCSSClass(undershootClass)
+		} else {
+			v.Scroll.RemoveCSSClass(undershootClass)
+		}
+	})
 
 	vp := v.Scroll.Viewport()
 	vp.SetScrollToFocus(true)
