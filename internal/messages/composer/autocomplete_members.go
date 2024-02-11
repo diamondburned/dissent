@@ -16,7 +16,7 @@ import (
 	"github.com/sahilm/fuzzy"
 )
 
-const memberCacheExpiry = 5 * time.Second
+const memberCacheExpiry = 2 * time.Second
 
 type members []discord.Member
 
