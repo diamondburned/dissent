@@ -5,6 +5,7 @@ import (
 	"io"
 	"mime"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -24,6 +25,13 @@ import (
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/pkg/errors"
 )
+
+var persistInput = prefs.NewBool(true, prefs.PropMeta{
+	Name:    "Persist Input",
+	Section: "Composer",
+	Description: "Persist the input message between sessions (to disk). " +
+		"If disabled, the input is only persisted for the current session on memory.",
+})
 
 // InputController is the parent controller that Input controls.
 type InputController interface {
@@ -73,6 +81,8 @@ var inputWYSIWYG = prefs.NewBool(true, prefs.PropMeta{
 
 // inputStateKey is the app state that stores the last input message.
 var inputStateKey = app.NewStateKey[string]("input-state")
+
+var inputStateMemory sync.Map // map[discord.ChannelID]string
 
 // NewInput creates a new Input widget.
 func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID) *Input {
@@ -125,10 +135,18 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 
 		// Persist input.
 		if end.Offset() == 0 {
-			inputState.Delete(chID.String())
+			if persistInput.Value() {
+				inputState.Delete(chID.String())
+			} else {
+				inputStateMemory.Delete(chID)
+			}
 		} else {
 			text := i.Buffer.Text(start, end, false)
-			inputState.Set(chID.String(), text)
+			if persistInput.Value() {
+				inputState.Set(chID.String(), text)
+			} else {
+				inputStateMemory.Store(chID, text)
+			}
 		}
 	})
 
