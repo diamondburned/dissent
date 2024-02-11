@@ -180,11 +180,13 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 	overlay.SetClipOverlay(revealer, true)
 
 	// Show or hide the placeholder when the buffer is empty or not.
-	v.Input.Buffer.ConnectChanged(func() {
+	updatePlaceholderVisibility := func() {
 		start, end := v.Input.Buffer.Bounds()
 		// Reveal if the buffer has 0 length.
 		revealer.SetRevealChild(start.Offset() == end.Offset())
-	})
+	}
+	v.Input.Buffer.ConnectChanged(updatePlaceholderVisibility)
+	updatePlaceholderVisibility()
 
 	v.UploadTray = NewUploadTray()
 
