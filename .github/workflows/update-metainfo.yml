@@ -1,0 +1,26 @@
+name: Update Metainfo
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  update:
+    name: Update Metainfo file
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: Run update-metainfo script
+        run: python ./.github/tools/update-metainfo.py ${{ github.ref_name }}
+      - name: Commit changes
+        run: |
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git commit -a -m "chore: Update metainfo.xml"
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main
