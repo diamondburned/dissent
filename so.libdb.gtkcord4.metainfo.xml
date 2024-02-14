@@ -57,6 +57,9 @@
   </content_rating>
 
   <releases>
+    <release version="v0.0.19" date="2024-02-13">
+      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.19</url>
+    </release>
     <release version="v0.0.18" date="2024-02-06">
       <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.18</url>
     </release>
