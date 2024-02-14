@@ -116,8 +116,13 @@ func (v *View) appendSummary(summary gateway.ConversationSummary) (messageKey, b
 		// position, probably.
 
 		v.summaries[summary.ID] = sw
-		v.msgs[sw.key] = messageRow{ListBoxRow: row}
-		v.List.Insert(row, endMsg.Index())
+		v.msgs[sw.key] = messageRow{
+			ListBoxRow: row,
+			info: messageInfo{
+				timestamp: discord.Timestamp(summary.EndID.Time()),
+			},
+		}
+		v.List.Insert(row, endMsg.Index()+1)
 
 		reset := v.surroundingMessagesResetter(sw.key)
 		reset()

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html"
 	"log"
+	"log/slog"
 	"sort"
 	"time"
 
@@ -781,6 +782,9 @@ func (v *View) resetMessage(key messageKey) {
 func (v *View) surroundingMessagesResetter(key messageKey) func() {
 	msg, ok := v.msgs[key]
 	if !ok {
+		slog.Warn(
+			"useless surroundingMessagesResetter call on non-existent message",
+			"key", key)
 		return func() {}
 	}
 
@@ -832,6 +836,11 @@ func (v *View) shouldBeCollapsed(info messageInfo) bool {
 			last, lastOK = v.msgs[prev]
 		}
 	} else {
+		slog.Warn(
+			"shouldBeCollapsed called on non-existent message, assuming last",
+			"id", info.id,
+			"timestamp", info.timestamp.Time())
+
 		// Assume we're about to append a new message.
 		last, lastOK = v.lastMessage()
 	}
