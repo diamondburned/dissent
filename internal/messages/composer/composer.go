@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"os"
 	"sort"
+	"strings"
 	"time"
+	"unicode"
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
@@ -416,13 +419,18 @@ func (v *View) addFiles(list gio.ListModeller) {
 	}()
 }
 
-func (v *View) commit() (string, []File) {
+func (v *View) peekContent() (string, []File) {
+	start, end := v.Input.Buffer.Bounds()
+	text := v.Input.Buffer.Text(start, end, false)
+	files := v.UploadTray.Files()
+	return text, files
+}
+
+func (v *View) commitContent() (string, []File) {
 	start, end := v.Input.Buffer.Bounds()
 	text := v.Input.Buffer.Text(start, end, false)
 	v.Input.Buffer.Delete(start, end)
-
 	files := v.UploadTray.Clear()
-
 	return text, files
 }
 
@@ -437,9 +445,47 @@ func (v *View) send() {
 		return
 	}
 
-	text, files := v.commit()
+	text, files := v.commitContent()
 	if text == "" && len(files) == 0 {
 		return
+	}
+
+	if len(files) == 0 && textBufferIsReaction(text) {
+		state := gtkcord.FromContext(v.ctx).Online()
+
+		var targetMessageID discord.MessageID
+		if v.state.replying != notReplying {
+			targetMessageID = v.state.id
+		} else {
+			msgs, _ := state.Cabinet.Messages(v.chID)
+			if len(msgs) > 0 {
+				targetMessageID = msgs[0].ID
+			}
+		}
+
+		if targetMessageID.IsValid() {
+			text = strings.TrimPrefix(text, "+")
+			text = strings.TrimSpace(text)
+			text = strings.Trim(text, "<>")
+
+			state := gtkcord.FromContext(v.ctx).Online()
+			emoji := discord.APIEmoji(text)
+			chID := v.chID
+			go func() {
+				if err := state.React(chID, targetMessageID, emoji); err != nil {
+					slog.Error(
+						"cannot react to message",
+						"channel", chID,
+						"message", targetMessageID,
+						"emoji", emoji,
+						"err", err)
+					app.Error(v.ctx, errors.Wrap(err, "cannot react to message"))
+				}
+			}()
+
+			v.ctrl.StopReplying()
+			return
+		}
 	}
 
 	v.ctrl.SendMessage(SendingMessage{
@@ -454,9 +500,16 @@ func (v *View) send() {
 	}
 }
 
+// textBufferIsReaction returns whether the text buffer is for adding a reaction.
+// It is true if the input matches something like "+<emoji>".
+func textBufferIsReaction(buffer string) bool {
+	buffer = strings.TrimRightFunc(buffer, unicode.IsSpace)
+	return strings.HasPrefix(buffer, "+") && !strings.ContainsFunc(buffer, unicode.IsSpace)
+}
+
 func (v *View) edit() {
 	editingID := v.state.id
-	text, _ := v.commit()
+	text, _ := v.commitContent()
 
 	state := gtkcord.FromContext(v.ctx).Online()
 

@@ -114,14 +114,23 @@ func (t *UploadTray) bindDelete(this uploadFile) func() {
 	}
 }
 
+// Files returns the list of files in the tray.
+func (t *UploadTray) Files() []File {
+	files := make([]File, len(t.files))
+	for i, file := range t.files {
+		files[i] = file.file
+	}
+	return files
+}
+
 // Clear clears the tray and returns the list of paths that it held.
 func (t *UploadTray) Clear() []File {
-	paths := make([]File, len(t.files))
+	files := make([]File, len(t.files))
 	for i, file := range t.files {
-		paths[i] = file.file
+		files[i] = file.file
 		t.Remove(file)
 	}
 
 	t.files = nil
-	return paths
+	return files
 }

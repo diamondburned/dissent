@@ -54,9 +54,10 @@ type Input struct {
 	Buffer *gtk.TextBuffer
 	ac     *autocomplete.Autocompleter
 
-	ctx  context.Context
-	ctrl InputController
-	chID discord.ChannelID
+	ctx     context.Context
+	ctrl    InputController
+	chID    discord.ChannelID
+	guildID discord.GuildID
 }
 
 var inputCSS = cssutil.Applier("composer-input", `
@@ -115,9 +116,10 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 
 	state := gtkcord.FromContext(ctx)
 	if ch, err := state.Cabinet.Channel(chID); err == nil {
+		i.guildID = ch.GuildID
 		i.ac.Use(
-			NewEmojiCompleter(ch.GuildID), // :
-			NewMemberCompleter(chID),      // @
+			NewEmojiCompleter(i.guildID), // :
+			NewMemberCompleter(chID),     // @
 		)
 	}
 
@@ -169,7 +171,31 @@ func (i *Input) onAutocompleted(row autocomplete.SelectedData) bool {
 
 	switch data := row.Data.(type) {
 	case EmojiData:
-		i.Buffer.Insert(row.Bounds[1], data.Content)
+		state := gtkcord.FromContext(i.ctx)
+		start, end := i.Buffer.Bounds()
+
+		canUseEmoji := false ||
+			// has Nitro so can use anything
+			state.EmojiState.HasNitro() ||
+			// unicode emoji
+			!data.Emoji.ID.IsValid() ||
+			// same guild, not animated
+			(data.GuildID == i.guildID && !data.Emoji.Animated) ||
+			// adding a reaction, so we can't even use URL
+			textBufferIsReaction(i.Buffer.Text(start, end, false))
+
+		var content string
+		if canUseEmoji {
+			// Use the default emoji format. This string is subject to
+			// server-side validation.
+			content = data.Emoji.String()
+		} else {
+			// Use the emoji URL instead of the emoji code to allow
+			// non-Nitro users to send emojis by sending the image URL.
+			content = gtkcord.InjectSizeUnscaled(data.Emoji.EmojiURL(), gtkcord.LargeEmojiSize)
+		}
+
+		i.Buffer.Insert(row.Bounds[1], content)
 		return true
 	case MemberData:
 		i.Buffer.Insert(row.Bounds[1], discord.Member(data).Mention())
@@ -199,7 +225,7 @@ func (i *Input) onKey(val, _ uint, state gdk.ModifierType) bool {
 		// Perhaps we could use the FindChar method to avoid allocating
 		// a new string (twice) on each keypress.
 		head := i.Buffer.StartIter()
-		tail := i.Buffer.IterAtOffset(i.Buffer.ObjectProperty("cursor-position").(int))
+		tail := i.Buffer.IterAtMark(i.Buffer.GetInsert())
 		uinput := i.Buffer.Text(head, tail, false)
 
 		// Check if the number of triple backticks is odd. If it is, then we're

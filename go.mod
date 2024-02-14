@@ -7,10 +7,10 @@ toolchain go1.21.5
 require (
 	github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8
 	github.com/diamondburned/arikawa/v3 v3.3.5
-	github.com/diamondburned/chatkit v0.0.0-20240126072327-e7ec2379e6a7
+	github.com/diamondburned/chatkit v0.0.0-20240214131532-4b8acdf0f84b
 	github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20240107232253-5f283b5d35bc
 	github.com/diamondburned/gotk4/pkg v0.2.2
-	github.com/diamondburned/gotkit v0.0.0-20240214114621-fcd3184b3995
+	github.com/diamondburned/gotkit v0.0.0-20240214122856-34324269516c
 	github.com/diamondburned/ningen/v3 v3.0.1-0.20240123023159-e96f8ed832e6
 	github.com/dustin/go-humanize v1.0.0
 	github.com/enescakir/emoji v1.0.0

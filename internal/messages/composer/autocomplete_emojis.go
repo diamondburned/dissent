@@ -28,16 +28,8 @@ const (
 
 type emojis []EmojiData
 
-func (e emojis) Len() int { return len(e) }
-
-func (e emojis) String(i int) string {
-	name := e[i].Name
-	if e[i].Guild != nil {
-		// Allow suffixing the guild name to search.
-		name += " " + e[i].Guild.Name
-	}
-	return name
-}
+func (e emojis) Len() int            { return len(e) }
+func (e emojis) String(i int) string { return e[i].EmojiName + " " + e[i].GuildName }
 
 type emojiCompleter struct {
 	emojis  emojis
@@ -83,8 +75,8 @@ func (c *emojiCompleter) Search(ctx context.Context, str string) []autocomplete.
 
 	for name, unicode := range unicodeEmojis {
 		c.emojis = append(c.emojis, EmojiData{
-			Name:    name,
-			Content: unicode,
+			Emoji:     &discord.Emoji{Name: unicode},
+			EmojiName: name,
 		})
 	}
 
@@ -96,28 +88,12 @@ func (c *emojiCompleter) Search(ctx context.Context, str string) []autocomplete.
 	}
 
 	for i, guild := range emojis {
-		for _, emoji := range guild.Emojis {
-			var content string
-			// Check if the user can use the emoji if they have Nitro or if the
-			// emoji is not animated and comes from the same guild thay they're
-			// sending it to.
-			if hasNitro || (guild.ID == c.guildID && !emoji.Animated) {
-				// Use the default emoji format. This string is subject to
-				// server-side validation.
-				content = emoji.String()
-			} else {
-				// Use the emoji URL instead of the emoji code to allow
-				// non-Nitro users to send emojis by sending the image URL.
-				content = gtkcord.InjectSizeUnscaled(emoji.EmojiURL(), gtkcord.LargeEmojiSize)
-				// Hint the user the emoji name.
-				content += "#" + emoji.Name
-			}
-
+		for j, emoji := range guild.Emojis {
 			c.emojis = append(c.emojis, EmojiData{
-				Guild:   &emojis[i],
-				ID:      emoji.ID,
-				Name:    emoji.Name,
-				Content: content,
+				GuildID:   guild.ID,
+				GuildName: guild.Name,
+				Emoji:     &emojis[i].Emojis[j],
+				EmojiName: emoji.Name,
 			})
 		}
 	}
@@ -141,8 +117,8 @@ func (c *emojiCompleter) search(str string, hasNitro bool) []autocomplete.Data {
 		sort.SliceStable(data, func(i, j int) bool {
 			a := data[i].(EmojiData)
 			b := data[j].(EmojiData)
-			correctA := a.Guild != nil && a.Guild.ID == c.guildID
-			correctB := b.Guild != nil && b.Guild.ID == c.guildID
+			correctA := a.GuildID == c.guildID
+			correctB := b.GuildID == c.guildID
 			return correctA && !correctB
 		})
 	}
@@ -152,10 +128,10 @@ func (c *emojiCompleter) search(str string, hasNitro bool) []autocomplete.Data {
 
 // EmojiData is the Data structure for each emoji.
 type EmojiData struct {
-	Guild   *emoji.Guild
-	ID      discord.EmojiID
-	Name    string
-	Content string
+	GuildID   discord.GuildID
+	GuildName string
+	Emoji     *discord.Emoji
+	EmojiName string
 }
 
 const emojiSize = 32 // px
@@ -169,10 +145,10 @@ var _ = cssutil.WriteCSS(`
 // Row satisfies autocomplete.Data.
 func (d EmojiData) Row(ctx context.Context) *gtk.ListBoxRow {
 	b := gtk.NewBox(gtk.OrientationHorizontal, 4)
-	markup := html.EscapeString(d.Name)
+	markup := html.EscapeString(d.EmojiName)
 
-	if !d.ID.IsValid() {
-		l := gtk.NewLabel(d.Content)
+	if !d.Emoji.ID.IsValid() {
+		l := gtk.NewLabel(d.Emoji.Name)
 		l.AddCSSClass("autocompleter-unicode")
 
 		b.Append(l)
@@ -180,13 +156,13 @@ func (d EmojiData) Row(ctx context.Context) *gtk.ListBoxRow {
 		i := onlineimage.NewImage(ctx, imgutil.HTTPProvider)
 		i.AddCSSClass("autocompleter-customemoji")
 		i.SetSizeRequest(emojiSize, emojiSize)
-		i.SetFromURL(gtkcord.EmojiURL(d.ID.String(), false))
+		i.SetFromURL(gtkcord.EmojiURL(d.Emoji.ID.String(), false))
 
 		b.Append(i)
 
 		markup += "\n" + fmt.Sprintf(
 			`<span size="smaller" fgalpha="75%%" rise="-1200">%s</span>`,
-			html.EscapeString(d.Guild.Name),
+			html.EscapeString(d.GuildName),
 		)
 	}
 
