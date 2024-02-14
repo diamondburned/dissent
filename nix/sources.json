@@ -5,10 +5,10 @@
         "homepage": "",
         "owner": "nix-community",
         "repo": "gomod2nix",
-        "rev": "cc75990c60d01d9eedcf32ff4bf0055dd49c3ea1",
-        "sha256": "1s9m70q2jsr75hynx7q4brgbf22n1lfw5hc45mc3x4r9g4m8qrdz",
+        "rev": "30e3c3a9ec4ac8453282ca7f67fca9e1da12c3e6",
+        "sha256": "1m0q0p1xidsp61xfrbj8ld1dqk3fhyrfifxj2ks36yjbnzmi1x69",
         "type": "tarball",
-        "url": "https://github.com/nix-community/gomod2nix/archive/cc75990c60d01d9eedcf32ff4bf0055dd49c3ea1.tar.gz",
+        "url": "https://github.com/nix-community/gomod2nix/archive/30e3c3a9ec4ac8453282ca7f67fca9e1da12c3e6.tar.gz",
         "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz",
         "version": "1.5.0"
     },
