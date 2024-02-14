@@ -356,9 +356,7 @@ func (c *Content) SetReactions(reactions []discord.Reaction) {
 		c.react = newContentReactions(c.ctx, c)
 		c.append(c.react)
 	}
-
-	c.react.Clear()
-	c.react.AddReactions(reactions)
+	c.react.SetReactions(reactions)
 }
 
 var renderers = []mdrender.OptionFunc{

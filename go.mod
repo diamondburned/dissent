@@ -1,14 +1,16 @@
 module github.com/diamondburned/gtkcord4
 
-go 1.21
+go 1.21.0
+
+toolchain go1.21.5
 
 require (
 	github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8
-	github.com/diamondburned/arikawa/v3 v3.3.5-0.20240122104110-dbc4ae8978dd
+	github.com/diamondburned/arikawa/v3 v3.3.5
 	github.com/diamondburned/chatkit v0.0.0-20240126072327-e7ec2379e6a7
-	github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20231226035729-503b3cb0406c
-	github.com/diamondburned/gotk4/pkg v0.1.1-0.20240210085006-e5bfe6119990
-	github.com/diamondburned/gotkit v0.0.0-20240129021633-217be91d2538
+	github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20240107232253-5f283b5d35bc
+	github.com/diamondburned/gotk4/pkg v0.2.2
+	github.com/diamondburned/gotkit v0.0.0-20240214114621-fcd3184b3995
 	github.com/diamondburned/ningen/v3 v3.0.1-0.20240123023159-e96f8ed832e6
 	github.com/dustin/go-humanize v1.0.0
 	github.com/enescakir/emoji v1.0.0
@@ -28,6 +30,8 @@ require (
 	github.com/gorilla/schema v1.2.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/leonelquinteros/gotext v1.5.3-0.20230829162019-37f474cfb069 // indirect
+	github.com/lmittmann/tint v1.0.4 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/twmb/murmur3 v1.1.3 // indirect
 	github.com/yalue/merged_fs v1.2.3 // indirect
 	github.com/zalando/go-keyring v0.2.1 // indirect
@@ -36,6 +40,7 @@ require (
 	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/image v0.0.0-20220902085622-e7cb96979f69 // indirect
 	golang.org/x/sync v0.1.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
 )

@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"html"
-	"log"
+	"log/slog"
 	"strconv"
 	"strings"
 
 	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
+	"github.com/diamondburned/gotk4/pkg/core/gioutil"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/app"
@@ -20,17 +22,43 @@ import (
 	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 )
 
+type messageReaction struct {
+	discord.Reaction
+	GuildID   discord.GuildID
+	ChannelID discord.ChannelID
+	MessageID discord.MessageID
+}
+
+func (r messageReaction) Equal(other messageReaction) bool {
+	return true &&
+		r.MessageID == other.MessageID &&
+		r.ChannelID == other.ChannelID &&
+		r.Me == other.Me &&
+		r.Count == other.Count &&
+		r.Emoji.APIString() == other.Emoji.APIString()
+}
+
 type contentReactions struct {
 	*gtk.FlowBox
+
+	// *gtk.ScrolledWindow
+	// grid *gtk.GridView
+
 	ctx       context.Context
-	reactions map[discord.APIEmoji]*contentReaction
 	parent    *Content
+	reactions *gioutil.ListModel[messageReaction]
 }
 
 var reactionsCSS = cssutil.Applier("message-reactions", `
 	.message-reactions {
 		padding: 0;
-		margin-top: 2px;
+		margin-top: 4px;
+		background: none;
+	}
+	.message-reactions > flowboxchild {
+		margin: 4px 0;
+		margin-right: 6px;
+		padding: 0;
 	}
 `)
 
@@ -38,229 +66,326 @@ func newContentReactions(ctx context.Context, parent *Content) *contentReactions
 	rs := contentReactions{
 		ctx:       ctx,
 		parent:    parent,
-		reactions: make(map[discord.APIEmoji]*contentReaction),
+		reactions: gioutil.NewListModel[messageReaction](),
 	}
+
+	// TODO: complain to the GTK devs about how broken GridView is.
+	// Why is it not reflowing widgets? and other mysteries to solve in the GTK
+	// framework.
+
+	// rs.grid = gtk.NewGridView(
+	// 	gtk.NewNoSelection(rs.reactions.ListModel),
+	// 	newContentReactionsFactory(ctx))
+	// rs.grid.SetOrientation(gtk.OrientationHorizontal)
+	// reactionsCSS(rs.grid)
+	//
+	// rs.ScrolledWindow = gtk.NewScrolledWindow()
+	// rs.ScrolledWindow.SetPolicy(gtk.PolicyNever, gtk.PolicyNever)
+	// rs.ScrolledWindow.SetPropagateNaturalWidth(true)
+	// rs.ScrolledWindow.SetPropagateNaturalHeight(false)
+	// rs.ScrolledWindow.SetChild(rs.grid)
 
 	rs.FlowBox = gtk.NewFlowBox()
 	rs.FlowBox.SetOrientation(gtk.OrientationHorizontal)
 	rs.FlowBox.SetHomogeneous(true)
-	rs.FlowBox.SetMaxChildrenPerLine(100)
-	rs.FlowBox.SetSelectionMode(gtk.SelectionBrowse)
-	rs.FlowBox.SetRowSpacing(2)
-	rs.FlowBox.SetColumnSpacing(2)
-	rs.FlowBox.SetActivateOnSingleClick(true)
+	rs.FlowBox.SetMaxChildrenPerLine(30)
+	rs.FlowBox.SetSelectionMode(gtk.SelectionNone)
 	reactionsCSS(rs)
 
-	rs.FlowBox.ConnectChildActivated(func(child *gtk.FlowBoxChild) {
-		client := gtkcord.FromContext(rs.ctx)
-		chID := rs.parent.ChannelID()
-		msgID := rs.parent.MessageID()
+	rs.FlowBox.BindModel(rs.reactions.ListModel, func(o *glib.Object) gtk.Widgetter {
+		reaction := gioutil.ObjectValue[messageReaction](o)
+		w := newContentReaction()
+		w.SetReaction(ctx, rs.FlowBox, reaction)
+		return w
+	})
 
-		emoji := discord.APIEmoji(child.Name())
-		selected := rs.reactions[emoji].me
+	gtkutil.BindActionCallbackMap(rs, map[string]gtkutil.ActionCallback{
+		"reactions.toggle": {
+			ArgType: glib.NewVariantType("s"),
+			Func: func(args *glib.Variant) {
+				emoji := discord.APIEmoji(args.String())
+				selected := rs.isReacted(emoji)
 
-		child.SetSensitive(false)
-		go func() {
-			var err error
-			if selected {
-				err = client.Unreact(chID, msgID, emoji)
-			} else {
-				err = client.React(chID, msgID, emoji)
-			}
+				client := gtkcord.FromContext(rs.ctx).Online()
+				gtkutil.Async(rs.ctx, func() func() {
+					var err error
+					if selected {
+						err = client.Unreact(rs.parent.ChannelID(), rs.parent.MessageID(), emoji)
+					} else {
+						err = client.React(rs.parent.ChannelID(), rs.parent.MessageID(), emoji)
+					}
 
-			if err != nil {
-				if selected {
-					err = fmt.Errorf("failed to react: %w", err)
-				} else {
-					err = fmt.Errorf("failed to unreact: %w", err)
-				}
-			}
+					if err != nil {
+						if selected {
+							err = fmt.Errorf("failed to react: %w", err)
+						} else {
+							err = fmt.Errorf("failed to unreact: %w", err)
+						}
+						app.Error(rs.ctx, err)
+					}
 
-			glib.IdleAdd(func() {
-				child.SetSensitive(true)
-				if err != nil {
-					app.Error(rs.ctx, err)
-				}
-			})
-		}()
+					return nil
+				})
+			},
+		},
 	})
 
 	return &rs
 }
 
-func (rs *contentReactions) Clear() {
-	for k, child := range rs.reactions {
-		rs.Remove(child)
-		delete(rs.reactions, k)
-	}
-}
+func (rs *contentReactions) findReactionIx(emoji discord.APIEmoji) int {
+	var i int
+	foundIx := -1
 
-func (rs *contentReactions) AddReactions(reactions []discord.Reaction) {
-	for _, react := range reactions {
-		rs.addReaction(react)
-	}
-
-	for _, reaction := range rs.reactions {
-		reaction.Invalidate()
-	}
-}
-
-func (rs *contentReactions) addReaction(reaction discord.Reaction) {
-	name := reaction.Emoji.APIString()
-
-	r, ok := rs.reactions[name]
-	if ok {
-		r.count++
-		r.me = reaction.Me
-	} else {
-		r = newContentReaction(rs, reaction)
-		rs.reactions[name] = r
-
-		// Manually search where this reaction should be inserted.
-		pos := -1
-		for _, curr := range rs.reactions {
-			if curr.count > r.count {
-				pos = curr.Index()
-			}
+	iter := rs.reactions.AllItems()
+	iter(func(reaction messageReaction) bool {
+		if reaction.Emoji.APIString() == emoji {
+			foundIx = i
+			return false
 		}
-		rs.Insert(r, pos)
-	}
+		i++
+		return true
+	})
+
+	return foundIx
 }
+
+func (rs *contentReactions) isReacted(emoji discord.APIEmoji) bool {
+	ix := rs.findReactionIx(emoji)
+	if ix == -1 {
+		return false
+	}
+	return rs.reactions.Item(ix).Me
+}
+
+// SetReactions sets the reactions of the message.
+//
+// TODO: implement Add and Remove event handlers directly in this container to
+// avoid having to clear the whole list.
+func (rs *contentReactions) SetReactions(reactions []discord.Reaction) {
+	messageReactions := make([]messageReaction, len(reactions))
+	for i, r := range reactions {
+		messageReactions[i] = messageReaction{
+			Reaction:  r,
+			GuildID:   rs.parent.view.GuildID(),
+			ChannelID: rs.parent.view.ChannelID(),
+			MessageID: rs.parent.MessageID(),
+		}
+	}
+	rs.reactions.Splice(0, rs.reactions.NItems(), messageReactions...)
+}
+
+/*
+func newContentReactionsFactory(ctx context.Context) *gtk.ListItemFactory {
+	reactionWidgets := make(map[uintptr]*contentReaction)
+
+	factory := gtk.NewSignalListItemFactory()
+	factory.ConnectSetup(func(item *gtk.ListItem) {
+		w := newContentReaction()
+		item.SetChild(w)
+		reactionWidgets[item.Native()] = w
+	})
+	factory.ConnectTeardown(func(item *gtk.ListItem) {
+		item.SetChild(nil)
+		delete(reactionWidgets, item.Native())
+	})
+
+	factory.ConnectBind(func(item *gtk.ListItem) {
+		reaction := gioutil.ObjectValue[messageReaction](item.Item())
+
+		w := reactionWidgets[item.Native()]
+		w.SetReaction(ctx, reaction)
+	})
+	factory.ConnectUnbind(func(item *gtk.ListItem) {
+		w := reactionWidgets[item.Native()]
+		w.Clear()
+	})
+
+	return &factory.ListItemFactory
+}
+*/
+
+type reactionsLoadState uint8
+
+const (
+	reactionsNotLoaded reactionsLoadState = iota
+	reactionsLoading
+	reactionsLoaded
+)
 
 type contentReaction struct {
-	*gtk.FlowBoxChild
-	reactions  *contentReactions
+	*gtk.ToggleButton
+	iconBin    *adw.Bin
 	countLabel *gtk.Label
 
-	tooltip    string
-	hasTooltip bool
+	reaction messageReaction
+	client   *gtkcord.State
 
-	emoji discord.Emoji
-	count int
-	me    bool
+	tooltip      string
+	tooltipState reactionsLoadState
 }
 
 var reactionCSS = cssutil.Applier("message-reaction", `
 	.message-reaction {
-		border: 1px solid @borders;
-		padding: 2px 4px;
+		/* min-width: 4em; */
+		min-width: 0;
+		min-height: 0;
+		padding: 0;
 	}
-	.message-reaction-me {
-		/* background-color: alpha(@theme_selected_bg_color, 0.25); */
+	.message-reaction > box {
+		margin: 6px;
 	}
-	.message-reaction-count {
-		margin-left: 4px;
+	.message-reaction-emoji-icon {
+		min-width:  22px;
+		min-height: 22px;
 	}
 	.message-reaction-emoji-unicode {
 		font-size: 18px;
 	}
-	.message-reaction-emoji-custom {
-		min-width:  22px;
-		min-height: 22px;
-	}
 `)
 
-func newContentReaction(rs *contentReactions, reaction discord.Reaction) *contentReaction {
-	r := contentReaction{
-		reactions: rs,
-		emoji:     reaction.Emoji,
-		count:     reaction.Count,
-		me:        reaction.Me,
-	}
+func newContentReaction() *contentReaction {
+	r := contentReaction{}
 
-	box := gtk.NewBox(gtk.OrientationHorizontal, 0)
+	r.ToggleButton = gtk.NewToggleButton()
+	r.ToggleButton.AddCSSClass("message-reaction")
+	r.ToggleButton.ConnectClicked(func() {
+		r.SetSensitive(false)
 
-	r.FlowBoxChild = gtk.NewFlowBoxChild()
-	r.FlowBoxChild.SetName(string(reaction.Emoji.APIString()))
-	r.FlowBoxChild.SetChild(box)
-	reactionCSS(r)
-
-	var loadedUser bool
-	r.FlowBoxChild.SetHasTooltip(true)
-	r.FlowBoxChild.ConnectQueryTooltip(func(_, _ int, _ bool, tooltip *gtk.Tooltip) bool {
-		if !loadedUser {
-			loadedUser = true
-			r.invalidateUsers(func() {
-				tooltip.SetMarkup(r.tooltip)
-			})
+		ok := r.ActivateAction("reactions.toggle", glib.NewVariantString(string(r.reaction.Emoji.APIString())))
+		if !ok {
+			slog.Error(
+				"failed to activate reactions.toggle",
+				"emoji", r.reaction.Emoji.APIString())
 		}
-
-		if !r.hasTooltip {
-			tooltip.SetText(locale.Get("Loading..."))
-			return true
-		}
-
-		tooltip.SetMarkup(r.tooltip)
-		return r.tooltip != ""
 	})
+
+	r.ToggleButton.SetHasTooltip(true)
+	r.ToggleButton.ConnectQueryTooltip(func(_, _ int, _ bool, tooltip *gtk.Tooltip) bool {
+		tooltip.SetText(locale.Get("Loading..."))
+		r.invalidateUsers(tooltip.SetMarkup)
+		return true
+	})
+
+	r.iconBin = adw.NewBin()
+	r.iconBin.AddCSSClass("message-reaction-icon")
 
 	r.countLabel = gtk.NewLabel("")
 	r.countLabel.AddCSSClass("message-reaction-count")
 	r.countLabel.SetHExpand(true)
 	r.countLabel.SetXAlign(1)
 
+	box := gtk.NewBox(gtk.OrientationHorizontal, 0)
+	box.Append(r.iconBin)
+	box.Append(r.countLabel)
+
+	r.ToggleButton.SetChild(box)
+	reactionCSS(r)
+
+	return &r
+}
+
+// SetReaction sets the reaction of the widget.
+func (r *contentReaction) SetReaction(ctx context.Context, flowBox *gtk.FlowBox, reaction messageReaction) {
+	r.reaction = reaction
+	r.client = gtkcord.FromContext(ctx).Online()
+
 	if reaction.Emoji.IsCustom() {
-		emoji := onlineimage.NewPicture(rs.ctx, imgutil.HTTPProvider)
+		emoji := onlineimage.NewPicture(ctx, imgutil.HTTPProvider)
 		emoji.AddCSSClass("message-reaction-emoji")
 		emoji.AddCSSClass("message-reaction-emoji-custom")
 		emoji.SetSizeRequest(gtkcord.InlineEmojiSize, gtkcord.InlineEmojiSize)
 		emoji.SetKeepAspectRatio(true)
 		emoji.SetURL(reaction.Emoji.EmojiURL())
 
-		anim := emoji.EnableAnimation()
-		anim.ConnectMotion(r)
+		// TODO: get this working:
+		// Currently, it just jitters in size. The button itself can still be
+		// sized small, FlowBox is just forcing it to be big. This does mean
+		// that it's not the GIF that is causing this.
 
-		box.Append(emoji)
+		// anim := emoji.EnableAnimation()
+		// anim.ConnectMotion(r)
+
+		r.iconBin.SetChild(emoji)
 	} else {
 		label := gtk.NewLabel(reaction.Emoji.Name)
 		label.AddCSSClass("message-reaction-emoji")
 		label.AddCSSClass("message-reaction-emoji-unicode")
 
-		box.Append(label)
+		r.iconBin.SetChild(label)
 	}
 
-	box.Append(r.countLabel)
+	r.countLabel.SetLabel(strconv.Itoa(reaction.Count))
 
-	return &r
-}
-
-// Invalidate invalidates the widget state.
-func (r *contentReaction) Invalidate() {
-	r.FlowBoxChild.Changed()
-	r.countLabel.SetLabel(strconv.Itoa(r.count))
-
-	if r.me {
+	r.ToggleButton.SetActive(reaction.Me)
+	if reaction.Me {
 		r.AddCSSClass("message-reaction-me")
-		r.reactions.SelectChild(r.FlowBoxChild)
 	} else {
 		r.RemoveCSSClass("message-reaction-me")
-		r.reactions.UnselectChild(r.FlowBoxChild)
 	}
 }
 
-func (r *contentReaction) InvalidateUsers() {
-	r.invalidateUsers(func() {})
+func (r *contentReaction) Clear() {
+	r.reaction = messageReaction{}
+	r.client = nil
+	r.tooltipState = reactionsNotLoaded
+	r.iconBin.SetChild(nil)
+	r.ToggleButton.SetActive(false)
+	r.ToggleButton.RemoveCSSClass("message-reaction-me")
 }
 
-func (r *contentReaction) invalidateUsers(done func()) {
-	if r.emoji.IsCustom() {
-		r.tooltip = ":" + html.EscapeString(r.emoji.Name) + ":\n"
-		r.hasTooltip = true
+func (r *contentReaction) invalidateUsers(callback func(string)) {
+	if r.tooltipState != reactionsNotLoaded {
+		callback(r.tooltip)
+		return
 	}
 
-	tooltip := r.tooltip
+	r.tooltipState = reactionsLoading
+	r.tooltip = ""
 
-	gtkutil.Async(r.reactions.ctx, func() func() {
-		client := gtkcord.FromContext(r.reactions.ctx).Online()
+	reaction := r.reaction
+	client := r.client
 
+	var tooltip string
+	if reaction.Emoji.IsCustom() {
+		tooltip = ":" + html.EscapeString(reaction.Emoji.Name) + ":\n"
+	}
+
+	done := func(tooltip string, err error) {
+		glib.IdleAdd(func() {
+			if !r.reaction.Equal(reaction) {
+				// The reaction has changed,
+				// so we don't care about the result.
+				return
+			}
+
+			if err != nil {
+				r.tooltipState = reactionsNotLoaded
+				r.tooltip = tooltip + "<b>" + locale.Get("Error: ") + "</b>" + err.Error()
+
+				slog.Error(
+					"cannot load reaction tooltip",
+					"channel", reaction.ChannelID,
+					"message", reaction.MessageID,
+					"emoji", reaction.Emoji.APIString(),
+					"err", err)
+			} else {
+				r.tooltipState = reactionsLoaded
+				r.tooltip = tooltip
+			}
+
+			callback(r.tooltip)
+		})
+	}
+
+	go func() {
 		u, err := client.Reactions(
-			r.reactions.parent.view.ChannelID(),
-			r.reactions.parent.MessageID(),
-			discord.NewAPIEmoji(r.emoji.ID, r.emoji.Name), 11,
-		)
+			reaction.ChannelID,
+			reaction.MessageID,
+			reaction.Emoji.APIString(), 11)
 		if err != nil {
-			log.Print("cannot fetch reactions for message ", r.reactions.parent.MessageID(), ": ", err)
-			return done
+			done(tooltip, err)
+			return
 		}
 
 		var hasMore bool
@@ -270,23 +395,18 @@ func (r *contentReaction) invalidateUsers(done func()) {
 		}
 
 		for _, user := range u {
-			tooltip += client.MemberMarkup(
-				r.reactions.parent.view.GuildID(),
-				&discord.GuildUser{User: user},
+			tooltip += fmt.Sprintf(
+				`<span size="small">%s</span>`+"\n",
+				client.MemberMarkup(reaction.GuildID, &discord.GuildUser{User: user}),
 			)
-			tooltip += "\n"
 		}
 
 		if hasMore {
 			tooltip += "..."
+		} else {
+			tooltip = strings.TrimRight(tooltip, "\n")
 		}
 
-		tooltip = strings.TrimSuffix(tooltip, "\n")
-
-		return func() {
-			r.tooltip = tooltip
-			r.hasTooltip = true
-			done()
-		}
-	})
+		done(tooltip, nil)
+	}()
 }

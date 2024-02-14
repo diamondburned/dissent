@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"sort"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/chatkit/components/author"
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/core/gioutil"
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
@@ -55,6 +57,8 @@ type Controller interface {
 	StopEditing()
 	StopReplying()
 	EditLastMessage() bool
+	AddReaction(discord.MessageID, discord.APIEmoji)
+	AddToast(*adw.Toast)
 }
 
 type typer struct {
@@ -456,12 +460,21 @@ func (v *View) edit() {
 
 	state := gtkcord.FromContext(v.ctx).Online()
 
-	go func() {
+	gtkutil.Async(v.ctx, func() func() {
 		_, err := state.EditMessage(v.chID, editingID, text)
 		if err != nil {
-			app.Error(v.ctx, errors.Wrap(err, "cannot edit message"))
+			err = errors.Wrap(err, "cannot edit message")
+			log.Println()
+			return func() {
+				toast := adw.NewToast(locale.Get("Cannot edit message"))
+				toast.SetTimeout(0)
+				toast.SetButtonLabel(locale.Get("Logs"))
+				toast.SetActionName("app.logs")
+				v.ctrl.AddToast(toast)
+			}
 		}
-	}()
+		return nil
+	})
 
 	v.ctrl.StopEditing()
 }

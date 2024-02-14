@@ -131,13 +131,12 @@ func debugInfo(build *debug.BuildInfo) string {
 }
 
 func lastNLogLines(n int) string {
-	buffer := logui.DefaultBuffer()
+	handler := logui.DefaultLogHandler()
 
-	lines := buffer.LineCount()
-	if lines > n {
-		lines = lines - n
-	}
+	logModel := handler.ListModel()
+	nLogs := logModel.NItems()
 
-	iter, _ := buffer.IterAtLine(lines)
-	return buffer.Text(iter, buffer.EndIter(), false)
+	iter := logModel.RangeItems(max(0, nLogs-n), nLogs)
+	logs := logui.RecordsToString(iter)
+	return logs
 }

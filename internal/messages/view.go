@@ -66,10 +66,11 @@ type View struct {
 	*adaptive.LoadablePage
 	focused gtk.Widgetter
 
-	LoadMore *gtk.Button
-	Scroll   *autoscroll.Window
-	List     *gtk.ListBox
-	Composer *composer.View
+	ToastOverlay *adw.ToastOverlay
+	LoadMore     *gtk.Button
+	Scroll       *autoscroll.Window
+	List         *gtk.ListBox
+	Composer     *composer.View
 
 	msgs    map[messageKey]messageRow
 	chName  string
@@ -223,8 +224,11 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 	outerBox.Append(v.Scroll)
 	outerBox.Append(composerClamp)
 
+	v.ToastOverlay = adw.NewToastOverlay()
+	v.ToastOverlay.SetChild(outerBox)
+
 	// This becomes the outermost widget.
-	v.focused = outerBox
+	v.focused = v.ToastOverlay
 
 	v.LoadablePage = adaptive.NewLoadablePage()
 	v.LoadablePage.SetTransitionDuration(125)
@@ -1075,11 +1079,23 @@ func (v *View) AddReaction(id discord.MessageID, emoji discord.APIEmoji) {
 
 	emoji = discord.APIEmoji(gtkcord.SanitizeEmoji(string(emoji)))
 
-	go func() {
-		if error := state.React(v.chID, id, emoji); error != nil {
-			app.Error(state.Context(), errors.Wrap(error, "Failed to react:"))
+	gtkutil.Async(v.ctx, func() func() {
+		if err := state.React(v.chID, id, emoji); err != nil {
+			err = errors.Wrap(err, "Failed to react:")
+			return func() {
+				toast := adw.NewToast(locale.Get("Cannot react to message"))
+				toast.SetTimeout(0)
+				toast.SetButtonLabel(locale.Get("Logs"))
+				toast.SetActionName("")
+			}
 		}
-	}()
+		return nil
+	})
+}
+
+// AddToast adds a toast to the message view.
+func (v *View) AddToast(toast *adw.Toast) {
+	v.ToastOverlay.AddToast(toast)
 }
 
 // ReplyTo starts replying to the message with the given ID.
