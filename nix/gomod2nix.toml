@@ -17,20 +17,20 @@ schema = 3
     version = "v0.0.2-0.20221227093656-fa139be203a8"
     hash = "sha256-xIerrbYQf6FPbbRd60OnBStIJMl6mg/Qvl+LTmRbyIw="
   [mod."github.com/diamondburned/arikawa/v3"]
-    version = "v3.3.5-0.20240122104110-dbc4ae8978dd"
-    hash = "sha256-afqWDC9E75Yi1leGty7SYm+0cgrBUNYp50dVqP9GYns="
+    version = "v3.3.5"
+    hash = "sha256-diP4y1hCMNrGNpnHVWBjbwiDmPF0LJx9K6os1sy36i4="
   [mod."github.com/diamondburned/chatkit"]
     version = "v0.0.0-20240126072327-e7ec2379e6a7"
     hash = "sha256-ZbZ1BS15Z/Zo1b9DNoiPvZLGZ6VB5I2IWiGWLXbVkVQ="
   [mod."github.com/diamondburned/gotk4-adwaita/pkg"]
-    version = "v0.0.0-20231226035729-503b3cb0406c"
-    hash = "sha256-KRn8dqQ0HUrzR7S/83BL2r8X+76KFlzbwjEMtLaW8i8="
+    version = "v0.0.0-20240107232253-5f283b5d35bc"
+    hash = "sha256-ktoJxbdnDWTrGIKkzEg1yxe4xnklqTggBZUTFYtu62Y="
   [mod."github.com/diamondburned/gotk4/pkg"]
-    version = "v0.1.1-0.20240210085006-e5bfe6119990"
-    hash = "sha256-KyaKmBbzm+xmhwHJD2sXBq/u4J4xkFjEvmhOdrtF0iQ="
+    version = "v0.2.2"
+    hash = "sha256-wyGZ+QNlDGB7A9TvotMhUefq28KBUPqIMfcVs8cHHj0="
   [mod."github.com/diamondburned/gotkit"]
-    version = "v0.0.0-20240129021633-217be91d2538"
-    hash = "sha256-5UsxBa6KVI2TN9S29MwIydgnnDqlYFuUgugaZ6epTuw="
+    version = "v0.0.0-20240214114621-fcd3184b3995"
+    hash = "sha256-4eDXXC+7D6qnIJMWOBpMQsjeSENO2R6CCTNZRTtgwng="
   [mod."github.com/diamondburned/ningen/v3"]
     version = "v3.0.1-0.20240123023159-e96f8ed832e6"
     hash = "sha256-xBW2h5ee4eFBzcSBKHDizBZqjjgocyUOEoYdbRN5gLk="
@@ -58,6 +58,12 @@ schema = 3
   [mod."github.com/leonelquinteros/gotext"]
     version = "v1.5.3-0.20230829162019-37f474cfb069"
     hash = "sha256-ylBa3NtdtkgqEAhsXdYBTyhUUSU7e5NpHfw6Wq7cwbU="
+  [mod."github.com/lmittmann/tint"]
+    version = "v1.0.4"
+    hash = "sha256-xLaS+fcxmjsoOC3I5IX4jWkmgPVUFJBKEK+jgY5AFa0="
+  [mod."github.com/mattn/go-isatty"]
+    version = "v0.0.20"
+    hash = "sha256-qhw9hWtU5wnyFyuMbKx+7RB8ckQaFQ8D+8GKPkN3HHQ="
   [mod."github.com/pkg/errors"]
     version = "v0.9.1"
     hash = "sha256-mNfQtcrQmu3sNg/7IwiieKWOgFQOVVe2yXgKBpe/wZw="
@@ -91,6 +97,9 @@ schema = 3
   [mod."golang.org/x/sync"]
     version = "v0.1.0"
     hash = "sha256-Hygjq9euZ0qz6TvHYQwOZEjNiTbTh1nSLRAWZ6KFGR8="
+  [mod."golang.org/x/sys"]
+    version = "v0.15.0"
+    hash = "sha256-n7TlABF6179RzGq3gctPDKDPRtDfnwPdjNCMm8ps2KY="
   [mod."golang.org/x/text"]
     version = "v0.14.0"
     hash = "sha256-yh3B0tom1RfzQBf1RNmfdNWF1PtiqxV41jW1GVS6JAg="
