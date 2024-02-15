@@ -2,10 +2,12 @@ package window
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/diamondburned/adaptive"
 	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/core/glib"
 	"github.com/diamondburned/gotk4/pkg/gdk/v4"
@@ -20,6 +22,8 @@ import (
 	"github.com/diamondburned/gtkcord4/internal/sidebar"
 	"github.com/diamondburned/gtkcord4/internal/window/backbutton"
 	"github.com/diamondburned/gtkcord4/internal/window/quickswitcher"
+	"github.com/diamondburned/ningen/v3/states/read"
+	"libdb.so/ctxt"
 )
 
 var lastGuildKey = app.NewSingleStateKey[discord.GuildID]("last-guild-state")
@@ -152,6 +156,14 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	breakpoint := adw.NewBreakpoint(adw.BreakpointConditionParse("max-width: 500sp"))
 	breakpoint.AddSetter(p.OverlaySplitView, "collapsed", true)
 	w.AddBreakpoint(breakpoint)
+
+	state := gtkcord.FromContext(ctx)
+	w.ConnectDestroy(state.AddHandler(
+		func(*gateway.MessageCreateEvent) { p.updateWindowTitle() },
+		func(*gateway.MessageUpdateEvent) { p.updateWindowTitle() },
+		func(*gateway.MessageDeleteEvent) { p.updateWindowTitle() },
+		func(*read.UpdateEvent) { p.updateWindowTitle() },
+	))
 
 	chatPageCSS(p)
 	return &p
@@ -318,13 +330,12 @@ func (p *ChatPage) onActiveTabChange(page *adw.TabPage) {
 	}
 	p.lastButtons = nil
 
+	p.updateWindowTitle()
+
 	var tab *chatTab
 	var chID discord.ChannelID
-	var title string
 
 	if page != nil {
-		title = page.Title()
-
 		tab = p.tabs[page.Native()]
 		if tab == nil {
 			// Ignore this. It's possible that we're still initializing.
@@ -367,8 +378,23 @@ func (p *ChatPage) onActiveTabChange(page *adw.TabPage) {
 
 	// Update the window titles.
 	p.RightTitle.SetText(chName)
+}
 
-	win := app.WindowFromContext(p.ctx)
+func (p *ChatPage) updateWindowTitle() {
+	var title string
+	if page := p.tabView.SelectedPage(); page != nil {
+		title = page.Title()
+	}
+
+	state := gtkcord.FromContext(p.ctx)
+
+	// Add a ping indicator if the user has pings.
+	mentions := state.ReadState.TotalMentionCount()
+	if mentions > 0 {
+		title = fmt.Sprintf("(%d) %s", mentions, title)
+	}
+
+	win, _ := ctxt.From[*Window](p.ctx)
 	win.SetTitle(title)
 }
 

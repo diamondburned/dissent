@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html"
 	"log"
+	"log/slog"
 	"math"
 	"net/http"
 	"net/url"
@@ -259,22 +260,59 @@ func (s *State) BindWidget(w gtk.Widgetter, fn func(gateway.Event), filters ...g
 	})
 }
 
+// AddHandler adds a handler to the state. The handler is removed when the
+// returned function is called.
+func (s *State) AddHandler(fns ...any) func() {
+	if len(fns) == 1 {
+		return s.MainThreadHandler.AddHandler(fns[0])
+	}
+
+	unbinds := make([]func(), 0, len(fns))
+	for _, fn := range fns {
+		unbind := s.MainThreadHandler.AddHandler(fn)
+		unbinds = append(unbinds, unbind)
+	}
+
+	return func() {
+		for _, unbind := range unbinds {
+			unbind()
+		}
+		unbinds = unbinds[:0]
+	}
+}
+
 // AddHandlerForWidget replaces BindWidget and provides a way to bind a handler
 // that only receives events as long as the widget is mapped. As soon as the
 // widget is unmapped, the handler is unbound.
-func (s *State) AddHandlerForWidget(w gtk.Widgetter, fn any) func() {
-	unbind := s.AddHandler(fn)
+func (s *State) AddHandlerForWidget(w gtk.Widgetter, fns ...any) func() {
+	unbinds := make([]func(), 0, len(fns))
+
+	unbind := func() {
+		for _, unbind := range unbinds {
+			unbind()
+		}
+		unbinds = unbinds[:0]
+	}
+
+	bind := func() {
+		for _, fn := range fns {
+			unbind := s.AddHandler(fn)
+			unbinds = append(unbinds, unbind)
+		}
+	}
+
+	bind()
 
 	base := gtk.BaseWidget(w)
 	base.NotifyProperty("parent", func() {
-		if unbind != nil {
-			unbind()
-			unbind = nil
-		}
+		unbind()
 		if base.Parent() != nil {
-			unbind = s.AddHandler(fn)
+			bind()
 		} else {
-			log.Printf("gtkcord: AddHandlerForWidget: widget unparented, unbinding handler from %T", w)
+			slog.Debug(
+				"widget unparented, unbinding handler",
+				"func", "AddHandlerForWidget",
+				"widget_type", gtk.BaseWidget(w).Type())
 		}
 	})
 

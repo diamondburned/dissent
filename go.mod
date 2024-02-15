@@ -1,8 +1,6 @@
 module github.com/diamondburned/gtkcord4
 
-go 1.21.0
-
-toolchain go1.21.5
+go 1.21.5
 
 require (
 	github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8
@@ -11,13 +9,14 @@ require (
 	github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20240107232253-5f283b5d35bc
 	github.com/diamondburned/gotk4/pkg v0.2.2
 	github.com/diamondburned/gotkit v0.0.0-20240214122856-34324269516c
-	github.com/diamondburned/ningen/v3 v3.0.1-0.20240123023159-e96f8ed832e6
+	github.com/diamondburned/ningen/v3 v3.0.1-0.20240215053437-0d35ff052647
 	github.com/dustin/go-humanize v1.0.0
 	github.com/enescakir/emoji v1.0.0
 	github.com/ianlancetaylor/cgosymbolizer v0.0.0-20220405231054-a1ae3e4bba26
 	github.com/pkg/errors v0.9.1
 	github.com/sahilm/fuzzy v0.1.0
 	github.com/yuin/goldmark v1.5.6
+	libdb.so/ctxt v0.0.0-20240118132135-5a5840831d74
 )
 
 require (

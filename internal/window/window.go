@@ -16,6 +16,7 @@ import (
 	"github.com/diamondburned/gtkcord4/internal/window/login"
 	"github.com/diamondburned/gtkcord4/internal/window/quickswitcher"
 	"github.com/pkg/errors"
+	"libdb.so/ctxt"
 )
 
 var useDiscordColorScheme = prefs.NewBool(true, prefs.PropMeta{
@@ -77,10 +78,10 @@ func NewWindow(ctx context.Context) *Window {
 
 	w := Window{
 		ApplicationWindow: win,
-
-		win: appWindow,
-		ctx: ctx,
+		win:               appWindow,
+		ctx:               ctx,
 	}
+	w.ctx = ctxt.With(w.ctx, &w)
 
 	w.Login = login.NewPage(ctx, &loginWindow{Window: &w})
 	w.Login.LoadKeyring()
@@ -157,6 +158,11 @@ func (w *Window) SwitchToLoginPage() {
 
 func (w *Window) SetLoading() {
 	panic("not implemented")
+}
+
+// SetTitle sets the window title.
+func (w *Window) SetTitle(title string) {
+	w.ApplicationWindow.SetTitle(app.FromContext(w.ctx).SuffixedTitle(title))
 }
 
 func (w *Window) showQuickSwitcher() {
