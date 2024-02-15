@@ -1,0 +1,21 @@
+name: Update Metainfo
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  update:
+    name: Update Metainfo file
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: Run update-metainfo script
+        run: python ./.github/tools/update-metainfo.py ${{ github.ref_name }}
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: Update metainfo.xml"
+          file_pattern: so.libdb.gtkcord4.metainfo.xml
