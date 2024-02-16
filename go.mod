@@ -1,6 +1,6 @@
 module github.com/diamondburned/gtkcord4
 
-go 1.21.5
+go 1.21.0
 
 require (
 	github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8
@@ -16,7 +16,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sahilm/fuzzy v0.1.0
 	github.com/yuin/goldmark v1.5.6
-	libdb.so/ctxt v0.0.0-20240118132135-5a5840831d74
+	libdb.so/ctxt v0.0.0-20240216055249-07a499f07b78
 )
 
 require (
