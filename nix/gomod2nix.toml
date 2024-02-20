@@ -107,5 +107,5 @@ schema = 3
     version = "v0.0.0-20210723032227-1f47c861a9ac"
     hash = "sha256-YygVh3tohBFn6Or1txGRgeaCaCoMJLhEmKaKxLkjLbc="
   [mod."libdb.so/ctxt"]
-    version = "v0.0.0-20240118132135-5a5840831d74"
-    hash = "sha256-72FZeKUdT1SuUi7l+up9F41sfanDOU64r3BkY+TJvZg="
+    version = "v0.0.0-20240216055249-07a499f07b78"
+    hash = "sha256-bw3d7H4zeKiKuE9djkxkLwYp/09k0Tu9GM9fL3mQve0="
