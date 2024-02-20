@@ -2,7 +2,9 @@ package messages
 
 import (
 	"context"
+	"fmt"
 	"html"
+	"log/slog"
 	"strings"
 
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -49,16 +51,20 @@ var contentCSS = cssutil.Applier("message-content-box", `
 		border-width: 0;
 		border-radius: 8px; /* stolen from Discord mobile */
 	}
-	.message-reply-content,
-	.message-reply-header {
-		color: alpha(@theme_fg_color, 0.85);
+	.message-header-blockquote {
+		margin-bottom: 0;
 	}
-	.message-reply-header,
-	.message-reply-box .mauthor-chip {
+	.message-header-blockquote > *,
+	.message-header-blockquote .mauthor-chip,
+	.message-reply-content link {
+		color: mix(@theme_bg_color, @theme_fg_color, 0.85);
+	}
+	.message-header-blockquote > * {
 		font-size: 0.9em;
 	}
-	.message-reply-content {
-		font-size: 0.95em;
+	.message-interaction-name {
+		margin-left: 0.25em;
+		font-family: monospace;
 	}
 `)
 
@@ -142,62 +148,13 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 	state := gtkcord.FromContext(c.ctx)
 
 	if m.Reference != nil {
-		header := gtk.NewLabel("<a href=\"gtkcord4://reply\">Replying to</a> ")
-		header.AddCSSClass("message-reply-header")
-		header.SetUseMarkup(true)
-		header.ConnectActivateLink(func(link string) bool {
-			if link == "gtkcord4://reply" {
-				c.view.ScrollToMessage(m.ID)
-				return true
-			}
-			return false
-		})
+		w := c.newReplyBox(m)
+		c.append(w)
+	}
 
-		topBox := gtk.NewBox(gtk.OrientationHorizontal, 0)
-		topBox.SetHAlign(gtk.AlignStart)
-		topBox.Append(header)
-
-		replyBox := gtk.NewBox(gtk.OrientationVertical, 0)
-		replyBox.AddCSSClass("md-blockquote")
-		replyBox.AddCSSClass("message-reply-box")
-		replyBox.Append(topBox)
-
-		msg := m.ReferencedMessage
-		if msg == nil {
-			msg, _ = state.Cabinet.Message(m.Reference.ChannelID, m.Reference.MessageID)
-		}
-		if msg != nil {
-			if !showBlockedMessages.Value() && state.UserIsBlocked(msg.Author.ID) {
-				header.SetLabel(header.Label() + "blocked user.")
-			} else {
-				member, _ := state.Cabinet.Member(m.Reference.GuildID, msg.Author.ID)
-				chip := newAuthorChip(c.ctx, m.GuildID, &discord.GuildUser{
-					User:   msg.Author,
-					Member: member,
-				})
-				chip.Unpad()
-				topBox.Append(chip)
-
-				if preview := state.MessagePreview(msg); preview != "" {
-					// Force single line.
-					reply := gtk.NewLabel(strings.ReplaceAll(preview, "\n", "  "))
-					reply.AddCSSClass("message-reply-content")
-					reply.SetTooltipText(preview)
-					reply.SetEllipsize(pango.EllipsizeEnd)
-					reply.SetLines(1)
-					reply.SetXAlign(0)
-
-					replyBox.Append(reply)
-					c.append(replyBox)
-				}
-
-				if state.UserIsBlocked(msg.Author.ID) {
-					blockedCSS(replyBox)
-				}
-			}
-		} else {
-			header.SetLabel(header.Label() + " unknown message.")
-		}
+	if m.Interaction != nil {
+		w := c.newInteractionBox(m)
+		c.append(w)
 	}
 
 	var messageMarkup string
@@ -308,6 +265,140 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 
 	c.SetReactions(m.Reactions)
 	c.setMenu()
+}
+
+func (c *Content) newReplyBox(m *discord.Message) gtk.Widgetter {
+	box := gtk.NewBox(gtk.OrientationVertical, 0)
+	box.AddCSSClass("md-blockquote")
+	box.AddCSSClass("message-header-blockquote")
+	box.AddCSSClass("message-reply-box")
+
+	state := gtkcord.FromContext(c.ctx)
+
+	referencedMsg := m.ReferencedMessage
+	if referencedMsg == nil {
+		referencedMsg, _ = state.Cabinet.Message(m.Reference.ChannelID, m.Reference.MessageID)
+	}
+
+	if referencedMsg == nil {
+		slog.Warn(
+			"Cannot display message reference because the message is not found",
+			"channel_id", m.ChannelID,
+			"guild_id", m.GuildID,
+			"id", m.ID,
+			"id_reference", m.Reference.MessageID)
+
+		header := gtk.NewLabel("Unknown message.")
+		header.AddCSSClass("message-reply-header")
+		box.Append(header)
+
+		return box
+	}
+
+	if !showBlockedMessages.Value() && state.UserIsBlocked(referencedMsg.Author.ID) {
+		header := gtk.NewLabel("Blocked user.")
+		header.AddCSSClass("message-reply-header")
+		box.Append(header)
+
+		blockedCSS(box)
+		return box
+	}
+
+	member, _ := state.Cabinet.Member(m.Reference.GuildID, referencedMsg.Author.ID)
+	chip := newAuthorChip(c.ctx, m.GuildID, &discord.GuildUser{
+		User:   referencedMsg.Author,
+		Member: member,
+	})
+	chip.SetHAlign(gtk.AlignStart)
+	chip.Unpad()
+	box.Append(chip)
+
+	if preview := state.MessagePreview(referencedMsg); preview != "" {
+		// Force single line.
+		preview = strings.ReplaceAll(preview, "\n", "  ")
+		markup := fmt.Sprintf(
+			`<a href="gtkcord4://reply">%s</a>`,
+			html.EscapeString(preview),
+		)
+
+		reply := gtk.NewLabel(markup)
+		reply.AddCSSClass("message-reply-content")
+		reply.SetUseMarkup(true)
+		reply.SetTooltipText(preview)
+		reply.SetEllipsize(pango.EllipsizeEnd)
+		reply.SetLines(1)
+		reply.SetXAlign(0)
+		reply.ConnectActivateLink(func(link string) bool {
+			slog.Debug(
+				"Activated message reference link",
+				"link", link,
+				"message_id", m.ID,
+				"reference_id", referencedMsg.ID)
+
+			if link != "gtkcord4://reply" {
+				return false
+			}
+
+			if !c.ActivateAction("messages.scroll-to", gtkcord.NewMessageIDVariant(m.ID)) {
+				slog.Error(
+					"Failed to activate messages.scroll-to",
+					"id", m.ID)
+			}
+
+			return true
+		})
+
+		box.Append(reply)
+	}
+
+	if state.UserIsBlocked(referencedMsg.Author.ID) {
+		blockedCSS(box)
+	}
+
+	return box
+}
+
+func (c *Content) newInteractionBox(m *discord.Message) gtk.Widgetter {
+	box := gtk.NewBox(gtk.OrientationHorizontal, 0)
+	box.AddCSSClass("md-blockquote")
+	box.AddCSSClass("message-header-blockquote")
+	box.AddCSSClass("message-interaction-box")
+
+	state := gtkcord.FromContext(c.ctx)
+
+	if !showBlockedMessages.Value() && state.UserIsBlocked(m.Interaction.User.ID) {
+		header := gtk.NewLabel("Blocked user.")
+		header.AddCSSClass("message-reply-header")
+		box.Append(header)
+
+		blockedCSS(box)
+		return box
+	}
+
+	chip := newAuthorChip(c.ctx, m.GuildID, &discord.GuildUser{
+		User:   m.Interaction.User,
+		Member: m.Interaction.Member,
+	})
+	chip.SetHAlign(gtk.AlignStart)
+	chip.Unpad()
+	box.Append(chip)
+
+	nameLabel := gtk.NewLabel(m.Interaction.Name)
+	nameLabel.AddCSSClass("message-interaction-name")
+	if m.Interaction.Type == discord.CommandInteractionType {
+		nameLabel.SetText("/" + m.Interaction.Name)
+		nameLabel.AddCSSClass("message-interaction-command")
+	}
+	nameLabel.SetTooltipText(m.Interaction.Name)
+	nameLabel.SetEllipsize(pango.EllipsizeEnd)
+	nameLabel.SetXAlign(0)
+	box.Append(nameLabel)
+
+	if state.UserIsBlocked(m.Interaction.User.ID) {
+		blockedCSS(box)
+	}
+
+	return box
 }
 
 func (c *Content) append(w gtk.Widgetter) {

@@ -384,6 +384,29 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 		}
 	})
 
+	gtkutil.BindActionCallbackMap(v.List, map[string]gtkutil.ActionCallback{
+		"messages.scroll-to": {
+			ArgType: gtkcord.SnowflakeVariant,
+			Func: func(args *glib.Variant) {
+				id := discord.MessageID(args.Int64())
+
+				msg, ok := v.msgs[messageKeyID(id)]
+				if !ok {
+					slog.Warn(
+						"tried to scroll to non-existent message",
+						"id", id)
+					return
+				}
+
+				if !msg.ListBoxRow.GrabFocus() {
+					slog.Warn(
+						"failed to grab focus of message",
+						"id", id)
+				}
+			},
+		},
+	})
+
 	v.load()
 
 	viewCSS(v)
@@ -1066,20 +1089,13 @@ func (v *View) SendMessage(msg composer.SendingMessage) {
 	})
 }
 
-// ScrollToMessage scrolls to the message with the given ID. If the ID is
-// unknown, then false is returned.
-func (v *View) ScrollToMessage(id discord.MessageID) bool {
-	msg, ok := v.msgs[messageKeyID(id)]
-	if !ok {
-		log.Println("cannot scroll to message", messageKeyID(id))
-		return false
+// ScrollToMessage scrolls to the message with the given ID.
+func (v *View) ScrollToMessage(id discord.MessageID) {
+	if !v.List.ActivateAction("messages.scroll-to", gtkcord.NewMessageIDVariant(id)) {
+		slog.Error(
+			"cannot emit messages.scroll-to signal",
+			"id", id)
 	}
-
-	position := msg.ListBoxRow.Index()
-	v.List.ActivateAction("list.scroll-to-item", glib.NewVariantUint32(uint32(position)))
-
-	log.Println("scrolled to message", id)
-	return true
 }
 
 // AddReaction adds an reaction to the message with the given ID.
