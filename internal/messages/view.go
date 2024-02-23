@@ -67,11 +67,12 @@ type View struct {
 	*adaptive.LoadablePage
 	focused gtk.Widgetter
 
-	ToastOverlay *adw.ToastOverlay
-	LoadMore     *gtk.Button
-	Scroll       *autoscroll.Window
-	List         *gtk.ListBox
-	Composer     *composer.View
+	ToastOverlay    *adw.ToastOverlay
+	LoadMore        *gtk.Button
+	Scroll          *autoscroll.Window
+	List            *gtk.ListBox
+	Composer        *composer.View
+	TypingIndicator *TypingIndicator
 
 	msgs    map[messageKey]messageRow
 	chName  string
@@ -132,6 +133,16 @@ var viewCSS = cssutil.Applier("message-view", `
 	}
 	.message-show-more:hover {
 		background: alpha(@theme_fg_color, 0.075);
+	}
+	.messages-typing-indicator {
+		margin-top: -1em;
+	}
+	.messages-typing-box {
+		background-color: @theme_bg_color;
+	}
+	.message-list,
+	.message-scroll scrollbar.vertical {
+		margin-bottom: 1em;
 	}
 `)
 
@@ -215,8 +226,16 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 	v.Composer = composer.NewView(ctx, v, chID)
 	gtkutil.ForwardTyping(v.List, v.Composer.Input)
 
+	v.TypingIndicator = NewTypingIndicator(ctx, chID)
+	v.TypingIndicator.SetHExpand(true)
+	v.TypingIndicator.SetVAlign(gtk.AlignStart)
+
+	composerOverlay := gtk.NewOverlay()
+	composerOverlay.AddOverlay(v.TypingIndicator)
+	composerOverlay.SetChild(v.Composer)
+
 	composerClamp := adw.NewClamp()
-	composerClamp.SetChild(v.Composer)
+	composerClamp.SetChild(composerOverlay)
 	applyViewClamp(composerClamp)
 
 	outerBox := gtk.NewBox(gtk.OrientationVertical, 0)
