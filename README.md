@@ -15,13 +15,13 @@
 [![Stable release status](https://img.shields.io/github/deployments/diamondburned/dissent/Stable%20release?logo=github&label=Stable%20Build)](https://github.com/diamondburned/dissent/deployments/Stable%20release)
 ![Latest release](https://img.shields.io/github/v/tag/diamondburned/dissent?filter=!nightly&label=Latest%20Release&color=blue)
 
-<img src="./.github/screenshot6/03.png" alt="Screenshot 3" width="800">
+<img src="./.github/screenshots/03.png" alt="Screenshot 3" width="800">
 
 <div>
-  <a href="./.github/screenshot6/03.png"><img src="./.github/screenshot6/03.png" alt="Screenshot 3" width="150"></a>
-  <a href="./.github/screenshot6/01.png"><img src="./.github/screenshot6/01.png" alt="Screenshot 1" width="150"></a>
-  <a href="./.github/screenshot6/02.png"><img src="./.github/screenshot6/02.png" alt="Screenshot 2" width="150"></a>
-  <a href="./.github/screenshot6/04.png"><img src="./.github/screenshot6/04.png" alt="Screenshot 4" width="150"></a>
+  <a href="./.github/screenshots/03.png"><img src="./.github/screenshots/03.png" alt="Screenshot 3" width="150"></a>
+  <a href="./.github/screenshots/01.png"><img src="./.github/screenshots/01.png" alt="Screenshot 1" width="150"></a>
+  <a href="./.github/screenshots/02.png"><img src="./.github/screenshots/02.png" alt="Screenshot 2" width="150"></a>
+  <a href="./.github/screenshots/04.png"><img src="./.github/screenshots/04.png" alt="Screenshot 4" width="150"></a>
 </div>
 
 </div>
