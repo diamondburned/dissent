@@ -1,5 +1,5 @@
 {
-	pname = "gtkcord4";
+	pname = "dissent";
 	# 0000000000000000000000000000000000000000000000000000000000000000
 	# vendorSha256 = "10ijsv73bfgrsmvzirwv0nanyicxy6a6nayimif9dfvi9m5a7521";
 
@@ -20,15 +20,15 @@
 
 	files = {
 		desktop = {
-			name = "so.libdb.gtkcord4.desktop";
-			path = ./so.libdb.gtkcord4.desktop;
+			name = "so.libdb.dissent.desktop";
+			path = ./so.libdb.dissent.desktop;
 		};
 		service = {
-			name = "so.libdb.gtkcord4.service";
-			path = ./so.libdb.gtkcord4.service;
+			name = "so.libdb.dissent.service";
+			path = ./so.libdb.dissent.service;
 		};
 		logo = {
-			name = "gtkcord4.svg";
+			name = "dissent.svg";
 			path = ../internal/icons/hicolor/scalable/apps/logo.svg;
 		};
 	};

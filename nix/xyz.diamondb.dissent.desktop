@@ -1,9 +1,9 @@
 [Desktop Entry]
-Name=gtkcord4
+Name=Dissent
 GenericName=Discord Chat
 Comment=A Discord client in Go and GTK4
-Exec=gtkcord4
-Icon=gtkcord4
+Exec=dissent
+Icon=dissent
 Terminal=false
 Type=Application
 Categories=GNOME;GTK;Network;Chat;

@@ -9,8 +9,8 @@ import (
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/pkg/errors"
+	"libdb.so/dissent/internal/gtkcord"
 )
 
 // LoginController is the parent controller that Page controls.

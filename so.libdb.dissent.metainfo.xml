@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>so.libdb.gtkcord4</id>
-  <name translatable="no">gtkcord4</name>
-  <summary>GTK4 Discord client in Go</summary>
+  <id>so.libdb.dissent</id>
+  <name>Dissent</name>
+  <summary>GTK4 Discord client in Go (formerly gtkcord4)</summary>
   <developer_name translatable="no">diamondburned</developer_name>
-  <launchable type="desktop-id">so.libdb.gtkcord4.desktop</launchable>
-  <translation type="gettext">gtkcord4</translation>
+  <launchable type="desktop-id">so.libdb.dissent.desktop</launchable>
+  <translation type="gettext">Dissent</translation>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0+</project_license>
 
@@ -17,21 +17,21 @@
 
   <screenshots>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/diamondburned/gtkcord4/main/.github/screenshot6/03.png</image>
+      <image>https://raw.githubusercontent.com/diamondburned/dissent/main/.github/screenshot6/03.png</image>
     </screenshot>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/diamondburned/gtkcord4/main/.github/screenshot6/01.png</image>
+      <image>https://raw.githubusercontent.com/diamondburned/dissent/main/.github/screenshot6/01.png</image>
     </screenshot>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/diamondburned/gtkcord4/main/.github/screenshot6/02.png</image>
+      <image>https://raw.githubusercontent.com/diamondburned/dissent/main/.github/screenshot6/02.png</image>
     </screenshot>
     <screenshot type="default">
-      <image>https://raw.githubusercontent.com/diamondburned/gtkcord4/main/.github/screenshot6/04.png</image>
+      <image>https://raw.githubusercontent.com/diamondburned/dissent/main/.github/screenshot6/04.png</image>
     </screenshot>
   </screenshots>
 
-  <url type="homepage">https://github.com/diamondburned/gtkcord4</url>
-  <url type="bugtracker">https://github.com/diamondburned/gtkcord4/issues</url>
+  <url type="homepage">https://github.com/diamondburned/dissent</url>
+  <url type="bugtracker">https://github.com/diamondburned/dissent/issues</url>
 
   <kudos>
     <kudo>HiDpiIcon</kudo>
@@ -58,49 +58,49 @@
 
   <releases>
     <release version="v0.0.19" date="2024-02-13">
-      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.19</url>
+      <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.19</url>
     </release>
     <release version="v0.0.18" date="2024-02-06">
-      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.18</url>
+      <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.18</url>
     </release>
     <release version="v0.0.17" date="2024-01-06">
-      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.17</url>
+      <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.17</url>
     </release>
     <release version="v0.0.16-1" date="2023-11-25">
-      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.16-1</url>
+      <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.16-1</url>
     </release>
     <release version="v0.0.16" date="2023-11-25">
-      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.16</url>
+      <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.16</url>
     </release>
     <release version="v0.0.15-1" date="2023-10-28">
-      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.15-1</url>
+      <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.15-1</url>
     </release>
     <release version="v0.0.15" date="2023-10-27">
-      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.15</url>
+      <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.15</url>
     </release>
     <release version="v0.0.14" date="2023-10-07">
-      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.14</url>
+      <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.14</url>
     </release>
     <release version="v0.0.13" date="2023-10-04">
-      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.13</url>
+      <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.13</url>
     </release>
     <release version="v0.0.12" date="2023-08-28">
-      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.12</url>
+      <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.12</url>
     </release>
     <release version="v0.0.11" date="2023-05-27">
-      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.11</url>
+      <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.11</url>
     </release>
     <release version="v0.0.10" date="2023-03-08">
-      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.10</url>
+      <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.10</url>
     </release>
     <release version="v0.0.9" date="2023-02-10">
-      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.9</url>
+      <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.9</url>
     </release>
     <release version="v0.0.8" date="2023-02-02">
-      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.8</url>
+      <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.8</url>
     </release>
     <release version="v0.0.7" date="2023-02-01">
-      <url>https://github.com/diamondburned/gtkcord4/releases/tag/v0.0.7</url>
+      <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.7</url>
     </release>
   </releases>
 </component>

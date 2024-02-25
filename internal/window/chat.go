@@ -17,13 +17,13 @@ import (
 	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord"
-	"github.com/diamondburned/gtkcord4/internal/messages"
-	"github.com/diamondburned/gtkcord4/internal/sidebar"
-	"github.com/diamondburned/gtkcord4/internal/window/backbutton"
-	"github.com/diamondburned/gtkcord4/internal/window/quickswitcher"
 	"github.com/diamondburned/ningen/v3/states/read"
 	"libdb.so/ctxt"
+	"libdb.so/dissent/internal/gtkcord"
+	"libdb.so/dissent/internal/messages"
+	"libdb.so/dissent/internal/sidebar"
+	"libdb.so/dissent/internal/window/backbutton"
+	"libdb.so/dissent/internal/window/quickswitcher"
 )
 
 var lastGuildKey = app.NewSingleStateKey[discord.GuildID]("last-guild-state")

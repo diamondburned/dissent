@@ -10,8 +10,8 @@ import (
 	"github.com/diamondburned/arikawa/v3/utils/ws"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotkit/app/notify"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/diamondburned/ningen/v3"
+	"libdb.so/dissent/internal/gtkcord"
 )
 
 type loginWindow struct {

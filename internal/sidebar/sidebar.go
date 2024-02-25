@@ -10,11 +10,11 @@ import (
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord"
-	"github.com/diamondburned/gtkcord4/internal/sidebar/channels"
-	"github.com/diamondburned/gtkcord4/internal/sidebar/direct"
-	"github.com/diamondburned/gtkcord4/internal/sidebar/directbutton"
-	"github.com/diamondburned/gtkcord4/internal/sidebar/guilds"
+	"libdb.so/dissent/internal/gtkcord"
+	"libdb.so/dissent/internal/sidebar/channels"
+	"libdb.so/dissent/internal/sidebar/direct"
+	"libdb.so/dissent/internal/sidebar/directbutton"
+	"libdb.so/dissent/internal/sidebar/guilds"
 )
 
 // Sidebar is the bar on the left side of the application once it's logged in.

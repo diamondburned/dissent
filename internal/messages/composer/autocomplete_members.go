@@ -12,8 +12,8 @@ import (
 	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/components/onlineimage"
 	"github.com/diamondburned/gotkit/gtkutil/imgutil"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/sahilm/fuzzy"
+	"libdb.so/dissent/internal/gtkcord"
 )
 
 const memberCacheExpiry = 2 * time.Second

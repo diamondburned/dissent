@@ -20,9 +20,9 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/imgutil"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/diamondburned/ningen/v3/discordmd"
 	"github.com/dustin/go-humanize"
+	"libdb.so/dissent/internal/gtkcord"
 )
 
 // TODO: allow disable fetching videos.
@@ -250,13 +250,13 @@ func mimeIcon(mimePrefix string) string {
 }
 
 var normalEmbedCSS = cssutil.Applier("message-normalembed", `
-	@define-color gtkcord4_embed_background alpha(@theme_fg_color, 0.05);
+	@define-color dissent_embed_background alpha(@theme_fg_color, 0.05);
 
 	.message-normalembed {
 		border: none;
 		border-radius: 8px;
 		padding: 10px;
-		background-color: @gtkcord4_embed_background;
+		background-color: @dissent_embed_background;
 	}
 	.message-normalembed-body > *:not(:last-child) {
 		margin-bottom: 0.5em;
@@ -283,8 +283,8 @@ const embedColorCSSf = `
 		padding-left: 14px;
 		background: linear-gradient(to right,
 			%s 4px,
-			@gtkcord4_embed_background 0px,
-			@gtkcord4_embed_background 100%%
+			@dissent_embed_background 0px,
+			@dissent_embed_background 100%%
 		);
 	}
 `

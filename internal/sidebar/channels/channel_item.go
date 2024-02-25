@@ -14,11 +14,11 @@ import (
 	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/imgutil"
-	"github.com/diamondburned/gtkcord4/internal/components/hoverpopover"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord"
-	"github.com/diamondburned/gtkcord4/internal/signaling"
 	"github.com/diamondburned/ningen/v3"
 	"github.com/diamondburned/ningen/v3/states/read"
+	"libdb.so/dissent/internal/components/hoverpopover"
+	"libdb.so/dissent/internal/gtkcord"
+	"libdb.so/dissent/internal/signaling"
 )
 
 var revealStateKey = app.NewStateKey[bool]("collapsed-channels-state")

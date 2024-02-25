@@ -29,9 +29,9 @@ import (
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/app/prefs"
 	"github.com/diamondburned/gotkit/gtkutil"
-	"github.com/diamondburned/gtkcord4/internal/colorhash"
 	"github.com/diamondburned/ningen/v3"
 	"github.com/diamondburned/ningen/v3/discordmd"
+	"libdb.so/dissent/internal/colorhash"
 
 	coreglib "github.com/diamondburned/gotk4/pkg/core/glib"
 )
@@ -42,11 +42,11 @@ func init() {
 		hostname = "PC"
 	}
 
-	api.UserAgent = "gtkcord4 (https://github.com/diamondburned/arikawa/v3)"
+	api.UserAgent = "Dissent (https://libdb.so/dissent)"
 	gateway.DefaultIdentity = gateway.IdentifyProperties{
 		OS:      runtime.GOOS,
 		Device:  "Arikawa",
-		Browser: "gtkcord4 on " + hostname,
+		Browser: "Dissent on " + hostname,
 	}
 }
 

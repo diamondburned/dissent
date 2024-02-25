@@ -25,8 +25,8 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/mediautil"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/pkg/errors"
+	"libdb.so/dissent/internal/gtkcord"
 )
 
 var showAllEmojis = prefs.NewBool(true, prefs.PropMeta{

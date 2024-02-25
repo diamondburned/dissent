@@ -14,9 +14,9 @@ import (
 	"github.com/diamondburned/gotkit/components/onlineimage"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/imgutil"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/diamondburned/ningen/v3/states/emoji"
 	"github.com/sahilm/fuzzy"
+	"libdb.so/dissent/internal/gtkcord"
 
 	unicodeemoji "github.com/enescakir/emoji"
 )

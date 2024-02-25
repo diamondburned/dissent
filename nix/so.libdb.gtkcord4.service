@@ -1,3 +1,0 @@
-[D-BUS Service]
-Name=so.libdb.gtkcord4
-Exec=/usr/bin/gtkcord4 --gapplication-service

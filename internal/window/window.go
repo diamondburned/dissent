@@ -12,11 +12,11 @@ import (
 	"github.com/diamondburned/gotkit/app/prefs"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord"
-	"github.com/diamondburned/gtkcord4/internal/window/login"
-	"github.com/diamondburned/gtkcord4/internal/window/quickswitcher"
 	"github.com/pkg/errors"
 	"libdb.so/ctxt"
+	"libdb.so/dissent/internal/gtkcord"
+	"libdb.so/dissent/internal/window/login"
+	"libdb.so/dissent/internal/window/quickswitcher"
 )
 
 var useDiscordColorScheme = prefs.NewBool(true, prefs.PropMeta{

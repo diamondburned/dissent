@@ -14,8 +14,8 @@ import (
 	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/diamondburned/ningen/v3/states/read"
+	"libdb.so/dissent/internal/gtkcord"
 )
 
 // ChannelView displays a list of direct messaging channels.

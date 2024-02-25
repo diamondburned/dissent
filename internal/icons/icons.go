@@ -9,9 +9,9 @@ import (
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 )
 
-//go:generate glib-compile-resources gtkcord4.gresource.xml
+//go:generate glib-compile-resources dissent.gresource.xml
 
-//go:embed gtkcord4.gresource
+//go:embed dissent.gresource
 var Resources []byte
 
 func init() {

@@ -11,9 +11,9 @@ import (
 	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/diamondburned/ningen/v3/states/read"
 	"github.com/pkg/errors"
+	"libdb.so/dissent/internal/gtkcord"
 )
 
 // ViewChild is a child inside the guilds view. It is either a *Guild or a

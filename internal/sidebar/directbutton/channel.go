@@ -7,9 +7,9 @@ import (
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord"
-	"github.com/diamondburned/gtkcord4/internal/sidebar/sidebutton"
 	"github.com/diamondburned/ningen/v3"
+	"libdb.so/dissent/internal/gtkcord"
+	"libdb.so/dissent/internal/sidebar/sidebutton"
 )
 
 type ChannelButton struct {

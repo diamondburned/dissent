@@ -1,4 +1,4 @@
-module github.com/diamondburned/gtkcord4
+module libdb.so/dissent
 
 go 1.21.0
 

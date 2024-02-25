@@ -15,12 +15,12 @@ import (
 	"github.com/diamondburned/gotkit/components/prefui"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord"
-	"github.com/diamondburned/gtkcord4/internal/window"
-	"github.com/diamondburned/gtkcord4/internal/window/about"
+	"libdb.so/dissent/internal/gtkcord"
+	"libdb.so/dissent/internal/window"
+	"libdb.so/dissent/internal/window/about"
 
 	_ "github.com/diamondburned/gotkit/gtkutil/aggressivegc"
-	_ "github.com/diamondburned/gtkcord4/internal/icons"
+	_ "libdb.so/dissent/internal/icons"
 )
 
 //go:embed po/*
@@ -52,7 +52,7 @@ var _ = cssutil.WriteCSS(`
 
 func main() {
 	m := manager{}
-	m.app = app.New(context.Background(), "so.libdb.gtkcord4", "gtkcord4")
+	m.app = app.New(context.Background(), "so.libdb.dissent", "Dissent")
 	m.app.AddJSONActions(map[string]interface{}{
 		"app.preferences": func() { prefui.ShowDialog(m.win.Context()) },
 		"app.about":       func() { about.New(m.win.Context()).Present() },

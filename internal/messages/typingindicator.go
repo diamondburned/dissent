@@ -13,7 +13,7 @@ import (
 	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord"
+	"libdb.so/dissent/internal/gtkcord"
 )
 
 const typerTimeout = 10 * time.Second

@@ -1,13 +1,12 @@
 [Desktop Entry]
-# Translators: Application name. Keep this string as "gtkcord4"
-Name=gtkcord4
+Name=Dissent
 Version=1.0
 Type=Application
 Terminal=false
 GenericName=Discord chat client
 Comment=A Discord client in Go and GTK4
-Exec=gtkcord4
-Icon=gtkcord4
+Exec=dissent
+Icon=dissent
 Categories=GNOME;GTK;Network;Chat;InstantMessaging;
 # Translators: Search terms to find this application. Do NOT translate or localize the semicolons! The list MUST also end with a semicolon!
 Keywords=Discord;chat;irc;communications;talk;

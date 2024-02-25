@@ -11,8 +11,8 @@ import (
 	"github.com/diamondburned/gotkit/components/onlineimage"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/imgutil"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/diamondburned/ningen/v3"
+	"libdb.so/dissent/internal/gtkcord"
 )
 
 // Channel is an individual direct messaging channel.

@@ -18,16 +18,16 @@ func New(ctx context.Context) *adw.AboutWindow {
 	about := adw.NewAboutWindow()
 	about.SetTransientFor(app.GTKWindowFromContext(ctx))
 	about.SetModal(true)
-	about.SetApplicationName("gtkcord4")
+	about.SetApplicationName("Dissent")
 	about.SetApplicationIcon("logo")
 	about.SetVersion("git") // TODO: version
-	about.SetWebsite("https://libdb.so/gtkcord4")
+	about.SetWebsite("https://libdb.so/dissent")
 	about.SetCopyright("© 2023 diamondburned and contributors")
 	about.SetLicenseType(gtk.LicenseGPL30)
 
 	about.SetDevelopers([]string{
 		"diamondburned",
-		"gtkcord4 contributors",
+		"Dissent contributors",
 	})
 
 	about.AddCreditSection("Sound Files", []string{
@@ -39,7 +39,7 @@ func New(ctx context.Context) *adw.AboutWindow {
 	if ok {
 		about.AddCreditSection("Dependency Authors", modAuthors(build.Deps))
 		about.SetDebugInfo(debugInfo(build))
-		about.SetDebugInfoFilename("gtkcord4-debuginfo")
+		about.SetDebugInfoFilename("dissent-debuginfo")
 
 		version := buildVersion(build.Settings)
 		about.SetVersion(version)

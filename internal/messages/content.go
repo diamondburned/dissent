@@ -21,9 +21,9 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/imgutil"
 	"github.com/diamondburned/gotkit/gtkutil/textutil"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord"
 	"github.com/diamondburned/ningen/v3/discordmd"
 	"github.com/yuin/goldmark/ast"
+	"libdb.so/dissent/internal/gtkcord"
 )
 
 // Content is the message content widget.
@@ -317,7 +317,7 @@ func (c *Content) newReplyBox(m *discord.Message) gtk.Widgetter {
 		// Force single line.
 		preview = strings.ReplaceAll(preview, "\n", "  ")
 		markup := fmt.Sprintf(
-			`<a href="gtkcord4://reply">%s</a>`,
+			`<a href="dissent://reply">%s</a>`,
 			html.EscapeString(preview),
 		)
 
@@ -335,7 +335,7 @@ func (c *Content) newReplyBox(m *discord.Message) gtk.Widgetter {
 				"message_id", m.ID,
 				"reference_id", referencedMsg.ID)
 
-			if link != "gtkcord4://reply" {
+			if link != "dissent://reply" {
 				return false
 			}
 

@@ -24,10 +24,10 @@ import (
 	"github.com/diamondburned/gotkit/components/autoscroll"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
-	"github.com/diamondburned/gtkcord4/internal/components/hoverpopover"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord"
-	"github.com/diamondburned/gtkcord4/internal/messages/composer"
 	"github.com/pkg/errors"
+	"libdb.so/dissent/internal/components/hoverpopover"
+	"libdb.so/dissent/internal/gtkcord"
+	"libdb.so/dissent/internal/messages/composer"
 )
 
 type messageRow struct {

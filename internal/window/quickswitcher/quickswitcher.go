@@ -11,7 +11,7 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/textutil"
-	"github.com/diamondburned/gtkcord4/internal/gtkcord"
+	"libdb.so/dissent/internal/gtkcord"
 )
 
 // QuickSwitcher is a search box capable of looking up guilds and channels for

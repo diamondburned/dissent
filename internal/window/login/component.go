@@ -12,8 +12,8 @@ import (
 	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
-	"github.com/diamondburned/gtkcord4/internal/window/login/loading"
 	"github.com/pkg/errors"
+	"libdb.so/dissent/internal/window/login/loading"
 )
 
 // LoginComponent is the main component in the login page.
