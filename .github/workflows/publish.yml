@@ -208,7 +208,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: gtkcord4-${{ steps.build.outputs.name }}
+          name: dissent-${{ steps.build.outputs.name }}
           path: ${{ steps.build.outputs.directory }}
 
   build:
@@ -311,7 +311,7 @@ jobs:
       - name: Initialize environment
         id: init
         run: |
-          echo "name=gtkcord4-windows-amd64-$VERSION" >> $GITHUB_OUTPUT
+          echo "name=dissent-windows-amd64-$VERSION" >> $GITHUB_OUTPUT
         env:
           VERSION: ${{ needs.build-init.outputs.version }}
 
@@ -325,8 +325,8 @@ jobs:
           mkdir result
           out=$(realpath result)
 
-          # Build gtkcord4
-          go build -o $out/gtkcord4.exe
+          # Build Dissent
+          go build -o $out/dissent.exe
 
           # copyDLLs copies all required DLLs of the given binaries to the
           # result directory.
@@ -338,7 +338,7 @@ jobs:
           }
 
           # Copy all of the binary's dependencies to the result directory.
-          copyDLLs $out/gtkcord4.exe
+          copyDLLs $out/dissent.exe
 
           # countDLLs returns the number of DLLs in the result directory.
           # We use this to recursively copy dependencies until no new DLLs are
@@ -446,7 +446,7 @@ jobs:
           version() { jq -r ".$1" <<< "$versionJSON"; }
 
           body=$(cat<<EOF
-          This is a nightly release of gtkcord4. It is built from the latest
+          This is a nightly release of Dissent. It is built from the latest
           commit on the `main` branch.
 
           **Warning:** This release is not guaranteed to be stable. It may
@@ -455,7 +455,7 @@ jobs:
 
           ### Version Information
 
-          - gtkcord4: $(version gtkcord4)
+          - Dissent: $(version dissent)
           - Go: $(version go)
           - GTK: $(version gtk4)
           - Libadwaita: $(version libadwaita1)
