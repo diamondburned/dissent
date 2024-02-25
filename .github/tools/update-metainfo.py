@@ -11,8 +11,8 @@ from datetime import datetime
 
 logging.basicConfig(level=logging.INFO)
 
-METAINFO_PATH = "../../so.libdb.gtkcord4.metainfo.xml"
-REPOSITORY_URL = "https://github.com/diamondburned/gtkcord4"
+METAINFO_PATH = "../../so.libdb.dissent.metainfo.xml"
+REPOSITORY_URL = "https://github.com/diamondburned/dissent"
 
 arg_list = sys.argv[1:]
 rel_version = arg_list[0]

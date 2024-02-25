@@ -2,14 +2,14 @@
 
 main() {
 	jq --null-input "$@" \
-		--arg gtkcord4    "$(v_gtkcord4)" \
+		--arg dissent    "$(v_dissent)" \
 		--arg go          "$(v_go)" \
 		--arg gtk4        "$(v_pkgconfig gtk4 4.x)" \
 		--arg libadwaita1 "$(v_pkgconfig libadwaita-1 1.x)" \
-        '{ $gtkcord4, $go, $gtk4, $libadwaita1 }'
+        '{ $dissent, $go, $gtk4, $libadwaita1 }'
 }
 
-v_gtkcord4() {
+v_dissent() {
 	git-version
 }
 
