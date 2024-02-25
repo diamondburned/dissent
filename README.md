@@ -1,8 +1,8 @@
 <div align="center">
 
-![Logo](./internal/icons/hicolor/scalable/apps/logo.svg)
+![Dissent logo](./internal/icons/hicolor/scalable/apps/so.libdb.Dissent.svg)
 
-<h1>Dissent <small>formerly gtkcord4</small></h1>
+<h1>Dissent (formerly gtkcord4)</h1>
 
 <br>
 
