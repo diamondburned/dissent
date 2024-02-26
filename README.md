@@ -2,7 +2,7 @@
 
 ![Dissent logo](./internal/icons/hicolor/scalable/apps/so.libdb.Dissent.svg)
 
-<h1>Dissent (formerly gtkcord4)</h1>
+<h1>Dissent</h1>
 
 <br>
 
@@ -10,10 +10,12 @@
 [![Packaging status](https://img.shields.io/repology/repositories/dissent?label=in%20repositories)](https://repology.org/project/dissent/versions)
 ![GitHub download count](https://img.shields.io/github/downloads/diamondburned/dissent/total?label=GitHub%20Downloads&logo=github)
 ![Flathub download count](https://img.shields.io/flathub/downloads/so.libdb.dissent?logo=flatpak&logoColor=orange&label=Flatpak%20Installs&color=orange)
-![SourceForge download count](https://img.shields.io/sourceforge/dt/dissent.mirror?label=SourceForge%20Downloads&logo=sourceforge&color=orange)
+![SourceForge download count](https://img.shields.io/sourceforge/dt/gtkcord4.mirror?label=SourceForge%20Downloads&logo=sourceforge&color=orange)
 [![Nightly release status](https://img.shields.io/github/deployments/diamondburned/dissent/Nightly%20release?logo=github&label=Nightly%20Build)](https://github.com/diamondburned/dissent/deployments/Nightly%20release)
 [![Stable release status](https://img.shields.io/github/deployments/diamondburned/dissent/Stable%20release?logo=github&label=Stable%20Build)](https://github.com/diamondburned/dissent/deployments/Stable%20release)
 ![Latest release](https://img.shields.io/github/v/tag/diamondburned/dissent?filter=!nightly&label=Latest%20Release&color=blue)
+
+<p><sub>(formerly gtkcord4)</sub></p>
 
 <img src="./.github/screenshots/03.png" alt="Screenshot 3" width="800">
 
@@ -64,7 +66,7 @@ You need Go 1.18+ for this step.
 To compile from scratch, run
 
 ```sh
-go install -v github.com/diamondburned/dissent@latest
+go install -v libdb.so/dissent@latest
 ```
 
 ## Logging In
