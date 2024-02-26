@@ -19,6 +19,8 @@ import (
 // LoginComponent is the main component in the login page.
 type Component struct {
 	*gtk.Box
+	Inner *gtk.Box
+
 	Loading  *loading.PulsatingBar
 	Methods  *Methods
 	Bottom   *gtk.Box
@@ -32,19 +34,26 @@ type Component struct {
 
 var componentCSS = cssutil.Applier("login-component", `
 	.login-component {
-		background: @theme_base_color;
+		background: mix(@theme_bg_color, @theme_fg_color, 0.05);
+		border-radius: 12px;
 		min-width: 250px;
 		margin:  12px;
 		padding: 0;
 	}
 	.login-component > *:not(.osd) {
-		margin: 0 12px;
+		margin: 0 8px;
 	}
 	.login-component > *:nth-child(2) {
 		margin-top: 6px;
 	}
+	.login-component > *:first-child {
+		margin-top: 8px;
+	}
+	.login-component > *:not(:first-child) {
+		margin-bottom: 4px;
+	}
 	.login-component > *:last-child {
-		margin-bottom: 12px;
+		margin-bottom: 8px;
 	}
 	.login-component > notebook {
 		background: none;
@@ -114,16 +123,20 @@ func NewComponent(ctx context.Context, p *Page) *Component {
 		}
 	})
 
+	c.Inner = gtk.NewBox(gtk.OrientationVertical, 0)
+	c.Inner.Append(loginWith)
+	c.Inner.Append(c.Methods)
+	c.Inner.Append(c.Remember)
+	c.Inner.Append(c.ErrorRev)
+	c.Inner.Append(buttonBox)
+	componentCSS(c.Inner)
+
 	c.Box = gtk.NewBox(gtk.OrientationVertical, 0)
+	c.Box.AddCSSClass("login-component-outer")
 	c.Box.SetHAlign(gtk.AlignCenter)
 	c.Box.SetVAlign(gtk.AlignCenter)
 	c.Box.Append(c.Loading)
-	c.Box.Append(loginWith)
-	c.Box.Append(c.Methods)
-	c.Box.Append(c.Remember)
-	c.Box.Append(c.ErrorRev)
-	c.Box.Append(buttonBox)
-	componentCSS(c)
+	c.Box.Append(c.Inner)
 
 	return &c
 }
@@ -231,17 +244,22 @@ type Methods struct {
 }
 
 var methodsCSS = cssutil.Applier("login-methods", `
+	.login-methods > * {
+		margin: 0;
+	}
 	.login-methods > header > tabs > tab {
 		min-width: 0;
 		padding-left:  8px;
 		padding-right: 8px;
 	}
 	.login-methods > stack {
-		padding: 0 8px;
-		padding-bottom: 8px;
+		padding: 0 4px;
 	}
 	.login-methods .login-formentry {
 		margin-top: 8px;
+	}
+	.login-methods header tab:checked {
+		background-color: @accent_color;
 	}
 	.login-form-2fa {
 		margin-left: 6px;
@@ -335,7 +353,7 @@ func NewFormEntry(label string) *FormEntry {
 
 	e.Entry = gtk.NewEntry()
 	e.Entry.SetVExpand(true)
-	e.Entry.SetHasFrame(false)
+	e.Entry.SetHasFrame(true)
 
 	e.Box = gtk.NewBox(gtk.OrientationVertical, 0)
 	e.Box.Append(e.Label)

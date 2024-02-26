@@ -29,6 +29,13 @@ type PulsatingBar struct {
 const pulsateRate = 1000 / 30 // 30Hz update
 
 var pulsatingBarCSS = cssutil.Applier("loading-pulsatingbar", `
+	.loading-pulsatingbar {
+		opacity: 0;
+		transition: all 0.15s ease-in-out;
+	}
+	.loading-pulsatingbar.loading {
+		opacity: 1;
+	}
 	.loading-pulsatingbar,
 	.loading-pulsatingbar progerssbar trough {
 		min-height: 4px;
@@ -80,8 +87,10 @@ func NewPulsatingBar(flags PulsatingFlags) *PulsatingBar {
 
 func (p *PulsatingBar) Show() {
 	p.Bar.Show()
+	p.AddCSSClass("loading")
 }
 
 func (p *PulsatingBar) Hide() {
 	p.Bar.Hide()
+	p.RemoveCSSClass("loading")
 }

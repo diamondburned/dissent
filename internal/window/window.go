@@ -95,6 +95,7 @@ func NewWindow(ctx context.Context) *Window {
 	w.Stack.SetVisibleChild(w.Login)
 	win.SetContent(w.Stack)
 
+	w.SwitchToLoginPage()
 	return &w
 }
 
