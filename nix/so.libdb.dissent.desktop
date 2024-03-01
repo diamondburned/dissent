@@ -6,7 +6,7 @@ Terminal=false
 GenericName=Discord chat client
 Comment=A Discord client in Go and GTK4
 Exec=dissent
-Icon=dissent
+Icon=so.libdb.Dissent
 Categories=GNOME;GTK;Network;Chat;InstantMessaging;
 # Translators: Search terms to find this application. Do NOT translate or localize the semicolons! The list MUST also end with a semicolon!
 Keywords=Discord;chat;irc;communications;talk;
