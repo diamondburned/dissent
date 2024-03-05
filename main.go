@@ -52,7 +52,7 @@ var _ = cssutil.WriteCSS(`
 
 func main() {
 	m := manager{}
-	m.app = app.New(context.Background(), "so.libdb.dissent", "Dissent")
+	m.app = app.New(context.Background(), "so.libdb.Dissent", "Dissent")
 	m.app.AddJSONActions(map[string]interface{}{
 		"app.preferences": func() { prefui.ShowDialog(m.win.Context()) },
 		"app.about":       func() { about.New(m.win.Context()).Present() },

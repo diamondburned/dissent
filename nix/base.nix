@@ -20,12 +20,12 @@
 
 	files = {
 		desktop = {
-			name = "so.libdb.dissent.desktop";
-			path = ./so.libdb.dissent.desktop;
+			name = "so.libdb.Dissent.desktop";
+			path = ./so.libdb.Dissent.desktop;
 		};
 		service = {
-			name = "so.libdb.dissent.service";
-			path = ./so.libdb.dissent.service;
+			name = "so.libdb.Dissent.service";
+			path = ./so.libdb.Dissent.service;
 		};
 		logo = {
 			name = "dissent.svg";
