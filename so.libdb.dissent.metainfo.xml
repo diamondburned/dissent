@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>so.libdb.Dissent</id>
+  <id>so.libdb.dissent</id>
   <name>Dissent</name>
   <summary>GTK4 Discord client in Go (formerly gtkcord4)</summary>
   <developer_name translatable="no">diamondburned</developer_name>
-  <launchable type="desktop-id">so.libdb.Dissent.desktop</launchable>
+  <launchable type="desktop-id">so.libdb.dissent.desktop</launchable>
   <translation type="gettext">Dissent</translation>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0+</project_license>

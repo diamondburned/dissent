@@ -1,6 +1,6 @@
 <div align="center">
 
-![Dissent logo](./internal/icons/hicolor/scalable/apps/so.libdb.Dissent.svg)
+![Dissent logo](./internal/icons/hicolor/scalable/apps/so.libdb.dissent.svg)
 
 <h1>Dissent</h1>
 
@@ -9,7 +9,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/diamondburned/dissent)](https://goreportcard.com/report/github.com/diamondburned/dissent)
 [![Packaging status](https://img.shields.io/repology/repositories/dissent?label=in%20repositories)](https://repology.org/project/dissent/versions)
 ![GitHub download count](https://img.shields.io/github/downloads/diamondburned/dissent/total?label=GitHub%20Downloads&logo=github)
-![Flathub download count](https://img.shields.io/flathub/downloads/so.libdb.Dissent?logo=flatpak&logoColor=orange&label=Flatpak%20Installs&color=orange)
+![Flathub download count](https://img.shields.io/flathub/downloads/so.libdb.dissent?logo=flatpak&logoColor=orange&label=Flatpak%20Installs&color=orange)
 ![SourceForge download count](https://img.shields.io/sourceforge/dt/gtkcord4.mirror?label=SourceForge%20Downloads&logo=sourceforge&color=orange)
 [![Nightly release status](https://img.shields.io/github/deployments/diamondburned/dissent/Nightly%20release?logo=github&label=Nightly%20Build)](https://github.com/diamondburned/dissent/deployments/Nightly%20release)
 [![Stable release status](https://img.shields.io/github/deployments/diamondburned/dissent/Stable%20release?logo=github&label=Stable%20Build)](https://github.com/diamondburned/dissent/deployments/Stable%20release)
@@ -53,9 +53,9 @@ Dissent is available in the following distributions:
 
 Dissent is available on Flathub:
 
-[![Flathub Version](https://img.shields.io/flathub/v/so.libdb.Dissent?logo=flatpak&logoColor=orange&label=Flathub)](https://flathub.org/apps/details/so.libdb.Dissent)
+[![Flathub Version](https://img.shields.io/flathub/v/so.libdb.dissent?logo=flatpak&logoColor=orange&label=Flathub)](https://flathub.org/apps/details/so.libdb.dissent)
 
-<a href="https://flathub.org/apps/details/so.libdb.Dissent">
+<a href="https://flathub.org/apps/details/so.libdb.dissent">
     <img src="https://flathub.org/assets/badges/flathub-badge-en.svg" alt="Download on Flathub" width="180">
 </a>
 

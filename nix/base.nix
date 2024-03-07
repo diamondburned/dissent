@@ -20,16 +20,16 @@
 
 	files = {
 		desktop = {
-			name = "so.libdb.Dissent.desktop";
-			path = ./so.libdb.Dissent.desktop;
+			name = "so.libdb.dissent.desktop";
+			path = ./so.libdb.dissent.desktop;
 		};
 		service = {
-			name = "so.libdb.Dissent.service";
-			path = ./so.libdb.Dissent.service;
+			name = "so.libdb.dissent.service";
+			path = ./so.libdb.dissent.service;
 		};
 		logo = {
 			name = "dissent.svg";
-			path = ../internal/icons/hicolor/scalable/apps/so.libdb.Dissent.svg;
+			path = ../internal/icons/hicolor/scalable/apps/so.libdb.dissent.svg;
 		};
 	};
 }
