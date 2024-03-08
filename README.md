@@ -1,6 +1,6 @@
 <div align="center">
 
-![Dissent logo](./internal/icons/hicolor/scalable/apps/so.libdb.Dissent.svg)
+![Dissent logo](./internal/icons/hicolor/scalable/apps/so.libdb.dissent.svg)
 
 <h1>Dissent</h1>
 

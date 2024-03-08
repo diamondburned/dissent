@@ -29,7 +29,7 @@
 		};
 		logo = {
 			name = "dissent.svg";
-			path = ../internal/icons/hicolor/scalable/apps/so.libdb.Dissent.svg;
+			path = ../internal/icons/hicolor/scalable/apps/so.libdb.dissent.svg;
 		};
 	};
 }
