@@ -132,6 +132,8 @@ func (t *TypingIndicator) AddTyperMember(userID discord.UserID, when discord.Uni
 		markup = t.state.UserIDMarkup(t.chID, userID, mods...)
 	}
 
+	markup = "<b>" + markup + "</b>"
+
 	t.typers = append(t.typers, typingTyper{
 		UserMarkup: markup,
 		UserID:     userID,
