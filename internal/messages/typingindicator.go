@@ -80,7 +80,8 @@ func NewTypingIndicator(ctx context.Context, chID discord.ChannelID) *TypingIndi
 	t.child.Box.Append(t.child.Dots)
 	t.child.Box.Append(t.child.Label)
 
-	t.SetTransitionType(gtk.RevealerTransitionTypeSlideUp)
+	t.SetTransitionType(gtk.RevealerTransitionTypeCrossfade)
+	t.SetCanTarget(false)
 	t.SetOverflow(gtk.OverflowHidden)
 	t.SetChild(t.child.Box)
 	typingIndicatorCSS(t)
