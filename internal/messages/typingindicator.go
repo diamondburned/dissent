@@ -90,7 +90,7 @@ func NewTypingIndicator(ctx context.Context, chID discord.ChannelID) *TypingIndi
 			if ev.ChannelID != chID {
 				return
 			}
-			t.AddTyper(ev.UserID, ev.Timestamp)
+			t.AddTyperMember(ev.UserID, ev.Timestamp, ev.Member)
 		},
 		func(ev *gateway.MessageCreateEvent) {
 			if ev.ChannelID != chID {

@@ -336,13 +336,13 @@ func (s *State) UserMarkup(gID discord.GuildID, u *discord.User, mods ...author.
 func (s *State) UserIDMarkup(chID discord.ChannelID, uID discord.UserID, mods ...author.MarkupMod) string {
 	chs, err := s.Cabinet.Channel(chID)
 	if err != nil {
-		return uID.Mention()
+		return html.EscapeString(uID.Mention())
 	}
 
 	if chs.GuildID.IsValid() {
 		member, err := s.Cabinet.Member(chs.GuildID, uID)
 		if err != nil {
-			return uID.Mention()
+			return html.EscapeString(uID.Mention())
 		}
 
 		return s.MemberMarkup(chs.GuildID, &discord.GuildUser{
@@ -357,7 +357,7 @@ func (s *State) UserIDMarkup(chID discord.ChannelID, uID discord.UserID, mods ..
 		}
 	}
 
-	return uID.Mention()
+	return html.EscapeString(uID.Mention())
 }
 
 var overrideMemberColors = prefs.NewBool(false, prefs.PropMeta{
