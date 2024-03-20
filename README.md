@@ -28,6 +28,18 @@
 
 </div>
 
+Dissent is a third-party Discord client designed for a smooth, native
+experience on Linux desktops. Built with the GTK4 toolkit for a modern look and
+feel, it delivers your favorite Discord app in a lightweight and visually
+appealing package.
+
+> [!NOTE]
+> Using an unofficial client at all is against Discord's Terms of Service and
+> may cause your account to be banned! While Dissent tries its best to not use
+> the REST API at all unless necessary to reduce the risk of abuse, it is still
+> possible that Discord may ban your account for using it. **Please use at your
+> own risk!**
+
 ## Installation
 
 ### Dependencies
@@ -37,7 +49,12 @@ headers are also required.
 
 ### Pre-built Binary
 
-Dissent's CI automatically builds each release for Linux x86_64 and aarch64.
+Dissent's CI automatically builds each release for the following platforms:
+
+- Linux x86_64
+- Linux aarch64
+- Windows x86_64
+
 See the [Releases](https://github.com/diamondburned/dissent/releases) page for
 the binaries.
 
@@ -85,8 +102,3 @@ To log into Dissent, you need to get your user token:
 > Logging in using username/email and password is strongly discouraged. This
 > method is untested and may cause your account to be banned! Prefer using the
 > token method above.
-
-> [!NOTE]
-> Using an unofficial client at all is against Discord's Terms of Service and
-> may cause your account to be banned! Use at your own risk!
-
