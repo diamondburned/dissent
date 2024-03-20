@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <component type="desktop-application">
   <id>so.libdb.dissent</id>
   <name>Dissent</name>
@@ -60,6 +60,9 @@
   </content_rating>
 
   <releases>
+    <release version="v0.0.22" date="2024-03-20">
+      <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.22</url>
+    </release>
     <release version="v0.0.19" date="2024-02-13">
       <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.19</url>
     </release>
