@@ -2,7 +2,7 @@
 <component type="desktop-application">
   <id>so.libdb.dissent</id>
   <name>Dissent</name>
-  <summary>GTK4 Discord client in Go (formerly gtkcord4)</summary>
+  <summary>Lightweight and modern Discord client</summary>
   <developer_name translatable="no">diamondburned</developer_name>
   <launchable type="desktop-id">so.libdb.dissent.desktop</launchable>
   <translation type="gettext">Dissent</translation>
@@ -11,7 +11,10 @@
 
   <description>
     <p>
-      GTK4 Discord client in Go
+      Dissent (formerly gtkcord4) is a third-party Discord client designed for
+      a smooth, native experience on Linux desktops. Built with the GTK4
+      toolkit for a modern look and feel, it delivers your favorite Discord
+      app in a lightweight and visually appealing package.
     </p>
   </description>
 
