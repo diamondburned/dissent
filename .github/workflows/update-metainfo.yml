@@ -18,4 +18,5 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: Update metainfo.xml"
+          branch: ${{ github.event.repository.default_branch }}
           file_pattern: so.libdb.dissent.metainfo.xml
