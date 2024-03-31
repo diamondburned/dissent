@@ -15,11 +15,14 @@
 [![Stable release status](https://img.shields.io/github/deployments/diamondburned/dissent/Stable%20release?logo=github&label=Stable%20Build)](https://github.com/diamondburned/dissent/deployments/Stable%20release)
 ![Latest release](https://img.shields.io/github/v/tag/diamondburned/dissent?filter=!nightly&label=Latest%20Release&color=blue)
 
+<br>
+
 <p>
   Dissent (formerly gtkcord4) is a third-party Discord client designed for a
-  smooth, native experience on Linux desktops. Built with the GTK4 toolkit for a
-  modern look and feel, it delivers your favorite Discord app in a lightweight
-  and visually appealing package.
+  smooth, native experience on Linux desktops.
+
+  Built with the GTK4 toolkit for a modern look and feel, it delivers your
+  favorite Discord app in a lightweight and visually appealing package.
 </p>
 
 <div align="center">
