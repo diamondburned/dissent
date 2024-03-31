@@ -37,29 +37,17 @@ jobs:
           # latest commit from.
           ref: ${{ github.ref_name }}
 
-      - name: Install Nix shell
-        uses: ./.github/actions/init-nix
-        with:
-          shell-file: shell.nix
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Tidy up Go modules
-        run: go mod tidy
+        run: nix develop -c go mod tidy
 
       - name: Update gomod2nix.toml
-        run: gomod2nix --outdir nix
-
-      - name: Prepare commit
-        id: prepare
-        run: |
-          if git diff --exit-code nix/gomod2nix.toml go.mod go.sum; then
-            echo "changed=0" >> $GITHUB_OUTPUT
-          else
-            echo "changed=1" >> $GITHUB_OUTPUT
-          fi
+        run: nix develop -c gomod2nix --outdir nix
 
       - name: Commit changes
-        if: steps.prepare.outputs.changed == 1
-        uses: stefanzweifel/git-auto-commit-action@v4
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: Tidy up Go modules
           file_pattern: nix/gomod2nix.toml go.mod go.sum
