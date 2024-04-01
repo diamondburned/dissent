@@ -11,11 +11,33 @@
 
   <description>
     <p>
-      Dissent (formerly gtkcord4) is a third-party Discord client designed for
-      a smooth, native experience on Linux desktops.
-
-      Built with the GTK4 toolkit for a modern look and feel, it delivers your
-      favorite Discord app in a lightweight and visually appealing package.
+      Dissent (previously gtkcord4) is a third-party Discord client designed
+      for a smooth, native experience on Linux desktops.
+    </p>
+    <p>
+      Built with the GTK4 and libadwaita for a modern look and feel, it
+      delivers your favorite Discord app in a lightweight and visually
+      appealing package.
+    </p>
+    <p>
+      Dissent offers a streamlined Discord experience, prioritizing simplicity
+      and speed over feature completeness on par with the official client.
+      Here's what you can expect:
+    </p>
+    <ul>
+      <li>Text chat with complete Markdown and custom emoji support</li>
+      <li>Guild folders and channel categories</li>
+      <li>Tabbed chat interface</li>
+      <li>Quick switcher for channels and servers</li>
+      <li>Image and file uploads, previews, and downloads</li>
+      <li>User theming via custom CSS</li>
+      <li>Partial thread/forum support</li>
+      <li>Partial message reaction support</li>
+      <li>Partial AI summary support (provided by Discord)</li>
+    </ul>
+    <p>
+      It does not aim to support voice chat and other advanced features, as
+      these are best handled by the official client or the web app.
     </p>
   </description>
 

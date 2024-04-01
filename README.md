@@ -3,29 +3,7 @@
 ![Dissent logo](./internal/icons/hicolor/scalable/apps/so.libdb.dissent.svg)
 
 <h1>Dissent</h1>
-
-</div>
-
-[![Go Report Card](https://goreportcard.com/badge/github.com/diamondburned/dissent)](https://goreportcard.com/report/github.com/diamondburned/dissent)
-[![Packaging status](https://img.shields.io/repology/repositories/dissent?label=in%20repositories)](https://repology.org/project/dissent/versions)
-![GitHub download count](https://img.shields.io/github/downloads/diamondburned/dissent/total?label=GitHub%20Downloads&logo=github)
-![Flathub download count](https://img.shields.io/flathub/downloads/so.libdb.dissent?logo=flatpak&logoColor=orange&label=Flatpak%20Installs&color=orange)
-![SourceForge download count](https://img.shields.io/sourceforge/dt/gtkcord4.mirror?label=SourceForge%20Downloads&logo=sourceforge&color=orange)
-[![Nightly release status](https://img.shields.io/github/deployments/diamondburned/dissent/Nightly%20release?logo=github&label=Nightly%20Build)](https://github.com/diamondburned/dissent/deployments/Nightly%20release)
-[![Stable release status](https://img.shields.io/github/deployments/diamondburned/dissent/Stable%20release?logo=github&label=Stable%20Build)](https://github.com/diamondburned/dissent/deployments/Stable%20release)
-![Latest release](https://img.shields.io/github/v/tag/diamondburned/dissent?filter=!nightly&label=Latest%20Release&color=blue)
-
-<br>
-
-<p>
-  Dissent (formerly gtkcord4) is a third-party Discord client designed for a
-  smooth, native experience on Linux desktops.
-
-  Built with the GTK4 toolkit for a modern look and feel, it delivers your
-  favorite Discord app in a lightweight and visually appealing package.
-</p>
-
-<div align="center">
+<p><b>Tiny Discord app</b></p>
 
 <img src="./.github/screenshots/03.png" alt="Screenshot 3" width="800">
 
@@ -38,14 +16,52 @@
 
 </div>
 
+<br>
+<hr>
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/diamondburned/dissent)](https://goreportcard.com/report/github.com/diamondburned/dissent)
+[![Packaging status](https://img.shields.io/repology/repositories/dissent?label=in%20repositories)](https://repology.org/project/dissent/versions)
+![GitHub download count](https://img.shields.io/github/downloads/diamondburned/dissent/total?label=GitHub%20Downloads&logo=github)
+![Flathub download count](https://img.shields.io/flathub/downloads/so.libdb.dissent?logo=flatpak&logoColor=orange&label=Flatpak%20Installs&color=orange)
+![SourceForge download count](https://img.shields.io/sourceforge/dt/gtkcord4.mirror?label=SourceForge%20Downloads&logo=sourceforge&color=orange)
+[![Nightly release status](https://img.shields.io/github/deployments/diamondburned/dissent/Nightly%20release?logo=github&label=Nightly%20Build)](https://github.com/diamondburned/dissent/deployments/Nightly%20release)
+[![Stable release status](https://img.shields.io/github/deployments/diamondburned/dissent/Stable%20release?logo=github&label=Stable%20Build)](https://github.com/diamondburned/dissent/deployments/Stable%20release)
+![Latest release](https://img.shields.io/github/v/tag/diamondburned/dissent?filter=!nightly&label=Latest%20Release&color=blue)
+
+
+Dissent (previously gtkcord4) is a third-party Discord client designed for a
+smooth, native experience on Linux desktops.
+
+Built with the GTK4 and libadwaita for a modern look and feel, it delivers your
+favorite Discord app in a lightweight and visually appealing package.
+
+### Features
+
+Dissent offers a streamlined Discord experience, prioritizing simplicity and
+speed over feature completeness on par with the official client. Here's what
+you can expect:
+
+- Text chat with complete Markdown and custom emoji support
+- Guild folders and channel categories
+- Tabbed chat interface
+- Quick switcher for channels and servers
+- Image and file uploads, previews, and downloads
+- User theming via custom CSS
+- Partial thread/forum support
+- Partial message reaction support
+- Partial AI summary support (provided by Discord)
+
+It does not aim to support voice chat and other advanced features, as these are
+best handled by the official client or the web app.
+
+## Installation
+
 > [!NOTE]
 > Using an unofficial client at all is against Discord's Terms of Service and
 > may cause your account to be banned! While Dissent tries its best to not use
 > the REST API at all unless necessary to reduce the risk of abuse, it is still
 > possible that Discord may ban your account for using it. **Please use at your
 > own risk!**
-
-## Installation
 
 ### Dependencies
 
