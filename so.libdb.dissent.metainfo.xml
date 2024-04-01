@@ -82,6 +82,11 @@
     <content_attribute id="money-purchasing">intense</content_attribute>
   </content_rating>
 
+  <branding>
+    <color type="primary" scheme_preference="light">#bcc3f8</color>
+    <color type="primary" scheme_preference="dark">#263396</color>
+  </branding>
+
   <releases>
     <release version="v0.0.22" date="2024-03-20">
       <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.22</url>
