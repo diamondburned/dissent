@@ -10,6 +10,7 @@ import (
 )
 
 //go:generate glib-compile-resources dissent.gresource.xml
+//go:generate ./windows/generate-icon.sh
 
 //go:embed dissent.gresource
 var Resources []byte
