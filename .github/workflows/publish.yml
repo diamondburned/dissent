@@ -199,7 +199,7 @@ jobs:
 
   upload-release:
     name: Upload artifacts to release
-    needs: [build, build-source, build-windows]
+    needs: [build-source, build-linux, build-windows]
     environment: Stable release
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
@@ -224,7 +224,7 @@ jobs:
 
   nightly-release:
     name: Update nightly release
-    needs: [build, build-source, build-windows]
+    needs: [build-source, build-linux, build-windows]
     environment: Nightly release
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
