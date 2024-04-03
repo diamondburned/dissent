@@ -10,7 +10,7 @@
 		};
 
 		gotk4-nix = {
-			url = "git+file:///home/diamond/Scripts/gotk4/gotk4-nix";
+			url = "github:diamondburned/gotk4-nix?ref=flake";
 			inputs.nixpkgs.follows = "nixpkgs";
 			inputs.gomod2nix.follows = "gomod2nix";
 			inputs.flake-utils.follows = "flake-utils";

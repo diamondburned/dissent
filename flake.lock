@@ -69,16 +69,18 @@
         ]
       },
       "locked": {
-        "dirtyRev": "3723de36ae5970294dc82d01c5005c2c139147d9-dirty",
-        "dirtyShortRev": "3723de3-dirty",
-        "lastModified": 1711875149,
-        "narHash": "sha256-XhgZmKhTnsbC59HiuTu2qrS+5yEvEfR0AKMDrxHT92Q=",
-        "type": "git",
-        "url": "file:///home/diamond/Scripts/gotk4/gotk4-nix"
+        "lastModified": 1712121845,
+        "narHash": "sha256-4BFH8gVEkPDRZvResY33l5ANXpBhluqlE+HWyw+6Spg=",
+        "owner": "diamondburned",
+        "repo": "gotk4-nix",
+        "rev": "8cf941c0b6438faf147cf8a3bf68ca1e46e242cd",
+        "type": "github"
       },
       "original": {
-        "type": "git",
-        "url": "file:///home/diamond/Scripts/gotk4/gotk4-nix"
+        "owner": "diamondburned",
+        "ref": "flake",
+        "repo": "gotk4-nix",
+        "type": "github"
       }
     },
     "nixpkgs": {
