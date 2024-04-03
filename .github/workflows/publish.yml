@@ -152,7 +152,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ steps.build-linux.outputs.name }}
+          name: ${{ steps.build.outputs.name }}
           path: result
 
 
