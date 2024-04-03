@@ -145,7 +145,7 @@ jobs:
         run: |
           nix build --file ./. lib.mkPackageCross \
             --argstr version "$(git-version)" \
-            --argstr target  "${TARGET}"
+            --argstr target  "${{ matrix.target }}"
 
           echo name=$(ls result) >> "$GITHUB_OUTPUT"
 
