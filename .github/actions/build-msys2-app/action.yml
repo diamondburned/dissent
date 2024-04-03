@@ -22,7 +22,7 @@ runs:
       uses: msys2/setup-msys2@v2
       with:
         msystem: MINGW64
-        release: false
+        update: true
         install: |
           git
           zip
@@ -34,8 +34,8 @@ runs:
       run: |
         export PATH="/mingw64/bin:$PATH"
 
-        mkdir result
-        out=$(realpath result)
+        mkdir "$OUT_PATH"
+        out=$(realpath "$OUT_PATH")
 
         # Build Dissent
         go build -o "$out/$EXE_NAME"
@@ -91,3 +91,4 @@ runs:
         GOROOT: /mingw64/lib/go
         GOPATH: /mingw64
         EXE_NAME: ${{ inputs.exe-name }}
+        OUT_PATH: ${{ inputs.out-path }}

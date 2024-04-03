@@ -45,11 +45,15 @@ runs:
         $shortcut.Name = $env:APP_NAME
         $shortcut.Icon($env:ICON_PATH)
 
+        $project.BuildComponent.Builds[0].Name = $env:OUT_NAME.replace('.msi', '')
         $project.BuildComponent.Builds[0].OutputFolder = $env:OUT_PATH
-        $project.BuildComponent.Builds[0].PackageName = $env:OUT_NAME.replace('.msi', '')
-        $project.ProductDetails.Version = $env:APP_VERSION.replace('v', '')
-        $project.ProductDetails.ProductCode.GenerateAll()
 
+        $project.ProductDetails.Version = $env:APP_VERSION
+        if ($env:APP_VERSION -match '^v\d') {
+          $project.ProductDetails.Version = $env:APP_VERSION.Substring(1)
+        }
+
+        $project.ProductDetails.ProductCode.GenerateAll()
         $project.Build()
       shell: pwsh
       env:
