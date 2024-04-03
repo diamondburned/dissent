@@ -160,9 +160,6 @@ jobs:
     name: Build for Windows
     needs: [gomod, generate]
     runs-on: windows-latest
-    defaults:
-      run:
-        shell: msys2 {0}
     steps:
       - uses: actions/checkout@v4
 
@@ -192,6 +189,7 @@ jobs:
           name=$name
           path=$path
           EOF
+        shell: msys2 {0}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3

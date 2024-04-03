@@ -86,6 +86,7 @@ runs:
             lib/gdk-pixbuf-2.0 \
             $out
         )
+      shell: msys2 {0}
       env:
         GOROOT: /mingw64/lib/go
         GOPATH: /mingw64
