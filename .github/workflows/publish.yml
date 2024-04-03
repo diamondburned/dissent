@@ -1,18 +1,6 @@
 name: Build and Publish
 
 on:
-  workflow_dispatch:
-    inputs:
-      targets:
-        description: Build targets (separated by spaces)
-        type: string
-        default: x86_64 aarch64
-  workflow_call:
-    inputs:
-      targets:
-        description: Build targets (separated by spaces)
-        type: string
-        default: x86_64 aarch64
   push:
     branches-ignore:
       - nightly
@@ -22,29 +10,27 @@ on:
   release:
     types: [released] # Prevents double builds on nightly
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref_name }}
-  cancel-in-progress: true
+defaults:
+  run:
+    # Use Nix for all of our build commands.
+    # Doing this will automatically run everything in our devShell.
+    shell: nix develop -c bash -e {0}
 
 jobs:
   gomod:
     name: Validate Go modules
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-        with:
-          # Use ref_name instead of ref so we always get the branch to pull our
-          # latest commit from.
-          ref: ${{ github.ref_name }}
+      - uses: actions/checkout@v4
 
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Tidy up Go modules
-        run: nix develop -c go mod tidy
+        run: go mod tidy
 
       - name: Update gomod2nix.toml
-        run: nix develop -c gomod2nix --outdir nix
+        run: gomod2nix --outdir nix
 
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v5
@@ -52,51 +38,35 @@ jobs:
           commit_message: Tidy up Go modules
           file_pattern: nix/gomod2nix.toml go.mod go.sum
 
+
   generate:
     name: Run go generate
-    needs: gomod
+    needs: [gomod]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: ${{ github.ref_name }}
+      - uses: actions/checkout@v4
 
-      - name: Install Nix shell
-        uses: ./.github/actions/init-nix
-        with:
-          shell-file: shell.nix
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Generate
         run: go generate ./...
 
-      - name: Prepare commit
-        id: prepare
-        run: |
-          if git diff --exit-code; then
-            echo "changed=0" >> $GITHUB_OUTPUT
-          else
-            echo "changed=1" >> $GITHUB_OUTPUT
-          fi
-
       - name: Commit changes
-        if: steps.prepare.outputs.changed == 1
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: Run go generate
+
 
   lint:
     name: Lint
     needs: [gomod, generate]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: ${{ github.ref_name }}
+      - uses: actions/checkout@v4
 
-      - name: Install Nix shell
-        uses: ./.github/actions/init-nix
-        with:
-          shell-file: shell.nix
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Format
         run: |
@@ -118,90 +88,38 @@ jobs:
       - name: Test
         run: go test -v ./...
 
-  # We need a whole ass job for this.
-  # https://docs.github.com/en/actions/learn-github-actions/expressions#example-returning-a-json-object
-  build-init:
-    name: Initialize build environment
-    runs-on: ubuntu-latest
-    outputs:
-      target-matrix: ${{ steps.set-matrix.outputs.matrix }}
-      version: ${{ steps.version.outputs.version }}
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: ${{ github.ref_name }}
-
-      - id: set-targets
-        run: |
-          if [[ "$TARGETS" == "" ]]; then
-            case "$ACTION" in
-            push|release)
-              TARGETS="x86_64 aarch64" ;;
-            pull_request)
-              TARGETS="x86_64" ;;
-            *)
-              echo "Unknown action: $ACTION"
-              exit 1 ;;
-            esac
-          fi
-          echo "targets=$TARGETS" >> $GITHUB_OUTPUT
-        env:
-          ACTION: ${{ github.event_name }}
-          TARGETS: ${{ inputs.targets }}
-
-      - id: set-matrix
-        run: |
-          echo "matrix=$(printf "%s\n" $TARGETS | jq -R | jq -sc)" >> $GITHUB_OUTPUT
-        env:
-          TARGETS: ${{ steps.set-targets.outputs.targets }}
-
-      - id: version
-        run: |
-          echo "version=$(.github/tools/git-version)" >> $GITHUB_OUTPUT
 
   build-source:
     name: Build source tarball
-    needs: [build-init, gomod, generate]
+    needs: [gomod, generate]
     runs-on: ubuntu-latest
     outputs:
       name: ${{ steps.build.outputs.name }}
       directory: ${{ steps.build.outputs.directory }}
     steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: ${{ github.ref_name }}
+      - uses: actions/checkout@v4
 
-      - name: Install Nix environment
-        uses: ./.github/actions/init-nix
-        with:
-          instantiated-expression: ${{ steps.init.outputs.expr }}
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Build
         id: build
         run: |
-          expr=$(cat<<EOF
-          import ./nix {
-            action  = "build-source";
-            version = "$VERSION";
-          }
-          EOF)
+          nix build --file ./. lib.mkSource \
+            --argstr version "$(git-version)"
 
-          out=$(nix-build -E "$expr" --no-out-link)
-
-          echo "directory=$out" >> $GITHUB_OUTPUT
-          echo "name=source-$VERSION" >> $GITHUB_OUTPUT
-        env:
-          VERSION: ${{ needs.build-init.outputs.version }}
+          echo name=$(ls result) >> "$GITHUB_OUTPUT"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: dissent-${{ steps.build.outputs.name }}
-          path: ${{ steps.build.outputs.directory }}
+          name: ${{ steps.build.outputs.name }}
+          path: result
 
-  build:
+
+  build-linux:
     name: Build for Linux (via Nix)
-    needs: [build-init, gomod, generate]
+    needs: [gomod, generate]
     runs-on: ubuntu-latest
     outputs:
       name: ${{ steps.build.outputs.name }}
@@ -210,83 +128,44 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        target: ${{ fromJSON(needs.build-init.outputs.target-matrix) }}
-        tags:
-          - [""]
+        target:
+          - x86_64-linux
+          - aarch64-linux
     steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: ${{ github.ref_name }}
+      - uses: actions/checkout@v4
 
-      - name: Initialize environment
-        id: init
-        run: |
-          cat<<EOF > /tmp/expr.nix
-          import ./nix {
-            action  = "build-cross";
-            version = "$VERSION";
-            target  = $TARGET;
-            tags    = $TAGS;
-          }
-          EOF
-
-          # GitHub doesn't allow multiline strings in outputs, so we trim the
-          # new lines.
-          echo "expr=$(cat /tmp/expr.nix | tr -d $'\n')" >> $GITHUB_OUTPUT
-        env:
-          VERSION: ${{ needs.build-init.outputs.version }}
-          TARGET: ${{ toJSON(matrix.target) }}
-          TAGS: ${{ toJSON(matrix.tags) }}
-
-      - name: Install Nix environment
-        uses: ./.github/actions/init-nix
-        with:
-          instantiated-expression: ${{ steps.init.outputs.expr }}
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Build
         id: build
         run: |
-          out=$(nix-build -E "$EXPR" --no-out-link)
-          echo "path=$out" >> $GITHUB_OUTPUT
+          nix build --file ./. lib.mkPackageCross \
+            --argstr version "$(git-version)" \
+            --argstr target  "${TARGET}"
 
-          names=$(nix-instantiate --eval --json -E "builtins.attrNames ($EXPR).outputs")
-          name=$(jq -r '.[0]' <<< "$names")
-          echo "name=$name" >> $GITHUB_OUTPUT
-        env:
-          EXPR: ${{ steps.init.outputs.expr }}
-          VERSION: ${{ needs.build-init.outputs.version }}
-          TARGET: ${{ toJSON(matrix.target) }}
-          TAGS: ${{ toJSON(matrix.tags) }}
+          echo name=$(ls result) >> "$GITHUB_OUTPUT"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ steps.build.outputs.name }}
-          path: ${{ steps.build.outputs.path }}
+          name: ${{ steps.build-linux.outputs.name }}
+          path: result
 
-  # Action taken from getseabird/seabird:
-  # https://github.com/getseabird/seabird/blob/fd49c18b0601021a1a4b312a1d1c67b0dc7fe150/.github/workflows/release.yaml#L59
+
   build-windows:
     name: Build for Windows
-    needs: [build-init, gomod, generate]
+    needs: [gomod, generate]
     runs-on: windows-latest
     defaults:
       run:
         shell: msys2 {0}
     steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: ${{ github.ref_name }}
+      - uses: actions/checkout@v4
 
-      - name: Install MSYS2 environment
-        uses: msys2/setup-msys2@v2
+      - uses: ./.github/actions/build-msys2-app
         with:
-          msystem: MINGW64
-          release: false
-          install: |
-            git
-            zip
-            p7zip
+          msys-dependencies: |
             mingw-w64-x86_64-gcc 
             mingw-w64-x86_64-pkg-config
             mingw-w64-x86_64-gtk4
@@ -295,85 +174,28 @@ jobs:
             mingw-w64-x86_64-gobject-introspection
             mingw-w64-x86_64-glib2
             mingw-w64-x86_64-go
-
-      - name: Initialize environment
-        id: init
-        run: |
-          echo "name=dissent-windows-amd64-$VERSION" >> $GITHUB_OUTPUT
-        env:
-          VERSION: ${{ needs.build-init.outputs.version }}
-
-      - name: Build
-        id: build
-        run: |
-          export PATH="/mingw64/bin:$PATH"
-          export GOROOT=/mingw64/lib/go
-          export GOPATH=/mingw64
-
-          mkdir result
-          out=$(realpath result)
-
-          # Build Dissent
-          go build -o $out/dissent.exe
-
-          # copyDLLs copies all required DLLs of the given binaries to the
-          # result directory.
-          copyDLLs() {
-            ldd "$@" \
-              | { grep "=> /mingw64/bin/" || true; } \
-              | cut -d ' ' -f1 \
-              | xargs -I{} cp /mingw64/bin/{} $out/
-          }
-
-          # Copy all of the binary's dependencies to the result directory.
-          copyDLLs $out/dissent.exe
-
-          # countDLLs returns the number of DLLs in the result directory.
-          # We use this to recursively copy dependencies until no new DLLs are
-          # found.
-          countDLLs() {
-            find $out -type f -name "*.dll" | wc -l
-          }
-
-          # Copy DLLs recursively until no new ones are found.
-          currentCount=$(countDLLs)
-          while true; do
-            copyDLLs $out/*.dll
-
-            newCount=$(countDLLs)
-            (( newCount == currentCount )) && break
-            currentCount=$newCount
-          done
-
-          # Copy the RSVG and GDBus stuff.
-          cp \
-            /mingw64/bin/librsvg*.dll \
-            /mingw64/bin/gdbus.exe \
-            $out
-
-          # Copy the GLib schemas and GTK resources.
-          (
-            cd /mingw64
-            cp --parents -r \
-              share/glib-2.0/schemas/gschemas.compiled \
-              share/gtk-4.0 \
-              share/gtksourceview-5 \
-              share/icons \
-              lib/gdk-pixbuf-2.0 \
-              $out
-          )
+          out-path: result
+          exe-name: dissent.exe
 
       - name: Pack artifacts
+        id: pack
         run: |
-          7z a "$NAME.7z" result
-        env:
-          NAME: ${{ steps.init.outputs.name }}
+          name="dissent-windows-amd64-$(.github/tools/git-version)"
+          path="$name.7z"
+
+          7z a "$path" result
+
+          cat<<EOF > "$GITHUB_OUTPUT"
+          name=$name
+          path=$path
+          EOF
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ steps.init.outputs.name }}
-          path: ${{ steps.init.outputs.name }}.7z
+          name: ${{ steps.pack.outputs.name }}
+          path: ${{ steps.pack.outputs.path }}
+
 
   upload-release:
     name: Upload artifacts to release
@@ -381,15 +203,13 @@ jobs:
     environment: Stable release
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
+    concurrency:
+      group: release-${{ github.workflow }}-${{ github.ref }}
     steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: ${{ github.ref_name }}
+      - uses: actions/checkout@v4
 
-      - name: Install Nix shell
-        uses: ./.github/actions/init-nix
-        with:
-          shell-file: shell.nix
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Download artifacts
         uses: actions/download-artifact@v3
@@ -397,11 +217,10 @@ jobs:
           path: artifacts
 
       - name: Upload artifacts to GitHub Releases
-        run: upload-artifacts artifacts
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPO: ${{ github.repository }}
-          RELEASE_ID: ${{ github.event.release.id }}
+        uses: diamondburned/action-upload-release@main
+        with:
+          files: artifacts
+
 
   nightly-release:
     name: Update nightly release
@@ -409,15 +228,13 @@ jobs:
     environment: Nightly release
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    concurrency:
+      group: nightly-${{ github.workflow }}-${{ github.ref }}
     steps:
-      - uses: actions/checkout@v3
-        with:
-          ref: ${{ github.ref_name }}
+      - uses: actions/checkout@v4
 
-      - name: Install Nix shell
-        uses: ./.github/actions/init-nix
-        with:
-          shell-file: shell.nix
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Download artifacts
         uses: actions/download-artifact@v3
@@ -437,9 +254,9 @@ jobs:
           This is a nightly release of Dissent. It is built from the latest
           commit on the `main` branch.
 
-          **Warning:** This release is not guaranteed to be stable. It may
-          contain bugs and/or security vulnerabilities. Use at your own risk.
-          Please report any issues you encounter as separate GitHub Issues.
+          **Warning:** This release is not guaranteed to be stable and may
+          contain bugs. Use at your own risk. Please report any issues you
+          encounter as separate GitHub Issues.
 
           ### Version Information
 
