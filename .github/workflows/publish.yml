@@ -20,8 +20,6 @@ jobs:
   gomod:
     name: Validate Go modules
     runs-on: ubuntu-latest
-    concurrency:
-      group: push-${{ github.workflow }}-${{ github.ref }}
     steps:
       - uses: actions/checkout@v4
 
@@ -44,8 +42,7 @@ jobs:
   generate:
     name: Run go generate
     runs-on: ubuntu-latest
-    concurrency:
-      group: push-${{ github.workflow }}-${{ github.ref }}
+    needs: gomod # avoid pushing at the same time as gomod
     steps:
       - uses: actions/checkout@v4
 
