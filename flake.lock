@@ -83,11 +83,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1712150147,
-        "narHash": "sha256-nV2mofmlo156N9NQUpU40e89Vw9x9QlRNsxZ370vW7k=",
+        "lastModified": 1712150953,
+        "narHash": "sha256-6vx9SymhNpCenkZp0Ru7hcplSamehMA+sQriSqq0Esk=",
         "owner": "diamondburned",
         "repo": "gotk4-nix",
-        "rev": "9ae2d30e7c2cf690812fa2824a68f4b965d7643d",
+        "rev": "f8e9e6853bc9062633847d61620cc94e8b5bb6b9",
         "type": "github"
       },
       "original": {

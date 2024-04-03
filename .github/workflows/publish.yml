@@ -121,10 +121,6 @@ jobs:
     name: Build for Linux (via Nix)
     needs: [gomod, generate]
     runs-on: ubuntu-latest
-    outputs:
-      name: ${{ steps.build.outputs.name }}
-      versions: ${{ steps.versions.outputs.json }}
-      directory: ${{ steps.build.outputs.directory }}
     strategy:
       fail-fast: true
       matrix:
@@ -141,7 +137,7 @@ jobs:
         id: build
         run: |
           nix build --file ./. lib.mkPackageCross \
-            --argstr version "$(git-version)" \
+            --argstr version "" \
             --argstr target  "${{ matrix.target }}"
 
           echo name=$(ls result) >> "$GITHUB_OUTPUT"
@@ -181,12 +177,9 @@ jobs:
       - name: Prepare
         id: prepare
         run: |
-          version=$(.github/tools/git-version)
-          name=dissent-windows-amd64-$version
-
           cat<<EOF >> "$GITHUB_OUTPUT"
-          version=$version
-          name=$name
+          version=$(.github/tools/git-version)
+          name=dissent-windows-amd64
           EOF
 
       - name: Make MSI installer
