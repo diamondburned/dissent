@@ -157,10 +157,26 @@ jobs:
     name: Build for Windows
     needs: [gomod, generate]
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/build-msys2-app
+      - name: Prepare build
+        id: prepare
+        run: |
+          version=$(.github/tools/git-version)
+          name=dissent-windows-amd64-$version
+
+          cat<<EOF >> "$GITHUB_OUTPUT"
+          version=$version
+          name=$name
+          temp=$(mktemp -d)
+          EOF
+
+      - name: Build using MSYS2
+        uses: ./.github/actions/build-msys2-app
         with:
           msys-dependencies: |
             mingw-w64-x86_64-gcc 
@@ -171,28 +187,26 @@ jobs:
             mingw-w64-x86_64-gobject-introspection
             mingw-w64-x86_64-glib2
             mingw-w64-x86_64-go
-          out-path: result
+          out-path: ${{ steps.prepare.outputs.temp }}
           exe-name: dissent.exe
 
-      - name: Pack artifacts
-        id: pack
-        run: |
-          name="dissent-windows-amd64-$(.github/tools/git-version)"
-          path="$name.7z"
-
-          7z a "$path" result
-
-          cat<<EOF > "$GITHUB_OUTPUT"
-          name=$name
-          path=$path
-          EOF
-        shell: msys2 {0}
+      - name: Make MSI installer
+        uses: ./.github/actions/make-advinst-app
+        with:
+          aip-file: nix/dissent-windows.aip
+          exe-directory: ${{ steps.prepare.outputs.temp }}
+          exe-name: dissent.exe
+          app-name: Dissent
+          app-version: ${{ steps.prepare.outputs.version }}
+          icon-file: internal/icons/windows/dissent.ico
+          out-path: result
+          out-name: ${{ steps.prepare.outputs.name }}.msi
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ steps.pack.outputs.name }}
-          path: ${{ steps.pack.outputs.path }}
+          name: ${{ steps.prepare.outputs.name }}
+          path: result
 
 
   upload-release:

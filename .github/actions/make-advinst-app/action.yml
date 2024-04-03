@@ -1,0 +1,63 @@
+name: Make an MSI installer with Advanced Installer
+
+inputs:
+  out-path:
+    description: Path to the output directory
+    default: dist
+  out-name:
+    description: Name of the output file, e.g. dissent.msi
+    required: true
+  aip-file:
+    description: Path to the Advanced Installer project file
+    required: true
+  icon-file:
+    description: Path to the icon file to use
+    required: true
+  exe-directory:
+    description: Path to the directory containing the exe and optional dlls to package
+    required: true
+  exe-name:
+    description: Name of the exe file to package within the exe-directory
+    required: true
+  app-name:
+    description: Name of the application
+    required: true
+  app-version:
+    description: Version of the application, must start with 'v'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: caphyon/advinst-github-action@main
+      with:
+        advinst-enable-automation: true
+
+    - run: |
+        $advinst = new-object -com advancedinstaller
+
+        $project = $advinst.LoadProject($env:AIP_PATH)
+        $project.FilesComponent.AddFolderContent($project.PredefinedFolders.ApplicationFolder, $env:EXE_DIR)
+
+        $exe = $project.FilesComponent.FindFileBySourcePath($env:EXE_PATH)
+        $shortcut = $project.ShortcutsComponent.CreateFileShortcut($project.PredefinedFolders.ShortcutFolder, $exe)
+        $shortcut.Name = "tmp" # Can't rename from lowercase: "A file with the same name already exists in this folder"
+        $shortcut.Name = $env:APP_NAME
+        $shortcut.Icon($env:ICON_PATH)
+
+        $project.BuildComponent.Builds[0].OutputFolder = $env:OUT_PATH
+        $project.BuildComponent.Builds[0].PackageName = $env:OUT_NAME.replace('.msi', '')
+        $project.ProductDetails.Version = $env:APP_VERSION.replace('v', '')
+        $project.ProductDetails.ProductCode.GenerateAll()
+
+        $project.Build()
+      shell: pwsh
+      env:
+        AIP_PATH: ${{ github.workspace }}\${{ inputs.aip-file }}
+        EXE_DIR: ${{ github.workspace }}\${{ inputs.exe-directory }}
+        EXE_PATH: ${{ github.workspace }}\${{ inputs.exe-directory }}\${{ inputs.exe-name }}
+        ICON_PATH: ${{ github.workspace }}\${{ inputs.icon-file }}
+        APP_NAME: ${{ inputs.app-name }}
+        APP_VERSION: ${{ inputs.app-version }}
+        OUT_PATH: ${{ github.workspace }}\${{ inputs.out-path }}
+        OUT_NAME: ${{ inputs.out-name }}
