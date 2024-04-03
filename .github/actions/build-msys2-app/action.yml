@@ -1,0 +1,93 @@
+# Action taken from getseabird/seabird:
+# https://github.com/getseabird/seabird/blob/fd49c18b0601021a1a4b312a1d1c67b0dc7fe150/.github/workflows/release.yaml#L59
+
+name: Build using MSYS2
+inputs:
+  exe-name:
+    description: Name of the executable to produce, must end in .exe
+    required: true
+  out-path:
+    description: Path to the output directory, which contains the executable and all its libraries
+    default: result
+  msys-system:
+    description: MSYS2 system to use
+    default: MINGW64
+  msys-dependencies:
+    description: MSYS2 packages to install
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Install MSYS2 Environment
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: true
+        install: |
+          git
+          zip
+          p7zip
+          ${{ inputs.msys-dependencies }}
+
+    - name: Build
+      id: build
+      run: |
+        export PATH="/mingw64/bin:$PATH"
+
+        mkdir "$OUT_PATH"
+        out=$(realpath "$OUT_PATH")
+
+        # Build Dissent
+        go build -ldflags "-H windowsgui" -o "$out/$EXE_NAME"
+
+        # copyDLLs copies all required DLLs of the given binaries to the
+        # result directory.
+        copyDLLs() {
+          ldd "$@" \
+            | { grep "=> /mingw64/bin/" || true; } \
+            | cut -d ' ' -f1 \
+            | xargs -I{} cp /mingw64/bin/{} $out/
+        }
+
+        # Copy all of the binary's dependencies to the result directory.
+        copyDLLs "$out/$EXE_NAME"
+
+        # countDLLs returns the number of DLLs in the result directory.
+        # We use this to recursively copy dependencies until no new DLLs are
+        # found.
+        countDLLs() {
+          find $out -type f -name "*.dll" | wc -l
+        }
+
+        # Copy DLLs recursively until no new ones are found.
+        currentCount=$(countDLLs)
+        while true; do
+          copyDLLs $out/*.dll
+
+          newCount=$(countDLLs)
+          (( newCount == currentCount )) && break
+          currentCount=$newCount
+        done
+
+        # Copy the RSVG and GDBus stuff.
+        cp \
+          /mingw64/bin/librsvg*.dll \
+          /mingw64/bin/gdbus.exe \
+          $out
+
+        # Copy the GLib schemas and GTK resources.
+        (
+          cd /mingw64
+          cp --parents -r \
+            share/glib-2.0/schemas/gschemas.compiled \
+            share/gtk-4.0 \
+            share/icons \
+            lib/gdk-pixbuf-2.0 \
+            $out
+        )
+      shell: msys2 {0}
+      env:
+        GOROOT: /mingw64/lib/go
+        GOPATH: /mingw64
+        EXE_NAME: ${{ inputs.exe-name }}
+        OUT_PATH: ${{ inputs.out-path }}

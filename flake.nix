@@ -2,6 +2,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
 		flake-utils.url = "github:numtide/flake-utils";
+		flake-compat.url = "https://flakehub.com/f/edolstra/flake-compat/1.tar.gz";
 
 		gomod2nix = {
 			url = "github:nix-community/gomod2nix";
@@ -17,10 +18,18 @@
 		};
   };
 
-	outputs = { self, ... }@inputs:
+	outputs =
+		{ self, ... }@inputs:
+
+		with builtins;
+		with inputs.nixpkgs.lib;
+
 		let
-			base = import ./nix/base.nix // { src = self; };
+			base = import ./nix/base.nix // {
+				src = self;
+			};
 		in
+
 		(inputs.flake-utils.lib.eachDefaultSystem (system:
 			let
 				pkgs = inputs.nixpkgs.legacyPackages.${system}.appendOverlays [
@@ -28,6 +37,7 @@
 					inputs.gotk4-nix.overlays.patchelf
 				];
 			in
+
 			{
 				devShells.default = inputs.gotk4-nix.lib.mkShell {
 					inherit base pkgs;
@@ -44,20 +54,14 @@
 
 				packages.default = inputs.gotk4-nix.lib.mkPackage {
 					inherit base pkgs;
-					buildPkgs = pkgs;
 					version = self.rev or "unknown";
 				};
 			}
-		)) // {
-			lib.mkPackageCross =
-				{
-					system ? builtins.currentSystem,
-					version ? self.rev or "unknown",
-					...
-				}@args:
-				inputs.gotk4-nix.lib.mkPackageCross (args // {
-					inherit base;
-					pkgs = inputs.nixpkgs.legacyPackages.${system};
-				});
+		)) //
+		{
+			lib = inputs.gotk4-nix.lib.mkLib {
+				inherit base;
+				pkgs = inputs.nixpkgs.legacyPackages.${builtins.currentSystem};
+			};
 		};
 }

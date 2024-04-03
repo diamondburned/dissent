@@ -1,0 +1,76 @@
+name: Make an MSI installer with Advanced Installer
+
+inputs:
+  out-path:
+    description: Path to the output directory
+    default: dist
+  out-name:
+    description: Name of the output file, e.g. dissent.msi
+    required: true
+  aip-file:
+    description: Path to the Advanced Installer project file
+    required: true
+  icon-file:
+    description: Path to the icon file to use
+    required: true
+  exe-directory:
+    description: Path to the directory containing the exe and optional dlls to package
+    required: true
+  exe-name:
+    description: Name of the exe file to package within the exe-directory
+    required: true
+  app-name:
+    description: Name of the application
+    required: true
+  app-version:
+    description: Version of the application, must start with 'v'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: caphyon/advinst-github-action@main
+      with:
+        advinst-enable-automation: true
+
+    - run: |
+        $exe_directory = $env:EXE_DIRECTORY.replace('/', '\')
+        $exe_path = join-path $exe_directory $env:EXE_NAME
+        $aip_path = join-path $env:BASE_PATH $env:AIP_FILE.replace('/', '\')
+        $icon_path = join-path $env:BASE_PATH $env:ICON_FILE.replace('/', '\')
+        $out_path = join-path $env:BASE_PATH $env:OUT_PATH.replace('/', '\')
+        $out_name = $env:OUT_NAME.replace('.msi', '')
+        $app_name = $env:APP_NAME
+        $app_version = $env:APP_VERSION
+        if ($app_version -match '^v\d') {
+          $app_version = $app_version.Substring(1)
+        }
+
+        $advinst = new-object -com advancedinstaller
+
+        $project = $advinst.LoadProject($aip_path)
+        $project.FilesComponent.AddFolderContent($project.PredefinedFolders.ApplicationFolder, $exe_directory)
+
+        $project_exe = $project.FilesComponent.FindFileBySourcePath($exe_path)
+        $shortcut = $project.ShortcutsComponent.CreateFileShortcut($project.PredefinedFolders.ShortcutFolder, $project_exe)
+        $shortcut.Name = "tmp" # Can't rename from lowercase: "A file with the same name already exists in this folder"
+        $shortcut.Name = $app_name
+        $shortcut.Icon($icon_path)
+
+        $project.BuildComponent.Builds[0].PackageName = $out_name
+        $project.BuildComponent.Builds[0].OutputFolder = $out_path
+        $project.ProductDetails.Version = $app_version
+        $project.ProductDetails.ProductCode.GenerateAll()
+
+        $project.Build()
+      shell: pwsh
+      env:
+        BASE_PATH: ${{ github.workspace }}
+        EXE_DIRECTORY: ${{ inputs.exe-directory }}
+        EXE_NAME: ${{ inputs.exe-name }}
+        AIP_FILE: ${{ inputs.aip-file }}
+        ICON_FILE: ${{ inputs.icon-file }}
+        APP_NAME: ${{ inputs.app-name }}
+        APP_VERSION: ${{ inputs.app-version }}
+        OUT_PATH: ${{ inputs.out-path }}
+        OUT_NAME: ${{ inputs.out-name }}
