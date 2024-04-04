@@ -17,6 +17,25 @@ defaults:
     shell: nix develop -c bash -e {0}
 
 jobs:
+  generate:
+    name: Run go generate
+    runs-on: ubuntu-latest
+    needs: gomod # avoid pushing at the same time as gomod
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Generate
+        run: go generate ./...
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Run go generate
+
+
   gomod:
     name: Validate Go modules
     runs-on: ubuntu-latest
@@ -37,25 +56,6 @@ jobs:
         with:
           commit_message: Tidy up Go modules
           file_pattern: nix/gomod2nix.toml go.mod go.sum
-
-
-  generate:
-    name: Run go generate
-    runs-on: ubuntu-latest
-    needs: gomod # avoid pushing at the same time as gomod
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
-
-      - name: Generate
-        run: go generate ./...
-
-      - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: Run go generate
 
 
   lint:
