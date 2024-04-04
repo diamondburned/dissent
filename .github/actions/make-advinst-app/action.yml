@@ -34,34 +34,43 @@ runs:
         advinst-enable-automation: true
 
     - run: |
-        $advinst = new-object -com advancedinstaller
-
-        $project = $advinst.LoadProject($env:AIP_PATH)
-        $project.FilesComponent.AddFolderContent($project.PredefinedFolders.ApplicationFolder, $env:EXE_DIR)
-
-        $exe = $project.FilesComponent.FindFileBySourcePath($env:EXE_PATH)
-        $shortcut = $project.ShortcutsComponent.CreateFileShortcut($project.PredefinedFolders.ShortcutFolder, $exe)
-        $shortcut.Name = "tmp" # Can't rename from lowercase: "A file with the same name already exists in this folder"
-        $shortcut.Name = $env:APP_NAME
-        $shortcut.Icon($env:ICON_PATH)
-
-        $project.BuildComponent.Builds[0].Name = $env:OUT_NAME.replace('.msi', '')
-        $project.BuildComponent.Builds[0].OutputFolder = $env:OUT_PATH
-
-        $project.ProductDetails.Version = $env:APP_VERSION
-        if ($env:APP_VERSION -match '^v\d') {
-          $project.ProductDetails.Version = $env:APP_VERSION.Substring(1)
+        $exe_directory = $env:EXE_DIRECTORY.replace('/', '\')
+        $exe_path = join-path $exe_directory $env:EXE_NAME
+        $aip_path = join-path $env:BASE_PATH $env:AIP_FILE.replace('/', '\')
+        $icon_path = join-path $env:BASE_PATH $env:ICON_FILE.replace('/', '\')
+        $out_path = join-path $env:BASE_PATH $env:OUT_PATH.replace('/', '\')
+        $out_name = $env:OUT_NAME.replace('.msi', '')
+        $app_name = $env:APP_NAME
+        $app_version = $env:APP_VERSION
+        if ($app_version -match '^v\d') {
+          $app_version = $app_version.Substring(1)
         }
 
+        $advinst = new-object -com advancedinstaller
+
+        $project = $advinst.LoadProject($aip_path)
+        $project.FilesComponent.AddFolderContent($project.PredefinedFolders.ApplicationFolder, $exe_directory)
+
+        $project_exe = $project.FilesComponent.FindFileBySourcePath($exe_path)
+        $shortcut = $project.ShortcutsComponent.CreateFileShortcut($project.PredefinedFolders.ShortcutFolder, $project_exe)
+        $shortcut.Name = "tmp" # Can't rename from lowercase: "A file with the same name already exists in this folder"
+        $shortcut.Name = $app_name
+        $shortcut.Icon($icon_path)
+
+        $project.BuildComponent.Builds[0].Name = $out_name
+        $project.BuildComponent.Builds[0].OutputFolder = $out_path
+        $project.ProductDetails.Version = $app_version
         $project.ProductDetails.ProductCode.GenerateAll()
+
         $project.Build()
       shell: pwsh
       env:
-        AIP_PATH: ${{ github.workspace }}\${{ inputs.aip-file }}
-        EXE_DIR: ${{ github.workspace }}\${{ inputs.exe-directory }}
-        EXE_PATH: ${{ github.workspace }}\${{ inputs.exe-directory }}\${{ inputs.exe-name }}
-        ICON_PATH: ${{ github.workspace }}\${{ inputs.icon-file }}
+        BASE_PATH: ${{ github.workspace }}
+        EXE_DIRECTORY: ${{ inputs.exe-directory }}
+        EXE_NAME: ${{ inputs.exe-name }}
+        AIP_FILE: ${{ inputs.aip-file }}
+        ICON_FILE: ${{ inputs.icon-file }}
         APP_NAME: ${{ inputs.app-name }}
         APP_VERSION: ${{ inputs.app-version }}
-        OUT_PATH: ${{ github.workspace }}\${{ inputs.out-path }}
+        OUT_PATH: ${{ inputs.out-path }}
         OUT_NAME: ${{ inputs.out-name }}
