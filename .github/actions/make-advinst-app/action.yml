@@ -57,7 +57,7 @@ runs:
         $shortcut.Name = $app_name
         $shortcut.Icon($icon_path)
 
-        $project.BuildComponent.Builds[0].Name = $out_name
+        $project.BuildComponent.Builds[0].PackageName = $out_name
         $project.BuildComponent.Builds[0].OutputFolder = $out_path
         $project.ProductDetails.Version = $app_version
         $project.ProductDetails.ProductCode.GenerateAll()
