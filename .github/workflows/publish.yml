@@ -83,7 +83,7 @@ jobs:
         run: go vet ./... |& workflowify -e -t vet
 
       - name: Staticcheck (warnings)
-        run: staticcheck ./... || true |& workflowify -w -t staticcheck
+        run: nix run .#staticcheck ./... || true |& workflowify -w -t staticcheck
 
       - name: Test
         run: go test -v ./...

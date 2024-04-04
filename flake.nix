@@ -56,6 +56,11 @@
 					inherit base pkgs;
 					version = self.rev or "unknown";
 				};
+
+				apps.staticcheck = {
+					type = "app";
+					program = "${pkgs.go-tools}/bin/staticcheck";
+				};
 			}
 		)) //
 		{
