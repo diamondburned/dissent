@@ -3,6 +3,9 @@
 
 name: Build using MSYS2
 inputs:
+  go-flags:
+    description: Flags to pass to the go build command
+    default: "-H=windowsgui"
   exe-name:
     description: Name of the executable to produce, must end in .exe
     required: true
@@ -38,7 +41,7 @@ runs:
         out=$(realpath "$OUT_PATH")
 
         # Build Dissent
-        go build -o "$out/$EXE_NAME"
+        go build -ldflags "-H windowsgui" -o "$out/$EXE_NAME"
 
         # copyDLLs copies all required DLLs of the given binaries to the
         # result directory.
