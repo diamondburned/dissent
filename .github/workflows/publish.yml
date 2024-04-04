@@ -177,8 +177,23 @@ jobs:
       - name: Prepare
         id: prepare
         run: |
-          cat<<EOF >> "$GITHUB_OUTPUT"
           version=$(.github/tools/git-version)
+
+          # version is usually in the format vMAJOR.MINOR.PATCH-N-HASH, while
+          # Advanced Installer only allows format MAJOR.MINOR.PATCH.REVISION.
+          # We trim out our hash, trim the leading v, and replace the first - with a .
+          if [[ $version =~ ^v([0-9]+\.[0-9]+\.[0-9]+(-[0-9]+)?) ]]; then
+            version=${BASH_REMATCH[1]}
+            version=${version//-/.}
+          else
+            # Use some fallback version. Realistically, this should never
+            # happen, so we throw a warning.
+            version=0.0.0.999
+            echo '::warning::Could not determine version from git for Windows build. Using `$version`'
+          fi
+
+          cat<<EOF >> "$GITHUB_OUTPUT"
+          version=$version
           name=dissent-windows-amd64
           EOF
 
