@@ -3,9 +3,6 @@
 
 name: Build using MSYS2
 inputs:
-  go-flags:
-    description: Flags to pass to the go build command
-    default: "-H=windowsgui"
   exe-name:
     description: Name of the executable to produce, must end in .exe
     required: true
@@ -84,7 +81,6 @@ runs:
           cp --parents -r \
             share/glib-2.0/schemas/gschemas.compiled \
             share/gtk-4.0 \
-            share/gtksourceview-5 \
             share/icons \
             lib/gdk-pixbuf-2.0 \
             $out
