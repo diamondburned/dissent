@@ -57,9 +57,16 @@
 					version = self.rev or "unknown";
 				};
 
-				apps.staticcheck = {
-					type = "app";
-					program = "${pkgs.go-tools}/bin/staticcheck";
+				apps = rec {
+					default = dissent;
+					dissent = {
+						type = "app";
+						program = "${self.packages.${system}.default}/bin/dissent";
+					};
+					staticcheck = {
+						type = "app";
+						program = "${pkgs.go-tools}/bin/staticcheck";
+					};
 				};
 			}
 		)) //
