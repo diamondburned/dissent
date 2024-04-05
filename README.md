@@ -23,8 +23,6 @@
   <a href="https://github.com/diamondburned/dissent/releases/latest"><img height="22" src="https://img.shields.io/github/v/tag/diamondburned/dissent?filter=!nightly&amp;label=Latest%20Release&amp;color=blue" alt="Latest release"></a>
   <a href="https://repology.org/project/dissent/versions"><img height="22" src="https://img.shields.io/repology/repositories/dissent?label=Packaged Distros" alt="Packaging status"></a>
   <a href="https://goreportcard.com/report/github.com/diamondburned/dissent"><img height="22" src="https://goreportcard.com/badge/github.com/diamondburned/dissent" alt="Go Report Card"></a>
-  <a href="https://github.com/diamondburned/dissent/deployments/Nightly%20release"><img height="22" src="https://img.shields.io/github/deployments/diamondburned/dissent/Nightly%20release?logo=github&amp;label=Nightly%20Build" alt="Nightly release status"></a>
-  <a href="https://github.com/diamondburned/dissent/deployments/Stable%20release"><img height="22" src="https://img.shields.io/github/deployments/diamondburned/dissent/Stable%20release?logo=github&amp;label=Stable%20Build" alt="Stable release status"></a>
 </div>
 
 <br>
@@ -72,15 +70,15 @@ GitHub Actions on each release.
 
 <div>
   <a href="https://github.com/diamondburned/dissent/releases/download/latest/dissent-windows-amd64.exe">
-    <img height="24" alt="Windows x86_64" src="https://img.shields.io/badge/Windows-Download%20for%20x86__64-grey?style=flat-square&logo=windows11&labelColor=%23357EC7&cacheSeconds=999999999" />
+    <img height="24" alt="Windows x86_64" src="https://img.shields.io/badge/Windows-Download%20for%20x86__64-grey?style=flat&logo=windows11&labelColor=%23357EC7&cacheSeconds=999999999" />
   </a>
   <br>
   <a href="https://github.com/diamondburned/dissent/releases/download/latest/dissent-linux-amd64.tar.zst">
-    <img height="24" alt="Linux x86_64" src="https://img.shields.io/badge/Linux-Download%20for%20x86__64-grey?style=flat-square&logo=linux&logoColor=black&labelColor=%23ffcc33&cacheSeconds=999999999" />
+    <img height="24" alt="Linux x86_64" src="https://img.shields.io/badge/Linux-Download%20for%20x86__64-grey?style=flat&logo=linux&logoColor=black&labelColor=%23ffcc33&cacheSeconds=999999999" />
   </a>
   <br>
   <a href="https://github.com/diamondburned/dissent/releases/download/latest/dissent-linux-arm64.tar.zst">
-    <img height="24" alt="Linux Aarch64" src="https://img.shields.io/badge/Linux-Download%20for%20AArch64-grey?style=flat-square&logo=linux&logoColor=black&labelColor=%23ffcc33&cacheSeconds=999999999" />
+    <img height="24" alt="Linux Aarch64" src="https://img.shields.io/badge/Linux-Download%20for%20AArch64-grey?style=flat&logo=linux&logoColor=black&labelColor=%23ffcc33&cacheSeconds=999999999" />
   </a>
 </div>
 
