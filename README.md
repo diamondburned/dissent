@@ -69,15 +69,15 @@ clicking on the below badges. These are automatically built and uploaded by
 GitHub Actions on each release.
 
 <div>
-  <a href="https://github.com/diamondburned/dissent/releases/download/latest/dissent-windows-amd64.exe">
+  <a href="https://github.com/diamondburned/dissent/releases/latest/download/dissent-windows-amd64.exe">
     <img height="24" alt="Windows x86_64" src="https://img.shields.io/badge/Windows-Download%20for%20x86__64-grey?style=flat&logo=windows11&labelColor=%23357EC7&cacheSeconds=999999999" />
   </a>
   <br>
-  <a href="https://github.com/diamondburned/dissent/releases/download/latest/dissent-linux-amd64.tar.zst">
+  <a href="https://github.com/diamondburned/dissent/releases/latest/download/dissent-linux-amd64.tar.zst">
     <img height="24" alt="Linux x86_64" src="https://img.shields.io/badge/Linux-Download%20for%20x86__64-grey?style=flat&logo=linux&logoColor=black&labelColor=%23ffcc33&cacheSeconds=999999999" />
   </a>
   <br>
-  <a href="https://github.com/diamondburned/dissent/releases/download/latest/dissent-linux-arm64.tar.zst">
+  <a href="https://github.com/diamondburned/dissent/releases/latest/download/dissent-linux-arm64.tar.zst">
     <img height="24" alt="Linux Aarch64" src="https://img.shields.io/badge/Linux-Download%20for%20AArch64-grey?style=flat&logo=linux&logoColor=black&labelColor=%23ffcc33&cacheSeconds=999999999" />
   </a>
 </div>
