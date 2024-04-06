@@ -52,21 +52,36 @@
 					];
 				};
 
-				packages.default = inputs.gotk4-nix.lib.mkPackage {
-					inherit base pkgs;
-					version = self.rev or "unknown";
+				packages = rec {
+					default = dissent;
+					dissent = inputs.gotk4-nix.lib.mkPackage {
+						inherit base pkgs;
+						version = self.rev or "unknown";
+						overridePackageAttrs = old: {
+							meta = {
+								description = "Tiny Discord app";
+								homepage = "https://libdb.so/dissent";
+								platforms = with platforms; linux ++ darwin ++ windows;
+								mainProgram = "dissent";
+							};
+						};
+					};
 				};
 
 				apps = rec {
 					default = dissent;
 					dissent = {
 						type = "app";
-						program = "${self.packages.${system}.default}/bin/dissent";
+						program = "${self.packages.${system}.dissent}/bin/dissent";
 					};
 					staticcheck = {
 						type = "app";
 						program = "${pkgs.go-tools}/bin/staticcheck";
 					};
+				};
+
+				checks = import ./nix/checks.nix {
+					inherit self pkgs;
 				};
 			}
 		)) //
