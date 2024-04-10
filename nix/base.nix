@@ -27,6 +27,8 @@
 			name = "so.libdb.dissent.service";
 			path = ./so.libdb.dissent.service;
 		};
-		icons = ../internal/icons;
+		icons = {
+			path = ../internal/icons;
+		};
 	};
 }
