@@ -3,6 +3,7 @@ package direct
 import (
 	"context"
 	"log"
+	"log/slog"
 	"strings"
 
 	"github.com/diamondburned/adaptive"
@@ -10,7 +11,6 @@ import (
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
-	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
@@ -46,8 +46,6 @@ var _ = cssutil.WriteCSS(`
 	}
 `)
 
-var lastOpenKey = app.NewSingleStateKey[discord.ChannelID]("direct-last-open")
-
 // NewChannelView creates a new view.
 func NewChannelView(ctx context.Context) *ChannelView {
 	v := ChannelView{
@@ -64,7 +62,6 @@ func NewChannelView(ctx context.Context) *ChannelView {
 	v.list.SetActivateOnSingleClick(true)
 
 	var currentCh discord.ChannelID
-	lastOpenState := lastOpenKey.Acquire(ctx)
 
 	v.list.ConnectRowSelected(func(r *gtk.ListBoxRow) {
 		if r == nil {
@@ -81,8 +78,6 @@ func NewChannelView(ctx context.Context) *ChannelView {
 		}
 
 		currentCh = ch.id
-		lastOpenState.Set(ch.id)
-
 		parent := gtk.BaseWidget(v.list.Parent())
 		parent.ActivateAction("win.open-channel", gtkcord.NewChannelIDVariant(ch.id))
 	})
@@ -148,17 +143,6 @@ func NewChannelView(ctx context.Context) *ChannelView {
 		(*read.UpdateEvent)(nil),
 	)
 
-	// Restore the last open channel. We must delay this until the view is
-	// realized so the parent view can be realized first.
-	gtkutil.OnFirstMap(v, func() {
-		lastOpenState.Get(func(id discord.ChannelID) {
-			// Only restore selection if we're not already selecting something.
-			if v.list.SelectedRow() == nil {
-				v.SelectChannel(id)
-			}
-		})
-	})
-
 	return &v
 }
 
@@ -174,11 +158,19 @@ func (v *ChannelView) SelectChannel(chID discord.ChannelID) {
 
 	v.selectID = 0
 	v.list.SelectRow(ch.ListBoxRow)
+
+	slog.Debug(
+		"selected DM channel immediately",
+		"channel_id", chID)
 }
 
 // Invalidate invalidates the whole channel view.
 func (v *ChannelView) Invalidate() {
 	state := gtkcord.FromContext(v.ctx)
+
+	// Freeze list signals and re-emit it after.
+	v.list.FreezeNotify()
+	defer v.list.ThawNotify()
 
 	// Temporarily disable the sort function. We'll re-enable it once we're
 	// done and force a full re-sort.
@@ -194,7 +186,7 @@ func (v *ChannelView) Invalidate() {
 		return
 	}
 
-	v.SetChild(v.box)
+	v.LoadablePage.SetChild(v.box)
 
 	// Keep track of channels that aren't in the list anymore.
 	keep := make(map[discord.ChannelID]bool, len(v.channels))
@@ -203,10 +195,13 @@ func (v *ChannelView) Invalidate() {
 	}
 
 	for i, channel := range chs {
-		ch := NewChannel(v.ctx, channel.ID)
-		ch.Update(&chs[i])
+		ch, ok := v.channels[channel.ID]
+		if !ok {
+			ch = NewChannel(v.ctx, channel.ID)
+			v.channels[channel.ID] = ch
+		}
 
-		v.channels[channel.ID] = ch
+		ch.Update(&chs[i])
 
 		if _, ok := keep[channel.ID]; ok {
 			keep[channel.ID] = true
@@ -222,10 +217,14 @@ func (v *ChannelView) Invalidate() {
 		}
 	}
 
-	// If we have a channel to be selectedd, then select it.
+	// If we have a channel to be selected, then select it.
 	if v.selectID.IsValid() {
 		if ch, ok := v.channels[v.selectID]; ok {
 			v.list.SelectRow(ch.ListBoxRow)
+
+			slog.Debug(
+				"finally found DM channel to select",
+				"channel_id", v.selectID)
 		}
 	}
 }

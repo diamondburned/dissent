@@ -4,6 +4,8 @@ package sidebar
 import (
 	"context"
 	"log"
+	"log/slog"
+	"strings"
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
@@ -137,28 +139,48 @@ func (s *Sidebar) GuildID() discord.GuildID {
 	return ch.GuildID()
 }
 
-func (s *Sidebar) removeCurrent() {
-	if s.current.w == nil {
+func (s *Sidebar) stackSelect(w gtk.Widgetter) {
+	if w == s.current.w {
 		return
 	}
 
-	w := s.current.w
-	s.current.w = nil
+	old := s.current.w
+	s.current.w = w
 
 	if w == nil {
-		return
+		s.Right.SetVisibleChild(s.placeholder)
+	} else {
+		// This should do nothing if the widget is already in the stack.
+		// Maybe???
+		s.Right.AddChild(w)
+		s.Right.SetVisibleChild(w)
+
+		w := gtk.BaseWidget(w)
+		w.GrabFocus()
 	}
 
-	gtkutil.NotifyProperty(s.Right, "transition-running", func() bool {
-		// Remove the widget when the transition is done.
-		if !s.Right.TransitionRunning() {
-			s.Right.Remove(w)
-			return true
-		}
-		return false
-	})
+	if old != nil {
+		gtkutil.NotifyProperty(s.Right, "transition-running", func() bool {
+			// Remove the widget when the transition is done.
+			if !s.Right.TransitionRunning() {
+				s.Right.Remove(old)
+
+				w := gtk.BaseWidget(old)
+				slog.Debug(
+					"sidebar: right stack transition done, removed widget",
+					"widget", w.Type().String()+"."+strings.Join(w.CSSClasses(), "."))
+
+				return true
+			} else {
+				slog.Debug("sidebar: right stack transition started")
+				return false
+			}
+		})
+	}
 }
 
+// OpenDMs opens the DMs view. It automatically loads the DMs on first open, so
+// the returned ChannelView is guaranteed to be ready.
 func (s *Sidebar) OpenDMs() *direct.ChannelView {
 	if direct, ok := s.current.w.(*direct.ChannelView); ok {
 		// we're already there
@@ -170,12 +192,10 @@ func (s *Sidebar) OpenDMs() *direct.ChannelView {
 
 	direct := direct.NewChannelView(s.ctx)
 	direct.SetVExpand(true)
-	s.current.w = direct
-
-	s.Right.AddChild(direct)
-	s.Right.SetVisibleChild(direct)
-
 	direct.Invalidate()
+
+	s.stackSelect(direct)
+
 	return direct
 }
 
@@ -191,20 +211,16 @@ func (s *Sidebar) openGuild(guildID discord.GuildID) *channels.View {
 
 	chs = channels.NewView(s.ctx, guildID)
 	chs.SetVExpand(true)
-	s.current.w = chs
-
-	s.Right.AddChild(chs)
-	s.Right.SetVisibleChild(chs)
-
-	chs.Child.View.GrabFocus()
 	chs.InvalidateHeader()
+
+	s.stackSelect(chs)
 	return chs
 }
 
 func (s *Sidebar) unselect() {
 	s.Guilds.Unselect()
 	s.DMView.Unselect()
-	s.removeCurrent()
+	s.stackSelect(nil)
 }
 
 // Unselect unselects the current guild or channel.

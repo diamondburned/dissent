@@ -3,13 +3,13 @@ package window
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/diamondburned/adaptive"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
-	"github.com/diamondburned/gotk4/pkg/core/glib"
 	"github.com/diamondburned/gotk4/pkg/gdk/v4"
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
@@ -190,20 +190,13 @@ func (p *ChatPage) SwitchToMessages() {
 	tab := p.currentTab()
 	tab.switchToPlaceholder()
 
-	p.lastGuildState.Exists(func(exists bool) {
-		if !exists {
-			// Open DMs if there is no last opened channel.
+	// Restore the last opened channel if there is one.
+	p.lastGuildState.Get(func(id discord.GuildID) {
+		if id.IsValid() {
+			p.OpenGuild(id)
+		} else {
 			p.OpenDMs()
-			return
 		}
-		// Restore the last opened channel if there is one.
-		p.lastGuildState.Get(func(id discord.GuildID) {
-			if id.IsValid() {
-				p.OpenGuild(id)
-			} else {
-				p.OpenDMs()
-			}
-		})
 	})
 }
 
@@ -224,20 +217,19 @@ func (p *ChatPage) OpenGuild(guildID discord.GuildID) {
 }
 
 func (p *ChatPage) restoreLastChannel(guildID discord.GuildID) {
-	var k string
-	if guildID.IsValid() {
-		k = guildID.String()
-	}
-
-	// Allow a bit of delay for the page to finish loading.
-	glib.IdleAdd(func() {
-		p.lastChannelState.Exists(k, func(exists bool) {
-			if exists {
-				p.lastChannelState.Get(k, p.OpenChannel)
-			} else {
-				p.SwitchToPlaceholder()
-			}
-		})
+	k := guildID.String()
+	p.lastChannelState.Exists(k, func(exists bool) {
+		if exists {
+			p.lastChannelState.Get(k, func(chID discord.ChannelID) {
+				slog.Debug(
+					"restoring last channel from state",
+					"guild_id", guildID,
+					"restored_channel_id", chID)
+				p.OpenChannel(chID)
+			})
+		} else {
+			p.SwitchToPlaceholder()
+		}
 	})
 }
 
@@ -257,6 +249,7 @@ func (p *ChatPage) OpenChannel(chID discord.ChannelID) {
 		tab = p.currentTab()
 	}
 
+	// Open the channel in the message view.
 	tab.switchToChannel(chID)
 
 	page := p.tabView.Page(tab)
@@ -265,17 +258,15 @@ func (p *ChatPage) OpenChannel(chID discord.ChannelID) {
 		p.tabView.SetSelectedPage(page)
 	}
 
+	// This method updates the tab and window, but it also updates the sidebar
+	// selection internally.
 	p.onActiveTabChange(page)
 
 	state := gtkcord.FromContext(p.ctx).Offline()
 	ch, _ := state.Channel(chID)
 	if ch != nil {
-		var k string
-		if ch.GuildID.IsValid() {
-			k = ch.GuildID.String()
-		}
 		// Save the last opened channel for the guild.
-		p.lastChannelState.Set(k, chID)
+		p.lastChannelState.Set(ch.GuildID.String(), chID)
 	}
 }
 
