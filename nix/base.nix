@@ -27,9 +27,6 @@
 			name = "so.libdb.dissent.service";
 			path = ./so.libdb.dissent.service;
 		};
-		logo = {
-			name = "so.libdb.dissent.svg";
-			path = ../internal/icons/hicolor/scalable/apps/so.libdb.dissent.svg;
-		};
+		icons = ../internal/icons;
 	};
 }
