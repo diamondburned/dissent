@@ -356,8 +356,6 @@ func (p *ChatPage) onActiveTabChange(page *adw.TabPage) {
 		// channel on display.
 		if p.lastGuild.IsValid() {
 			p.Sidebar.SetSelectedGuild(p.lastGuild)
-		} else {
-			p.Sidebar.Unselect()
 		}
 	}
 
