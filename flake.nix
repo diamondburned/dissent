@@ -25,7 +25,8 @@
 		with inputs.nixpkgs.lib;
 
 		let
-			base = import ./nix/base.nix // {
+			baseFunc = pkgs: import ./nix/base.nix {
+				inherit pkgs;
 				src = self;
 			};
 		in
@@ -40,7 +41,8 @@
 
 			{
 				devShells.default = inputs.gotk4-nix.lib.mkShell {
-					inherit base pkgs;
+					pkgs = pkgs;
+					base = baseFunc pkgs;
 					buildInputs = with pkgs; [
 						jq
 						niv
@@ -53,7 +55,8 @@
 				};
 
 				packages.default = inputs.gotk4-nix.lib.mkPackage {
-					inherit base pkgs;
+					pkgs = pkgs;
+					base = baseFunc pkgs;
 					version = self.rev or "unknown";
 				};
 
@@ -71,9 +74,9 @@
 			}
 		)) //
 		{
-			lib = inputs.gotk4-nix.lib.mkLib {
-				inherit base;
+			lib = inputs.gotk4-nix.lib.mkLib rec {
 				pkgs = inputs.nixpkgs.legacyPackages.${builtins.currentSystem};
+				base = baseFunc pkgs;
 			};
 		};
 }
