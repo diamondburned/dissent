@@ -122,6 +122,9 @@ var _ = cssutil.WriteCSS(`
 	.message-richframe:not(:first-child) {
 		margin-top: 4px;
 	}
+	.message-embed-spoiler .onlineimage {
+		filter: blur(45px);
+	}
 `)
 
 var messageAttachmentCSS = cssutil.Applier("message-attachment", `
@@ -172,6 +175,10 @@ func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widg
 		image.SetOpenURL(func() {
 			openViewer(ctx, attachment.URL, opts)
 		})
+
+		if strings.HasPrefix(attachment.Filename, "SPOILER_") {
+			image.AddCSSClass("message-embed-spoiler")
+		}
 
 		if attachment.Width > 0 && attachment.Height > 0 {
 			origW := int(attachment.Width)
