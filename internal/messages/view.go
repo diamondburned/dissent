@@ -597,10 +597,10 @@ func (v *View) loadMore() {
 	ctx := v.ctx
 	state := gtkcord.FromContext(ctx).Online()
 
-	prevScrollVal := v.Scroll.VAdjustment().Value()
-	prevScrollMax := v.Scroll.VAdjustment().Upper()
-
 	upsertMessages := func(msgs []discord.Message) {
+		unlock := v.Scroll.LockScroll()
+		glib.IdleAdd(unlock)
+
 		msgs = v.filterIgnoredMessages(msgs)
 
 		infos := make([]messageInfo, len(msgs))
@@ -634,17 +634,6 @@ func (v *View) loadMore() {
 			w := v.upsertMessage(msg.ID, infos[i], flags)
 			w.Update(&gateway.MessageCreateEvent{Message: msg})
 		}
-
-		// Do this on the next iteration of the main loop so that the scroll
-		// adjustment has time to update.
-		glib.IdleAdd(func() {
-			// Calculate the offset at which to scroll to after loading more
-			// messages.
-			currentScrollMax := v.Scroll.VAdjustment().Upper()
-
-			vadj := v.Scroll.VAdjustment()
-			vadj.SetValue(prevScrollVal + (currentScrollMax - prevScrollMax))
-		})
 
 		// Style the first prepended message to add a visual indicator for the
 		// user.

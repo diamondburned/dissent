@@ -43,10 +43,10 @@ github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20240107232253-5f283b5d35bc h1
 github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20240107232253-5f283b5d35bc/go.mod h1:fkvdR7MYO1sI0ex07VYLTc+YK87v24aRFYyMJQ/xAeA=
 github.com/diamondburned/gotk4/pkg v0.2.2 h1:6EBtg/7uhnN/sCJd7rZdc+PqMXmnEaEDNIC9K/hTZfQ=
 github.com/diamondburned/gotk4/pkg v0.2.2/go.mod h1:DqeOW+MxSZFg9OO+esk4JgQk0TiUJJUBfMltKhG+ub4=
-github.com/diamondburned/gotkit v0.0.0-20240420000353-b561f0555aad h1:kHHxriJfcpwqeOCduLaK7q/B4HCP8AAocJPqsabKhcI=
-github.com/diamondburned/gotkit v0.0.0-20240420000353-b561f0555aad/go.mod h1:JmHnd62t8NMsPJUL86cjmeJfEcw3Yyb7qkdTZGCgu0o=
-github.com/diamondburned/gotkit v0.0.0-20240420055850-e219ca3e4a87 h1:mFUM93buCaqz8eBt5ZggNID8Icazmh8GExIj6Y0dg24=
-github.com/diamondburned/gotkit v0.0.0-20240420055850-e219ca3e4a87/go.mod h1:JmHnd62t8NMsPJUL86cjmeJfEcw3Yyb7qkdTZGCgu0o=
+github.com/diamondburned/gotkit v0.0.0-20240421041746-e3fb06938d7b h1:HLPVhtSQTiTab43mt/Dgz7vFYmAevXr1Do6ot+RhNjE=
+github.com/diamondburned/gotkit v0.0.0-20240421041746-e3fb06938d7b/go.mod h1:JmHnd62t8NMsPJUL86cjmeJfEcw3Yyb7qkdTZGCgu0o=
+github.com/diamondburned/gotkit v0.0.0-20240421051130-6094a5dcd206 h1:mdgj7yTYL1oNXAeY8lzDwo1qoVAmUk5SjfiSgMVlatk=
+github.com/diamondburned/gotkit v0.0.0-20240421051130-6094a5dcd206/go.mod h1:JmHnd62t8NMsPJUL86cjmeJfEcw3Yyb7qkdTZGCgu0o=
 github.com/diamondburned/ningen/v3 v3.0.1-0.20240215053437-0d35ff052647 h1:jvL5HCZ5wXvt9dSP+j8rcpCtgqKNIv1/rh6qU0Qot5Y=
 github.com/diamondburned/ningen/v3 v3.0.1-0.20240215053437-0d35ff052647/go.mod h1:aRTBRHaAPjg3Gz5zQxuLiKVQhjiUeA2mzDg+QqKT0O0=
 github.com/dlclark/regexp2 v1.4.0 h1:F1rxgk7p4uKjwIQxBs9oAXe5CqrXlCduYEJvrF4u93E=
