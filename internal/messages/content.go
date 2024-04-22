@@ -2,6 +2,7 @@ package messages
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"html"
 	"log/slog"
@@ -15,6 +16,7 @@ import (
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
+	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/components/onlineimage"
 	"github.com/diamondburned/gotkit/gtkutil"
@@ -144,6 +146,22 @@ var systemContentCSS = cssutil.Applier("message-system-content", `
 func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 	c.msgID = m.ID
 	c.clear()
+
+	// Prevent the Markdown parser from crashing the client.
+	// See https://github.com/diamondburned/dissent/issues/275.
+	defer func() {
+		if r := recover(); r != nil {
+			slog.Error(
+				"recovered from a panic while parsing markdown",
+				"message_id", m.ID,
+				"content", m.Content,
+				"panic", r)
+
+			app.Error(c.ctx, errors.New(
+				locale.Get("Panic caught while parsing markdown, please check logs.")))
+			c.Redact()
+		}
+	}()
 
 	state := gtkcord.FromContext(c.ctx)
 
