@@ -147,7 +147,7 @@ var viewCSS = cssutil.Applier("message-view", `
 `)
 
 const (
-	loadMoreBatch = 25 // load this many more messages on scroll
+	loadMoreBatch = 50 // load this many more messages on scroll
 	initialBatch  = 15 // load this many messages on startup
 	idealMaxCount = 50 // ideally keep this many messages in the view
 )
