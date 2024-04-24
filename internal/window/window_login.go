@@ -2,7 +2,7 @@ package window
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"sync"
 
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -30,7 +30,9 @@ func (w *loginWindow) Hook(state *gtkcord.State) {
 	state.BindWidget(w, func(ev gateway.Event) {
 		switch ev := ev.(type) {
 		case *ningen.ConnectedEvent:
-			log.Println("connected:", ev.EventType())
+			slog.Info(
+				"Discord gateway connected",
+				"event", ev.EventType())
 
 			// Cancel the 3s delay if we're already connected during that.
 			if reconnecting != 0 {
@@ -41,13 +43,21 @@ func (w *loginWindow) Hook(state *gtkcord.State) {
 			w.Connected()
 
 		case *ws.BackgroundErrorEvent:
-			log.Println("warning: gateway:", ev)
+			slog.Warn(
+				"Discord gateway backgorund error",
+				"err", ev.Err)
 
 		case *ws.CloseEvent:
-			log.Println("disconnected (*ws.CloseEvent), err:", ev.Err, ", code:", ev.Code)
+			slog.Info(
+				"Discord gateway closed",
+				"err", ev.Err,
+				"code", ev.Code)
 
 		case *ningen.DisconnectedEvent:
-			log.Println("disconnected, err:", ev.Err, ", code:", ev.Code)
+			slog.Info(
+				"Discord gateway disconnected",
+				"err", ev.Err,
+				"code", ev.Code)
 
 			if ev.IsLoggedOut() {
 				w.PromptLogin()
@@ -105,10 +115,10 @@ func (w *loginWindow) Hook(state *gtkcord.State) {
 func (w *loginWindow) Ready(state *gtkcord.State) {
 	app := w.Application()
 	app.ConnectShutdown(func() {
-		log.Println("Closing Discord session...")
+		slog.Info("Closing Discord session...")
 
 		if err := state.Close(); err != nil {
-			log.Println("error closing session:", err)
+			slog.Error("error closing session", "err", err)
 		}
 	})
 }
