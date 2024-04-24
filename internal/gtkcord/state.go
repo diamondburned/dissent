@@ -111,7 +111,14 @@ func Wrap(state *state.State) *State {
 		log.Printf("state error: %v", err)
 	}
 
-	// dumpRawEvents(state)
+	if os.Getenv("DISSENT_DEBUG_DUMP_ALL_EVENTS_PLEASE") == "1" {
+		dir := filepath.Join(os.TempDir(), "gtkcord4-events")
+		slog.Warn(
+			"ATTENTION: DISSENT_DEBUG_DUMP_ALL_EVENTS_PLEASE is set to 1, dumping all raw events.",
+			"dir", dir)
+		dumpRawEvents(state, dir)
+	}
+
 	ningen := ningen.FromState(state)
 	return &State{
 		MainThreadHandler: NewMainThreadHandler(ningen.Handler),
@@ -121,12 +128,11 @@ func Wrap(state *state.State) *State {
 
 var rawEventsOnce sync.Once
 
-func dumpRawEvents(state *state.State) {
+func dumpRawEvents(state *state.State, dir string) {
 	rawEventsOnce.Do(func() {
 		ws.EnableRawEvents = true
 	})
 
-	dir := filepath.Join(os.TempDir(), "gtkcord4-events")
 	os.RemoveAll(dir)
 
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
