@@ -17,7 +17,7 @@ schema = 3
     version = "v0.0.2-0.20221227093656-fa139be203a8"
     hash = "sha256-xIerrbYQf6FPbbRd60OnBStIJMl6mg/Qvl+LTmRbyIw="
   [mod."github.com/diamondburned/arikawa/v3"]
-    version = "v3.3.6-0.20240424061322-5aaffc368786"
+    version = "v3.3.6"
     hash = "sha256-zNmLDanbMP/YD17agnV12q2imqmiEDrJbFl7p8RfTsk="
   [mod."github.com/diamondburned/chatkit"]
     version = "v0.0.0-20240424232758-4d10a6d2ca12"
