@@ -20,8 +20,8 @@ schema = 3
     version = "v3.3.6"
     hash = "sha256-zNmLDanbMP/YD17agnV12q2imqmiEDrJbFl7p8RfTsk="
   [mod."github.com/diamondburned/chatkit"]
-    version = "v0.0.0-20240424232758-4d10a6d2ca12"
-    hash = "sha256-GiBGoAaHNSb6GpQjJ8RU8rFaCCcQLWmerXrDk/f8CX8="
+    version = "v0.0.0-20240508075112-f09055581ed8"
+    hash = "sha256-bRg2Liove4DDDrFbQqpdlFqhntsvQZak0zZyUB82UBQ="
   [mod."github.com/diamondburned/gotk4-adwaita/pkg"]
     version = "v0.0.0-20240107232253-5f283b5d35bc"
     hash = "sha256-ktoJxbdnDWTrGIKkzEg1yxe4xnklqTggBZUTFYtu62Y="
@@ -67,6 +67,9 @@ schema = 3
   [mod."github.com/pkg/errors"]
     version = "v0.9.1"
     hash = "sha256-mNfQtcrQmu3sNg/7IwiieKWOgFQOVVe2yXgKBpe/wZw="
+  [mod."github.com/puzpuzpuz/xsync/v3"]
+    version = "v3.1.0"
+    hash = "sha256-LX3udTADhVRKqNUjef1cAvf+EjcRnH0DyqQbaSwtWDQ="
   [mod."github.com/sahilm/fuzzy"]
     version = "v0.1.1"
     hash = "sha256-f2VsDI6G+V2w31tSDzbZPi9EI2E7jRV6Aq8yeOorSZY="
@@ -103,9 +106,15 @@ schema = 3
   [mod."golang.org/x/sys"]
     version = "v0.19.0"
     hash = "sha256-cmuL31TYLJmDm/fDnI2Sn0wB88cpdOHV1+urorsJWx4="
+  [mod."golang.org/x/text"]
+    version = "v0.15.0"
+    hash = "sha256-pBnj0AEkfkvZf+3bN7h6epCD2kurw59clDP7yWvxKlk="
   [mod."golang.org/x/time"]
     version = "v0.5.0"
     hash = "sha256-W6RgwgdYTO3byIPOFxrP2IpAZdgaGowAaVfYby7AULU="
   [mod."libdb.so/ctxt"]
     version = "v0.0.0-20240229093153-2db38a5d3c12"
     hash = "sha256-mViBj67wYeuD4mQKMP/4gQo9lFNO6J8HZztHw9ZGPlk="
+  [mod."libdb.so/go-emoji"]
+    version = "v0.0.0-20240508073816-39776eee41ac"
+    hash = "sha256-Lsc8gcjZdlh/J95zoHACfE06xv8TojUIoVoCaugvLlY="
