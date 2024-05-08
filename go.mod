@@ -5,7 +5,7 @@ go 1.21.0
 require (
 	github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8
 	github.com/diamondburned/arikawa/v3 v3.3.6
-	github.com/diamondburned/chatkit v0.0.0-20240424232758-4d10a6d2ca12
+	github.com/diamondburned/chatkit v0.0.0-20240508075112-f09055581ed8
 	github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20240107232253-5f283b5d35bc
 	github.com/diamondburned/gotk4/pkg v0.2.2
 	github.com/diamondburned/gotkit v0.0.0-20240421051130-6094a5dcd206
@@ -31,6 +31,7 @@ require (
 	github.com/leonelquinteros/gotext v1.6.0 // indirect
 	github.com/lmittmann/tint v1.0.4 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/puzpuzpuz/xsync/v3 v3.1.0 // indirect
 	github.com/twmb/murmur3 v1.1.8 // indirect
 	github.com/yalue/merged_fs v1.3.0 // indirect
 	github.com/zalando/go-keyring v0.2.4 // indirect
@@ -41,5 +42,7 @@ require (
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
+	golang.org/x/text v0.15.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
+	libdb.so/go-emoji v0.0.0-20240508073816-39776eee41ac // indirect
 )
