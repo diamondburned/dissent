@@ -45,10 +45,10 @@ github.com/diamondburned/chatkit v0.0.0-20240508075112-f09055581ed8 h1:MW3lhdmgw
 github.com/diamondburned/chatkit v0.0.0-20240508075112-f09055581ed8/go.mod h1:NdMdUalJ02Lhlc5Lr1dVgeMpeUA7yM0r0dT2iYIz108=
 github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20240107232253-5f283b5d35bc h1:qx5q0yTNuT30m0t/gugjsYOHjmGUVxsCekR5xcwGRVY=
 github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20240107232253-5f283b5d35bc/go.mod h1:fkvdR7MYO1sI0ex07VYLTc+YK87v24aRFYyMJQ/xAeA=
-github.com/diamondburned/gotk4/pkg v0.2.2 h1:6EBtg/7uhnN/sCJd7rZdc+PqMXmnEaEDNIC9K/hTZfQ=
-github.com/diamondburned/gotk4/pkg v0.2.2/go.mod h1:DqeOW+MxSZFg9OO+esk4JgQk0TiUJJUBfMltKhG+ub4=
-github.com/diamondburned/gotkit v0.0.0-20240421051130-6094a5dcd206 h1:mdgj7yTYL1oNXAeY8lzDwo1qoVAmUk5SjfiSgMVlatk=
-github.com/diamondburned/gotkit v0.0.0-20240421051130-6094a5dcd206/go.mod h1:JmHnd62t8NMsPJUL86cjmeJfEcw3Yyb7qkdTZGCgu0o=
+github.com/diamondburned/gotk4/pkg v0.2.3-0.20240606221803-e395a91f5db3 h1:zIfoTMA4pz2wDi9x5zL6D1rgHYD6R1dIARcIRMZDtF0=
+github.com/diamondburned/gotk4/pkg v0.2.3-0.20240606221803-e395a91f5db3/go.mod h1:DqeOW+MxSZFg9OO+esk4JgQk0TiUJJUBfMltKhG+ub4=
+github.com/diamondburned/gotkit v0.0.0-20240607070750-da4f8cafb57d h1:R/YGQUbel+SqTVrIZAlNF3+dzRS8/U+7iFo+V1Lx8OA=
+github.com/diamondburned/gotkit v0.0.0-20240607070750-da4f8cafb57d/go.mod h1:QkWKdMY+WQ11h8FGhpkByLM+gdqhcJv0uQ7QiRsoeak=
 github.com/diamondburned/ningen/v3 v3.0.1-0.20240527225532-96fcee660001 h1:Ygt6NHNSU9NKj7oAl692A99d3KXMxPjlSuxIjsLvTvg=
 github.com/diamondburned/ningen/v3 v3.0.1-0.20240527225532-96fcee660001/go.mod h1:aRTBRHaAPjg3Gz5zQxuLiKVQhjiUeA2mzDg+QqKT0O0=
 github.com/dlclark/regexp2 v1.4.0/go.mod h1:2pZnwuY/m+8K6iRw6wQdMtk+rH5tNGR1i55kozfMjCc=

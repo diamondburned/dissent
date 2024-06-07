@@ -137,7 +137,7 @@ func (rs *contentReactions) findReactionIx(emoji discord.APIEmoji) int {
 	var i int
 	foundIx := -1
 
-	iter := rs.reactions.AllItems()
+	iter := rs.reactions.All()
 	iter(func(reaction messageReaction) bool {
 		if reaction.Emoji.APIString() == emoji {
 			foundIx = i
@@ -155,7 +155,7 @@ func (rs *contentReactions) isReacted(emoji discord.APIEmoji) bool {
 	if ix == -1 {
 		return false
 	}
-	return rs.reactions.Item(ix).Me
+	return rs.reactions.At(ix).Me
 }
 
 // SetReactions sets the reactions of the message.
@@ -172,7 +172,7 @@ func (rs *contentReactions) SetReactions(reactions []discord.Reaction) {
 			MessageID: rs.parent.MessageID(),
 		}
 	}
-	rs.reactions.Splice(0, rs.reactions.NItems(), messageReactions...)
+	rs.reactions.Splice(0, rs.reactions.Len(), messageReactions...)
 }
 
 /*
