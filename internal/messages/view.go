@@ -95,35 +95,11 @@ var viewCSS = cssutil.Applier("message-view", `
 		background: none;
 	}
 	.message-list > row {
-		transition: linear 150ms background-color;
 		box-shadow: none;
 		background: none;
 		background-image: none;
 		background-color: transparent;
 		padding: 0;
-		border: 2px solid transparent;
-	}
-	.message-list > row:focus,
-	.message-list > row:hover {
-		transition: none;
-	}
-	.message-list > row:focus {
-		background-color: alpha(@theme_fg_color, 0.125);
-	}
-	.message-list > row:hover {
-		background-color: alpha(@theme_fg_color, 0.075);
-	}
-	.message-list > row.message-editing,
-	.message-list > row.message-replying {
-		background-color: alpha(@theme_selected_bg_color, 0.15);
-		border-color: alpha(@theme_selected_bg_color, 0.55);
-	}
-	.message-list > row.message-sending {
-		opacity: 0.65;
-	}
-	.message-list > row.message-first-prepended {
-		border-bottom: 1.5px dashed alpha(@theme_fg_color, 0.25);
-		padding-bottom: 2.5px;
 	}
 	.message-show-more {
 		background: none;
@@ -1036,7 +1012,7 @@ func (v *View) SendMessage(msg composer.SendingMessage) {
 		}
 	}
 
-	gtk.BaseWidget(row).AddCSSClass("message-sending")
+	row.AddCSSClass("message-sending")
 	row.Update(&gateway.MessageCreateEvent{Message: m})
 
 	uploading := newUploadingLabel(v.ctx, len(msg.Files))
@@ -1143,7 +1119,7 @@ func (v *View) ReplyTo(id discord.MessageID) {
 	v.state.row = msg.ListBoxRow
 	v.state.replying = true
 
-	msg.AddCSSClass("message-replying")
+	msg.message.AddCSSClass("message-replying")
 	v.Composer.StartReplyingTo(msg.message.Message())
 }
 
@@ -1159,7 +1135,7 @@ func (v *View) Edit(id discord.MessageID) {
 	v.state.row = msg.ListBoxRow
 	v.state.editing = true
 
-	msg.AddCSSClass("message-editing")
+	msg.message.AddCSSClass("message-editing")
 	v.Composer.StartEditing(msg.message.Message())
 }
 

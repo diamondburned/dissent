@@ -20,8 +20,49 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/imgutil"
 	"github.com/diamondburned/gotkit/gtkutil/textutil"
+	"github.com/diamondburned/ningen/v3"
 	"libdb.so/dissent/internal/gtkcord"
 )
+
+var _ = cssutil.WriteCSS(`
+	.message-box {
+		border: 2px solid transparent;
+		transition: linear 150ms background-color;
+	}
+	row:focus .message-box,
+	row:hover .message-box {
+		transition: none;
+	}
+	row:focus .message-box {
+		background-color: alpha(@theme_fg_color, 0.125);
+	}
+	row:hover .message-box {
+		background-color: alpha(@theme_fg_color, 0.075);
+	}
+	.message-box.message-editing,
+	.message-box.message-replying {
+		background-color: alpha(@theme_selected_bg_color, 0.15);
+		border-color: alpha(@theme_selected_bg_color, 0.55);
+	}
+	.message-box.message-sending {
+		opacity: 0.65;
+	}
+	.message-box.message-first-prepended {
+		border-bottom: 1.5px dashed alpha(@theme_fg_color, 0.25);
+		padding-bottom: 2.5px;
+	}
+	.message-mentioned {
+		border-left: 2px solid @mentioned;
+		border-top: 0;
+		border-bottom: 0;
+		padding-top: 4px;
+		padding-bottom: 2px;
+		background: alpha(@mentioned, 0.075);
+	}
+	row:hover .message-mentioned {
+		background: alpha(@mentioned, 0.125);
+	}
+`)
 
 // ExtraMenuSetter is an interface for types that implement SetExtraMenu.
 type ExtraMenuSetter interface {
@@ -36,13 +77,24 @@ type Message interface {
 	Redact()
 	Content() *Content
 	Message() *discord.Message
+	AddCSSClass(string)
+	RemoveCSSClass(string)
 }
+
+var (
+	_ Message = (*cozyMessage)(nil)
+	_ Message = (*collapsedMessage)(nil)
+)
 
 // MessageWithUser extends Message for types that also show user information.
 type MessageWithUser interface {
 	Message
 	UpdateMember(*discord.Member)
 }
+
+var (
+	_ MessageWithUser = (*cozyMessage)(nil)
+)
 
 var blockedCSS = cssutil.Applier("message-blocked", `
 	.message-blocked {
@@ -82,13 +134,23 @@ func (m *message) Content() *Content {
 }
 
 func (m *message) update(parent gtk.Widgetter, message *discord.Message) {
+	parentWidget := gtk.BaseWidget(parent)
+	parentWidget.AddCSSClass("message-box")
+
 	m.message = message
 	m.bind(parent)
 	m.content.Update(message)
 
 	state := gtkcord.FromContext(m.ctx())
+
 	if state.RelationshipState.IsBlocked(message.Author.ID) {
 		blockedCSS(parent)
+	}
+
+	if state.MessageMentions(message).Has(ningen.MessageMentions) {
+		parentWidget.AddCSSClass("message-mentioned")
+	} else {
+		parentWidget.RemoveCSSClass("message-mentioned")
 	}
 }
 
@@ -242,7 +304,7 @@ var _ MessageWithUser = (*cozyMessage)(nil)
 
 var cozyCSS = cssutil.Applier("message-cozy", `
 	.message-cozy {
-		margin-top: 2px;
+		padding-top: 2px;
 	}
 	.message-cozy-header {
 		min-height: 1.75em;
@@ -341,7 +403,7 @@ var _ Message = (*collapsedMessage)(nil)
 
 var collapsedCSS = cssutil.Applier("message-collapsed", `
 	.message-collapsed {
-		margin-bottom: 1px;
+		padding-bottom: 1px;
 	}
 	.message-collapsed-timestamp {
 		opacity: 0;
