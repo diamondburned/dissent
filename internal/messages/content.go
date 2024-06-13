@@ -18,13 +18,11 @@ import (
 	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/app/locale"
-	"github.com/diamondburned/gotkit/components/onlineimage"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/imgutil"
-	"github.com/diamondburned/gotkit/gtkutil/textutil"
 	"github.com/diamondburned/ningen/v3/discordmd"
-	"github.com/yuin/goldmark/ast"
+	"libdb.so/ctxt"
 	"libdb.so/dissent/internal/gtkcord"
 )
 
@@ -258,7 +256,9 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 		src := []byte(m.Content)
 		node := discordmd.ParseWithMessage(src, *state.Cabinet, m, true)
 
-		c.mdview = mdrender.NewMarkdownViewer(c.ctx, src, node, renderers...)
+		c.mdview = mdrender.NewMarkdownViewer(
+			ctxt.With(c.ctx, newMarkdownState()),
+			src, node, renderers...)
 		c.append(c.mdview)
 	}
 
@@ -466,109 +466,6 @@ func (c *Content) SetReactions(reactions []discord.Reaction) {
 		c.append(c.react)
 	}
 	c.react.SetReactions(reactions)
-}
-
-var renderers = []mdrender.OptionFunc{
-	mdrender.WithRenderer(discordmd.KindEmoji, renderEmoji),
-	mdrender.WithRenderer(discordmd.KindInline, renderInline),
-	mdrender.WithRenderer(discordmd.KindMention, renderMention),
-}
-
-var inlineEmojiTag = textutil.TextTag{
-	"rise":     -5 * pango.SCALE,
-	"rise-set": true,
-}
-
-func renderEmoji(r *mdrender.Renderer, n ast.Node) ast.WalkStatus {
-	emoji := n.(*discordmd.Emoji)
-	text := r.State.TextBlock()
-
-	picture := onlineimage.NewPicture(r.State.Context(), imgutil.HTTPProvider)
-	picture.EnableAnimation().OnHover()
-	picture.SetKeepAspectRatio(true)
-	picture.SetTooltipText(emoji.Name)
-	picture.SetURL(gtkcord.EmojiURL(emoji.ID, emoji.GIF))
-
-	var inlineImage *md.InlineImage
-	makeInlineImage := func(size int) {
-		inlineImage = md.InsertCustomImageWidget(text.TextView, text.Buffer.CreateChildAnchor(text.Iter), picture)
-		inlineImage.SetSizeRequest(size, size)
-	}
-
-	if emoji.Large {
-		makeInlineImage(gtkcord.LargeEmojiSize)
-	} else {
-		tag := inlineEmojiTag.FromTable(text.Buffer.TagTable(), "inline-emoji")
-		text.TagBounded(tag, func() { makeInlineImage(gtkcord.InlineEmojiSize) })
-	}
-
-	return ast.WalkContinue
-}
-
-var htmlTagMap = map[discordmd.Attribute]string{
-	discordmd.AttrBold:          "b",
-	discordmd.AttrItalics:       "i",
-	discordmd.AttrUnderline:     "u",
-	discordmd.AttrStrikethrough: "strike",
-	discordmd.AttrMonospace:     "code",
-}
-
-func renderInline(r *mdrender.Renderer, n ast.Node) ast.WalkStatus {
-	text := r.State.TextBlock()
-	startIx := text.Iter.Offset()
-
-	// Render everything inside. We'll wrap the whole region with tags.
-	r.RenderChildren(n)
-
-	start := text.Buffer.IterAtOffset(startIx)
-	end := text.Iter
-
-	inline := n.(*discordmd.Inline)
-
-	for tag, htmltag := range htmlTagMap {
-		if inline.Attr.Has(tag) {
-			text.Buffer.ApplyTag(text.Tag(htmltag), start, end)
-		}
-	}
-
-	return ast.WalkSkipChildren
-}
-
-// rgba(111, 120, 219, 0.3)
-const defaultMentionColor = "#6F78DB"
-
-func mentionTag(r *mdrender.Renderer, color string) *gtk.TextTag {
-	tag := textutil.TextTag{"background": color + "76"}
-	return tag.FromTable(r.State.TagTable(), tag.Hash())
-}
-
-func renderMention(r *mdrender.Renderer, n ast.Node) ast.WalkStatus {
-	mention := n.(*discordmd.Mention)
-
-	text := r.State.TextBlock()
-
-	switch {
-	case mention.Channel != nil:
-		text.TagBounded(mentionTag(r, defaultMentionColor), func() {
-			text.Insert(" #" + mention.Channel.Name + " ")
-		})
-
-	case mention.GuildRole != nil:
-		roleColor := defaultMentionColor
-		if mention.GuildRole.Color != discord.NullColor {
-			roleColor = mention.GuildRole.Color.String()
-		}
-
-		text.TagBounded(mentionTag(r, roleColor), func() {
-			text.Insert(" @" + mention.GuildRole.Name + " ")
-		})
-
-	case mention.GuildUser != nil:
-		chip := newAuthorChip(r.State.Context(), mention.Message.GuildID, mention.GuildUser)
-		chip.InsertText(text.TextView, text.Iter)
-	}
-
-	return ast.WalkContinue
 }
 
 func newAuthorChip(ctx context.Context, guildID discord.GuildID, user *discord.GuildUser) *author.Chip {
