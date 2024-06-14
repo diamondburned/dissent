@@ -124,7 +124,7 @@ func (it channelItem) Row(ctx context.Context) *gtk.ListBoxRow {
 
 		box.Append(icon)
 	default:
-		icon := channels.NewChannelIcon(it.Type, it.NSFW, func(t discord.ChannelType) (string, bool) {
+		icon := channels.NewChannelIcon(it.Channel, func(t discord.ChannelType) (string, bool) {
 			_, isThread := threadTypes[t]
 			return "thread-branch-symbolic", isThread
 		})

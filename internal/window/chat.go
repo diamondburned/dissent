@@ -22,6 +22,7 @@ import (
 	"libdb.so/dissent/internal/gtkcord"
 	"libdb.so/dissent/internal/messages"
 	"libdb.so/dissent/internal/sidebar"
+	"libdb.so/dissent/internal/sidebar/channels"
 	"libdb.so/dissent/internal/window/backbutton"
 	"libdb.so/dissent/internal/window/quickswitcher"
 )
@@ -38,7 +39,7 @@ type ChatPage struct {
 	*adw.OverlaySplitView
 	Sidebar     *sidebar.Sidebar
 	RightHeader *adw.HeaderBar
-	RightTitle  *gtk.Label
+	rightTitle  *adw.Bin
 
 	tabView       *adw.TabView
 	quickswitcher *quickswitcher.Dialog
@@ -79,6 +80,9 @@ var chatPageCSS = cssutil.Applier("window-chatpage", `
 	.right-header-label {
 		font-weight: bold;
 	}
+	.right-header-channel-icon {
+		margin-right: 4px;
+	}
 `)
 
 func NewChatPage(ctx context.Context, w *Window) *ChatPage {
@@ -110,11 +114,15 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	p.Sidebar = sidebar.NewSidebar(ctx)
 	p.Sidebar.SetHAlign(gtk.AlignStart)
 
-	p.RightTitle = gtk.NewLabel("")
-	p.RightTitle.AddCSSClass("right-header-label")
-	p.RightTitle.SetXAlign(0)
-	p.RightTitle.SetHExpand(true)
-	p.RightTitle.SetEllipsize(pango.EllipsizeEnd)
+	p.rightTitle = adw.NewBin()
+	p.rightTitle.AddCSSClass("right-header-bin")
+	p.rightTitle.SetHExpand(true)
+
+	// p.rightTitle = gtk.NewLabel("")
+	// p.rightTitle.AddCSSClass("right-header-label")
+	// p.rightTitle.SetXAlign(0)
+	// p.rightTitle.SetHExpand(true)
+	// p.rightTitle.SetEllipsize(pango.EllipsizeEnd)
 
 	back := backbutton.New()
 	back.SetTransitionType(gtk.RevealerTransitionTypeSlideRight)
@@ -130,7 +138,7 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	p.RightHeader.SetShowBackButton(false) // this is useless with OverlaySplitView
 	p.RightHeader.SetShowTitle(false)
 	p.RightHeader.PackStart(back)
-	p.RightHeader.PackStart(p.RightTitle)
+	p.RightHeader.PackStart(p.rightTitle)
 	p.RightHeader.PackEnd(newTabButton)
 
 	tabBar := adw.NewTabBar()
@@ -365,13 +373,29 @@ func (p *ChatPage) onActiveTabChange(page *adw.TabPage) {
 	}
 
 	// Update the displaying window title.
-	var chName string
-	if chID.IsValid() {
-		chName = gtkcord.ChannelNameFromID(p.ctx, chID)
+	if !chID.IsValid() {
+		p.rightTitle.SetChild(nil)
+		return
 	}
 
-	// Update the window titles.
-	p.RightTitle.SetText(chName)
+	state := gtkcord.FromContext(p.ctx)
+	ch, _ := state.Cabinet.Channel(chID)
+
+	chName := gtkcord.ChannelNameWithoutHash(ch)
+	label := gtk.NewLabel(chName)
+	label.AddCSSClass("right-header-label")
+	label.SetEllipsize(pango.EllipsizeEnd)
+	label.SetXAlign(0)
+
+	chIcon := channels.NewChannelIcon(ch)
+	chIcon.AddCSSClass("right-header-channel-icon")
+
+	box := gtk.NewBox(gtk.OrientationHorizontal, 0)
+	box.AddCSSClass("right-header-channel-box")
+	box.Append(chIcon)
+	box.Append(label)
+
+	p.rightTitle.SetChild(box)
 }
 
 func (p *ChatPage) updateWindowTitle() {

@@ -315,7 +315,7 @@ var _ = cssutil.WriteCSS(`
 `)
 
 func newUnknownChannelItem(name string) gtk.Widgetter {
-	icon := NewChannelIcon(9999, false)
+	icon := NewChannelIcon(nil)
 
 	label := gtk.NewLabel(name)
 	label.SetEllipsize(pango.EllipsizeEnd)
@@ -342,7 +342,7 @@ var _ = cssutil.WriteCSS(`
 `)
 
 func newChannelItemText(ch *discord.Channel) gtk.Widgetter {
-	icon := NewChannelIcon(ch.Type, ch.NSFW)
+	icon := NewChannelIcon(ch)
 
 	label := gtk.NewLabel(ch.Name)
 	label.SetEllipsize(pango.EllipsizeEnd)
@@ -485,7 +485,7 @@ var _ = cssutil.WriteCSS(`
 `)
 
 func newChannelItemVoice(state *gtkcord.State, ch *discord.Channel) gtk.Widgetter {
-	icon := NewChannelIcon(ch.Type, ch.NSFW)
+	icon := NewChannelIcon(ch)
 
 	label := gtk.NewLabel(ch.Name)
 	label.SetEllipsize(pango.EllipsizeEnd)

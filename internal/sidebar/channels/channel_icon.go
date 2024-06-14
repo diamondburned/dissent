@@ -76,11 +76,20 @@ type ChannelIcon struct {
 	Icon *gtk.Image
 }
 
+const unknownChannelType discord.ChannelType = 9999
+
 // NewChannelIcon creates a new ChannelIcon.
-func NewChannelIcon(chType discord.ChannelType, nsfw bool, overrides ...ChannelIconOverrideFunc) *ChannelIcon {
+// If ch is nil, the icon will be a special unknown icon.
+func NewChannelIcon(ch *discord.Channel, overrides ...ChannelIconOverrideFunc) *ChannelIcon {
+	chType := unknownChannelType
+	var nsfw bool
+	if ch != nil {
+		chType = ch.Type
+		nsfw = ch.NSFW
+	}
+
 	var iconName string
 	var found bool
-
 	for _, override := range append(overrides, channelIconBase) {
 		iconName, found = override(chType)
 		if found {
@@ -88,7 +97,7 @@ func NewChannelIcon(chType discord.ChannelType, nsfw bool, overrides ...ChannelI
 		}
 	}
 
-	if !found {
+	if !found && chType != unknownChannelType {
 		slog.Debug(
 			"channel icon called with unknown channel type, using fallback icon",
 			"channel_type", chType)

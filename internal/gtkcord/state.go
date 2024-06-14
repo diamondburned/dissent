@@ -27,6 +27,7 @@ import (
 	"github.com/diamondburned/chatkit/components/author"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
+	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/app/prefs"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/ningen/v3"
@@ -538,14 +539,24 @@ func WindowTitleFromID(ctx context.Context, id discord.ChannelID) string {
 func ChannelNameFromID(ctx context.Context, id discord.ChannelID) string {
 	state := FromContext(ctx)
 	ch, _ := state.Cabinet.Channel(id)
-	if ch != nil {
-		return ChannelName(ch)
-	}
-	return "Unknown channel"
+	return ChannelName(ch)
 }
 
 // ChannelName returns the channel's name in plain text.
 func ChannelName(ch *discord.Channel) string {
+	return channelName(ch, true)
+}
+
+// ChannelNameWithoutHash returns the channel's name in plain text without the
+// hash.
+func ChannelNameWithoutHash(ch *discord.Channel) string {
+	return channelName(ch, false)
+}
+
+func channelName(ch *discord.Channel, hash bool) string {
+	if ch == nil {
+		return locale.Get("Unknown channel")
+	}
 	switch ch.Type {
 	case discord.DirectMessage:
 		if len(ch.DMRecipients) == 0 {
@@ -560,7 +571,10 @@ func ChannelName(ch *discord.Channel) string {
 	case discord.GuildPublicThread, discord.GuildPrivateThread:
 		return ch.Name
 	default:
-		return "#" + ch.Name
+		if hash {
+			return "#" + ch.Name
+		}
+		return ch.Name
 	}
 }
 
