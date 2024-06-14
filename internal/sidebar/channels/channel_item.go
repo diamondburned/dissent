@@ -85,7 +85,7 @@ var _ = cssutil.WriteCSS(`
 	.channel-item {
 		padding: 0.35em 0;
 	}
-	.channel-item :first-child {
+	.channel-item > :first-child {
 		min-width: 2.5em;
 		margin: 0;
 	}
@@ -315,7 +315,7 @@ var _ = cssutil.WriteCSS(`
 `)
 
 func newUnknownChannelItem(name string) gtk.Widgetter {
-	icon := gtk.NewImageFromIconName("channel-symbolic")
+	icon := NewChannelIcon(9999, false)
 
 	label := gtk.NewLabel(name)
 	label.SetEllipsize(pango.EllipsizeEnd)
@@ -339,34 +339,10 @@ var _ = cssutil.WriteCSS(`
 	.channel-item-mention .channel-item-thread {
 		opacity: 1;
 	}
-	.channel-item-nsfw-indicator {
-		font-size: 0.75em;
-		font-weight: bold;
-		margin-right: 0.75em;
-	}
 `)
 
 func newChannelItemText(ch *discord.Channel) gtk.Widgetter {
-	icon := gtk.NewImageFromIconName("")
-	switch ch.Type {
-	case discord.GuildText:
-		icon.SetFromIconName("channel-symbolic")
-	case discord.GuildAnnouncement:
-		icon.SetFromIconName("channel-broadcast-symbolic")
-	case discord.GuildPublicThread, discord.GuildPrivateThread, discord.GuildAnnouncementThread:
-		icon.SetFromIconName("thread-branch-symbolic")
-	}
-
-	iconFrame := gtk.NewOverlay()
-	iconFrame.SetChild(icon)
-
-	if ch.NSFW {
-		nsfwIndicator := gtk.NewLabel("!")
-		nsfwIndicator.AddCSSClass("channel-item-nsfw-indicator")
-		nsfwIndicator.SetHAlign(gtk.AlignEnd)
-		nsfwIndicator.SetVAlign(gtk.AlignEnd)
-		iconFrame.AddOverlay(nsfwIndicator)
-	}
+	icon := NewChannelIcon(ch.Type, ch.NSFW)
 
 	label := gtk.NewLabel(ch.Name)
 	label.SetEllipsize(pango.EllipsizeEnd)
@@ -375,7 +351,7 @@ func newChannelItemText(ch *discord.Channel) gtk.Widgetter {
 
 	box := gtk.NewBox(gtk.OrientationHorizontal, 0)
 	box.AddCSSClass("channel-item")
-	box.Append(iconFrame)
+	box.Append(icon)
 	box.Append(label)
 
 	switch ch.Type {
@@ -509,7 +485,7 @@ var _ = cssutil.WriteCSS(`
 `)
 
 func newChannelItemVoice(state *gtkcord.State, ch *discord.Channel) gtk.Widgetter {
-	icon := gtk.NewImageFromIconName("channel-voice-symbolic")
+	icon := NewChannelIcon(ch.Type, ch.NSFW)
 
 	label := gtk.NewLabel(ch.Name)
 	label.SetEllipsize(pango.EllipsizeEnd)

@@ -22,14 +22,7 @@ func ShowDialog(ctx context.Context) {
 	d.Show()
 }
 
-var dialogCSS = cssutil.Applier("quickswitcher-dialog", `
-	.quickswitcher-dialog .quickswitcher-list {
-		margin: 8px;
-	}
-	.quickswitcher-dialog .quickswitcher-search {
-		margin: 8px 0;
-	}
-`)
+var dialogCSS = cssutil.Applier("quickswitcher-dialog", "")
 
 // NewDialog creates a new Quick Switcher dialog.
 func NewDialog(ctx context.Context) *Dialog {
@@ -51,12 +44,13 @@ func NewDialog(ctx context.Context) *Dialog {
 	d := Dialog{QuickSwitcher: qs}
 	d.ApplicationWindow = adw.NewApplicationWindow(app.Application)
 	d.SetTransientFor(win)
-	d.SetDefaultSize(400, 275)
+	d.SetDefaultSize(375, 275)
 	d.SetModal(true)
 	d.SetDestroyWithParent(true)
 	d.SetTitle(app.SuffixedTitle("Quick Switcher"))
 	d.SetContent(toolbarView)
 	d.ConnectShow(func() {
+		qs.Clear()
 		qs.search.GrabFocus()
 	})
 	dialogCSS(d)

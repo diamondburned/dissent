@@ -38,7 +38,8 @@ type entry struct {
 
 var qsCSS = cssutil.Applier("quickswitcher", `
 	.quickswitcher-search {
-		font-size: 1.35em;
+		font-size: 1.15em;
+		margin: 0;
 	}
 	.quickswitcher-search image {
 		min-width:  32px;
@@ -48,7 +49,13 @@ var qsCSS = cssutil.Applier("quickswitcher", `
 		padding: 12px;
 	}
 	.quickswitcher-list {
-		font-size: 1.15em;
+		font-size: 1.05em;
+		background: none;
+		margin: 8px;
+		margin-top: 0;
+	}
+	.quickswitcher-list > row {
+		padding: 4px 2px;
 	}
 `)
 
@@ -138,16 +145,22 @@ func qsListPlaceholder() gtk.Widgetter {
 	return l
 }
 
-func (qs *QuickSwitcher) do() {
-	if qs.text == "" {
-		return
-	}
+func (qs *QuickSwitcher) Clear() {
+	qs.search.SetText("")
+	qs.text = ""
+	qs.do()
+}
 
+func (qs *QuickSwitcher) do() {
 	for i, e := range qs.entries {
 		qs.entryList.Remove(e)
 		qs.entries[i] = entry{}
 	}
 	qs.entries = qs.entries[:0]
+
+	if qs.text == "" {
+		return
+	}
 
 	for _, match := range qs.index.search(qs.text) {
 		e := entry{
