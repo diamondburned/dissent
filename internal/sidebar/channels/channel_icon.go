@@ -9,7 +9,7 @@ import (
 )
 
 var channelIndicatorCSS = cssutil.Applier("channel-item-indicator", `
-	@define-color channel_item_indicator_color @theme_base_color;
+	@define-color channel_item_indicator_color @theme_bg_color;
 
 	.channel-item-indicator {
 		font-family: monospace;
