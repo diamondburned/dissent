@@ -115,6 +115,10 @@ type View struct {
 }
 
 var viewCSS = cssutil.Applier("composer-view", `
+	.composer-view * {
+		/* Fix spacing for certain GTK themes such as stock Adwaita. */
+		min-height: 0;
+	}
 	.composer-left-actions {
 		margin: 0 4px 0 11px;
 	}
