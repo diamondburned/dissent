@@ -42,10 +42,10 @@ var _ = cssutil.WriteCSS(`
 		background-color: @theme_bg_color;
 	}
 
-	.adaptive-avatar > image {
+	avatar > image {
 		background: none;
 	}
-	.adaptive-avatar > label {
+	avatar > label {
 		background: @borders;
 	}
 `)

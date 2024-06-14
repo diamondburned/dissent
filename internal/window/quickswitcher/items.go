@@ -114,7 +114,7 @@ func (it channelItem) Row(ctx context.Context) *gtk.ListBoxRow {
 		icon.AddCSSClass("quickswitcher-channel-icon")
 		icon.AddCSSClass("quickswitcher-channel-image")
 		icon.SetHAlign(gtk.AlignCenter)
-		icon.SetInitials(it.name)
+		icon.SetText(it.name)
 		if len(it.DMRecipients) == 1 {
 			icon.SetFromURL(gtkcord.InjectAvatarSize(it.DMRecipients[0].AvatarURL()))
 		}
@@ -181,7 +181,7 @@ func (it guildItem) Row(ctx context.Context) *gtk.ListBoxRow {
 
 	icon := onlineimage.NewAvatar(ctx, imgutil.HTTPProvider, gtkcord.InlineEmojiSize)
 	icon.AddCSSClass("quickswitcher-guild-icon")
-	icon.SetInitials(it.Name)
+	icon.SetText(it.Name)
 	icon.SetFromURL(it.IconURL())
 	icon.SetHAlign(gtk.AlignCenter)
 

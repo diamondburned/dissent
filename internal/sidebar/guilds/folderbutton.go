@@ -100,7 +100,7 @@ func NewFolderButton(ctx context.Context) *FolderButton {
 
 	for ix := range b.Images {
 		b.Images[ix] = onlineimage.NewAvatar(ctx, imgutil.HTTPProvider, FolderMiniSize)
-		b.Images[ix].SetInitials("#")
+		b.Images[ix].SetText("#")
 
 		pos := folderIconMatrix[ix]
 		b.GuildGrid.Attach(b.Images[ix], pos[0], pos[1], 1, 1)
@@ -145,11 +145,11 @@ func (b *FolderButton) SetIcons(guildIDs []discord.GuildID) {
 
 		g, err := state.Cabinet.Guild(guildIDs[ix])
 		if err != nil {
-			image.SetInitials("?")
+			image.SetText("?")
 			continue
 		}
 
-		image.SetInitials(g.Name)
+		image.SetText(g.Name)
 		image.SetFromURL(gtkcord.InjectSize(g.IconURL(), 64))
 	}
 }

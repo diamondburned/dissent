@@ -71,11 +71,9 @@ func (g *Guild) Invalidate() {
 // either Invalidate sees it or Update is called on it.
 func (g *Guild) SetUnavailable() {
 	g.name = "(guild unavailable)"
+	g.Icon.SetIconName("dialog-question-symbolic")
+	g.Icon.SetText("")
 	g.SetSensitive(false)
-
-	if g.Icon.Initials() == "" {
-		g.Icon.SetInitials("?")
-	}
 }
 
 // Update updates the guild with the given Discord object.
@@ -83,7 +81,7 @@ func (g *Guild) Update(guild *discord.Guild) {
 	g.name = guild.Name
 
 	g.SetSensitive(true)
-	g.Icon.SetInitials(guild.Name)
+	g.Icon.SetText(guild.Name)
 	g.Icon.SetFromURL(gtkcord.InjectAvatarSize(guild.IconURL()))
 
 	g.InvalidateUnread()

@@ -90,10 +90,10 @@ func (ch *Channel) Update(channel *discord.Channel) {
 
 	if channel.Type == discord.DirectMessage && len(channel.DMRecipients) > 0 {
 		u := channel.DMRecipients[0]
-		ch.avatar.SetInitials(name)
+		ch.avatar.SetText(name)
 		ch.avatar.SetFromURL(gtkcord.InjectAvatarSize(u.AvatarURL()))
 	} else {
-		ch.avatar.SetFromIconName("avatar-default-symbolic")
+		ch.avatar.SetIconName("avatar-default-symbolic")
 		ch.avatar.SetFromURL(gtkcord.InjectAvatarSize(channel.IconURL()))
 	}
 

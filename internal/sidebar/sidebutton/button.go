@@ -37,30 +37,18 @@ var buttonCSS = cssutil.Applier("sidebar-button", `
 	.sidebar-button image {
 		background-color: @theme_bg_color;
 	}
-	.sidebar-button > button .adaptive-avatar {
-		border-radius: 0; /* reset */
-	}
-	.sidebar-button > button .adaptive-avatar > image,
-	.sidebar-button > button .adaptive-avatar > label {
+	.sidebar-button > button avatar {
+		border-radius: calc({$guild_icon_size} / 2);
 		outline: 0px solid transparent;
 		outline-offset: 0;
 	}
-	.sidebar-button > button:hover .adaptive-avatar > image,
-	.sidebar-button > button:hover .adaptive-avatar > label {
+	.sidebar-button > button:hover avatar {
+		border-radius: calc({$guild_icon_size} / 4);
 		outline: 2px solid @theme_selected_bg_color;
 		background-color: alpha(@theme_selected_bg_color, 0.35);
 	}
-	.sidebar-button > button .adaptive-avatar > image,
-	.sidebar-button > button .adaptive-avatar > label {
-		border-radius: calc({$guild_icon_size} / 2);
-	}
-	.sidebar-button > button:hover .adaptive-avatar > image,
-	.sidebar-button > button:hover .adaptive-avatar > label {
-		border-radius: calc({$guild_icon_size} / 4);
-	}
 	.sidebar-button > button image,
-	.sidebar-button > button .adaptive-avatar > image,
-	.sidebar-button > button .adaptive-avatar > label {
+	.sidebar-button > button avatar {
 		transition: 200ms ease;
 		transition-property: all;
 	}

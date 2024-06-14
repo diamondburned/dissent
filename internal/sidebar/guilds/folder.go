@@ -40,21 +40,24 @@ type Folder struct {
 
 var folderCSS = cssutil.Applier("guild-folder", `
 	.guild-folder .guild-guild > button {
-		padding: 0 12px;
+		padding: 0px 12px;
 	}
-	.guild-folder .guild-guild > button .adaptive-avatar {
+	.guild-folder .guild-guild > button > * {
 		padding: 4px 0;
 		transition: 200ms ease;
 		background-color: @theme_bg_color;
 	}
-	.guild-folder .guild-guild > button       .adaptive-avatar,
-	.guild-folder .guild-guild > button:hover .adaptive-avatar  {
+	.guild-folder .guild-guild > button avatar {
+		padding: 0;
+	}
+	.guild-folder .guild-guild > button       avatar,
+	.guild-folder .guild-guild > button:hover avatar  {
 		background-color: @theme_bg_color;
 	}
 	.guild-folder .guild-guild:last-child > button {
 		padding-bottom: 4px;
 	}
-	.guild-folder .guild-guild:last-child > button .adaptive-avatar {
+	.guild-folder .guild-guild:last-child > button > * {
 		padding: 0;
 		padding-top: 4px;
 		border-radius: 0 0 99px 99px;

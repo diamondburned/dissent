@@ -129,7 +129,7 @@ func (b *userBar) updateUser(me *discord.User) {
 		displayName = me.Username
 	}
 
-	b.avatar.SetInitials(displayName)
+	b.avatar.SetText(displayName)
 	b.avatar.SetFromURL(me.AvatarURL())
 	b.name.SetMarkup(name)
 	b.name.SetTooltipMarkup(name)

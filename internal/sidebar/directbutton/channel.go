@@ -59,7 +59,7 @@ func (c *ChannelButton) Update(ch *discord.Channel) {
 	}
 
 	c.Button.SetTooltipText(name)
-	c.Icon.SetInitials(name)
+	c.Icon.SetText(name)
 	c.Icon.SetFromURL(iconURL)
 }
 
