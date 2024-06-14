@@ -153,6 +153,7 @@ func NewView(ctx context.Context, guildID discord.GuildID) *View {
 	// The header is placed on top of the overlay, kind of like the official
 	// client.
 	v.Header.HeaderBar = adw.NewHeaderBar()
+	v.Header.HeaderBar.AddCSSClass("titlebar")
 	v.Header.HeaderBar.AddCSSClass("channels-header")
 	v.Header.HeaderBar.SetShowTitle(false)
 	v.Header.HeaderBar.PackStart(v.Header.Name)

@@ -62,6 +62,9 @@ type chatPageView struct {
 }
 
 var chatPageCSS = cssutil.Applier("window-chatpage", `
+	.window-chatpage-rightbox > .top-bar > windowhandle > .collapse-spacing {
+		padding: 0;
+	}
 	.right-header {
 		border-radius: 0;
 		box-shadow: none;
@@ -121,6 +124,7 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	newTabButton.ConnectClicked(func() { p.newTab() })
 
 	p.RightHeader = adw.NewHeaderBar()
+	p.RightHeader.AddCSSClass("titlebar")
 	p.RightHeader.AddCSSClass("right-header")
 	p.RightHeader.SetShowEndTitleButtons(true)
 	p.RightHeader.SetShowBackButton(false) // this is useless with OverlaySplitView
@@ -135,6 +139,7 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	tabBar.SetAutohide(true)
 
 	rightBox := adw.NewToolbarView()
+	rightBox.AddCSSClass("window-chatpage-rightbox")
 	rightBox.SetTopBarStyle(adw.ToolbarFlat)
 	rightBox.SetHExpand(true)
 	rightBox.AddTopBar(p.RightHeader)
