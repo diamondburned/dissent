@@ -2,6 +2,7 @@ package messages
 
 import (
 	"context"
+	"log/slog"
 	"slices"
 	"time"
 
@@ -151,16 +152,16 @@ func (t *TypingIndicator) RemoveTyper(userID discord.UserID) {
 // cleanup using TimeoutAdd.
 func (t *TypingIndicator) updateAndScheduleNext() {
 	now := time.Now()
-	earliest := discord.UnixTimestamp(now.Add(-typerTimeout).Unix())
 
-	nowUnix := discord.UnixTimestamp(now.Unix())
-	next := nowUnix
+	// We don't keep around typing events that are older than the timeout.
+	earliestPossibleTime := discord.UnixTimestamp(now.Add(-typerTimeout).Unix())
 
 	typers := t.typers[:0]
+	earliestTyper := discord.UnixTimestamp(now.Unix())
 	for _, typer := range t.typers {
-		if typer.When > earliest {
+		if typer.When > earliestPossibleTime {
 			typers = append(typers, typer)
-			next = min(next, typer.When)
+			earliestTyper = min(earliestTyper, typer.When)
 		}
 	}
 	for i := len(typers); i < len(t.typers); i++ {
@@ -183,7 +184,16 @@ func (t *TypingIndicator) updateAndScheduleNext() {
 
 	// Schedule the next cleanup.
 	// Prevent rounding errors by adding a small buffer.
-	cleanUpInSeconds := uint(next-nowUnix) + 1
+	cleanUpInSeconds := uint(
+		earliestTyper.
+			Time().
+			Add(typerTimeout).
+			Sub(now).
+			Seconds()) + 1
+	slog.Debug(
+		"schedule typing indicator update and cleanup",
+		"n_typers", len(t.typers),
+		"next_cleanup_sec", cleanUpInSeconds)
 	glib.TimeoutSecondsAdd(cleanUpInSeconds, func() {
 		t.updateAndScheduleNext()
 	})
