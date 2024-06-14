@@ -62,6 +62,12 @@ func newMessageAuthor(author *discord.User) messageAuthor {
 	}
 }
 
+type viewState struct {
+	row      messageRow
+	editing  bool
+	replying bool
+}
+
 // View is a message view widget.
 type View struct {
 	*adaptive.LoadablePage
@@ -74,17 +80,13 @@ type View struct {
 	Composer        *composer.View
 	TypingIndicator *TypingIndicator
 
-	msgs    map[messageKey]messageRow
+	rows    map[messageKey]messageRow
 	chName  string
 	guildID discord.GuildID
 
 	summaries map[discord.Snowflake]messageSummaryWidget
 
-	state struct {
-		row      *gtk.ListBoxRow
-		editing  bool
-		replying bool
-	}
+	state viewState
 
 	ctx  context.Context
 	chID discord.ChannelID
@@ -138,7 +140,7 @@ func applyViewClamp(clamp *adw.Clamp) {
 // methods call on it will act on that channel.
 func NewView(ctx context.Context, chID discord.ChannelID) *View {
 	v := &View{
-		msgs: make(map[messageKey]messageRow),
+		rows: make(map[messageKey]messageRow),
 		chID: chID,
 		ctx:  ctx,
 	}
@@ -270,12 +272,12 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 				// Try and look up the nonce.
 				key := messageKeyNonce(ev.Nonce)
 
-				if msg, ok := v.msgs[key]; ok {
-					delete(v.msgs, key)
+				if msg, ok := v.rows[key]; ok {
+					delete(v.rows, key)
 
 					key = messageKeyID(ev.ID)
 					// Known sent message. Update this instead.
-					v.msgs[key] = msg
+					v.rows[key] = msg
 
 					msg.ListBoxRow.SetName(string(key))
 					msg.message.Update(ev)
@@ -385,7 +387,7 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 			Func: func(args *glib.Variant) {
 				id := discord.MessageID(args.Int64())
 
-				msg, ok := v.msgs[messageKeyID(id)]
+				msg, ok := v.rows[messageKeyID(id)]
 				if !ok {
 					slog.Warn(
 						"tried to scroll to non-existent message",
@@ -613,12 +615,12 @@ func (v *View) loadMore() {
 
 		// Style the first prepended message to add a visual indicator for the
 		// user.
-		first := v.msgs[messageKeyID(msgs[0].ID)]
-		first.ListBoxRow.AddCSSClass("message-first-prepended")
+		first := v.rows[messageKeyID(msgs[0].ID)]
+		first.message.AddCSSClass("message-first-prepended")
 
 		// Remove this visual indicator after a short while.
 		glib.TimeoutSecondsAdd(10, func() {
-			first.ListBoxRow.RemoveCSSClass("message-first-prepended")
+			first.message.RemoveCSSClass("message-first-prepended")
 		})
 	}
 
@@ -670,9 +672,9 @@ func (v *View) setPageToMain() {
 }
 
 func (v *View) unload() {
-	for k, msg := range v.msgs {
+	for k, msg := range v.rows {
 		v.List.Remove(msg)
-		delete(v.msgs, k)
+		delete(v.rows, k)
 	}
 }
 
@@ -722,12 +724,12 @@ func (v *View) upsertMessage(id discord.MessageID, info messageInfo, flags upser
 
 // upsertMessageKeyed inserts or updates a new message row with the given key.
 func (v *View) upsertMessageKeyed(key messageKey, info messageInfo, flags upsertFlags) Message {
-	if msg, ok := v.msgs[key]; ok {
+	if msg, ok := v.rows[key]; ok {
 		return msg.message
 	}
 
 	msg := v.createMessageKeyed(key, info, flags)
-	v.msgs[key] = msg
+	v.rows[key] = msg
 
 	if flags&upsertFlagPrepend != 0 {
 		v.List.Prepend(msg.ListBoxRow)
@@ -762,7 +764,7 @@ func (v *View) createMessageKeyed(key messageKey, info messageInfo, flags upsert
 // resetMessage resets the message with the given messageRow.
 // Its main point is to re-evaluate the collapsed state of the message.
 func (v *View) resetMessage(key messageKey) {
-	row, ok := v.msgs[key]
+	row, ok := v.rows[key]
 	if !ok || row.message == nil {
 		return
 	}
@@ -781,13 +783,13 @@ func (v *View) resetMessage(key messageKey) {
 	row.message = message
 	row.ListBoxRow.SetChild(message)
 
-	v.msgs[key] = row
+	v.rows[key] = row
 }
 
 // surroundingMessagesResetter creates a function that resets the messages
 // surrounding the given message.
 func (v *View) surroundingMessagesResetter(key messageKey) func() {
-	msg, ok := v.msgs[key]
+	msg, ok := v.rows[key]
 	if !ok {
 		slog.Warn(
 			"useless surroundingMessagesResetter call on non-existent message",
@@ -817,7 +819,7 @@ func (v *View) deleteMessage(id discord.MessageID) {
 }
 
 func (v *View) deleteMessageKeyed(key messageKey) {
-	msg, ok := v.msgs[key]
+	msg, ok := v.rows[key]
 	if !ok {
 		return
 	}
@@ -831,16 +833,16 @@ func (v *View) deleteMessageKeyed(key messageKey) {
 	defer reset()
 
 	v.List.Remove(msg)
-	delete(v.msgs, key)
+	delete(v.rows, key)
 }
 
 func (v *View) shouldBeCollapsed(info messageInfo) bool {
 	var last messageRow
 	var lastOK bool
-	if curr, ok := v.msgs[messageKeyID(info.id)]; ok {
+	if curr, ok := v.rows[messageKeyID(info.id)]; ok {
 		prev, ok := v.prevMessageKey(curr)
 		if ok {
-			last, lastOK = v.msgs[prev]
+			last, lastOK = v.rows[prev]
 		}
 	} else {
 		slog.Warn(
@@ -884,7 +886,7 @@ func (v *View) prevMessageKey(row messageRow) (messageKey, bool) {
 func (v *View) lastMessage() (messageRow, bool) {
 	row, _ := v.List.LastChild().(*gtk.ListBoxRow)
 	if row != nil {
-		msg, ok := v.msgs[messageKeyRow(row)]
+		msg, ok := v.rows[messageKeyRow(row)]
 		return msg, ok
 	}
 
@@ -910,7 +912,7 @@ func (v *View) lastUserMessage() Message {
 func (v *View) firstMessage() (messageRow, bool) {
 	row, _ := v.List.FirstChild().(*gtk.ListBoxRow)
 	if row != nil {
-		msg, ok := v.msgs[messageKeyRow(row)]
+		msg, ok := v.rows[messageKeyRow(row)]
 		return msg, ok
 	}
 
@@ -924,7 +926,7 @@ func (v *View) eachMessage(f func(messageRow) bool) {
 	for row != nil {
 		key := messageKey(row.Name())
 
-		m, ok := v.msgs[key]
+		m, ok := v.rows[key]
 		if ok {
 			if f(m) {
 				break
@@ -956,7 +958,7 @@ func (v *View) updateMember(member *discord.Member) {
 }
 
 func (v *View) updateMessageReactions(id discord.MessageID) {
-	widget, ok := v.msgs[messageKeyID(id)]
+	widget, ok := v.rows[messageKeyID(id)]
 	if !ok || widget.message == nil {
 		return
 	}
@@ -973,7 +975,7 @@ func (v *View) updateMessageReactions(id discord.MessageID) {
 }
 
 // SendMessage implements composer.Controller.
-func (v *View) SendMessage(msg composer.SendingMessage) {
+func (v *View) SendMessage(sendingMsg composer.SendingMessage) {
 	state := gtkcord.FromContext(v.ctx)
 
 	me, _ := state.Cabinet.Me()
@@ -994,31 +996,31 @@ func (v *View) SendMessage(msg composer.SendingMessage) {
 	}
 
 	key := messageKeyLocal()
-	row := v.upsertMessageKeyed(key, info, flags)
+	msg := v.upsertMessageKeyed(key, info, flags)
 
 	m := discord.Message{
 		ChannelID: v.chID,
 		GuildID:   v.guildID,
-		Content:   msg.Content,
+		Content:   sendingMsg.Content,
 		Timestamp: discord.NowTimestamp(),
 		Author:    *me,
 	}
 
-	if msg.ReplyingTo.IsValid() {
+	if sendingMsg.ReplyingTo.IsValid() {
 		m.Reference = &discord.MessageReference{
 			ChannelID: v.chID,
 			GuildID:   v.guildID,
-			MessageID: msg.ReplyingTo,
+			MessageID: sendingMsg.ReplyingTo,
 		}
 	}
 
-	row.AddCSSClass("message-sending")
-	row.Update(&gateway.MessageCreateEvent{Message: m})
+	msg.AddCSSClass("message-sending")
+	msg.Update(&gateway.MessageCreateEvent{Message: m})
 
-	uploading := newUploadingLabel(v.ctx, len(msg.Files))
-	uploading.SetVisible(len(msg.Files) > 0)
+	uploading := newUploadingLabel(v.ctx, len(sendingMsg.Files))
+	uploading.SetVisible(len(sendingMsg.Files) > 0)
 
-	content := row.Content()
+	content := msg.Content()
 	content.Update(&m, uploading)
 
 	// Use the Background context so things keep getting updated when we switch
@@ -1029,7 +1031,7 @@ func (v *View) SendMessage(msg composer.SendingMessage) {
 			Reference: m.Reference,
 			Nonce:     key.Nonce(),
 			AllowedMentions: &api.AllowedMentions{
-				RepliedUser: &msg.ReplyMention,
+				RepliedUser: &sendingMsg.ReplyMention,
 				Parse: []api.AllowedMentionType{
 					api.AllowUserMention,
 					api.AllowRoleMention,
@@ -1040,7 +1042,7 @@ func (v *View) SendMessage(msg composer.SendingMessage) {
 
 		// Ensure that we open ALL files and defer-close them. Otherwise, we'll
 		// leak files.
-		for _, file := range msg.Files {
+		for _, file := range sendingMsg.Files {
 			f, err := file.Open()
 			if err != nil {
 				glib.IdleAdd(func() { uploading.AppendError(err) })
@@ -1060,7 +1062,7 @@ func (v *View) SendMessage(msg composer.SendingMessage) {
 		_, err := state.SendMessageComplex(m.ChannelID, sendData)
 
 		return func() {
-			gtk.BaseWidget(row).RemoveCSSClass("message-sending")
+			msg.RemoveCSSClass("message-sending")
 
 			if err != nil {
 				uploading.AppendError(err)
@@ -1111,32 +1113,32 @@ func (v *View) AddToast(toast *adw.Toast) {
 func (v *View) ReplyTo(id discord.MessageID) {
 	v.stopEditingOrReplying()
 
-	msg, ok := v.msgs[messageKeyID(id)]
-	if !ok || msg.message == nil || msg.message.Message() == nil {
+	row, ok := v.rows[messageKeyID(id)]
+	if !ok || row.message == nil || row.message.Message() == nil {
 		return
 	}
 
-	v.state.row = msg.ListBoxRow
+	v.state.row = row
 	v.state.replying = true
 
-	msg.message.AddCSSClass("message-replying")
-	v.Composer.StartReplyingTo(msg.message.Message())
+	row.message.AddCSSClass("message-replying")
+	v.Composer.StartReplyingTo(row.message.Message())
 }
 
 // Edit starts editing the message with the given ID.
 func (v *View) Edit(id discord.MessageID) {
 	v.stopEditingOrReplying()
 
-	msg, ok := v.msgs[messageKeyID(id)]
-	if !ok || msg.message == nil || msg.message.Message() == nil {
+	row, ok := v.rows[messageKeyID(id)]
+	if !ok || row.message == nil || row.message.Message() == nil {
 		return
 	}
 
-	v.state.row = msg.ListBoxRow
+	v.state.row = row
 	v.state.editing = true
 
-	msg.message.AddCSSClass("message-editing")
-	v.Composer.StartEditing(msg.message.Message())
+	row.message.AddCSSClass("message-editing")
+	v.Composer.StartEditing(row.message.Message())
 }
 
 // StopEditing implements composer.Controller.
@@ -1150,18 +1152,21 @@ func (v *View) StopReplying() {
 }
 
 func (v *View) stopEditingOrReplying() {
-	if v.state.row == nil {
+	if v.state == (viewState{}) {
 		return
 	}
 
 	if v.state.editing {
 		v.Composer.StopEditing()
-		v.state.row.RemoveCSSClass("message-editing")
+		v.state.row.message.RemoveCSSClass("message-editing")
 	}
+
 	if v.state.replying {
 		v.Composer.StopReplying()
-		v.state.row.RemoveCSSClass("message-replying")
+		v.state.row.message.RemoveCSSClass("message-replying")
 	}
+
+	v.state = viewState{}
 }
 
 // EditLastMessage implements composer.Controller.
@@ -1185,7 +1190,7 @@ func (v *View) Delete(id discord.MessageID) {
 
 	user := "?" // juuust in case
 
-	row, ok := v.msgs[messageKeyID(id)]
+	row, ok := v.rows[messageKeyID(id)]
 	if ok {
 		message := row.message.Message()
 		state := gtkcord.FromContext(v.ctx)
@@ -1214,7 +1219,7 @@ func (v *View) Delete(id discord.MessageID) {
 }
 
 func (v *View) delete(id discord.MessageID) {
-	if msg, ok := v.msgs[messageKeyID(id)]; ok {
+	if msg, ok := v.rows[messageKeyID(id)]; ok {
 		// Visual indicator.
 		msg.SetSensitive(false)
 	}
@@ -1238,7 +1243,7 @@ func (v *View) onScrollBottomed() {
 
 	// Try to clean up the top messages.
 	// Fast path: check our cache first.
-	if len(v.msgs) > idealMaxCount {
+	if len(v.rows) > idealMaxCount {
 		var count int
 
 		row, _ := v.List.LastChild().(*gtk.ListBoxRow)
@@ -1250,7 +1255,7 @@ func (v *View) onScrollBottomed() {
 			} else {
 				// Start purging messages.
 				v.List.Remove(row)
-				delete(v.msgs, messageKeyRow(row))
+				delete(v.rows, messageKeyRow(row))
 			}
 
 			row = next

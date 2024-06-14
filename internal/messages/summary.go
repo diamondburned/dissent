@@ -45,7 +45,7 @@ func (v *View) updateSummaries(summaries []gateway.ConversationSummary) {
 	}
 
 	for id, sw := range v.summaries {
-		if _, ok := v.msgs[sw.key]; !ok {
+		if _, ok := v.rows[sw.key]; !ok {
 			delete(v.summaries, id)
 		}
 	}
@@ -53,7 +53,7 @@ func (v *View) updateSummaries(summaries []gateway.ConversationSummary) {
 
 func (v *View) appendSummary(summary gateway.ConversationSummary) (messageKey, bool) {
 	// Skip this summary if the EndID isn't in the current channel.
-	endMsg, ok := v.msgs[messageKeyID(summary.EndID)]
+	endMsg, ok := v.rows[messageKeyID(summary.EndID)]
 	if !ok {
 		return "", false
 	}
@@ -116,7 +116,7 @@ func (v *View) appendSummary(summary gateway.ConversationSummary) (messageKey, b
 		// position, probably.
 
 		v.summaries[summary.ID] = sw
-		v.msgs[sw.key] = messageRow{
+		v.rows[sw.key] = messageRow{
 			ListBoxRow: row,
 			info: messageInfo{
 				timestamp: discord.Timestamp(summary.EndID.Time()),
