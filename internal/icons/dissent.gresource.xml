@@ -25,6 +25,7 @@
     <file preprocess="xml-stripblanks" alias="person-symbolic.svg">scalable/actions/person-symbolic.svg</file>
     <file preprocess="xml-stripblanks" alias="sentiment-satisfied-symbolic.svg">scalable/actions/sentiment-satisfied-symbolic.svg</file>
     <file preprocess="xml-stripblanks" alias="sidebar-show-symbolic.svg">scalable/actions/sidebar-show-symbolic.svg</file>
+    <file preprocess="xml-stripblanks" alias="speaker-notes-symbolic.svg">scalable/actions/speaker-notes-symbolic.svg</file>
     <file preprocess="xml-stripblanks" alias="thread-branch-symbolic.svg">scalable/actions/thread-branch-symbolic.svg</file>
     <file preprocess="xml-stripblanks" alias="user-available-symbolic.svg">scalable/actions/user-available-symbolic.svg</file>
     <file preprocess="xml-stripblanks" alias="user-busy-symbolic.svg">scalable/actions/user-busy-symbolic.svg</file>
