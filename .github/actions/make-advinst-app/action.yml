@@ -29,7 +29,7 @@ inputs:
 runs:
   using: composite
   steps:
-    - uses: caphyon/advinst-github-action@v1
+    - uses: caphyon/advinst-github-action@v1.1
       with:
         advinst-version: 21.7.1
         advinst-enable-automation: true
