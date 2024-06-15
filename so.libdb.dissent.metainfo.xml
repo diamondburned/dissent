@@ -2,7 +2,7 @@
 <component type="desktop-application">
   <id>so.libdb.dissent</id>
   <name>Dissent</name>
-  <summary>Tiny Discord app</summary>
+  <summary>Tiny native Discord app</summary>
   <developer_name translatable="no">diamondburned</developer_name>
   <launchable type="desktop-id">so.libdb.dissent.desktop</launchable>
   <translation type="gettext">Dissent</translation>
