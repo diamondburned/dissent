@@ -50,8 +50,6 @@ func newChannelItem(state *gtkcord.State, guild *discord.Guild, ch *discord.Chan
 
 	if ch.Name != "" {
 		item.name = ch.Name
-	} else if len(ch.DMRecipients) == 1 {
-		item.name = ch.DMRecipients[0].Tag()
 	} else {
 		item.name = gtkcord.RecipientNames(ch)
 	}
