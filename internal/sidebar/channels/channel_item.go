@@ -69,10 +69,17 @@ func channelIDFromItem(item *glib.Object) discord.ChannelID {
 }
 
 var _ = cssutil.WriteCSS(`
+    @define-color unread_indicator rgb(69, 69, 69);
+    
 	.channels-viewtree row:hover,
 	.channels-viewtree row:selected {
 		background: none;
 	}
+	.channels-viewtree row .channel-item-outer {
+        padding: 2px;
+        border-radius: 5px;
+        margin: 3px;
+    }
 	.channels-viewtree row:hover .channel-item-outer {
 		background: alpha(@theme_fg_color, 0.075);
 	}
@@ -97,31 +104,17 @@ var _ = cssutil.WriteCSS(`
 	.channel-item-muted {
 		opacity: 0.35;
 	}
-	.channel-unread-indicator {
-		font-size: 0.75em;
-		font-weight: 700;
+	.channel-item-unread, .channel-item-mentioned {
+	    font-weight: 800;
 	}
-	.channel-item-unread .channel-unread-indicator,
-	.channel-item-mentioned .channel-unread-indicator {
-		font-size: 0.7em;
-		font-weight: 900;
-		font-family: monospace;
-
-		min-width: 1em;
-		min-height: 1em;
-		line-height: 1em;
-
-		padding: 0;
-		margin: 0 1em;
-
-		outline: 1.5px solid @theme_fg_color;
-		border-radius: 99px;
+	.channel-item-unread .channel-item-text > image {
+	    background: @unread_indicator;
 	}
-	.channel-item-mentioned .channel-unread-indicator {
-		font-size: 0.8em;
-		outline-color: @mentioned;
-		background: @mentioned;
-		color: @theme_bg_color;
+	.channel-item-mentioned .channel-item-text > image {
+	    background: @mentioned;
+	}
+	.channel-label {
+		margin-left: 7px;
 	}
 `)
 
@@ -149,14 +142,7 @@ func bindChannelItem(state channelItemState, item *gtk.ListItem, row *gtk.TreeLi
 		chID:   channelIDFromListItem(item),
 	}
 
-	i.child.indicator = gtk.NewLabel("")
-	i.child.indicator.AddCSSClass("channel-unread-indicator")
-	i.child.indicator.SetHExpand(true)
-	i.child.indicator.SetHAlign(gtk.AlignEnd)
-	i.child.indicator.SetVAlign(gtk.AlignCenter)
-
 	i.child.Box = gtk.NewBox(gtk.OrientationHorizontal, 0)
-	i.child.Box.Append(i.child.indicator)
 
 	hoverpopover.NewMarkupHoverPopover(i.child.Box, func(w *hoverpopover.MarkupHoverPopoverWidget) bool {
 		summary := i.state.SummaryState.LastSummary(i.chID)
@@ -290,20 +276,10 @@ func (i *channelItem) Invalidate() {
 		i.child.Box.AddCSSClass(readCSSClasses[unread])
 	}
 
-	i.updateIndicator(unread)
-
 	if i.state.ChannelIsMuted(i.chID, unreadOpts) {
 		i.child.Box.AddCSSClass(channelMutedClass)
 	} else {
 		i.child.Box.RemoveCSSClass(channelMutedClass)
-	}
-}
-
-func (i *channelItem) updateIndicator(unread ningen.UnreadIndication) {
-	if unread == ningen.ChannelMentioned {
-		i.child.indicator.SetText("!")
-	} else {
-		i.child.indicator.SetText("")
 	}
 }
 
@@ -347,6 +323,7 @@ func newChannelItemText(ch *discord.Channel) gtk.Widgetter {
 	label := gtk.NewLabel(ch.Name)
 	label.SetEllipsize(pango.EllipsizeEnd)
 	label.SetXAlign(0)
+	label.AddCSSClass("channel-label")
 	bindLabelTooltip(label, false)
 
 	box := gtk.NewBox(gtk.OrientationHorizontal, 0)
