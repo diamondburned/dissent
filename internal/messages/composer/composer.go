@@ -130,7 +130,7 @@ var viewCSS = cssutil.Applier("composer-view", `
 		color: @accent_color;
 	}
 	.composer-right-actions {
-		margin: 0 11px 0 0;
+		margin: 0 11px 0 4px;
 	}
 	.composer-right-actions > *:not(:first-child) {
 		margin-left: 4px;
@@ -138,6 +138,37 @@ var viewCSS = cssutil.Applier("composer-view", `
 	.composer-placeholder {
 		padding: 12px 2px;
 		color: alpha(@theme_fg_color, 0.65);
+	}
+	.composer-send,
+	.composer-right-actions .composer-action {
+		background: @accent_bg_color;
+		border-radius: 99px;
+	}
+	.composer-right-actions button,
+	.composer-left-actions button {
+		min-height: 24px;
+	}
+	.composer-placeholder {
+		padding-top: 6px;
+		padding-left:7px;
+	}
+	.composer-placeholder-overlay {
+		margin-top: 5px;
+		margin-bottom: 5px;
+		background-color: alpha(@view_fg_color, 0.1);
+		border-radius: 17px;
+	}
+	.composer-view.horizontal {
+		margin-bottom: 2px;
+		margin-top: 2px;
+	}
+	.composer-send:hover,
+	.composer-right-actions .composer-action:hover {
+		background: @accent_color;
+	}
+	.composer-send:focus,
+	.composer-right-actions .composer-action:focus {
+		background: cross-fade(@accent_color 85%, @dark_5 15%);
 	}
 `)
 
