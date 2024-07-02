@@ -26,7 +26,7 @@ require (
 	github.com/danieljoos/wincred v1.2.1 // indirect
 	github.com/dlclark/regexp2 v1.11.0 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
-	github.com/gorilla/schema v1.3.0 // indirect
+	github.com/gorilla/schema v1.4.1 // indirect
 	github.com/gorilla/websocket v1.5.1 // indirect
 	github.com/leonelquinteros/gotext v1.6.0 // indirect
 	github.com/lmittmann/tint v1.0.4 // indirect
