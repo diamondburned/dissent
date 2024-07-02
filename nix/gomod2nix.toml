@@ -47,8 +47,8 @@ schema = 3
     version = "v5.1.0"
     hash = "sha256-xOCMJpQK3KTmHTPn/CdqI4j0eENCtMmJDgAIoYqYOEY="
   [mod."github.com/gorilla/schema"]
-    version = "v1.3.0"
-    hash = "sha256-sBh0rXgPr+vo2A7KDu3NmgMo+fkj7vi5Wr+Ax3eIROg="
+    version = "v1.4.1"
+    hash = "sha256-1sWmntFnTzzy95TtHSJJEUJpEruVBy7eA38vX8kJ85k="
   [mod."github.com/gorilla/websocket"]
     version = "v1.5.1"
     hash = "sha256-eHZ/U+eeE5tSgWc1jEDuBwtTRbXKP9fqP9zfW4Zw8T0="
