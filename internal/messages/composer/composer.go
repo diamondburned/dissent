@@ -531,6 +531,8 @@ func (v *View) StopEditing() {
 
 	v.state.id = 0
 	v.state.editing = false
+	start, end := v.Input.Buffer.Bounds()
+	v.Input.Buffer.Delete(start, end)
 
 	v.SetPlaceholderMarkup("")
 	v.RemoveCSSClass("composer-editing")
