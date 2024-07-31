@@ -6,6 +6,7 @@ import (
 	"html"
 	"net/url"
 	"path"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -27,8 +28,8 @@ import (
 
 // TODO: allow disable fetching videos.
 
-var trustedCDNHosts = map[string]struct{}{
-	"cdn.discordapp.com": {},
+var trustedCDNHosts = []string{
+	"cdn.discordapp.com",
 }
 
 var defaultEmbedOpts = embed.Opts{
@@ -58,7 +59,7 @@ func resizeURL(directURL, proxyURL string, w, h int) string {
 	if direct, err := url.Parse(directURL); err == nil {
 		// Special-case: sometimes, the URL is already a Discord CDN URL. In
 		// that case, we'll just use it directly.
-		if _, ok := trustedCDNHosts[direct.Host]; ok {
+		if slices.Contains(trustedCDNHosts, direct.Host) {
 			u = direct
 		}
 	}
@@ -587,7 +588,7 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 		image.SetSizeRequest(int(img.Width), int(img.Height))
 
 		image.SetOpenURL(func() {
-			openViewer(ctx, msgEmbed.URL, opts)
+			openViewer(ctx, img.URL, opts)
 		})
 
 		if msgEmbed.Image != nil {
