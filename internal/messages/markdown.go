@@ -55,7 +55,7 @@ func renderEmoji(ctx context.Context, r *mdrender.Renderer, n ast.Node) ast.Walk
 
 	picture := onlineimage.NewPicture(ctx, imgutil.HTTPProvider)
 	picture.EnableAnimation().OnHover()
-	picture.SetKeepAspectRatio(true)
+	picture.SetContentFit(gtk.ContentFitContain)
 	picture.SetTooltipText(emoji.Name)
 	picture.SetURL(gtkcord.EmojiURL(emoji.ID, emoji.GIF))
 

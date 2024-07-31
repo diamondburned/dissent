@@ -45,7 +45,7 @@ var contentCSS = cssutil.Applier("message-content-box", `
 		margin-right: 4px;
 	}
 	.message-content-box > *:not(:first-child) {
-		margin-top: 4px;
+		margin-top: 0.15em;
 	}
 	.message-content-box .thumbnail-embed {
 		border-width: 0;

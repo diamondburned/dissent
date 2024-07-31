@@ -293,8 +293,7 @@ func (m *message) ShowSource() {
 	box.Append(s)
 
 	d.SetContent(box)
-
-	d.Show()
+	d.Present()
 }
 
 // cozyMessage is a large cozy message with an avatar.
@@ -313,7 +312,7 @@ var _ MessageWithUser = (*cozyMessage)(nil)
 var cozyCSS = cssutil.Applier("message-cozy", `
 	.message-cozy {
 		padding-top: 0.25em;
-		padding-bottom: 0.25em;
+		padding-bottom: 0.15em;
 	}
 	.message-cozy-header {
 		min-height: 1.75em;

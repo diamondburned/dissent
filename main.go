@@ -96,7 +96,7 @@ func (m *manager) activate(ctx context.Context) {
 	}
 
 	m.win = window.NewWindow(ctx)
-	m.win.Show()
+	m.win.Present()
 
 	prefs.AsyncLoadSaved(ctx, func(err error) {
 		if err != nil {
