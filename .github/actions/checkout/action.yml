@@ -1,0 +1,8 @@
+name: Checkout to the latest commit of this repository
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ github.ref }}

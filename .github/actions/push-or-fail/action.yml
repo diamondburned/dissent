@@ -1,0 +1,27 @@
+name: Push a new commit or fail
+
+inputs:
+  commit-message:
+    description: The message to use for the commit
+    required: true
+  file-pattern:
+    description: The files to commit
+    default: .
+
+runs:
+  using: composite
+  steps:
+    - if: github.event_name == 'push'
+      name: Commit changes
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: ${{ inputs.commit-message }}
+        file_pattern: ${{ inputs.file-pattern }}
+
+    - if: github.event_name != 'push'
+      name: Fail if changed
+      run: |
+        if ! git diff --exit-code; then
+          echo "::error::Changes needed to be made by the user."
+          exit 1
+        fi
