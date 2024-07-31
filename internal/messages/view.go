@@ -345,7 +345,10 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 			}
 
 		case *gateway.GuildMemberAddEvent:
-			log.Println("TODO: handle GuildMemberAddEvent")
+			slog.Debug(
+				"GuildMemberAddEvent not implemented",
+				"guildID", ev.GuildID,
+				"userID", ev.User.ID)
 
 		case *gateway.GuildMemberUpdateEvent:
 			if ev.GuildID != v.guildID {
@@ -358,7 +361,10 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 			}
 
 		case *gateway.GuildMemberRemoveEvent:
-			log.Println("TODO: handle GuildMemberDeleteEvent")
+			slog.Debug(
+				"GuildMemberRemoveEvent not implemented",
+				"guildID", ev.GuildID,
+				"userID", ev.User.ID)
 
 		case *gateway.GuildMembersChunkEvent:
 			// TODO: Discord isn't sending us this event. I'm not sure why.
@@ -526,7 +532,9 @@ func (v *View) messageSummaries() map[discord.MessageID]gateway.ConversationSumm
 }
 
 func (v *View) load() {
-	log.Println("loading message view for", v.chID)
+	slog.Debug(
+		"loading message view",
+		"channel", v.chID)
 
 	v.LoadablePage.SetLoading()
 	v.unload()
@@ -570,7 +578,9 @@ func (v *View) loadMore() {
 
 	firstID := firstRow.info.id
 
-	log.Println("loading more messages for", v.chID)
+	slog.Debug(
+		"loading more messages",
+		"channel", v.chID)
 
 	ctx := v.ctx
 	state := gtkcord.FromContext(ctx).Online()
@@ -1277,7 +1287,11 @@ func (v *View) MarkRead() {
 
 	readState := state.ReadState.ReadState(v.ChannelID())
 	if readState != nil {
-		log.Println("message.View.MarkRead: marked", msgs[0].ID, "as read, last read", readState.LastMessageID)
+		slog.Debug(
+			"marked messages as read",
+			"channel", v.ChannelID(),
+			"last_message", msgs[0].ID,
+		)
 	}
 }
 
