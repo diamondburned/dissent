@@ -25,3 +25,4 @@ runs:
           echo "::error::Changes needed to be made by the user."
           exit 1
         fi
+      shell: bash
