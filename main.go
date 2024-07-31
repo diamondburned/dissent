@@ -48,6 +48,10 @@ var _ = cssutil.WriteCSS(`
 	avatar > label {
 		background: @borders;
 	}
+
+	.md-textblock {
+		line-height: 1.35em;
+	}
 `)
 
 func main() {
