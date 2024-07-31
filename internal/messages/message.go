@@ -55,8 +55,6 @@ var _ = cssutil.WriteCSS(`
 		border-left: 2px solid @mentioned;
 		border-top: 0;
 		border-bottom: 0;
-		padding-top: 4px;
-		padding-bottom: 2px;
 		background: alpha(@mentioned, 0.075);
 	}
 	row:hover .message-mentioned {
@@ -304,7 +302,8 @@ var _ MessageWithUser = (*cozyMessage)(nil)
 
 var cozyCSS = cssutil.Applier("message-cozy", `
 	.message-cozy {
-		padding-top: 2px;
+		padding-top: 0.25em;
+		padding-bottom: 0.25em;
 	}
 	.message-cozy-header {
 		min-height: 1.75em;
@@ -403,7 +402,7 @@ var _ Message = (*collapsedMessage)(nil)
 
 var collapsedCSS = cssutil.Applier("message-collapsed", `
 	.message-collapsed {
-		padding-bottom: 1px;
+		padding-bottom: 0.15em;
 	}
 	.message-collapsed-timestamp {
 		opacity: 0;

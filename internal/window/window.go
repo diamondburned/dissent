@@ -40,19 +40,6 @@ func SetPreferDarkTheme(prefer bool) {
 	adwStyles.SetColorScheme(scheme)
 }
 
-var _ = cssutil.WriteCSS(`
-	.titlebar {
-		background-color: @headerbar_bg_color;
-	}
-
-	window.devel .titlebar {
-		background-image: cross-fade(
-			5% -gtk-recolor(url("resource:/org/gnome/Adwaita/styles/assets/devel-symbolic.svg")),
-			image(transparent));
-		background-repeat: repeat-x;
-	}
-`)
-
 // Window is the main gtkcord window.
 type Window struct {
 	*adw.ApplicationWindow
