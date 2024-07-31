@@ -559,7 +559,7 @@ func (v *View) load() {
 
 			summariesMap := v.messageSummaries()
 
-			for _, msg := range v.filterIgnoredMessages(msgs) {
+			for _, msg := range msgs {
 				w := v.upsertMessage(msg.ID, newMessageInfo(&msg), 0)
 				w.Update(&gateway.MessageCreateEvent{Message: msg})
 				if summary, ok := summariesMap[msg.ID]; ok {
@@ -588,8 +588,6 @@ func (v *View) loadMore() {
 	upsertMessages := func(msgs []discord.Message) {
 		unlock := v.Scroll.LockScroll()
 		glib.IdleAdd(unlock)
-
-		msgs = v.filterIgnoredMessages(msgs)
 
 		infos := make([]messageInfo, len(msgs))
 		for i := range msgs {
@@ -686,22 +684,6 @@ func (v *View) unload() {
 		v.List.Remove(msg)
 		delete(v.rows, k)
 	}
-}
-
-// filterIgnoredMessages filters in-place the given messages, removing any
-// messages that should be ignored.
-func (v *View) filterIgnoredMessages(msgs []discord.Message) []discord.Message {
-	if showBlockedMessages.Value() {
-		return msgs // doesn't matter
-	}
-
-	filtered := msgs[:0]
-	for i := range msgs {
-		if !v.ignoreMessage(&msgs[i]) {
-			filtered = append(filtered, msgs[i])
-		}
-	}
-	return filtered
 }
 
 func (v *View) ignoreMessage(msg *discord.Message) bool {

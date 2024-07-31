@@ -10,6 +10,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/chatkit/md/hl"
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
+	"github.com/diamondburned/gotk4/pkg/core/glib"
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
@@ -143,6 +144,15 @@ func (m *message) update(parent gtk.Widgetter, message *discord.Message) {
 
 	if state.RelationshipState.IsBlocked(message.Author.ID) {
 		blockedCSS(parent)
+
+		parentRef := glib.NewWeakRef(parentWidget)
+		update := func() {
+			parentWidget := parentRef.Get()
+			parentWidget.SetVisible(showBlockedMessages.Value())
+		}
+
+		unbind := showBlockedMessages.Subscribe(update)
+		parentWidget.ConnectDestroy(unbind)
 	}
 
 	if state.MessageMentions(message).Has(ningen.MessageMentions) {
