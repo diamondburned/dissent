@@ -29,8 +29,8 @@ schema = 3
     version = "v0.3.1-0.20240731063639-b9c04a888a70"
     hash = "sha256-mj4oMN9b8ysyyXAqcvHWdBaSkJIYXXp5Qbqxn57iGl4="
   [mod."github.com/diamondburned/gotkit"]
-    version = "v0.0.0-20240731054606-064593800f03"
-    hash = "sha256-4luk1IUFRSkqSCEdHJyMz2FVlrVJDDgCd6PDqBimWAE="
+    version = "v0.0.0-20240731134720-2bef6d0ec1b9"
+    hash = "sha256-/h3waRWM99r/JmQVY9F2yYufrUnBmnLwIVF0L/De+wQ="
   [mod."github.com/diamondburned/ningen/v3"]
     version = "v3.0.1-0.20240704093451-74ff82d4a145"
     hash = "sha256-OeXhNvm2I/ZYURXcGOf+8A9l7XZf4hcY/Feosu6ZVNU="
@@ -94,9 +94,6 @@ schema = 3
   [mod."golang.org/x/crypto"]
     version = "v0.22.0"
     hash = "sha256-2+u9nd32+Bi7EEv7QFc12CRTbfV7DApNv+yKIr7+lTw="
-  [mod."golang.org/x/image"]
-    version = "v0.18.0"
-    hash = "sha256-g9N/y4asXG1lctPJ1KEf8XIjeJi/mQ43EXUa8HTj/zQ="
   [mod."golang.org/x/net"]
     version = "v0.24.0"
     hash = "sha256-w1c21ljta5wNIyel9CSIn/crPzwOCRofNKhqmfs4aEQ="

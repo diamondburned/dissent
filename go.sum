@@ -47,12 +47,6 @@ github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20240712143708-824c3ce8a5f4 h1
 github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20240712143708-824c3ce8a5f4/go.mod h1:fkvdR7MYO1sI0ex07VYLTc+YK87v24aRFYyMJQ/xAeA=
 github.com/diamondburned/gotk4/pkg v0.3.1-0.20240731063639-b9c04a888a70 h1:/cqExosovvaPHJ6t2+nbR6oG52rMjLjp+5DyM5BIdhI=
 github.com/diamondburned/gotk4/pkg v0.3.1-0.20240731063639-b9c04a888a70/go.mod h1:DqeOW+MxSZFg9OO+esk4JgQk0TiUJJUBfMltKhG+ub4=
-github.com/diamondburned/gotkit v0.0.0-20240731054606-064593800f03 h1:9JII8aSE5PXPNTYK5mwZWMdeL/9QT9aSajdR6PWCHv0=
-github.com/diamondburned/gotkit v0.0.0-20240731054606-064593800f03/go.mod h1:LP4opvla9JGWBVXscO9smR36oIwamsdfe+7LZ9kikvs=
-github.com/diamondburned/gotkit v0.0.0-20240731125436-e278a97ae09f h1:cjhP+5ZXrvein4h7jsC9HMLzW/cqMLqR/hOMoGhL/zU=
-github.com/diamondburned/gotkit v0.0.0-20240731125436-e278a97ae09f/go.mod h1:LP4opvla9JGWBVXscO9smR36oIwamsdfe+7LZ9kikvs=
-github.com/diamondburned/gotkit v0.0.0-20240731125726-7b892874d84e h1:hSZS3LKp4BUwYjD50wO1ASGapolct5dXm08Zz9k6zMg=
-github.com/diamondburned/gotkit v0.0.0-20240731125726-7b892874d84e/go.mod h1:LP4opvla9JGWBVXscO9smR36oIwamsdfe+7LZ9kikvs=
 github.com/diamondburned/gotkit v0.0.0-20240731134720-2bef6d0ec1b9 h1:0BUAkca0S2c6Lq/lFTJK8tfelSdwVnjEky75UFJi5B8=
 github.com/diamondburned/gotkit v0.0.0-20240731134720-2bef6d0ec1b9/go.mod h1:LP4opvla9JGWBVXscO9smR36oIwamsdfe+7LZ9kikvs=
 github.com/diamondburned/ningen/v3 v3.0.1-0.20240704093451-74ff82d4a145 h1:CxMWj7iRCjq/jFegk9KAY+Ykos2BJknupZ9e/O9PADk=
@@ -175,8 +169,6 @@ golang.org/x/exp v0.0.0-20191227195350-da58074b4299/go.mod h1:2RIsYlXP63K8oxa1u0
 golang.org/x/exp v0.0.0-20200207192155-f17229e696bd/go.mod h1:J/WKrq2StrnmMY6+EHIKF9dgMWnmCNThgcyBT1FY9mM=
 golang.org/x/image v0.0.0-20190227222117-0694c2d4d067/go.mod h1:kZ7UVZpmo3dzQBMxlp+ypCbDeSB+sBbTgSJuh5dn5js=
 golang.org/x/image v0.0.0-20190802002840-cff245a6509b/go.mod h1:FeLwcggjj3mMvU+oOTbSwawSJRM1uh48EjtB4UJZlP0=
-golang.org/x/image v0.18.0 h1:jGzIakQa/ZXI1I0Fxvaa9W7yP25TqT6cHIHn+6CqvSQ=
-golang.org/x/image v0.18.0/go.mod h1:4yyo5vMFQjVjUcVk4jEQcU9MGy/rulF5WvUILseCM2E=
 golang.org/x/lint v0.0.0-20181026193005-c67002cb31c3/go.mod h1:UVdnD1Gm6xHRNCYTkRU2/jEulfH38KcIWyp/GAMgvoE=
 golang.org/x/lint v0.0.0-20190227174305-5b3e6a55c961/go.mod h1:wehouNa3lNwaWXcvxsM5YxQ5yQlVC4a0KAMCusXpPoU=
 golang.org/x/lint v0.0.0-20190301231843-5614ed5bae6f/go.mod h1:UVdnD1Gm6xHRNCYTkRU2/jEulfH38KcIWyp/GAMgvoE=
