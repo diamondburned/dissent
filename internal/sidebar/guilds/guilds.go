@@ -322,8 +322,14 @@ func (v *View) eachGuild(f func(*Guild) (stop bool)) {
 }
 
 // SetSelectedGuild sets the selected guild. It does not propagate the selection
-// to the sidebar.
+// to the sidebar. If the ID is invalid, it unselects the current guild
+// selection.
 func (v *View) SetSelectedGuild(id discord.GuildID) {
+	if !id.IsValid() {
+		v.Unselect()
+		return
+	}
+
 	guild := v.Guild(id)
 	if guild == nil {
 		slog.Error(
