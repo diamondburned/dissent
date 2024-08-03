@@ -26,14 +26,14 @@ schema = 3
     version = "v0.0.0-20240712143708-824c3ce8a5f4"
     hash = "sha256-7iwswPgG+Q33r70EjWXiWQZUUf3U0GjTcp2swB/2TyU="
   [mod."github.com/diamondburned/gotk4/pkg"]
-    version = "v0.3.1-0.20240731063639-b9c04a888a70"
+    version = "v0.3.1"
     hash = "sha256-mj4oMN9b8ysyyXAqcvHWdBaSkJIYXXp5Qbqxn57iGl4="
   [mod."github.com/diamondburned/gotkit"]
-    version = "v0.0.0-20240731134720-2bef6d0ec1b9"
-    hash = "sha256-/h3waRWM99r/JmQVY9F2yYufrUnBmnLwIVF0L/De+wQ="
+    version = "v0.0.0-20240803153835-b0d58ff2b308"
+    hash = "sha256-+g0nPwX8M2PLrEX3E9mLQmS/g+GmRPKU76A6KEeetZk="
   [mod."github.com/diamondburned/ningen/v3"]
-    version = "v3.0.1-0.20240704093451-74ff82d4a145"
-    hash = "sha256-OeXhNvm2I/ZYURXcGOf+8A9l7XZf4hcY/Feosu6ZVNU="
+    version = "v3.0.1-0.20240803153024-b1a39a908e52"
+    hash = "sha256-AwFG3afS5hx+5LTbVnGEYbbna2q9HPzmebNnu5dMy08="
   [mod."github.com/dlclark/regexp2"]
     version = "v1.11.0"
     hash = "sha256-iXBBgykYu9Dcd+7LMJyRYc3Ry47jmuLGZFW13zU6toU="
@@ -46,6 +46,9 @@ schema = 3
   [mod."github.com/godbus/dbus/v5"]
     version = "v5.1.0"
     hash = "sha256-xOCMJpQK3KTmHTPn/CdqI4j0eENCtMmJDgAIoYqYOEY="
+  [mod."github.com/gofrs/flock"]
+    version = "v0.12.1"
+    hash = "sha256-clC0E7x21vaNcDpnmbgn07KqVQdjHXqvwTRKwed5cjc="
   [mod."github.com/gorilla/schema"]
     version = "v1.4.1"
     hash = "sha256-1sWmntFnTzzy95TtHSJJEUJpEruVBy7eA38vX8kJ85k="
@@ -101,8 +104,8 @@ schema = 3
     version = "v0.7.0"
     hash = "sha256-2ETllEu2GDWoOd/yMkOkLC2hWBpKzbVZ8LhjLu0d2A8="
   [mod."golang.org/x/sys"]
-    version = "v0.19.0"
-    hash = "sha256-cmuL31TYLJmDm/fDnI2Sn0wB88cpdOHV1+urorsJWx4="
+    version = "v0.22.0"
+    hash = "sha256-RbG0XaXGGlErCsl2agvUxMnrkRwdbJLmriYT1H24FwA="
   [mod."golang.org/x/text"]
     version = "v0.16.0"
     hash = "sha256-hMTO45upjEuA4sJzGplJT+La2n3oAfHccfYWZuHcH+8="
