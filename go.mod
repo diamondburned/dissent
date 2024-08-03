@@ -7,9 +7,9 @@ require (
 	github.com/diamondburned/arikawa/v3 v3.3.6
 	github.com/diamondburned/chatkit v0.0.0-20240614105536-5788b19145bc
 	github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20240712143708-824c3ce8a5f4
-	github.com/diamondburned/gotk4/pkg v0.3.1-0.20240731063639-b9c04a888a70
-	github.com/diamondburned/gotkit v0.0.0-20240731134720-2bef6d0ec1b9
-	github.com/diamondburned/ningen/v3 v3.0.1-0.20240704093451-74ff82d4a145
+	github.com/diamondburned/gotk4/pkg v0.3.1
+	github.com/diamondburned/gotkit v0.0.0-20240803153835-b0d58ff2b308
+	github.com/diamondburned/ningen/v3 v3.0.1-0.20240803153024-b1a39a908e52
 	github.com/dustin/go-humanize v1.0.1
 	github.com/enescakir/emoji v1.0.0
 	github.com/ianlancetaylor/cgosymbolizer v0.0.0-20240326020559-581a3f7c677f
@@ -26,6 +26,7 @@ require (
 	github.com/danieljoos/wincred v1.2.1 // indirect
 	github.com/dlclark/regexp2 v1.11.0 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
+	github.com/gofrs/flock v0.12.1 // indirect
 	github.com/gorilla/schema v1.4.1 // indirect
 	github.com/gorilla/websocket v1.5.1 // indirect
 	github.com/leonelquinteros/gotext v1.6.0 // indirect
@@ -40,7 +41,7 @@ require (
 	golang.org/x/crypto v0.22.0 // indirect
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.19.0 // indirect
+	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	libdb.so/go-emoji v0.0.0-20240508073816-39776eee41ac // indirect

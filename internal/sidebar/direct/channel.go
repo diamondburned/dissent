@@ -3,7 +3,7 @@ package direct
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
@@ -75,7 +75,10 @@ func (ch *Channel) Invalidate() {
 
 	channel, err := state.Cabinet.Channel(ch.id)
 	if err != nil {
-		log.Println("Channel.Invalidate:", err)
+		slog.Error(
+			"Failed to fetch direct channel from state",
+			"channel_id", ch.id,
+			"err", err)
 		return
 	}
 

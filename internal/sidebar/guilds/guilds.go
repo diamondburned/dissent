@@ -2,7 +2,7 @@ package guilds
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"sort"
 
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -326,7 +326,9 @@ func (v *View) eachGuild(f func(*Guild) (stop bool)) {
 func (v *View) SetSelectedGuild(id discord.GuildID) {
 	guild := v.Guild(id)
 	if guild == nil {
-		log.Printf("guilds.View: cannot select guild %d: not found", id)
+		slog.Error(
+			"cannot select guild since it's not found in guild view",
+			"guild_id", id)
 		v.Unselect()
 		return
 	}

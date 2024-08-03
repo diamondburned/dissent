@@ -2,7 +2,7 @@ package channels
 
 import (
 	"context"
-	"log"
+	"log/slog"
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
@@ -229,7 +229,9 @@ func NewView(ctx context.Context, guildID discord.GuildID) *View {
 
 		ch, _ := state.Cabinet.Channel(chID)
 		if ch == nil {
-			log.Printf("channels.View: tried opening non-existent channel %d", chID)
+			slog.Error(
+				"tried opening non-existent channel",
+				"channel_id", chID)
 			return
 		}
 
@@ -237,12 +239,17 @@ func NewView(ctx context.Context, guildID discord.GuildID) *View {
 		case discord.GuildCategory, discord.GuildForum:
 			// We cannot display these channel types.
 			// TODO: implement forum browsing
-			log.Printf("channels.View: ignoring channel %d of type %d", chID, ch.Type)
+			slog.Warn(
+				"category or forum channel selected, ignoring",
+				"channel_type", ch.Type,
+				"channel_id", chID)
 			return
 		}
 
-		log.Printf("channels.View: selected channel %d", chID)
-
+		slog.Debug(
+			"selection change signal emitted, selecting channel and clearing selectID",
+			"channel_type", ch.Type,
+			"channel_id", chID)
 		v.selectID = 0
 
 		row := v.model.Row(v.selection.Selected())
@@ -259,12 +266,18 @@ func NewView(ctx context.Context, guildID discord.GuildID) *View {
 			return
 		}
 
-		log.Println("channels.View: selecting channel", v.selectID, "after items changed")
-
 		i, ok := v.findChannelItem(v.selectID)
 		if ok {
+			slog.Debug(
+				"items-changed signal emitted, re-selecting stored channel",
+				"channel_id", v.selectID,
+				"channel_index", i)
 			v.selection.SelectItem(i, true)
 			v.selectID = 0
+		} else {
+			slog.Debug(
+				"items-changed signal emitted but stored channel not found",
+				"channel_id", v.selectID)
 		}
 	})
 
@@ -278,12 +291,17 @@ func NewView(ctx context.Context, guildID discord.GuildID) *View {
 func (v *View) SelectChannel(selectID discord.ChannelID) bool {
 	i, ok := v.findChannelItem(selectID)
 	if ok && v.selection.SelectItem(i, true) {
-		log.Println("channels.View: selected channel", selectID, "immediately at", i)
+		slog.Debug(
+			"channel found and selected immediately",
+			"channel_id", selectID,
+			"channel_index", i)
 		v.selectID = 0
 		return true
 	}
 
-	log.Println("channels.View: channel", selectID, "not found, selecting later")
+	slog.Debug(
+		"channel not found, selecting later",
+		"channel_id", selectID)
 	v.selectID = selectID
 	return false
 }
@@ -314,7 +332,10 @@ func (v *View) InvalidateHeader() {
 
 	g, err := state.Cabinet.Guild(v.guildID)
 	if err != nil {
-		log.Printf("channels.View: cannot fetch guild %d: %v", v.guildID, err)
+		slog.Warn(
+			"cannot fetch guild to check banner",
+			"guild_id", v.guildID,
+			"err", err)
 		return
 	}
 

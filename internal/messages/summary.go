@@ -119,6 +119,7 @@ func (v *View) appendSummary(summary gateway.ConversationSummary) (messageKey, b
 		v.rows[sw.key] = messageRow{
 			ListBoxRow: row,
 			info: messageInfo{
+				author:    messageAuthor{userID: discord.NullUserID},
 				timestamp: discord.Timestamp(summary.EndID.Time()),
 			},
 		}

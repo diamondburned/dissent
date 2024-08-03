@@ -2,7 +2,8 @@ package quickswitcher
 
 import (
 	"context"
-	"log"
+	"fmt"
+	"log/slog"
 
 	"github.com/diamondburned/gotk4/pkg/gdk/v4"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
@@ -189,7 +190,10 @@ func (qs *QuickSwitcher) choose(n int) {
 		ok = parent.ActivateAction("app.open-guild", gtkcord.NewGuildIDVariant(item.ID))
 	}
 	if !ok {
-		log.Println("quickswitcher: failed to activate action")
+		slog.Error(
+			"failed to activate opening action from quick switcher",
+			"parent", fmt.Sprintf("%T", qs.Parent()),
+			"item", fmt.Sprintf("%T", entry.indexItem))
 	}
 
 	if qs.chosenFunc != nil {

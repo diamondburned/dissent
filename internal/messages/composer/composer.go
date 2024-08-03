@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"log/slog"
 	"os"
 	"strings"
@@ -479,7 +478,10 @@ func (v *View) edit() {
 		_, err := state.EditMessage(v.chID, editingID, text)
 		if err != nil {
 			err = errors.Wrap(err, "cannot edit message")
-			log.Println()
+			slog.Error(
+				"cannot edit message",
+				"err", err)
+
 			return func() {
 				toast := adw.NewToast(locale.Get("Cannot edit message"))
 				toast.SetTimeout(0)

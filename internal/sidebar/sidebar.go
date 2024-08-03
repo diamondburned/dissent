@@ -3,7 +3,6 @@ package sidebar
 
 import (
 	"context"
-	"log"
 	"log/slog"
 	"strings"
 
@@ -253,7 +252,9 @@ func (s *Sidebar) SelectChannel(chID discord.ChannelID) {
 	state := gtkcord.FromContext(s.ctx)
 	ch, _ := state.Cabinet.Channel(chID)
 	if ch == nil {
-		log.Println("sidebar: channel with ID", chID, "not found")
+		slog.Error(
+			"cannot select channel in sidebar since it's not found in state",
+			"channel_id", chID)
 		return
 	}
 

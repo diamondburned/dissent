@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"html"
-	"log"
 	"log/slog"
 	"sort"
 	"time"
@@ -638,7 +637,10 @@ func (v *View) loadMore() {
 		var found bool
 		for i, m := range stateMessages {
 			if m.ID < firstID {
-				log.Println("found earlier message in state, content:", m.Content)
+				slog.Debug(
+					"while loading more messages, found earlier message in state",
+					"message_id", m.ID,
+					"content", m.Content)
 				stateMessages = stateMessages[i:]
 				found = true
 				break
@@ -688,13 +690,7 @@ func (v *View) unload() {
 
 func (v *View) ignoreMessage(msg *discord.Message) bool {
 	state := gtkcord.FromContext(v.ctx)
-
-	if !showBlockedMessages.Value() && state.UserIsBlocked(msg.Author.ID) {
-		log.Println("ignoring message from blocked user", msg.Author.Tag())
-		return true
-	}
-
-	return false
+	return showBlockedMessages.Value() && state.UserIsBlocked(msg.Author.ID)
 }
 
 type upsertFlags int
@@ -831,23 +827,27 @@ func (v *View) deleteMessageKeyed(key messageKey) {
 func (v *View) shouldBeCollapsed(info messageInfo) bool {
 	var last messageRow
 	var lastOK bool
+
 	if curr, ok := v.rows[messageKeyID(info.id)]; ok {
 		prev, ok := v.prevMessageKey(curr)
 		if ok {
 			last, lastOK = v.rows[prev]
 		}
 	} else {
-		slog.Warn(
+		slog.Debug(
 			"shouldBeCollapsed called on non-existent message, assuming last",
 			"id", info.id,
+			"author_id", info.author.userID,
 			"timestamp", info.timestamp.Time())
 
 		// Assume we're about to append a new message.
 		last, lastOK = v.lastMessage()
 	}
+
 	if !lastOK || last.message == nil {
 		return false
 	}
+
 	return shouldBeCollapsed(info, last.info)
 }
 
@@ -855,6 +855,8 @@ func shouldBeCollapsed(curr, last messageInfo) bool {
 	return true &&
 		// same author
 		last.author == curr.author &&
+		last.author.userID.IsValid() &&
+		curr.author.userID.IsValid() &&
 		// within the last 10 minutes
 		last.timestamp.Time().Add(10*time.Minute).After(curr.timestamp.Time())
 }
