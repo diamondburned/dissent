@@ -416,7 +416,6 @@ var collapsedCSS = cssutil.Applier("message-collapsed", `
 	.message-collapsed-timestamp {
 		opacity: 0;
 		font-size: 0.7em;
-		min-width: calc((8px * 2) + {$message_avatar_size});
 		min-height: calc(1em + 0.7rem);
 	}
 	.message-row:hover .message-collapsed-timestamp {
@@ -424,6 +423,8 @@ var collapsedCSS = cssutil.Applier("message-collapsed", `
 		color: alpha(@theme_fg_color, 0.75);
 	}
 `)
+
+const collapsedTimestampWidth = (8 * 2) + (gtkcord.MessageAvatarSize)
 
 // NewCollapsedMessage creates a new collapsed cozy message.
 func NewCollapsedMessage(ctx context.Context, v *View) Message {
@@ -433,7 +434,12 @@ func NewCollapsedMessage(ctx context.Context, v *View) Message {
 
 	m.Timestamp = gtk.NewLabel("")
 	m.Timestamp.AddCSSClass("message-collapsed-timestamp")
-	m.Timestamp.SetEllipsize(pango.EllipsizeEnd)
+	m.Timestamp.SetSizeRequest(collapsedTimestampWidth, -1)
+
+	// This widget will not ellipsize properly, so we're forced to wrap.
+	m.Timestamp.SetWrap(true)
+	m.Timestamp.SetWrapMode(pango.WrapWordChar)
+	m.Timestamp.SetNaturalWrapMode(gtk.NaturalWrapWord)
 
 	m.Box = gtk.NewBox(gtk.OrientationHorizontal, 0)
 	m.Box.Append(m.Timestamp)
@@ -445,6 +451,37 @@ func NewCollapsedMessage(ctx context.Context, v *View) Message {
 
 func (m *collapsedMessage) Update(message *gateway.MessageCreateEvent) {
 	m.message.update(m, &message.Message)
-	m.Timestamp.SetLabel(locale.Time(message.Timestamp.Time(), false))
+
+	// view := m.view()
+
+	var timestampLabel string
+
+	switch collapsedMessageTimestamp.Value() {
+	case compactTimestampStyle:
+		timestampLabel = locale.Time(message.Timestamp.Time(), false)
+		// case relativeTimestampStyle:
+		// 	prevKey, _ := view.prevMessageKeyFromID(message.Message.ID)
+		// 	prev, ok := view.rows[prevKey]
+		// 	if ok {
+		// 		prevMsg := prev.message.Message()
+		// 		if prevMsg != nil {
+		// 			currTimestamp := message.Timestamp.Time()
+		// 			prevTimestamp := prevMsg.Timestamp.Time()
+		//
+		// 			delta := currTimestamp.Sub(prevTimestamp)
+		// 			switch {
+		// 			case delta < time.Second:
+		// 				// leave empty
+		// 			case delta < time.Minute:
+		// 				timestampLabel = "+" + locale.Sprintf("%ds", int(math.Round(delta.Seconds())))
+		// 			default:
+		// 				// This is always at most 10 minutes.
+		// 				timestampLabel = "+" + locale.Sprintf("%dm", int(math.Round(delta.Minutes())))
+		// 			}
+		// 		}
+		// 	}
+	}
+
+	m.Timestamp.SetLabel(timestampLabel)
 	m.Timestamp.SetTooltipText(locale.Time(message.Timestamp.Time(), true))
 }

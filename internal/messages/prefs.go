@@ -67,6 +67,35 @@ func init() {
 	prefs.Order((*blockedUsersPrefs)(nil), showBlockedMessages)
 }
 
+type collapsedMessageTimestampStyle string
+
+const (
+	hiddenTimestampStyle collapsedMessageTimestampStyle = "Hidden"
+	// relativeTimestampStyle collapsedMessageTimestampStyle = "Relative"  // e.g. "+2s"
+	compactTimestampStyle collapsedMessageTimestampStyle = "Timestamp" // e.g. "21:16"
+)
+
+// defaultCollapsedMessageTimestampStyle is the default style of the timestamp
+// for compacted messages.
+const defaultCollapsedMessageTimestampStyle = hiddenTimestampStyle
+
+var collapsedMessageTimestamp = prefs.NewEnumList(
+	defaultCollapsedMessageTimestampStyle,
+	prefs.EnumListMeta[collapsedMessageTimestampStyle]{
+		PropMeta: prefs.PropMeta{
+			Name:    "Collapsed Message Timestamp",
+			Section: "Messages",
+			Description: "The style of the timestamp in compacted messages. " +
+				"Timestamp will show the time only, while Relative will show the time relative to the last message.",
+		},
+		Options: []collapsedMessageTimestampStyle{
+			hiddenTimestampStyle,
+			// relativeTimestampStyle,
+			compactTimestampStyle,
+		},
+	},
+)
+
 var _ = cssutil.WriteCSS(`
 	.message-blockedusers-expander {
 		margin-top: 4px;

@@ -8,7 +8,7 @@ require (
 	github.com/diamondburned/chatkit v0.0.0-20240614105536-5788b19145bc
 	github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20240712143708-824c3ce8a5f4
 	github.com/diamondburned/gotk4/pkg v0.3.1
-	github.com/diamondburned/gotkit v0.0.0-20240803153835-b0d58ff2b308
+	github.com/diamondburned/gotkit v0.0.0-20240817113851-aa2bd2b08135
 	github.com/diamondburned/ningen/v3 v3.0.1-0.20240808103805-f1a24c0da3d8
 	github.com/dustin/go-humanize v1.0.1
 	github.com/enescakir/emoji v1.0.0

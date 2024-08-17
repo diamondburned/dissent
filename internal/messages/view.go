@@ -758,10 +758,16 @@ func (v *View) resetMessage(key messageKey) {
 	}
 
 	var message Message
-	if v.shouldBeCollapsed(row.info) {
-		message = NewCollapsedMessage(v.ctx, v)
+
+	shouldBeCollapsed := v.shouldBeCollapsed(row.info)
+	if _, isCollapsed := row.message.(*collapsedMessage); shouldBeCollapsed == isCollapsed {
+		message = row.message
 	} else {
-		message = NewCozyMessage(v.ctx, v)
+		if shouldBeCollapsed {
+			message = NewCollapsedMessage(v.ctx, v)
+		} else {
+			message = NewCozyMessage(v.ctx, v)
+		}
 	}
 
 	message.Update(&gateway.MessageCreateEvent{
@@ -861,6 +867,15 @@ func shouldBeCollapsed(curr, last messageInfo) bool {
 		last.timestamp.Time().Add(10*time.Minute).After(curr.timestamp.Time())
 }
 
+func (v *View) nextMessageKeyFromID(id discord.MessageID) (messageKey, bool) {
+	row, ok := v.rows[messageKeyID(id)]
+	if !ok {
+		return "", false
+	}
+	return v.nextMessageKey(row)
+}
+
+// nextMessageKey returns the key of the message after the given message.
 func (v *View) nextMessageKey(row messageRow) (messageKey, bool) {
 	next, _ := row.NextSibling().(*gtk.ListBoxRow)
 	if next != nil {
@@ -869,6 +884,15 @@ func (v *View) nextMessageKey(row messageRow) (messageKey, bool) {
 	return "", false
 }
 
+func (v *View) prevMessageKeyFromID(id discord.MessageID) (messageKey, bool) {
+	row, ok := v.rows[messageKeyID(id)]
+	if !ok {
+		return "", false
+	}
+	return v.prevMessageKey(row)
+}
+
+// prevMessageKey returns the key of the message before the given message.
 func (v *View) prevMessageKey(row messageRow) (messageKey, bool) {
 	prev, _ := row.PrevSibling().(*gtk.ListBoxRow)
 	if prev != nil {
@@ -1209,7 +1233,7 @@ func (v *View) Delete(id discord.MessageID) {
 			v.delete(id)
 		}
 	})
-	dialog.Show()
+	dialog.Present()
 }
 
 func (v *View) delete(id discord.MessageID) {
