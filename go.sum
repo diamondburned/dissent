@@ -329,6 +329,10 @@ libdb.so/ctxt v0.0.0-20240229093153-2db38a5d3c12 h1:Yhdfv7kODmi9SqvX8dEoglc3Mr+R
 libdb.so/ctxt v0.0.0-20240229093153-2db38a5d3c12/go.mod h1:t9e0qzm6W32lQDEmSND4oDsdtiJaerFvGA4g6L4e/aM=
 libdb.so/go-emoji v0.0.0-20240508073816-39776eee41ac h1:fL1eVICs1WolgTePtsH6ykhRFA5XRkTrxtnP5qu2pzo=
 libdb.so/go-emoji v0.0.0-20240508073816-39776eee41ac/go.mod h1:AavBdb2VGDfm+8Q+49uIs09mFJbSia4s4mjrzm6iKXE=
+libdb.so/gotk4-sourceview/pkg v0.0.0-20240818070527-98263515a466 h1:CvEFAC1dKEtHY2VkQ4w7GVYbSM6JyaT+qrQVRAnetO4=
+libdb.so/gotk4-sourceview/pkg v0.0.0-20240818070527-98263515a466/go.mod h1:ZsyjUrebV0dlGjCl5knN0YZRfpzMqAXxTnzu15qdt9U=
+libdb.so/gotk4-spelling/pkg v0.0.0-20240818082554-ee26db878626 h1:XrzIZLJXXvA9nq1TGakox8dxrLw9VI+b0u7hBDYOj18=
+libdb.so/gotk4-spelling/pkg v0.0.0-20240818082554-ee26db878626/go.mod h1:u3i0zwMQ/rKousCpkgcGBUZSyTTjUUzlaIaXADo1kwg=
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
 rsc.io/quote/v3 v3.1.0/go.mod h1:yEA65RcK8LyAZtP9Kv3t0HmxON59tX3rD+tICJqUlj0=
 rsc.io/sampler v1.3.0/go.mod h1:T1hPZKmBbMNahiBKFy5HrXp6adAjACjK9JXDnKaTXpA=

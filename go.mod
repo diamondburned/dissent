@@ -2,6 +2,8 @@ module libdb.so/dissent
 
 go 1.21.0
 
+toolchain go1.22.5
+
 require (
 	github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8
 	github.com/diamondburned/arikawa/v3 v3.4.0
@@ -17,6 +19,8 @@ require (
 	github.com/sahilm/fuzzy v0.1.1
 	github.com/yuin/goldmark v1.7.1
 	libdb.so/ctxt v0.0.0-20240229093153-2db38a5d3c12
+	libdb.so/gotk4-sourceview/pkg v0.0.0-20240818070527-98263515a466
+	libdb.so/gotk4-spelling/pkg v0.0.0-20240818082554-ee26db878626
 )
 
 require (

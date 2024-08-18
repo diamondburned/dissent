@@ -18,6 +18,8 @@ import (
 	"libdb.so/dissent/internal/gtkcord"
 	"libdb.so/dissent/internal/window"
 	"libdb.so/dissent/internal/window/about"
+	"libdb.so/gotk4-sourceview/pkg/gtksource/v5"
+	"libdb.so/gotk4-spelling/pkg/spelling"
 
 	_ "github.com/diamondburned/gotkit/gtkutil/aggressivegc"
 	_ "libdb.so/dissent/internal/icons"
@@ -54,6 +56,15 @@ var _ = cssutil.WriteCSS(`
 	}
 `)
 
+func init() {
+	app.Hook(func(*app.Application) {
+		adw.Init()
+		adaptive.Init()
+		spelling.Init()
+		gtksource.Init()
+	})
+}
+
 func main() {
 	m := manager{}
 	m.app = app.New(context.Background(), "so.libdb.dissent", "Dissent")
@@ -87,9 +98,6 @@ func (m *manager) forwardSignalToWindow(name string, t *glib.VariantType) gtkuti
 }
 
 func (m *manager) activate(ctx context.Context) {
-	adw.Init()
-	adaptive.Init()
-
 	if m.win != nil {
 		m.win.Present()
 		return

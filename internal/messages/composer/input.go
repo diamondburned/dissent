@@ -24,6 +24,8 @@ import (
 	"github.com/diamondburned/gotkit/utils/osutil"
 	"github.com/pkg/errors"
 	"libdb.so/dissent/internal/gtkcord"
+	"libdb.so/gotk4-sourceview/pkg/gtksource/v5"
+	"libdb.so/gotk4-spelling/pkg/spelling"
 )
 
 var persistInput = prefs.NewBool(true, prefs.PropMeta{
@@ -31,6 +33,12 @@ var persistInput = prefs.NewBool(true, prefs.PropMeta{
 	Section: "Composer",
 	Description: "Persist the input message between sessions (to disk). " +
 		"If disabled, the input is only persisted for the current session on memory.",
+})
+
+var spellCheck = prefs.NewBool(true, prefs.PropMeta{
+	Name:        "Spell Check",
+	Section:     "Composer",
+	Description: "Enable spell checking in the composer.",
 })
 
 // InputController is the parent controller that Input controls.
@@ -51,7 +59,7 @@ type InputController interface {
 // Input is the text field of the composer.
 type Input struct {
 	*gtk.TextView
-	Buffer *gtk.TextBuffer
+	Buffer *gtksource.Buffer
 	ac     *autocomplete.Autocompleter
 
 	ctx     context.Context
@@ -93,42 +101,12 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 		chID: chID,
 	}
 
-	i.TextView = gtk.NewTextView()
-	i.TextView.SetWrapMode(gtk.WrapWordChar)
-	i.TextView.SetAcceptsTab(true)
-	i.TextView.SetHExpand(true)
-	i.TextView.SetInputHints(0 |
-		gtk.InputHintEmoji |
-		gtk.InputHintSpellcheck |
-		gtk.InputHintWordCompletion |
-		gtk.InputHintUppercaseSentences,
-	)
-	textutil.SetTabSize(i.TextView)
-	inputCSS(i)
-
-	i.TextView.ConnectPasteClipboard(i.readClipboard)
-
-	i.ac = autocomplete.New(ctx, i.TextView)
-	i.ac.AddSelectedFunc(i.onAutocompleted)
-	i.ac.SetCancelOnChange(false)
-	i.ac.SetMinLength(2)
-	i.ac.SetTimeout(time.Second)
-
-	state := gtkcord.FromContext(ctx)
-	if ch, err := state.Cabinet.Channel(chID); err == nil {
-		i.guildID = ch.GuildID
-		i.ac.Use(
-			NewEmojiCompleter(i.guildID), // :
-			NewMemberCompleter(chID),     // @
-		)
-	}
-
 	inputState := inputStateKey.Acquire(ctx)
 
-	i.Buffer = i.TextView.Buffer()
+	i.Buffer = gtksource.NewBuffer(nil)
 	i.Buffer.ConnectChanged(func() {
 		if inputWYSIWYG.Value() {
-			mdrender.RenderWYSIWYG(ctx, i.Buffer)
+			mdrender.RenderWYSIWYG(ctx, &i.Buffer.TextBuffer)
 		}
 
 		i.ac.Autocomplete()
@@ -151,6 +129,50 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 			}
 		}
 	})
+
+	spellChecker := spelling.CheckerGetDefault()
+	spellingAdapter := spelling.NewTextBufferAdapter(i.Buffer, spellChecker)
+
+	i.TextView = gtk.NewTextViewWithBuffer(&i.Buffer.TextBuffer)
+	i.TextView.SetWrapMode(gtk.WrapWordChar)
+	i.TextView.SetAcceptsTab(true)
+	i.TextView.SetHExpand(true)
+	i.TextView.SetInputHints(0 |
+		gtk.InputHintEmoji |
+		gtk.InputHintSpellcheck |
+		gtk.InputHintWordCompletion |
+		gtk.InputHintUppercaseSentences,
+	)
+	textutil.SetTabSize(i.TextView)
+	inputCSS(i)
+
+	i.TextView.ConnectPasteClipboard(i.readClipboard)
+
+	spellingMenu := spellingAdapter.MenuModel()
+	i.TextView.SetExtraMenu(spellingMenu)
+	i.TextView.InsertActionGroup("spelling", spellingAdapter)
+	spellingAdapter.SetEnabled(spellCheck.Value())
+	spellingAdapter.NotifyProperty("enabled", func() {
+		nowEnabled := spellingAdapter.Enabled()
+		if spellCheck.Value() != nowEnabled {
+			spellCheck.Publish(nowEnabled)
+		}
+	})
+
+	i.ac = autocomplete.New(ctx, i.TextView)
+	i.ac.AddSelectedFunc(i.onAutocompleted)
+	i.ac.SetCancelOnChange(false)
+	i.ac.SetMinLength(2)
+	i.ac.SetTimeout(time.Second)
+
+	state := gtkcord.FromContext(ctx)
+	if ch, err := state.Cabinet.Channel(chID); err == nil {
+		i.guildID = ch.GuildID
+		i.ac.Use(
+			NewEmojiCompleter(i.guildID), // :
+			NewMemberCompleter(chID),     // @
+		)
+	}
 
 	enterKeyer := gtk.NewEventControllerKey()
 	enterKeyer.ConnectKeyPressed(i.onKey)
