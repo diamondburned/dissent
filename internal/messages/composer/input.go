@@ -25,7 +25,6 @@ import (
 	"github.com/pkg/errors"
 	"libdb.so/dissent/internal/gtkcord"
 	"libdb.so/gotk4-sourceview/pkg/gtksource/v5"
-	"libdb.so/gotk4-spelling/pkg/spelling"
 )
 
 var persistInput = prefs.NewBool(true, prefs.PropMeta{
@@ -33,12 +32,6 @@ var persistInput = prefs.NewBool(true, prefs.PropMeta{
 	Section: "Composer",
 	Description: "Persist the input message between sessions (to disk). " +
 		"If disabled, the input is only persisted for the current session on memory.",
-})
-
-var spellCheck = prefs.NewBool(true, prefs.PropMeta{
-	Name:        "Spell Check",
-	Section:     "Composer",
-	Description: "Enable spell checking in the composer.",
 })
 
 // InputController is the parent controller that Input controls.
@@ -130,9 +123,6 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 		}
 	})
 
-	spellChecker := spelling.CheckerGetDefault()
-	spellingAdapter := spelling.NewTextBufferAdapter(i.Buffer, spellChecker)
-
 	i.TextView = gtk.NewTextViewWithBuffer(&i.Buffer.TextBuffer)
 	i.TextView.SetWrapMode(gtk.WrapWordChar)
 	i.TextView.SetAcceptsTab(true)
@@ -147,17 +137,6 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 	inputCSS(i)
 
 	i.TextView.ConnectPasteClipboard(i.readClipboard)
-
-	spellingMenu := spellingAdapter.MenuModel()
-	i.TextView.SetExtraMenu(spellingMenu)
-	i.TextView.InsertActionGroup("spelling", spellingAdapter)
-	spellingAdapter.SetEnabled(spellCheck.Value())
-	spellingAdapter.NotifyProperty("enabled", func() {
-		nowEnabled := spellingAdapter.Enabled()
-		if spellCheck.Value() != nowEnabled {
-			spellCheck.Publish(nowEnabled)
-		}
-	})
 
 	i.ac = autocomplete.New(ctx, i.TextView)
 	i.ac.AddSelectedFunc(i.onAutocompleted)
@@ -182,6 +161,7 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 		i.Buffer.SetText(text)
 	})
 
+	hookSpellChecker(&i)
 	return &i
 }
 
