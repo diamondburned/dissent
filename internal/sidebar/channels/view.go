@@ -157,6 +157,9 @@ func NewView(ctx context.Context, guildID discord.GuildID) *View {
 	v.Header.HeaderBar.AddCSSClass("channels-header")
 	v.Header.HeaderBar.SetShowTitle(false)
 	v.Header.HeaderBar.PackStart(v.Header.Name)
+	v.Header.HeaderBar.SetShowStartTitleButtons(false)
+	v.Header.HeaderBar.SetShowEndTitleButtons(false)
+	v.Header.HeaderBar.SetShowBackButton(false)
 
 	viewport := gtk.NewViewport(nil, nil)
 

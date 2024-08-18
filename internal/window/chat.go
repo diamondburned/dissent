@@ -118,12 +118,6 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	p.rightTitle.AddCSSClass("right-header-bin")
 	p.rightTitle.SetHExpand(true)
 
-	// p.rightTitle = gtk.NewLabel("")
-	// p.rightTitle.AddCSSClass("right-header-label")
-	// p.rightTitle.SetXAlign(0)
-	// p.rightTitle.SetHExpand(true)
-	// p.rightTitle.SetEllipsize(pango.EllipsizeEnd)
-
 	back := backbutton.New()
 	back.SetTransitionType(gtk.RevealerTransitionTypeSlideRight)
 
@@ -134,6 +128,7 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	p.RightHeader = adw.NewHeaderBar()
 	p.RightHeader.AddCSSClass("titlebar")
 	p.RightHeader.AddCSSClass("right-header")
+	p.RightHeader.SetShowStartTitleButtons(true)
 	p.RightHeader.SetShowEndTitleButtons(true)
 	p.RightHeader.SetShowBackButton(false) // this is useless with OverlaySplitView
 	p.RightHeader.SetShowTitle(false)
