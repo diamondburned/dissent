@@ -115,3 +115,9 @@ schema = 3
   [mod."libdb.so/go-emoji"]
     version = "v0.0.0-20240508073816-39776eee41ac"
     hash = "sha256-Lsc8gcjZdlh/J95zoHACfE06xv8TojUIoVoCaugvLlY="
+  [mod."libdb.so/gotk4-sourceview/pkg"]
+    version = "v0.0.0-20240818070527-98263515a466"
+    hash = "sha256-iPsTrm0Rzt/PqmWq4/dBJbNt1Bqe4vfPF1nmpwp/6Rk="
+  [mod."libdb.so/gotk4-spelling/pkg"]
+    version = "v0.0.0-20240818082554-ee26db878626"
+    hash = "sha256-QTdC0aMytvkvk5XpfbQZpecHKJ8LqNfheawO6zRI22o="
