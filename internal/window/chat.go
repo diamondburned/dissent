@@ -128,7 +128,7 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	p.RightHeader = adw.NewHeaderBar()
 	p.RightHeader.AddCSSClass("titlebar")
 	p.RightHeader.AddCSSClass("right-header")
-	p.RightHeader.SetShowStartTitleButtons(true)
+	p.RightHeader.SetShowStartTitleButtons(false)
 	p.RightHeader.SetShowEndTitleButtons(true)
 	p.RightHeader.SetShowBackButton(false) // this is useless with OverlaySplitView
 	p.RightHeader.SetShowTitle(false)
