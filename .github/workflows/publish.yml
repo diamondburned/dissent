@@ -177,15 +177,13 @@ jobs:
             mingw-w64-x86_64-pkg-config
             mingw-w64-x86_64-gtk4
             mingw-w64-x86_64-libadwaita
+            mingw-w64-x86_64-libspelling
             mingw-w64-x86_64-gtksourceview5
             mingw-w64-x86_64-gobject-introspection
             mingw-w64-x86_64-glib2
             mingw-w64-x86_64-go
           out-path: ${{ runner.temp }}/exe
           exe-name: dissent.exe
-          # libspelling is not available in MSYS yet, so we have to build
-          # without spellchecking support.
-          build-tags: nospellcheck
 
       - name: Prepare
         id: prepare
