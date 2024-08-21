@@ -6,6 +6,7 @@ import (
 	"mime"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -45,7 +46,7 @@ type InputController interface {
 	EditLastMessage() bool
 	// PasteClipboardFile is called everytime the user pastes a file from their
 	// clipboard. The file is usually (but not always) an image.
-	PasteClipboardFile(File)
+	PasteClipboardFile(*File)
 }
 
 // Input is the text field of the composer.
@@ -306,15 +307,14 @@ func (i *Input) readClipboard() {
 
 			// We're too lazy to do reference-counting, so just forbid Open from
 			// being called more than once.
-			var openedOnce bool
+			var openedOnce atomic.Bool
 
-			file := File{
+			file := &File{
 				Name: "clipboard",
 				Type: typ,
 				Size: s.Size(),
 				Open: func() (io.ReadCloser, error) {
-					if !openedOnce {
-						openedOnce = true
+					if openedOnce.CompareAndSwap(false, true) {
 						return f, nil
 					}
 					return nil, errors.New("Open called more than once on TempFile")
