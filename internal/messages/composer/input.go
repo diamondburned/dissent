@@ -24,7 +24,6 @@ import (
 	"github.com/diamondburned/gotkit/utils/osutil"
 	"github.com/pkg/errors"
 	"libdb.so/dissent/internal/gtkcord"
-	"libdb.so/gotk4-sourceview/pkg/gtksource/v5"
 )
 
 var persistInput = prefs.NewBool(true, prefs.PropMeta{
@@ -52,7 +51,7 @@ type InputController interface {
 // Input is the text field of the composer.
 type Input struct {
 	*gtk.TextView
-	Buffer *gtksource.Buffer
+	Buffer *gtk.TextBuffer
 	ac     *autocomplete.Autocompleter
 
 	ctx     context.Context
@@ -86,6 +85,14 @@ var inputStateKey = app.NewStateKey[string]("input-state")
 
 var inputStateMemory sync.Map // map[discord.ChannelID]string
 
+// initializedInput contains a subset of Input.
+// This stays here for as long as the dynexport cap on Windows is an issue,
+// which should be fixed by Go 1.24.
+type initializedInput struct {
+	View   *gtk.TextView
+	Buffer *gtk.TextBuffer
+}
+
 // NewInput creates a new Input widget.
 func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID) *Input {
 	i := Input{
@@ -96,12 +103,15 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 
 	inputState := inputStateKey.Acquire(ctx)
 
-	i.Buffer = gtksource.NewBuffer(nil)
-	i.Buffer.ConnectChanged(func() {
+	input := initializeInput()
+
+	input.Buffer.ConnectChanged(func() {
+		// Do rough WYSIWYG rendering.
 		if inputWYSIWYG.Value() {
-			mdrender.RenderWYSIWYG(ctx, &i.Buffer.TextBuffer)
+			mdrender.RenderWYSIWYG(ctx, input.Buffer)
 		}
 
+		// Handle autocompletion.
 		i.ac.Autocomplete()
 
 		start, end := i.Buffer.Bounds()
@@ -123,10 +133,13 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 		}
 	})
 
-	i.TextView = gtk.NewTextViewWithBuffer(&i.Buffer.TextBuffer)
+	i.Buffer = input.Buffer
+
+	i.TextView = input.View
 	i.TextView.SetWrapMode(gtk.WrapWordChar)
 	i.TextView.SetAcceptsTab(true)
 	i.TextView.SetHExpand(true)
+	i.TextView.ConnectPasteClipboard(i.readClipboard)
 	i.TextView.SetInputHints(0 |
 		gtk.InputHintEmoji |
 		gtk.InputHintSpellcheck |
@@ -135,8 +148,6 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 	)
 	textutil.SetTabSize(i.TextView)
 	inputCSS(i)
-
-	i.TextView.ConnectPasteClipboard(i.readClipboard)
 
 	i.ac = autocomplete.New(ctx, i.TextView)
 	i.ac.AddSelectedFunc(i.onAutocompleted)
@@ -161,7 +172,6 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 		i.Buffer.SetText(text)
 	})
 
-	hookSpellChecker(&i)
 	return &i
 }
 
