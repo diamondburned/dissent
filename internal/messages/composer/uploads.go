@@ -55,6 +55,9 @@ var uploadTrayCSS = cssutil.Applier("composer-upload-tray", `
 		margin: 0.25em 0.65em;
 		margin-top: 0;
 	}
+	.composer-upload-file-name {
+		font-size: 0.9em;
+	}
 	.composer-upload-file-icon {
 		margin: 0 0.5em;
 		margin-bottom: 1px;
@@ -84,6 +87,8 @@ func (t *UploadTray) AddFile(f *File) {
 	u.name = gtk.NewLabel(f.Name)
 	u.name.AddCSSClass("composer-upload-file-name")
 	u.name.SetEllipsize(pango.EllipsizeEnd)
+	u.name.SetVExpand(true)
+	u.name.SetVAlign(gtk.AlignBaseline)
 
 	u.size = gtk.NewLabel(humanize.Bytes(uint64(f.Size)))
 	u.size.AddCSSClass("composer-upload-file-size")
