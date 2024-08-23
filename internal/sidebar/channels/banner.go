@@ -15,7 +15,7 @@ import (
 
 const (
 	bannerWidth  = 240
-	bannerHeight = 135
+	bannerHeight = 120
 )
 
 // Banner is the guild banner display on top of the channel view.
@@ -27,7 +27,16 @@ type Banner struct {
 	gID     discord.GuildID
 }
 
-var bannerCSS = cssutil.Applier("channels-banner", ``)
+var bannerCSS = cssutil.Applier("channels-banner", `
+	.channels-banner-shadow {
+		background: alpha(black, 0.75);
+		transition: opacity 0.25s;
+		opacity: 0;
+	}
+	.channels-scrolled .channels-banner-shadow {
+		opacity: 0.5;
+	}
+`)
 
 // NewBanner creates a new Banner.
 func NewBanner(ctx context.Context, guildID discord.GuildID) *Banner {
@@ -39,10 +48,10 @@ func NewBanner(ctx context.Context, guildID discord.GuildID) *Banner {
 	b.Picture = onlineimage.NewPicture(ctx, imgutil.HTTPProvider)
 	b.Picture.SetLayoutManager(gtk.NewBinLayout()) // magically force min size
 	b.Picture.SetSizeRequest(bannerWidth, bannerHeight)
+	b.Picture.SetContentFit(gtk.ContentFitCover)
 
 	b.Shadows = gtk.NewBox(gtk.OrientationVertical, 0)
 	b.Shadows.AddCSSClass("channels-banner-shadow")
-	b.Shadows.SetOpacity(0)
 
 	b.Overlay = gtk.NewOverlay()
 	b.Overlay.SetHAlign(gtk.AlignStart)
@@ -50,7 +59,7 @@ func NewBanner(ctx context.Context, guildID discord.GuildID) *Banner {
 	b.Overlay.AddOverlay(b.Shadows)
 	b.Overlay.SetCanTarget(false)
 	b.Overlay.SetCanFocus(false)
-	b.Hide()
+	b.SetVisible(false)
 	bannerCSS(b)
 
 	state := gtkcord.FromContext(ctx)
@@ -69,17 +78,17 @@ func (b *Banner) Invalidate() {
 
 	g, err := state.Cabinet.Guild(b.gID)
 	if err != nil {
-		b.Hide()
+		b.SetVisible(false)
 		return
 	}
 
 	url := g.BannerURL()
 	if url == "" {
-		b.Hide()
+		b.SetVisible(false)
 		return
 	}
 
-	b.Show()
+	b.SetVisible(true)
 	b.SetURL(gtkcord.InjectSize(url, bannerWidth))
 }
 
@@ -95,11 +104,13 @@ func (b *Banner) SetURL(url string) { b.Picture.SetURL(url) }
 func (b *Banner) SetScrollOpacity(scrollY float64) (scrolled bool) {
 	// Calculate the height of the banner but account for the height of the
 	// header bar.
-	height := float64(b.AllocatedHeight()) - (gtkcord.HeaderHeight)
-	opacity := clamp(scrollY/height, 0, 1)
+	// height := float64(b.Height()) - (gtkcord.HeaderHeight)
+	// opacity := clamp(scrollY/height, 0, 1)
 
-	b.Shadows.SetOpacity(opacity)
-	return opacity >= 0.995
+	// b.Shadows.SetOpacity(opacity)
+	// return opacity >= 0.995
+
+	return scrollY > 0 // delegate to styling
 }
 
 func clamp(f, min, max float64) float64 {
