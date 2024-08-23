@@ -60,25 +60,13 @@ var viewCSS = cssutil.Applier("channels-view", `
 		margin: 0;
 		padding: 0;
 	}
+	.channels-name {
+		font-weight: 600;
+		font-size: 1.1em;
+		margin: 0.25em 0.5em;
+	}
 	.channels-header {
-		padding: 0 {$header_padding};
 		border-radius: 0;
-	}
-	.channels-has-banner  windowhandle,
-	.channels-has-banner .channels-header {
-		transition: linear 65ms all;
-	}
-	.channels-has-banner .channels-header {
-		/* go run ./cmd/ease-in-out-gradient/ -max 0.25 -min 0 -steps 5 */
-		background: linear-gradient(to bottom,
-			alpha(black, 0.24),
-			alpha(black, 0.19),
-			alpha(black, 0.06),
-			alpha(black, 0.01),
-			alpha(black, 0.00) 100%
-		);
-		box-shadow: none;
-		border: none;
 	}
 	.channels-has-banner .channels-header * {
 		color: white;
@@ -87,10 +75,6 @@ var viewCSS = cssutil.Applier("channels-view", `
 	.channels-has-banner .channels-header *:backdrop {
 		color: alpha(white, 0.75);
 		text-shadow: 0px 0px 3px alpha(black, 0.35);
-	}
-	.channels-name {
-		font-weight: 600;
-		font-size: 1.1em;
 	}
 `)
 
@@ -125,7 +109,7 @@ func NewView(ctx context.Context, guildID discord.GuildID) *View {
 	v.HeaderBar.SetShowStartTitleButtons(false)
 	v.HeaderBar.SetShowEndTitleButtons(false)
 	v.HeaderBar.SetShowBackButton(false)
-	v.HeaderBar.SetVAlign(gtk.AlignStart)
+	v.HeaderBar.SetVAlign(gtk.AlignEnd)
 	v.HeaderBar.SetHAlign(gtk.AlignFill)
 
 	v.Banner = NewBanner(ctx, guildID)

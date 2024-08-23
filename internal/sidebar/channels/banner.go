@@ -29,12 +29,39 @@ type Banner struct {
 
 var bannerCSS = cssutil.Applier("channels-banner", `
 	.channels-banner-shadow {
-		background: alpha(black, 0.75);
-		transition: opacity 0.25s;
-		opacity: 0;
+		transition: all 0.25s;
+	}
+	.channels-banner-shadow {
+		/* ease-in-out-opacity -max 0 -min 0.25 -start 24px -end 75px -steps 10 */
+		background-image: linear-gradient(
+			to top,
+			alpha(black, 0.25) 24px,
+			alpha(black, 0.25) 30px,
+			alpha(black, 0.24) 35px,
+			alpha(black, 0.21) 41px,
+			alpha(black, 0.16) 47px,
+			alpha(black, 0.09) 52px,
+			alpha(black, 0.04) 58px,
+			alpha(black, 0.01) 64px,
+			alpha(black, 0.00) 69px,
+			alpha(black, 0.00) 75px
+		);
 	}
 	.channels-scrolled .channels-banner-shadow {
-		opacity: 0.5;
+		/* ease-in-out-opacity -max 0.45 -min 0.65 -steps 10 */
+		background-image: linear-gradient(
+			to top,
+			alpha(black, 0.65) 0%,
+			alpha(black, 0.65) 11%,
+			alpha(black, 0.64) 22%,
+			alpha(black, 0.62) 33%,
+			alpha(black, 0.58) 44%,
+			alpha(black, 0.52) 56%,
+			alpha(black, 0.48) 67%,
+			alpha(black, 0.46) 78%,
+			alpha(black, 0.45) 89%,
+			alpha(black, 0.45) 100%
+		);
 	}
 `)
 
@@ -47,8 +74,8 @@ func NewBanner(ctx context.Context, guildID discord.GuildID) *Banner {
 
 	b.Picture = onlineimage.NewPicture(ctx, imgutil.HTTPProvider)
 	b.Picture.SetLayoutManager(gtk.NewBinLayout()) // magically force min size
-	b.Picture.SetSizeRequest(bannerWidth, bannerHeight)
 	b.Picture.SetContentFit(gtk.ContentFitCover)
+	b.Picture.SetSizeRequest(bannerWidth, bannerHeight)
 
 	b.Shadows = gtk.NewBox(gtk.OrientationVertical, 0)
 	b.Shadows.AddCSSClass("channels-banner-shadow")
