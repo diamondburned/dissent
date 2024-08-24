@@ -18,8 +18,6 @@ import (
 	"libdb.so/dissent/internal/gtkcord"
 	"libdb.so/dissent/internal/window"
 	"libdb.so/dissent/internal/window/about"
-	"libdb.so/gotk4-sourceview/pkg/gtksource/v5"
-	"libdb.so/gotk4-spelling/pkg/spelling"
 
 	_ "github.com/diamondburned/gotkit/gtkutil/aggressivegc"
 	_ "libdb.so/dissent/internal/icons"
@@ -60,8 +58,6 @@ func init() {
 	app.Hook(func(*app.Application) {
 		adw.Init()
 		adaptive.Init()
-		spelling.Init()
-		gtksource.Init()
 	})
 }
 

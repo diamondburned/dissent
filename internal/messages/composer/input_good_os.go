@@ -6,6 +6,7 @@ import (
 	"log/slog"
 
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
+	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/app/prefs"
 	"libdb.so/gotk4-sourceview/pkg/gtksource/v5"
 	"libdb.so/gotk4-spelling/pkg/spelling"
@@ -16,6 +17,13 @@ var spellCheck = prefs.NewBool(true, prefs.PropMeta{
 	Section:     "Composer",
 	Description: "Enable spell checking in the composer.",
 })
+
+func init() {
+	app.Hook(func(*app.Application) {
+		gtksource.Init()
+		spelling.Init()
+	})
+}
 
 func initializeInput() initializedInput {
 	languageManager := gtksource.LanguageManagerGetDefault()
