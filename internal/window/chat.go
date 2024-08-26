@@ -42,7 +42,6 @@ type ChatPage struct {
 	rightTitle  *adw.Bin
 
 	tabView       *adw.TabView
-	quickswitcher *quickswitcher.Dialog
 
 	lastGuildState   *app.TypedSingleState[discord.GuildID]
 	lastChannelState *app.TypedState[discord.ChannelID]
@@ -92,9 +91,6 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 		lastGuildState:   lastGuildKey.Acquire(ctx),
 		lastChannelState: lastChannelKey.Acquire(ctx),
 	}
-
-	p.quickswitcher = quickswitcher.NewDialog(ctx)
-	p.quickswitcher.SetHideOnClose(true) // so we can reopen it later
 
 	p.tabView = adw.NewTabView()
 	p.tabView.AddCSSClass("window-chatpage-tabview")
@@ -178,7 +174,7 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 }
 
 // OpenQuickSwitcher opens the Quick Switcher dialog.
-func (p *ChatPage) OpenQuickSwitcher() { p.quickswitcher.Show() }
+func (p *ChatPage) OpenQuickSwitcher() { quickswitcher.ShowDialog(p.ctx) }
 
 // ResetView switches out of any channel view and into the placeholder view.
 // This method is used when the guild becomes unavailable.

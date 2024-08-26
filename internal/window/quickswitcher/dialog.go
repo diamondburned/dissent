@@ -12,14 +12,14 @@ import (
 
 // Dialog is a Quick Switcher dialog.
 type Dialog struct {
-	*adw.ApplicationWindow
+	*adw.Dialog
 	QuickSwitcher *QuickSwitcher
 }
 
 // ShowDialog shows a new Quick Switcher dialog.
 func ShowDialog(ctx context.Context) {
 	d := NewDialog(ctx)
-	d.Show()
+	d.Present(app.GTKWindowFromContext(ctx))
 }
 
 var dialogCSS = cssutil.Applier("quickswitcher-dialog", "")
@@ -30,7 +30,6 @@ func NewDialog(ctx context.Context) *Dialog {
 	qs.Box.Remove(qs.search) // jank
 	qs.search.SetHExpand(true)
 
-	win := app.GTKWindowFromContext(ctx)
 	app := app.FromContext(ctx)
 
 	header := adw.NewHeaderBar()
@@ -42,25 +41,16 @@ func NewDialog(ctx context.Context) *Dialog {
 	toolbarView.SetContent(qs)
 
 	d := Dialog{QuickSwitcher: qs}
-	d.ApplicationWindow = adw.NewApplicationWindow(app.Application)
-	d.SetTransientFor(win)
-	d.SetDefaultSize(375, 275)
-	d.SetModal(true)
-	d.SetDestroyWithParent(true)
+	d.Dialog = adw.NewDialog()
+	d.SetContentWidth(375)
+	d.SetContentHeight(275)
 	d.SetTitle(app.SuffixedTitle("Quick Switcher"))
-	d.SetContent(toolbarView)
+	d.SetChild(toolbarView)
 	d.ConnectShow(func() {
 		qs.Clear()
 		qs.search.GrabFocus()
 	})
 	dialogCSS(d)
-
-	// SetDestroyWithParent doesn't work for some reason, so we have to manually
-	// destroy the QuickSwitcher on transient window destroy.
-	win.ConnectCloseRequest(func() bool {
-		d.Destroy()
-		return false
-	})
 
 	qs.ConnectChosen(func() {
 		d.Close()
