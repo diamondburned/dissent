@@ -70,13 +70,6 @@ var chatPageCSS = cssutil.Applier("window-chatpage", `
 		border-radius: 0;
 		box-shadow: none;
 	}
-	.right-header .adaptive-sidebar-reveal-button {
-		margin: 0;
-	}
-	.right-header .adaptive-sidebar-reveal-button button {
-		margin-left: 8px;
-		margin-right: 4px;
-	}
 	.right-header-label {
 		font-weight: bold;
 	}
@@ -119,7 +112,6 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	p.rightTitle.SetHExpand(true)
 
 	back := backbutton.New()
-	back.SetTransitionType(gtk.RevealerTransitionTypeSlideRight)
 
 	newTabButton := gtk.NewButtonFromIconName("list-add-symbolic")
 	newTabButton.SetTooltipText("Open a New Tab")
