@@ -359,8 +359,8 @@ func (m *cozyMessage) Update(message *gateway.MessageCreateEvent) {
 	m.updateAuthor(message)
 
 	tooltip := fmt.Sprintf(
-		"<b>%s</b> (%s)\n%s",
-		html.EscapeString(message.Author.Tag()), message.Author.ID,
+		"<b>%s</b>\n%s",
+		html.EscapeString(message.Author.Tag()),
 		html.EscapeString(locale.Time(message.Timestamp.Time(), true)),
 	)
 
