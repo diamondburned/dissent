@@ -246,16 +246,19 @@ func (m *message) ShowEmojiChooser() {
 	e.Popup()
 }
 
-// ShowSource opens a JSON showing the message JSON.
+// ShowSource opens a dialog showing a JSON representation of the message.
 func (m *message) ShowSource() {
-	d := adw.NewWindow()
+	d := adw.NewDialog()
 	d.SetTitle(locale.Get("View Source"))
-	d.SetTransientFor(app.GTKWindowFromContext(m.ctx()))
-	d.SetModal(true)
-	d.SetDefaultSize(500, 300)
+	d.SetContentWidth(500)
+	d.SetContentHeight(300)
 
 	h := adw.NewHeaderBar()
 	h.SetCenteringPolicy(adw.CenteringPolicyStrict)
+
+	toolbarView := adw.NewToolbarView()
+	toolbarView.SetTopBarStyle(adw.ToolbarFlat)
+	toolbarView.AddTopBar(h)
 
 	buf := gtk.NewTextBuffer(nil)
 
@@ -292,8 +295,10 @@ func (m *message) ShowSource() {
 	box.Append(h)
 	box.Append(s)
 
-	d.SetContent(box)
-	d.Present()
+	toolbarView.SetContent(box)
+
+	d.SetChild(toolbarView)
+	d.Present(app.GTKWindowFromContext(m.ctx()))
 }
 
 // cozyMessage is a large cozy message with an avatar.
