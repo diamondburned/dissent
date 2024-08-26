@@ -53,6 +53,9 @@ type View struct {
 }
 
 var viewCSS = cssutil.Applier("channels-view", `
+	.channels-viewtree {
+		background: none; /* adwaita reset */
+	}
 	/* GTK is dumb. There's absolutely no way to get a ListItemWidget instance
 	 * to style it, so we'll just unstyle everything and use the child instead.
 	 */
