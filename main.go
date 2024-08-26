@@ -66,7 +66,7 @@ func main() {
 	m.app = app.New(context.Background(), "so.libdb.dissent", "Dissent")
 	m.app.AddJSONActions(map[string]interface{}{
 		"app.preferences": func() { prefui.ShowDialog(m.win.Context()) },
-		"app.about":       func() { about.New(m.win.Context()).Present() },
+		"app.about":       func() { about.New(m.win.Context()).Present(m.win) },
 		"app.logs":        func() { logui.ShowDefaultViewer(m.win.Context()) },
 		"app.quit":        func() { m.app.Quit() },
 	})

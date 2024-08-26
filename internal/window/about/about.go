@@ -9,15 +9,12 @@ import (
 
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
-	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/components/logui"
 )
 
 // New creates a new about window.
-func New(ctx context.Context) *adw.AboutWindow {
-	about := adw.NewAboutWindow()
-	about.SetTransientFor(app.GTKWindowFromContext(ctx))
-	about.SetModal(true)
+func New(ctx context.Context) *adw.AboutDialog {
+	about := adw.NewAboutDialog()
 	about.SetApplicationName("Dissent")
 	about.SetApplicationIcon("logo")
 	about.SetVersion("git") // TODO: version
