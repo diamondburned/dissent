@@ -47,6 +47,8 @@ type InputController interface {
 	// PasteClipboardFile is called everytime the user pastes a file from their
 	// clipboard. The file is usually (but not always) an image.
 	PasteClipboardFile(*File)
+	// UpdateMessageLength updates the message length counter.
+	UpdateMessageLength(int)
 }
 
 // Input is the text field of the composer.
@@ -103,7 +105,6 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 	}
 
 	inputState := inputStateKey.Acquire(ctx)
-
 	input := initializeInput()
 
 	input.Buffer.ConnectChanged(func() {
@@ -111,6 +112,9 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 		if inputWYSIWYG.Value() {
 			mdrender.RenderWYSIWYG(ctx, input.Buffer)
 		}
+
+		// Check for message length limit.
+		ctrl.UpdateMessageLength(input.Buffer.CharCount())
 
 		// Handle autocompletion.
 		i.ac.Autocomplete()

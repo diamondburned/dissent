@@ -222,10 +222,14 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 	outerBox.Append(composerClamp)
 
 	v.ToastOverlay = adw.NewToastOverlay()
-	v.ToastOverlay.SetChild(outerBox)
+	v.ToastOverlay.SetVAlign(gtk.AlignStart)
+
+	toastOuterOverlay := gtk.NewOverlay()
+	toastOuterOverlay.SetChild(outerBox)
+	toastOuterOverlay.AddOverlay(v.ToastOverlay)
 
 	// This becomes the outermost widget.
-	v.focused = v.ToastOverlay
+	v.focused = toastOuterOverlay
 
 	v.LoadablePage = adaptive.NewLoadablePage()
 	v.LoadablePage.SetTransitionDuration(125)

@@ -28,6 +28,14 @@ import (
 	"libdb.so/dissent/internal/gtkcord"
 )
 
+const (
+	// MessageLengthLimitNonNitro is the maximum number of characters allowed in a message.
+	MessageLengthLimitNonNitro = 2000
+	// MessageLengthLimitNitro is the maximum number of characters allowed in a
+	// message if the user has Nitro.
+	MessageLengthLimitNitro = 4000
+)
+
 var showAllEmojis = prefs.NewBool(true, prefs.PropMeta{
 	Name:        "Show All Emojis",
 	Section:     "Composer",
@@ -126,6 +134,10 @@ type View struct {
 	leftBox      *gtk.Box
 	uploadButton *gtk.Button
 
+	msgLengthLabel *gtk.Label
+	msgLengthToast *adw.Toast
+	isOverLimit    bool
+
 	state struct {
 		id       discord.MessageID
 		editing  bool
@@ -137,6 +149,11 @@ var viewCSS = cssutil.Applier("composer-view", `
 	.composer-view * {
 		/* Fix spacing for certain GTK themes such as stock Adwaita. */
 		min-height: 0;
+	}
+	.composer-left-actions button,
+	.composer-right-actions button {
+		padding-top: 0.5em;
+		padding-bottom: 0.5em;
 	}
 	.composer-left-actions {
 		margin: 4px 0.65em;
@@ -154,6 +171,16 @@ var viewCSS = cssutil.Applier("composer-view", `
 	.composer-placeholder {
 		padding: 12px 2px;
 		color: alpha(@theme_fg_color, 0.65);
+	}
+	.composer-msg-length {
+		font-size: 0.8em;
+		margin: 0.25em 0.5em;
+		opacity: 0;
+		transition: opacity 0.1s;
+	}
+	.composer-msg-length.over-limit {
+		color: @destructive_color;
+		opacity: 1;
 	}
 `)
 
@@ -173,14 +200,10 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 		chID: chID,
 	}
 
-	v.Input = NewInput(ctx, inputControllerView{v}, chID)
-	v.UploadTray = NewUploadTray()
-
 	scroll := gtk.NewScrolledWindow()
 	scroll.SetPolicy(gtk.PolicyNever, gtk.PolicyAutomatic)
 	scroll.SetPropagateNaturalHeight(true)
 	scroll.SetMaxContentHeight(1000)
-	scroll.SetChild(v.Input)
 
 	v.Placeholder = gtk.NewLabel("")
 	v.Placeholder.AddCSSClass("composer-placeholder")
@@ -202,15 +225,6 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 	overlay.AddOverlay(revealer)
 	overlay.SetClipOverlay(revealer, true)
 
-	// Show or hide the placeholder when the buffer is empty or not.
-	updatePlaceholderVisibility := func() {
-		start, end := v.Input.Buffer.Bounds()
-		// Reveal if the buffer has 0 length.
-		revealer.SetRevealChild(start.Offset() == end.Offset())
-	}
-	v.Input.Buffer.ConnectChanged(updatePlaceholderVisibility)
-	updatePlaceholderVisibility()
-
 	middle := gtk.NewBox(gtk.OrientationVertical, 0)
 	middle.Append(overlay)
 
@@ -222,6 +236,7 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 
 	v.leftBox = gtk.NewBox(gtk.OrientationHorizontal, 0)
 	v.leftBox.AddCSSClass("composer-left-actions")
+	v.leftBox.SetVAlign(gtk.AlignCenter)
 
 	v.EmojiChooser = gtk.NewEmojiChooser()
 	v.EmojiChooser.ConnectEmojiPicked(func(emoji string) { v.insertEmoji(emoji) })
@@ -229,18 +244,18 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 	v.emojiButton = gtk.NewMenuButton()
 	v.emojiButton.SetIconName(emojiIcon)
 	v.emojiButton.AddCSSClass("flat")
-	v.emojiButton.SetTooltipText("Choose Emoji")
+	v.emojiButton.SetTooltipText(locale.Get("Choose Emoji"))
 	v.emojiButton.SetPopover(v.EmojiChooser)
 
 	v.sendButton = gtk.NewButtonFromIconName(sendIcon)
 	v.sendButton.AddCSSClass("composer-send")
-	v.sendButton.SetTooltipText("Send Message")
+	v.sendButton.SetTooltipText(locale.Get("Send Message"))
 	v.sendButton.SetHasFrame(false)
 	v.sendButton.ConnectClicked(v.send)
 
 	v.rightBox = gtk.NewBox(gtk.OrientationHorizontal, 0)
 	v.rightBox.AddCSSClass("composer-right-actions")
-	v.rightBox.SetHAlign(gtk.AlignEnd)
+	v.rightBox.SetVAlign(gtk.AlignCenter)
 
 	v.resetAction()
 
@@ -250,12 +265,36 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 	v.topBox.Append(middle)
 	v.topBox.Append(v.rightBox)
 
+	v.msgLengthLabel = gtk.NewLabel("")
+	v.msgLengthLabel.AddCSSClass("composer-msg-length")
+	v.msgLengthLabel.SetCanTarget(false)
+	v.msgLengthLabel.SetVAlign(gtk.AlignEnd)
+	v.msgLengthLabel.SetHAlign(gtk.AlignEnd)
+
+	topBoxOverlay := gtk.NewOverlay()
+	topBoxOverlay.SetChild(v.topBox)
+	topBoxOverlay.AddOverlay(v.msgLengthLabel)
+
 	v.bigBox = gtk.NewBox(gtk.OrientationVertical, 0)
-	v.bigBox.Append(v.topBox)
+	v.bigBox.Append(topBoxOverlay)
+
+	v.Input = NewInput(ctx, inputControllerView{v}, chID)
+	scroll.SetChild(v.Input)
+
+	v.UploadTray = NewUploadTray()
 	v.bigBox.Append(v.UploadTray)
 
 	v.Widget = &v.bigBox.Widget
 	v.SetPlaceholderMarkup("")
+
+	// Show or hide the placeholder when the buffer is empty or not.
+	updatePlaceholderVisibility := func() {
+		start, end := v.Input.Buffer.Bounds()
+		// Reveal if the buffer has 0 length.
+		revealer.SetRevealChild(start.Offset() == end.Offset())
+	}
+	v.Input.Buffer.ConnectChanged(updatePlaceholderVisibility)
+	updatePlaceholderVisibility()
 
 	viewCSS(v)
 	return v
@@ -408,6 +447,21 @@ func (v *View) insertEmoji(emoji string) {
 }
 
 func (v *View) send() {
+	if v.isOverLimit {
+		if v.msgLengthToast == nil {
+			v.msgLengthToast = adw.NewToast(locale.Get("Your message is too long."))
+			v.msgLengthToast.SetTimeout(0)
+			v.msgLengthToast.ConnectDismissed(func() { v.msgLengthToast = nil })
+
+			v.ctrl.AddToast(v.msgLengthToast)
+		}
+		return
+	} else {
+		if v.msgLengthToast != nil {
+			v.msgLengthToast.Dismiss()
+		}
+	}
+
 	if v.state.editing {
 		v.edit()
 		return
@@ -622,6 +676,31 @@ func (v *View) restart() bool {
 	return state.editing || state.replying != notReplying
 }
 
+func (v *View) UpdateMessageLength(length int) {
+	state := gtkcord.FromContext(v.ctx)
+	limit := MessageLengthLimitNonNitro
+	if state.EmojiState.HasNitro() {
+		limit = MessageLengthLimitNitro
+	}
+
+	if length > limit-100 {
+		// Hack to not update the label too often.
+		v.msgLengthLabel.SetText(fmt.Sprintf("%d / %d", length, limit))
+	}
+
+	overLimit := length > limit
+	if overLimit == v.isOverLimit {
+		return
+	}
+
+	v.isOverLimit = overLimit
+	if overLimit {
+		v.msgLengthLabel.AddCSSClass("over-limit")
+	} else {
+		v.msgLengthLabel.RemoveCSSClass("over-limit")
+	}
+}
+
 // inputControllerView implements InputController.
 type inputControllerView struct {
 	*View
@@ -636,4 +715,8 @@ func (v inputControllerView) EditLastMessage() bool {
 
 func (v inputControllerView) PasteClipboardFile(file *File) {
 	v.UploadTray.AddFile(file)
+}
+
+func (v inputControllerView) UpdateMessageLength(length int) {
+	v.View.UpdateMessageLength(length)
 }
