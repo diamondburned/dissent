@@ -88,6 +88,9 @@
   </branding>
 
   <releases>
+    <release version="v0.0.30" date="2024-09-10">
+      <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.30</url>
+    </release>
     <release version="v0.0.29" date="2024-08-24">
       <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.29</url>
     </release>
