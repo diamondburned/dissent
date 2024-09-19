@@ -542,14 +542,18 @@ func (v *View) load() {
 	v.LoadablePage.SetLoading()
 	v.unload()
 
-	state := gtkcord.FromContext(v.ctx).Online()
+	state := gtkcord.FromContext(v.ctx)
+
+	ch, _ := state.Cabinet.Channel(v.chID)
+	if ch == nil {
+		v.LoadablePage.SetError(fmt.Errorf("channel not found"))
+		return
+	}
 
 	gtkutil.Async(v.ctx, func() func() {
-		msgs, err := state.Messages(v.chID, 15)
+		msgs, err := state.Online().Messages(v.chID, 15)
 		if err != nil {
-			return func() {
-				v.LoadablePage.SetError(err)
-			}
+			return func() { v.LoadablePage.SetError(err) }
 		}
 
 		sort.Slice(msgs, func(i, j int) bool {
@@ -557,6 +561,12 @@ func (v *View) load() {
 		})
 
 		return func() {
+			if len(msgs) == 0 && ch.Type == discord.DirectMessage {
+				v.LoadablePage.SetError(errors.New(
+					"refusing to load DM: please send a message via the official client first"))
+				return
+			}
+
 			v.setPageToMain()
 			v.Scroll.ScrollToBottom()
 
