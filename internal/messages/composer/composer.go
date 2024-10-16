@@ -381,7 +381,6 @@ func (v *View) upload() {
 	d.OpenMultiple(v.ctx, app.GTKWindowFromContext(v.ctx), func(async gio.AsyncResulter) {
 		files, err := d.OpenMultipleFinish(async)
 		if err != nil {
-			app.Error(v.ctx, fmt.Errorf("failed to save logs: %w", err))
 			return
 		}
 		v.addFiles(files)
