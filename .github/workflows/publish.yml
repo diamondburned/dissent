@@ -153,7 +153,7 @@ jobs:
           path: result
 
   build-macos:
-    name: Build for macOS
+    name: Build for macOS (Universal)
     needs: [gomod, generate]
     runs-on: macos-latest
     steps:
@@ -170,18 +170,28 @@ jobs:
         run: |
           brew install gtk4 libadwaita gobject-introspection pkg-config
 
-      - name: Build
+      - name: Build Universal Binary
         id: build
         run: |
-          go build -o dissent
-          tar -czf dissent-macos-amd64.tar.gz dissent
-          echo "name=dissent-macos-amd64.tar.gz" >> $GITHUB_OUTPUT
+          # Build for ARM64
+          GOARCH=arm64 go build -o dissent-arm64
+
+          # Build for AMD64
+          GOARCH=amd64 go build -o dissent-amd64
+
+          # Create universal binary
+          lipo -create -output dissent dissent-arm64 dissent-amd64
+
+          # Create tarball
+          tar -czf dissent-macos-universal.tar.gz dissent
+
+          echo "name=dissent-macos-universal.tar.gz" >> $GITHUB_OUTPUT
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.build.outputs.name }}
-          path: dissent-macos-amd64.tar.gz
+          path: dissent-macos-universal.tar.gz
 
   build-windows:
     name: Build for Windows
