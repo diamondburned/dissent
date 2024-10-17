@@ -167,11 +167,13 @@ jobs:
           go-version: "1.21"
 
       - name: Install dependencies
+        shell: bash
         run: |
           brew install gtk4 libadwaita gobject-introspection pkg-config
 
       - name: Build Universal Binary
         id: build
+        shell: bash
         run: |
           # Build for ARM64
           GOARCH=arm64 go build -o dissent-arm64
