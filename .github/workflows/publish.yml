@@ -161,43 +161,69 @@ jobs:
         with:
           ref: ${{ github.ref }}
 
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: "1.21"
+      - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/magic-nix-cache-action@main
 
-      - name: Install dependencies
-        shell: bash
-        run: |
-          brew update
-          brew install gtk4 libadwaita gobject-introspection pkg-config gtksourceview5
-
-      - name: Build Universal Binary
+      - name: Build Universal Binary and Create DMG
         id: build
-        shell: bash
         run: |
-          # Set PKG_CONFIG_PATH to include Homebrew's lib/pkgconfig
-          export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:/opt/homebrew/lib/pkgconfig:$PKG_CONFIG_PATH"
+          # Ensure necessary tools are available
+          nix-env -iA nixpkgs.lipo nixpkgs.imagemagick nixpkgs.coreutils
 
-          # Build for ARM64
-          GOARCH=arm64 CGO_ENABLED=1 go build -tags nogtksource -o dissent-arm64
-
-          # Build for AMD64
-          GOARCH=amd64 CGO_ENABLED=1 go build -tags nogtksource -o dissent-amd64
+          # Build for ARM64 and AMD64 using Nix
+          nix build --file ./. lib.mkPackageCross --argstr version "" --argstr target aarch64-darwin
+          cp result/bin/dissent dissent-arm64
+          nix build --file ./. lib.mkPackageCross --argstr version "" --argstr target x86_64-darwin
+          cp result/bin/dissent dissent-amd64
 
           # Create universal binary
           lipo -create -output dissent dissent-arm64 dissent-amd64
 
-          # Create tarball
-          tar -czf dissent-macos-universal.tar.gz dissent
+          # Create app bundle structure
+          mkdir -p Dissent.app/Contents/{MacOS,Resources}
+          mv dissent Dissent.app/Contents/MacOS/
 
-          echo "name=dissent-macos-universal.tar.gz" >> $GITHUB_OUTPUT
+          # Convert SVG to ICNS
+          mkdir icon.iconset
+          for size in 16 32 64 128 256 512; do
+            convert -background none -resize ${size}x${size} internal/icons/hicolor/scalable/apps/so.libdb.dissent.svg icon.iconset/icon_${size}x${size}.png
+            convert -background none -resize $((size*2))x$((size*2)) internal/icons/hicolor/scalable/apps/so.libdb.dissent.svg icon.iconset/icon_${size}x${size}@2x.png
+          done
+          iconutil -c icns -o Dissent.app/Contents/Resources/dissent.icns icon.iconset
+          rm -rf icon.iconset
+
+          # Create Info.plist
+          cat > Dissent.app/Contents/Info.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>CFBundleExecutable</key>
+              <string>dissent</string>
+              <key>CFBundleIconFile</key>
+              <string>dissent.icns</string>
+              <key>CFBundleIdentifier</key>
+              <string>so.libdb.dissent</string>
+              <key>CFBundleName</key>
+              <string>Dissent</string>
+              <key>CFBundlePackageType</key>
+              <string>APPL</string>
+              <key>NSHighResolutionCapable</key>
+              <true/>
+          </dict>
+          </plist>
+          EOF
+
+          # Create DMG
+          hdiutil create -volname Dissent -srcfolder Dissent.app -ov -format UDZO dissent-macos-universal.dmg
+
+          echo "name=dissent-macos-universal.dmg" >> $GITHUB_OUTPUT
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.build.outputs.name }}
-          path: dissent-macos-universal.tar.gz
+          path: dissent-macos-universal.dmg
 
   build-windows:
     name: Build for Windows
