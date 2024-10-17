@@ -164,31 +164,33 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.21'
+          go-version: "1.21"
 
       - name: Install dependencies
+        shell: bash
         run: |
           brew update
           brew install gtk4 libadwaita gobject-introspection pkg-config gtksourceview5
 
       - name: Build Universal Binary
         id: build
+        shell: bash
         run: |
           # Set PKG_CONFIG_PATH to include Homebrew's lib/pkgconfig
           export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:/opt/homebrew/lib/pkgconfig:$PKG_CONFIG_PATH"
-          
+
           # Build for ARM64
           GOARCH=arm64 CGO_ENABLED=1 go build -tags nogtksource -o dissent-arm64
-          
+
           # Build for AMD64
           GOARCH=amd64 CGO_ENABLED=1 go build -tags nogtksource -o dissent-amd64
-          
+
           # Create universal binary
           lipo -create -output dissent dissent-arm64 dissent-amd64
-          
+
           # Create tarball
           tar -czf dissent-macos-universal.tar.gz dissent
-          
+
           echo "name=dissent-macos-universal.tar.gz" >> $GITHUB_OUTPUT
 
       - name: Upload build artifacts
@@ -351,4 +353,3 @@ jobs:
           files: /tmp/bin/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
