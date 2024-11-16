@@ -2,14 +2,16 @@ module libdb.so/dissent
 
 go 1.21.0
 
+toolchain go1.22.5
+
 require (
 	github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8
-	github.com/diamondburned/arikawa/v3 v3.3.6
+	github.com/diamondburned/arikawa/v3 v3.4.0
 	github.com/diamondburned/chatkit v0.0.0-20240614105536-5788b19145bc
-	github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20240107232253-5f283b5d35bc
-	github.com/diamondburned/gotk4/pkg v0.2.3-0.20240606221803-e395a91f5db3
-	github.com/diamondburned/gotkit v0.0.0-20240614110325-6aaca1acc990
-	github.com/diamondburned/ningen/v3 v3.0.1-0.20240527225532-96fcee660001
+	github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20240712143708-824c3ce8a5f4
+	github.com/diamondburned/gotk4/pkg v0.3.1
+	github.com/diamondburned/gotkit v0.0.0-20241016202055-5751b5af7e5e
+	github.com/diamondburned/ningen/v3 v3.0.1-0.20240808103805-f1a24c0da3d8
 	github.com/dustin/go-humanize v1.0.1
 	github.com/enescakir/emoji v1.0.0
 	github.com/ianlancetaylor/cgosymbolizer v0.0.0-20240326020559-581a3f7c677f
@@ -17,6 +19,8 @@ require (
 	github.com/sahilm/fuzzy v0.1.1
 	github.com/yuin/goldmark v1.7.1
 	libdb.so/ctxt v0.0.0-20240229093153-2db38a5d3c12
+	libdb.so/gotk4-sourceview/pkg v0.0.0-20240818070527-98263515a466
+	libdb.so/gotk4-spelling/pkg v0.0.0-20240818082554-ee26db878626
 )
 
 require (
@@ -26,8 +30,9 @@ require (
 	github.com/danieljoos/wincred v1.2.1 // indirect
 	github.com/dlclark/regexp2 v1.11.0 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
-	github.com/gorilla/schema v1.3.0 // indirect
-	github.com/gorilla/websocket v1.5.1 // indirect
+	github.com/gofrs/flock v0.12.1 // indirect
+	github.com/gorilla/schema v1.4.1 // indirect
+	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/leonelquinteros/gotext v1.6.0 // indirect
 	github.com/lmittmann/tint v1.0.4 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -37,12 +42,10 @@ require (
 	github.com/zalando/go-keyring v0.2.4 // indirect
 	go4.org v0.0.0-20230225012048-214862532bf5 // indirect
 	go4.org/unsafe/assume-no-moving-gc v0.0.0-20231121144256-b99613f794b6 // indirect
-	golang.org/x/crypto v0.22.0 // indirect
-	golang.org/x/image v0.18.0 // indirect
-	golang.org/x/net v0.24.0 // indirect
+	golang.org/x/crypto v0.25.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.19.0 // indirect
+	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
-	golang.org/x/time v0.5.0 // indirect
+	golang.org/x/time v0.6.0 // indirect
 	libdb.so/go-emoji v0.0.0-20240508073816-39776eee41ac // indirect
 )

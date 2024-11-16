@@ -2,7 +2,7 @@ package login
 
 import (
 	"context"
-	"log"
+	"log/slog"
 
 	"github.com/diamondburned/arikawa/v3/state"
 	"github.com/diamondburned/chatkit/kits/secret"
@@ -80,7 +80,9 @@ func (p *Page) asyncLoadFromSecrets(driver secret.Driver) {
 	gtkutil.Async(p.ctx, func() func() {
 		b, err := driver.Get("account")
 		if err != nil {
-			log.Println("note: account not found from driver:", err)
+			slog.Info(
+				"account not found in keyring",
+				"err", err)
 			return done
 		}
 

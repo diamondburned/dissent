@@ -2,7 +2,6 @@ package direct
 
 import (
 	"context"
-	"log"
 	"log/slog"
 	"strings"
 
@@ -285,12 +284,18 @@ func (v *ChannelView) filter(r *gtk.ListBoxRow) bool {
 func (v *ChannelView) rowChannel(r *gtk.ListBoxRow) *Channel {
 	id, err := discord.ParseSnowflake(r.Name())
 	if err != nil {
-		log.Panicln("cannot parse channel row name:", err)
+		slog.Error(
+			"failed to parse channel row name as snowflake",
+			"row_name", r.Name(),
+			"err", err)
+		return nil
 	}
 
 	ch, ok := v.channels[discord.ChannelID(id)]
 	if !ok {
-		log.Println("warning: ChannelView: row has unknown channel ID", id)
+		slog.Warn(
+			"ChannelView contains channel with unknown ID",
+			"channel_id", id)
 		return nil
 	}
 

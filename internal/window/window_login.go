@@ -44,7 +44,7 @@ func (w *loginWindow) Hook(state *gtkcord.State) {
 
 		case *ws.BackgroundErrorEvent:
 			slog.Warn(
-				"Discord gateway backgorund error",
+				"Discord gateway background error",
 				"err", ev.Err)
 
 		case *ws.CloseEvent:

@@ -37,13 +37,15 @@ func newChannelItemFactory(ctx context.Context, model *gtk.TreeListModel) *gtk.L
 
 	unbindFns := make(map[uintptr]func())
 
-	factory.ConnectBind(func(item *gtk.ListItem) {
+	factory.ConnectBind(func(obj *glib.Object) {
+		item := obj.Cast().(*gtk.ListItem)
 		row := model.Row(item.Position())
 		unbind := bindChannelItem(state, item, row)
 		unbindFns[item.Native()] = unbind
 	})
 
-	factory.ConnectUnbind(func(item *gtk.ListItem) {
+	factory.ConnectUnbind(func(obj *glib.Object) {
+		item := obj.Cast().(*gtk.ListItem)
 		unbind := unbindFns[item.Native()]
 		unbind()
 		delete(unbindFns, item.Native())

@@ -45,7 +45,7 @@ var contentCSS = cssutil.Applier("message-content-box", `
 		margin-right: 4px;
 	}
 	.message-content-box > *:not(:first-child) {
-		margin-top: 4px;
+		margin-top: 0.15em;
 	}
 	.message-content-box .thumbnail-embed {
 		border-width: 0;
@@ -251,7 +251,7 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 	// We don't render the message content if all it is is the URL to the
 	// embedded image, because that's what the official client does.
 	case m.Content != "" &&
-		(len(m.Embeds) != 1 || m.Embeds[0].Type != discord.ImageEmbed || m.Embeds[0].URL != m.Content):
+		!(len(m.Embeds) == 1 && m.Embeds[0].Type == discord.ImageEmbed && m.Embeds[0].URL == m.Content):
 
 		src := []byte(m.Content)
 		node := discordmd.ParseWithMessage(src, *state.Cabinet, m, true)

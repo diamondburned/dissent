@@ -2,7 +2,7 @@ package directbutton
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"sort"
 
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -77,7 +77,9 @@ func (v *View) Invalidate() {
 	// This is slow, but whatever.
 	dms, err := state.PrivateChannels()
 	if err != nil {
-		log.Println("dmbutton.View: failed to get private channels:", err)
+		slog.Error(
+			"failed to get private channels for DM button view",
+			"err", err)
 
 		// Clear all DMs.
 		v.update(nil)

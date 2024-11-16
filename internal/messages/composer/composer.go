@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"log/slog"
 	"os"
 	"strings"
@@ -29,6 +28,14 @@ import (
 	"libdb.so/dissent/internal/gtkcord"
 )
 
+const (
+	// MessageLengthLimitNonNitro is the maximum number of characters allowed in a message.
+	MessageLengthLimitNonNitro = 2000
+	// MessageLengthLimitNitro is the maximum number of characters allowed in a
+	// message if the user has Nitro.
+	MessageLengthLimitNitro = 4000
+)
+
 var showAllEmojis = prefs.NewBool(true, prefs.PropMeta{
 	Name:        "Show All Emojis",
 	Section:     "Composer",
@@ -44,10 +51,28 @@ type File struct {
 	Open func() (io.ReadCloser, error)
 }
 
+const spoilerPrefix = "SPOILER_"
+
+// IsSpoiler returns whether the file is spoilered or not.
+func (f File) IsSpoiler() bool { return strings.HasPrefix(f.Name, spoilerPrefix) }
+
+// SetSpoiler sets the spoilered state of the file.
+func (f *File) SetSpoiler(spoiler bool) {
+	if spoiler {
+		if !f.IsSpoiler() {
+			f.Name = spoilerPrefix + f.Name
+		}
+	} else {
+		if f.IsSpoiler() {
+			f.Name = strings.TrimPrefix(f.Name, spoilerPrefix)
+		}
+	}
+}
+
 // SendingMessage is the message created to be sent.
 type SendingMessage struct {
 	Content      string
-	Files        []File
+	Files        []*File
 	ReplyingTo   discord.MessageID
 	ReplyMention bool
 }
@@ -88,7 +113,8 @@ const (
 )
 
 type View struct {
-	*gtk.Box
+	*gtk.Widget
+
 	Input        *Input
 	Placeholder  *gtk.Label
 	UploadTray   *UploadTray
@@ -98,6 +124,9 @@ type View struct {
 	ctrl Controller
 	chID discord.ChannelID
 
+	bigBox *gtk.Box
+	topBox *gtk.Box
+
 	rightBox    *gtk.Box
 	emojiButton *gtk.MenuButton
 	sendButton  *gtk.Button
@@ -105,7 +134,9 @@ type View struct {
 	leftBox      *gtk.Box
 	uploadButton *gtk.Button
 
-	chooser *gtk.FileChooserNative
+	msgLengthLabel *gtk.Label
+	msgLengthToast *adw.Toast
+	isOverLimit    bool
 
 	state struct {
 		id       discord.MessageID
@@ -119,11 +150,13 @@ var viewCSS = cssutil.Applier("composer-view", `
 		/* Fix spacing for certain GTK themes such as stock Adwaita. */
 		min-height: 0;
 	}
-	.composer-left-actions {
-		margin: 0 4px 0 11px;
+	.composer-left-actions button,
+	.composer-right-actions button {
+		padding-top: 0.5em;
+		padding-bottom: 0.5em;
 	}
-	.composer-left-actions > *:not(:first-child) {
-		margin-right: 4px;
+	.composer-left-actions {
+		margin: 4px 0.65em;
 	}
 	.composer-right-actions button.toggle:checked {
 		background-color: alpha(@accent_color, 0.25);
@@ -169,6 +202,15 @@ var viewCSS = cssutil.Applier("composer-view", `
 	.composer-send:focus,
 	.composer-right-actions .composer-action:focus {
 		background: cross-fade(@accent_color 85%, @dark_5 15%);
+	.composer-msg-length {
+		font-size: 0.8em;
+		margin: 0.25em 0.5em;
+		opacity: 0;
+		transition: opacity 0.1s;
+	}
+	.composer-msg-length.over-limit {
+		color: @destructive_color;
+		opacity: 1;
 	}
 `)
 
@@ -188,13 +230,10 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 		chID: chID,
 	}
 
-	v.Input = NewInput(ctx, inputControllerView{v}, chID)
-
 	scroll := gtk.NewScrolledWindow()
 	scroll.SetPolicy(gtk.PolicyNever, gtk.PolicyAutomatic)
 	scroll.SetPropagateNaturalHeight(true)
 	scroll.SetMaxContentHeight(1000)
-	scroll.SetChild(v.Input)
 
 	v.Placeholder = gtk.NewLabel("")
 	v.Placeholder.AddCSSClass("composer-placeholder")
@@ -216,20 +255,8 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 	overlay.AddOverlay(revealer)
 	overlay.SetClipOverlay(revealer, true)
 
-	// Show or hide the placeholder when the buffer is empty or not.
-	updatePlaceholderVisibility := func() {
-		start, end := v.Input.Buffer.Bounds()
-		// Reveal if the buffer has 0 length.
-		revealer.SetRevealChild(start.Offset() == end.Offset())
-	}
-	v.Input.Buffer.ConnectChanged(updatePlaceholderVisibility)
-	updatePlaceholderVisibility()
-
-	v.UploadTray = NewUploadTray()
-
 	middle := gtk.NewBox(gtk.OrientationVertical, 0)
 	middle.Append(overlay)
-	middle.Append(v.UploadTray)
 
 	v.uploadButton = newActionButton(actionButtonData{
 		Name: "Upload File",
@@ -239,6 +266,7 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 
 	v.leftBox = gtk.NewBox(gtk.OrientationHorizontal, 0)
 	v.leftBox.AddCSSClass("composer-left-actions")
+	v.leftBox.SetVAlign(gtk.AlignCenter)
 
 	v.EmojiChooser = gtk.NewEmojiChooser()
 	v.EmojiChooser.ConnectEmojiPicked(func(emoji string) { v.insertEmoji(emoji) })
@@ -246,30 +274,57 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 	v.emojiButton = gtk.NewMenuButton()
 	v.emojiButton.SetIconName(emojiIcon)
 	v.emojiButton.AddCSSClass("flat")
-	v.emojiButton.SetVAlign(gtk.AlignCenter)
-	v.emojiButton.SetTooltipText("Choose Emoji")
+	v.emojiButton.SetTooltipText(locale.Get("Choose Emoji"))
 	v.emojiButton.SetPopover(v.EmojiChooser)
 
 	v.sendButton = gtk.NewButtonFromIconName(sendIcon)
 	v.sendButton.AddCSSClass("composer-send")
-	v.sendButton.SetVAlign(gtk.AlignCenter)
-	v.sendButton.SetTooltipText("Send Message")
+	v.sendButton.SetTooltipText(locale.Get("Send Message"))
 	v.sendButton.SetHasFrame(false)
 	v.sendButton.ConnectClicked(v.send)
 
 	v.rightBox = gtk.NewBox(gtk.OrientationHorizontal, 0)
 	v.rightBox.AddCSSClass("composer-right-actions")
-	v.rightBox.SetHAlign(gtk.AlignEnd)
+	v.rightBox.SetVAlign(gtk.AlignCenter)
 
 	v.resetAction()
 
-	v.Box = gtk.NewBox(gtk.OrientationHorizontal, 0)
-	v.Box.SetVAlign(gtk.AlignEnd)
-	v.Box.Append(v.leftBox)
-	v.Box.Append(middle)
-	v.Box.Append(v.rightBox)
+	v.topBox = gtk.NewBox(gtk.OrientationHorizontal, 0)
+	v.topBox.SetVAlign(gtk.AlignEnd)
+	v.topBox.Append(v.leftBox)
+	v.topBox.Append(middle)
+	v.topBox.Append(v.rightBox)
 
+	v.msgLengthLabel = gtk.NewLabel("")
+	v.msgLengthLabel.AddCSSClass("composer-msg-length")
+	v.msgLengthLabel.SetCanTarget(false)
+	v.msgLengthLabel.SetVAlign(gtk.AlignEnd)
+	v.msgLengthLabel.SetHAlign(gtk.AlignEnd)
+
+	topBoxOverlay := gtk.NewOverlay()
+	topBoxOverlay.SetChild(v.topBox)
+	topBoxOverlay.AddOverlay(v.msgLengthLabel)
+
+	v.bigBox = gtk.NewBox(gtk.OrientationVertical, 0)
+	v.bigBox.Append(topBoxOverlay)
+
+	v.Input = NewInput(ctx, inputControllerView{v}, chID)
+	scroll.SetChild(v.Input)
+
+	v.UploadTray = NewUploadTray()
+	v.bigBox.Append(v.UploadTray)
+
+	v.Widget = &v.bigBox.Widget
 	v.SetPlaceholderMarkup("")
+
+	// Show or hide the placeholder when the buffer is empty or not.
+	updatePlaceholderVisibility := func() {
+		start, end := v.Input.Buffer.Bounds()
+		// Reveal if the buffer has 0 length.
+		revealer.SetRevealChild(start.Offset() == end.Offset())
+	}
+	v.Input.Buffer.ConnectChanged(updatePlaceholderVisibility)
+	updatePlaceholderVisibility()
 
 	viewCSS(v)
 	return v
@@ -313,7 +368,6 @@ func newActionButton(a actionButtonData) *gtk.Button {
 	button.AddCSSClass("composer-action")
 	button.SetHasFrame(false)
 	button.SetHAlign(gtk.AlignCenter)
-	button.SetVAlign(gtk.AlignCenter)
 	button.SetSensitive(a.Func != nil)
 	button.SetIconName(a.Icon)
 	button.SetTooltipText(a.Name.String())
@@ -352,26 +406,15 @@ func (v *View) resetAction() {
 }
 
 func (v *View) upload() {
-	// From GTK's documentation:
-	//   Note that unlike GtkDialog, GtkNativeDialog objects are not toplevel
-	//   widgets, and GTK does not keep them alive. It is your responsibility to
-	//   keep a reference until you are done with the object.
-	v.chooser = gtk.NewFileChooserNative(
-		"Upload Files",
-		app.GTKWindowFromContext(v.ctx),
-		gtk.FileChooserActionOpen,
-		"Upload", "Cancel",
-	)
-	v.chooser.SetSelectMultiple(true)
-	v.chooser.SetModal(true)
-	v.chooser.ConnectResponse(func(resp int) {
-		if resp == int(gtk.ResponseAccept) {
-			v.addFiles(v.chooser.Files())
+	d := gtk.NewFileDialog()
+	d.SetTitle(app.FromContext(v.ctx).SuffixedTitle(locale.Get("Upload Files")))
+	d.OpenMultiple(v.ctx, app.GTKWindowFromContext(v.ctx), func(async gio.AsyncResulter) {
+		files, err := d.OpenMultipleFinish(async)
+		if err != nil {
+			return
 		}
-		v.chooser.Destroy()
-		v.chooser = nil
+		v.addFiles(files)
 	})
-	v.chooser.Show()
 }
 
 func (v *View) addFiles(list gio.ListModeller) {
@@ -386,7 +429,7 @@ func (v *View) addFiles(list gio.ListModeller) {
 			file := obj.Cast().(gio.Filer)
 			path := file.Path()
 
-			f := File{
+			f := &File{
 				Name: file.Basename(),
 				Type: mediautil.FileMIME(v.ctx, file),
 				Size: mediautil.FileSize(v.ctx, file),
@@ -412,14 +455,14 @@ func (v *View) addFiles(list gio.ListModeller) {
 	}()
 }
 
-func (v *View) peekContent() (string, []File) {
+func (v *View) peekContent() (string, []*File) {
 	start, end := v.Input.Buffer.Bounds()
 	text := v.Input.Buffer.Text(start, end, false)
 	files := v.UploadTray.Files()
 	return text, files
 }
 
-func (v *View) commitContent() (string, []File) {
+func (v *View) commitContent() (string, []*File) {
 	start, end := v.Input.Buffer.Bounds()
 	text := v.Input.Buffer.Text(start, end, false)
 	v.Input.Buffer.Delete(start, end)
@@ -433,6 +476,21 @@ func (v *View) insertEmoji(emoji string) {
 }
 
 func (v *View) send() {
+	if v.isOverLimit {
+		if v.msgLengthToast == nil {
+			v.msgLengthToast = adw.NewToast(locale.Get("Your message is too long."))
+			v.msgLengthToast.SetTimeout(0)
+			v.msgLengthToast.ConnectDismissed(func() { v.msgLengthToast = nil })
+
+			v.ctrl.AddToast(v.msgLengthToast)
+		}
+		return
+	} else {
+		if v.msgLengthToast != nil {
+			v.msgLengthToast.Dismiss()
+		}
+	}
+
 	if v.state.editing {
 		v.edit()
 		return
@@ -510,7 +568,10 @@ func (v *View) edit() {
 		_, err := state.EditMessage(v.chID, editingID, text)
 		if err != nil {
 			err = errors.Wrap(err, "cannot edit message")
-			log.Println()
+			slog.Error(
+				"cannot edit message",
+				"err", err)
+
 			return func() {
 				toast := adw.NewToast(locale.Get("Cannot edit message"))
 				toast.SetTimeout(0)
@@ -562,6 +623,8 @@ func (v *View) StopEditing() {
 
 	v.state.id = 0
 	v.state.editing = false
+	start, end := v.Input.Buffer.Bounds()
+	v.Input.Buffer.Delete(start, end)
 
 	v.SetPlaceholderMarkup("")
 	v.RemoveCSSClass("composer-editing")
@@ -642,6 +705,31 @@ func (v *View) restart() bool {
 	return state.editing || state.replying != notReplying
 }
 
+func (v *View) UpdateMessageLength(length int) {
+	state := gtkcord.FromContext(v.ctx)
+	limit := MessageLengthLimitNonNitro
+	if state.EmojiState.HasNitro() {
+		limit = MessageLengthLimitNitro
+	}
+
+	if length > limit-100 {
+		// Hack to not update the label too often.
+		v.msgLengthLabel.SetText(fmt.Sprintf("%d / %d", length, limit))
+	}
+
+	overLimit := length > limit
+	if overLimit == v.isOverLimit {
+		return
+	}
+
+	v.isOverLimit = overLimit
+	if overLimit {
+		v.msgLengthLabel.AddCSSClass("over-limit")
+	} else {
+		v.msgLengthLabel.RemoveCSSClass("over-limit")
+	}
+}
+
 // inputControllerView implements InputController.
 type inputControllerView struct {
 	*View
@@ -654,6 +742,10 @@ func (v inputControllerView) EditLastMessage() bool {
 	return v.ctrl.EditLastMessage()
 }
 
-func (v inputControllerView) PasteClipboardFile(file File) {
+func (v inputControllerView) PasteClipboardFile(file *File) {
 	v.UploadTray.AddFile(file)
+}
+
+func (v inputControllerView) UpdateMessageLength(length int) {
+	v.View.UpdateMessageLength(length)
 }

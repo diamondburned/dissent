@@ -2,7 +2,7 @@ package window
 
 import (
 	"context"
-	"log"
+	"log/slog"
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
@@ -39,19 +39,6 @@ func SetPreferDarkTheme(prefer bool) {
 	adwStyles := adw.StyleManagerGetDefault()
 	adwStyles.SetColorScheme(scheme)
 }
-
-var _ = cssutil.WriteCSS(`
-	.titlebar {
-		background-color: @headerbar_bg_color;
-	}
-
-	window.devel .titlebar {
-		background-image: cross-fade(
-			5% -gtk-recolor(url("resource:/org/gnome/Adwaita/styles/assets/devel-symbolic.svg")),
-			image(transparent));
-		background-repeat: repeat-x;
-	}
-`)
 
 // Window is the main gtkcord window.
 type Window struct {
@@ -128,14 +115,19 @@ func (w *Window) initActions() {
 			ArgType: gtkcord.SnowflakeVariant,
 			Func: func(variant *glib.Variant) {
 				id := discord.ChannelID(variant.Int64())
+				slog.Debug(
+					"opening channel from window-scoped action",
+					"channel_id", id)
 				w.useChatPage(func(p *ChatPage) { p.OpenChannel(id) })
 			},
 		},
 		"open-guild": {
 			ArgType: gtkcord.SnowflakeVariant,
 			Func: func(variant *glib.Variant) {
-				log.Println("opening guild")
 				id := discord.GuildID(variant.Int64())
+				slog.Debug(
+					"opening guild from window-scoped action",
+					"guild_id", id)
 				w.useChatPage(func(p *ChatPage) { p.OpenGuild(id) })
 			},
 		},

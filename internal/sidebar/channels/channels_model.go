@@ -1,7 +1,7 @@
 package channels
 
 import (
-	"log"
+	"log/slog"
 	"sort"
 
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -245,7 +245,10 @@ func (l *channelList) ConnectDestroy(f func()) {
 func fetchSortedChannels(state *gtkcord.State, guildID discord.GuildID, parentID discord.ChannelID) []discord.Channel {
 	channels, err := state.Offline().Channels(guildID, gtkcord.AllowedChannelTypes)
 	if err != nil {
-		log.Printf("CalculatePosition: failed to get channels: %v", err)
+		slog.Error(
+			"failed to get guild channels to sort",
+			"guild_id", guildID,
+			"err", err)
 		return nil
 	}
 

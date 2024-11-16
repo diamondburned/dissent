@@ -42,7 +42,6 @@ type ChatPage struct {
 	rightTitle  *adw.Bin
 
 	tabView       *adw.TabView
-	quickswitcher *quickswitcher.Dialog
 
 	lastGuildState   *app.TypedSingleState[discord.GuildID]
 	lastChannelState *app.TypedState[discord.ChannelID]
@@ -70,13 +69,6 @@ var chatPageCSS = cssutil.Applier("window-chatpage", `
 		border-radius: 0;
 		box-shadow: none;
 	}
-	.right-header .adaptive-sidebar-reveal-button {
-		margin: 0;
-	}
-	.right-header .adaptive-sidebar-reveal-button button {
-		margin-left: 8px;
-		margin-right: 4px;
-	}
 	.right-header-label {
 		font-weight: bold;
 	}
@@ -92,9 +84,6 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 		lastGuildState:   lastGuildKey.Acquire(ctx),
 		lastChannelState: lastChannelKey.Acquire(ctx),
 	}
-
-	p.quickswitcher = quickswitcher.NewDialog(ctx)
-	p.quickswitcher.SetHideOnClose(true) // so we can reopen it later
 
 	p.tabView = adw.NewTabView()
 	p.tabView.AddCSSClass("window-chatpage-tabview")
@@ -118,14 +107,7 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	p.rightTitle.AddCSSClass("right-header-bin")
 	p.rightTitle.SetHExpand(true)
 
-	// p.rightTitle = gtk.NewLabel("")
-	// p.rightTitle.AddCSSClass("right-header-label")
-	// p.rightTitle.SetXAlign(0)
-	// p.rightTitle.SetHExpand(true)
-	// p.rightTitle.SetEllipsize(pango.EllipsizeEnd)
-
 	back := backbutton.New()
-	back.SetTransitionType(gtk.RevealerTransitionTypeSlideRight)
 
 	newTabButton := gtk.NewButtonFromIconName("list-add-symbolic")
 	newTabButton.SetTooltipText("Open a New Tab")
@@ -134,6 +116,7 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	p.RightHeader = adw.NewHeaderBar()
 	p.RightHeader.AddCSSClass("titlebar")
 	p.RightHeader.AddCSSClass("right-header")
+	p.RightHeader.SetShowStartTitleButtons(false)
 	p.RightHeader.SetShowEndTitleButtons(true)
 	p.RightHeader.SetShowBackButton(false) // this is useless with OverlaySplitView
 	p.RightHeader.SetShowTitle(false)
@@ -183,7 +166,7 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 }
 
 // OpenQuickSwitcher opens the Quick Switcher dialog.
-func (p *ChatPage) OpenQuickSwitcher() { p.quickswitcher.Show() }
+func (p *ChatPage) OpenQuickSwitcher() { quickswitcher.ShowDialog(p.ctx) }
 
 // ResetView switches out of any channel view and into the placeholder view.
 // This method is used when the guild becomes unavailable.

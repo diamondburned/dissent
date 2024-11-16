@@ -48,14 +48,25 @@ var _ = cssutil.WriteCSS(`
 	avatar > label {
 		background: @borders;
 	}
+
+	.md-textblock {
+		line-height: 1.35em;
+	}
 `)
+
+func init() {
+	app.Hook(func(*app.Application) {
+		adw.Init()
+		adaptive.Init()
+	})
+}
 
 func main() {
 	m := manager{}
 	m.app = app.New(context.Background(), "so.libdb.dissent", "Dissent")
 	m.app.AddJSONActions(map[string]interface{}{
 		"app.preferences": func() { prefui.ShowDialog(m.win.Context()) },
-		"app.about":       func() { about.New(m.win.Context()).Present() },
+		"app.about":       func() { about.New(m.win.Context()).Present(m.win) },
 		"app.logs":        func() { logui.ShowDefaultViewer(m.win.Context()) },
 		"app.quit":        func() { m.app.Quit() },
 	})
@@ -83,16 +94,13 @@ func (m *manager) forwardSignalToWindow(name string, t *glib.VariantType) gtkuti
 }
 
 func (m *manager) activate(ctx context.Context) {
-	adw.Init()
-	adaptive.Init()
-
 	if m.win != nil {
 		m.win.Present()
 		return
 	}
 
 	m.win = window.NewWindow(ctx)
-	m.win.Show()
+	m.win.Present()
 
 	prefs.AsyncLoadSaved(ctx, func(err error) {
 		if err != nil {

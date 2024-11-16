@@ -15,7 +15,7 @@ import (
 
 const (
 	bannerWidth  = 240
-	bannerHeight = 135
+	bannerHeight = 120
 )
 
 // Banner is the guild banner display on top of the channel view.
@@ -27,7 +27,43 @@ type Banner struct {
 	gID     discord.GuildID
 }
 
-var bannerCSS = cssutil.Applier("channels-banner", ``)
+var bannerCSS = cssutil.Applier("channels-banner", `
+	.channels-banner-shadow {
+		transition: all 0.25s;
+	}
+	.channels-banner-shadow {
+		/* ease-in-out-opacity -max 0 -min 0.25 -start 24px -end 75px -steps 10 */
+		background-image: linear-gradient(
+			to top,
+			alpha(black, 0.25) 24px,
+			alpha(black, 0.25) 30px,
+			alpha(black, 0.24) 35px,
+			alpha(black, 0.21) 41px,
+			alpha(black, 0.16) 47px,
+			alpha(black, 0.09) 52px,
+			alpha(black, 0.04) 58px,
+			alpha(black, 0.01) 64px,
+			alpha(black, 0.00) 69px,
+			alpha(black, 0.00) 75px
+		);
+	}
+	.channels-scrolled .channels-banner-shadow {
+		/* ease-in-out-opacity -max 0.45 -min 0.65 -steps 10 */
+		background-image: linear-gradient(
+			to top,
+			alpha(black, 0.65) 0%,
+			alpha(black, 0.65) 11%,
+			alpha(black, 0.64) 22%,
+			alpha(black, 0.62) 33%,
+			alpha(black, 0.58) 44%,
+			alpha(black, 0.52) 56%,
+			alpha(black, 0.48) 67%,
+			alpha(black, 0.46) 78%,
+			alpha(black, 0.45) 89%,
+			alpha(black, 0.45) 100%
+		);
+	}
+`)
 
 // NewBanner creates a new Banner.
 func NewBanner(ctx context.Context, guildID discord.GuildID) *Banner {
@@ -38,11 +74,11 @@ func NewBanner(ctx context.Context, guildID discord.GuildID) *Banner {
 
 	b.Picture = onlineimage.NewPicture(ctx, imgutil.HTTPProvider)
 	b.Picture.SetLayoutManager(gtk.NewBinLayout()) // magically force min size
+	b.Picture.SetContentFit(gtk.ContentFitCover)
 	b.Picture.SetSizeRequest(bannerWidth, bannerHeight)
 
 	b.Shadows = gtk.NewBox(gtk.OrientationVertical, 0)
 	b.Shadows.AddCSSClass("channels-banner-shadow")
-	b.Shadows.SetOpacity(0)
 
 	b.Overlay = gtk.NewOverlay()
 	b.Overlay.SetHAlign(gtk.AlignStart)
@@ -50,7 +86,7 @@ func NewBanner(ctx context.Context, guildID discord.GuildID) *Banner {
 	b.Overlay.AddOverlay(b.Shadows)
 	b.Overlay.SetCanTarget(false)
 	b.Overlay.SetCanFocus(false)
-	b.Hide()
+	b.SetVisible(false)
 	bannerCSS(b)
 
 	state := gtkcord.FromContext(ctx)
@@ -69,17 +105,17 @@ func (b *Banner) Invalidate() {
 
 	g, err := state.Cabinet.Guild(b.gID)
 	if err != nil {
-		b.Hide()
+		b.SetVisible(false)
 		return
 	}
 
 	url := g.BannerURL()
 	if url == "" {
-		b.Hide()
+		b.SetVisible(false)
 		return
 	}
 
-	b.Show()
+	b.SetVisible(true)
 	b.SetURL(gtkcord.InjectSize(url, bannerWidth))
 }
 
@@ -95,11 +131,13 @@ func (b *Banner) SetURL(url string) { b.Picture.SetURL(url) }
 func (b *Banner) SetScrollOpacity(scrollY float64) (scrolled bool) {
 	// Calculate the height of the banner but account for the height of the
 	// header bar.
-	height := float64(b.AllocatedHeight()) - (gtkcord.HeaderHeight)
-	opacity := clamp(scrollY/height, 0, 1)
+	// height := float64(b.Height()) - (gtkcord.HeaderHeight)
+	// opacity := clamp(scrollY/height, 0, 1)
 
-	b.Shadows.SetOpacity(opacity)
-	return opacity >= 0.995
+	// b.Shadows.SetOpacity(opacity)
+	// return opacity >= 0.995
+
+	return scrollY > 0 // delegate to styling
 }
 
 func clamp(f, min, max float64) float64 {

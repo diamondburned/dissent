@@ -20,7 +20,7 @@ var summaryCSS = cssutil.Applier("message-summary-row", `
 	}
 	.message-summary-symbol {
 		font-size: 2em;
-		min-width: calc((8px * 2) + {$message_avatar_size});
+		min-width: calc((9px * 2) + {$message_avatar_size});
 		min-height: calc(1em + 0.7rem);
 	}
 	.message-summary-title {
@@ -119,6 +119,7 @@ func (v *View) appendSummary(summary gateway.ConversationSummary) (messageKey, b
 		v.rows[sw.key] = messageRow{
 			ListBoxRow: row,
 			info: messageInfo{
+				author:    messageAuthor{userID: discord.NullUserID},
 				timestamp: discord.Timestamp(summary.EndID.Time()),
 			},
 		}
@@ -138,9 +139,9 @@ func (v *View) appendSummary(summary gateway.ConversationSummary) (messageKey, b
 
 	if markups.header != "" {
 		sw.header.SetMarkup(markups.header)
-		sw.header.Show()
+		sw.header.SetVisible(false)
 	} else {
-		sw.header.Hide()
+		sw.header.SetVisible(true)
 	}
 
 	sw.title.SetMarkup(markups.title)

@@ -10,6 +10,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/chatkit/md/hl"
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
+	"github.com/diamondburned/gotk4/pkg/core/glib"
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
@@ -55,8 +56,6 @@ var _ = cssutil.WriteCSS(`
 		border-left: 2px solid @mentioned;
 		border-top: 0;
 		border-bottom: 0;
-		padding-top: 4px;
-		padding-bottom: 2px;
 		background: alpha(@mentioned, 0.075);
 	}
 	row:hover .message-mentioned {
@@ -145,6 +144,15 @@ func (m *message) update(parent gtk.Widgetter, message *discord.Message) {
 
 	if state.RelationshipState.IsBlocked(message.Author.ID) {
 		blockedCSS(parent)
+
+		parentRef := glib.NewWeakRef(parentWidget)
+		update := func() {
+			parentWidget := parentRef.Get()
+			parentWidget.SetVisible(showBlockedMessages.Value())
+		}
+
+		unbind := showBlockedMessages.Subscribe(update)
+		parentWidget.ConnectDestroy(unbind)
 	}
 
 	if state.MessageMentions(message).Has(ningen.MessageMentions) {
@@ -238,16 +246,19 @@ func (m *message) ShowEmojiChooser() {
 	e.Popup()
 }
 
-// ShowSource opens a JSON showing the message JSON.
+// ShowSource opens a dialog showing a JSON representation of the message.
 func (m *message) ShowSource() {
-	d := adw.NewWindow()
+	d := adw.NewDialog()
 	d.SetTitle(locale.Get("View Source"))
-	d.SetTransientFor(app.GTKWindowFromContext(m.ctx()))
-	d.SetModal(true)
-	d.SetDefaultSize(500, 300)
+	d.SetContentWidth(500)
+	d.SetContentHeight(300)
 
 	h := adw.NewHeaderBar()
 	h.SetCenteringPolicy(adw.CenteringPolicyStrict)
+
+	toolbarView := adw.NewToolbarView()
+	toolbarView.SetTopBarStyle(adw.ToolbarFlat)
+	toolbarView.AddTopBar(h)
 
 	buf := gtk.NewTextBuffer(nil)
 
@@ -284,9 +295,10 @@ func (m *message) ShowSource() {
 	box.Append(h)
 	box.Append(s)
 
-	d.SetContent(box)
+	toolbarView.SetContent(box)
 
-	d.Show()
+	d.SetChild(toolbarView)
+	d.Present(app.GTKWindowFromContext(m.ctx()))
 }
 
 // cozyMessage is a large cozy message with an avatar.
@@ -304,7 +316,8 @@ var _ MessageWithUser = (*cozyMessage)(nil)
 
 var cozyCSS = cssutil.Applier("message-cozy", `
 	.message-cozy {
-		padding-top: 2px;
+		padding-top: 0.25em;
+		padding-bottom: 0.15em;
 	}
 	.message-cozy-header {
 		min-height: 1.75em;
@@ -351,8 +364,8 @@ func (m *cozyMessage) Update(message *gateway.MessageCreateEvent) {
 	m.updateAuthor(message)
 
 	tooltip := fmt.Sprintf(
-		"<b>%s</b> (%s)\n%s",
-		html.EscapeString(message.Author.Tag()), message.Author.ID,
+		"<b>%s</b>\n%s",
+		html.EscapeString(message.Author.Tag()),
 		html.EscapeString(locale.Time(message.Timestamp.Time(), true)),
 	)
 
@@ -403,12 +416,11 @@ var _ Message = (*collapsedMessage)(nil)
 
 var collapsedCSS = cssutil.Applier("message-collapsed", `
 	.message-collapsed {
-		padding-bottom: 1px;
+		padding-bottom: 0.15em;
 	}
 	.message-collapsed-timestamp {
 		opacity: 0;
 		font-size: 0.7em;
-		min-width: calc((8px * 2) + {$message_avatar_size});
 		min-height: calc(1em + 0.7rem);
 	}
 	.message-row:hover .message-collapsed-timestamp {
@@ -416,6 +428,8 @@ var collapsedCSS = cssutil.Applier("message-collapsed", `
 		color: alpha(@theme_fg_color, 0.75);
 	}
 `)
+
+const collapsedTimestampWidth = (8 * 2) + (gtkcord.MessageAvatarSize)
 
 // NewCollapsedMessage creates a new collapsed cozy message.
 func NewCollapsedMessage(ctx context.Context, v *View) Message {
@@ -425,7 +439,12 @@ func NewCollapsedMessage(ctx context.Context, v *View) Message {
 
 	m.Timestamp = gtk.NewLabel("")
 	m.Timestamp.AddCSSClass("message-collapsed-timestamp")
-	m.Timestamp.SetEllipsize(pango.EllipsizeEnd)
+	m.Timestamp.SetSizeRequest(collapsedTimestampWidth, -1)
+
+	// This widget will not ellipsize properly, so we're forced to wrap.
+	m.Timestamp.SetWrap(true)
+	m.Timestamp.SetWrapMode(pango.WrapWordChar)
+	m.Timestamp.SetNaturalWrapMode(gtk.NaturalWrapWord)
 
 	m.Box = gtk.NewBox(gtk.OrientationHorizontal, 0)
 	m.Box.Append(m.Timestamp)
@@ -437,6 +456,37 @@ func NewCollapsedMessage(ctx context.Context, v *View) Message {
 
 func (m *collapsedMessage) Update(message *gateway.MessageCreateEvent) {
 	m.message.update(m, &message.Message)
-	m.Timestamp.SetLabel(locale.Time(message.Timestamp.Time(), false))
+
+	// view := m.view()
+
+	var timestampLabel string
+
+	switch collapsedMessageTimestamp.Value() {
+	case compactTimestampStyle:
+		timestampLabel = locale.Time(message.Timestamp.Time(), false)
+		// case relativeTimestampStyle:
+		// 	prevKey, _ := view.prevMessageKeyFromID(message.Message.ID)
+		// 	prev, ok := view.rows[prevKey]
+		// 	if ok {
+		// 		prevMsg := prev.message.Message()
+		// 		if prevMsg != nil {
+		// 			currTimestamp := message.Timestamp.Time()
+		// 			prevTimestamp := prevMsg.Timestamp.Time()
+		//
+		// 			delta := currTimestamp.Sub(prevTimestamp)
+		// 			switch {
+		// 			case delta < time.Second:
+		// 				// leave empty
+		// 			case delta < time.Minute:
+		// 				timestampLabel = "+" + locale.Sprintf("%ds", int(math.Round(delta.Seconds())))
+		// 			default:
+		// 				// This is always at most 10 minutes.
+		// 				timestampLabel = "+" + locale.Sprintf("%dm", int(math.Round(delta.Minutes())))
+		// 			}
+		// 		}
+		// 	}
+	}
+
+	m.Timestamp.SetLabel(timestampLabel)
 	m.Timestamp.SetTooltipText(locale.Time(message.Timestamp.Time(), true))
 }

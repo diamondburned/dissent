@@ -88,6 +88,21 @@
   </branding>
 
   <releases>
+    <release version="v0.0.30" date="2024-09-10">
+      <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.30</url>
+    </release>
+    <release version="v0.0.29" date="2024-08-24">
+      <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.29</url>
+    </release>
+    <release version="v0.0.28" date="2024-08-23">
+      <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.28</url>
+    </release>
+    <release version="v0.0.27" date="2024-08-05">
+      <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.27</url>
+    </release>
+    <release version="v0.0.26" date="2024-08-01">
+      <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.26</url>
+    </release>
     <release version="v0.0.25" date="2024-06-14">
       <url>https://github.com/diamondburned/dissent/releases/tag/v0.0.25</url>
     </release>

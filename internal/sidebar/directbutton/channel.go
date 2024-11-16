@@ -2,7 +2,7 @@ package directbutton
 
 import (
 	"context"
-	"log"
+	"log/slog"
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
@@ -39,7 +39,10 @@ func (c *ChannelButton) Invalidate() {
 
 	ch, err := state.Cabinet.Channel(c.id)
 	if err != nil {
-		log.Println("dmbutton.Channel.Invalidate: cannot fetch channel:", err)
+		slog.Error(
+			"cannot fetch channel for DMButton",
+			"channel_id", c.id,
+			"err", err)
 		return
 	}
 

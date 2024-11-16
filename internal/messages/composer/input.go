@@ -6,6 +6,7 @@ import (
 	"mime"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -45,7 +46,9 @@ type InputController interface {
 	EditLastMessage() bool
 	// PasteClipboardFile is called everytime the user pastes a file from their
 	// clipboard. The file is usually (but not always) an image.
-	PasteClipboardFile(File)
+	PasteClipboardFile(*File)
+	// UpdateMessageLength updates the message length counter.
+	UpdateMessageLength(int)
 }
 
 // Input is the text field of the composer.
@@ -85,6 +88,14 @@ var inputStateKey = app.NewStateKey[string]("input-state")
 
 var inputStateMemory sync.Map // map[discord.ChannelID]string
 
+// initializedInput contains a subset of Input.
+// This stays here for as long as the dynexport cap on Windows is an issue,
+// which should be fixed by Go 1.24.
+type initializedInput struct {
+	View   *gtk.TextView
+	Buffer *gtk.TextBuffer
+}
+
 // NewInput creates a new Input widget.
 func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID) *Input {
 	i := Input{
@@ -93,44 +104,19 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 		chID: chID,
 	}
 
-	i.TextView = gtk.NewTextView()
-	i.TextView.SetWrapMode(gtk.WrapWordChar)
-	i.TextView.SetAcceptsTab(true)
-	i.TextView.SetHExpand(true)
-	i.TextView.SetInputHints(0 |
-		gtk.InputHintEmoji |
-		gtk.InputHintSpellcheck |
-		gtk.InputHintWordCompletion |
-		gtk.InputHintUppercaseSentences,
-	)
-	textutil.SetTabSize(i.TextView)
-	inputCSS(i)
-
-	i.TextView.ConnectPasteClipboard(i.readClipboard)
-
-	i.ac = autocomplete.New(ctx, i.TextView)
-	i.ac.AddSelectedFunc(i.onAutocompleted)
-	i.ac.SetCancelOnChange(false)
-	i.ac.SetMinLength(2)
-	i.ac.SetTimeout(time.Second)
-
-	state := gtkcord.FromContext(ctx)
-	if ch, err := state.Cabinet.Channel(chID); err == nil {
-		i.guildID = ch.GuildID
-		i.ac.Use(
-			NewEmojiCompleter(i.guildID), // :
-			NewMemberCompleter(chID),     // @
-		)
-	}
-
 	inputState := inputStateKey.Acquire(ctx)
+	input := initializeInput()
 
-	i.Buffer = i.TextView.Buffer()
-	i.Buffer.ConnectChanged(func() {
+	input.Buffer.ConnectChanged(func() {
+		// Do rough WYSIWYG rendering.
 		if inputWYSIWYG.Value() {
-			mdrender.RenderWYSIWYG(ctx, i.Buffer)
+			mdrender.RenderWYSIWYG(ctx, input.Buffer)
 		}
 
+		// Check for message length limit.
+		ctrl.UpdateMessageLength(input.Buffer.CharCount())
+
+		// Handle autocompletion.
 		i.ac.Autocomplete()
 
 		start, end := i.Buffer.Bounds()
@@ -151,6 +137,37 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 			}
 		}
 	})
+
+	i.Buffer = input.Buffer
+
+	i.TextView = input.View
+	i.TextView.SetWrapMode(gtk.WrapWordChar)
+	i.TextView.SetAcceptsTab(true)
+	i.TextView.SetHExpand(true)
+	i.TextView.ConnectPasteClipboard(i.readClipboard)
+	i.TextView.SetInputHints(0 |
+		gtk.InputHintEmoji |
+		gtk.InputHintSpellcheck |
+		gtk.InputHintWordCompletion |
+		gtk.InputHintUppercaseSentences,
+	)
+	textutil.SetTabSize(i.TextView)
+	inputCSS(i)
+
+	i.ac = autocomplete.New(ctx, i.TextView)
+	i.ac.AddSelectedFunc(i.onAutocompleted)
+	i.ac.SetCancelOnChange(false)
+	i.ac.SetMinLength(2)
+	i.ac.SetTimeout(time.Second)
+
+	state := gtkcord.FromContext(ctx)
+	if ch, err := state.Cabinet.Channel(chID); err == nil {
+		i.guildID = ch.GuildID
+		i.ac.Use(
+			NewEmojiCompleter(i.guildID), // :
+			NewMemberCompleter(chID),     // @
+		)
+	}
 
 	enterKeyer := gtk.NewEventControllerKey()
 	enterKeyer.ConnectKeyPressed(i.onKey)
@@ -294,15 +311,14 @@ func (i *Input) readClipboard() {
 
 			// We're too lazy to do reference-counting, so just forbid Open from
 			// being called more than once.
-			var openedOnce bool
+			var openedOnce atomic.Bool
 
-			file := File{
+			file := &File{
 				Name: "clipboard",
 				Type: typ,
 				Size: s.Size(),
 				Open: func() (io.ReadCloser, error) {
-					if !openedOnce {
-						openedOnce = true
+					if openedOnce.CompareAndSwap(false, true) {
 						return f, nil
 					}
 					return nil, errors.New("Open called more than once on TempFile")

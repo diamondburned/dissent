@@ -5,8 +5,6 @@ on:
     branches-ignore:
       - nightly
   pull_request:
-    branches:
-      - main
   release:
     types: [released] # Prevents double builds on nightly
 
@@ -23,6 +21,8 @@ jobs:
     needs: gomod # avoid pushing at the same time as gomod
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
 
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
@@ -31,9 +31,9 @@ jobs:
         run: go generate ./...
 
       - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: ./.github/actions/push-or-fail
         with:
-          commit_message: Run go generate
+          commit-message: Run go generate
 
 
   gomod:
@@ -41,6 +41,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
 
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
@@ -52,10 +54,10 @@ jobs:
         run: gomod2nix --outdir nix
 
       - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: ./.github/actions/push-or-fail
         with:
-          commit_message: Tidy up Go modules
-          file_pattern: nix/gomod2nix.toml go.mod go.sum
+          commit-message: Tidy up Go modules
+          file-pattern: nix/gomod2nix.toml go.mod go.sum
 
 
   lint:
@@ -64,6 +66,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
 
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
@@ -98,6 +102,8 @@ jobs:
       directory: ${{ steps.build.outputs.directory }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
 
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
@@ -129,6 +135,8 @@ jobs:
           - aarch64-linux
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
 
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
@@ -158,6 +166,8 @@ jobs:
         shell: msys2 {0}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
 
       - name: Build using MSYS2
         uses: ./.github/actions/build-msys2-app
@@ -167,12 +177,12 @@ jobs:
             mingw-w64-x86_64-pkg-config
             mingw-w64-x86_64-gtk4
             mingw-w64-x86_64-libadwaita
-            mingw-w64-x86_64-gtksourceview5
             mingw-w64-x86_64-gobject-introspection
             mingw-w64-x86_64-glib2
             mingw-w64-x86_64-go
           out-path: ${{ runner.temp }}/exe
           exe-name: dissent.exe
+          build-tags: nogtksource
 
       - name: Prepare
         id: prepare
@@ -226,6 +236,8 @@ jobs:
       group: release-${{ github.workflow }}-${{ github.ref }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
 
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
@@ -251,6 +263,8 @@ jobs:
       group: nightly-${{ github.workflow }}-${{ github.ref }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
 
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main

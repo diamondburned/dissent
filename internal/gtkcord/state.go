@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"html"
-	"log"
 	"log/slog"
 	"math"
 	"net/http"
@@ -102,20 +101,26 @@ func Wrap(state *state.State) *State {
 
 		resp := (*http.Response)(dresp.(*httpdriver.DefaultResponse))
 		if resp.StatusCode >= 400 {
-			log.Printf("Discord API: %s %s: %s", req.Method, req.URL.Path, resp.Status)
+			slog.Warn(
+				"Discord API returned HTTP error",
+				"method", req.Method,
+				"path", req.URL.Path,
+				"status", resp.Status)
 		}
 
 		return nil
 	})
 
 	state.StateLog = func(err error) {
-		log.Printf("state error: %v", err)
+		slog.Error(
+			"unexpected Discord state error occured",
+			"err", err)
 	}
 
 	if os.Getenv("DISSENT_DEBUG_DUMP_ALL_EVENTS_PLEASE") == "1" {
 		dir := filepath.Join(os.TempDir(), "gtkcord4-events")
 		slog.Warn(
-			"ATTENTION: DISSENT_DEBUG_DUMP_ALL_EVENTS_PLEASE is set to 1, dumping all raw events.",
+			"ATTENTION: DISSENT_DEBUG_DUMP_ALL_EVENTS_PLEASE is set to 1, dumping all raw events",
 			"dir", dir)
 		dumpRawEvents(state, dir)
 	}
@@ -137,7 +142,11 @@ func dumpRawEvents(state *state.State, dir string) {
 	os.RemoveAll(dir)
 
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-		log.Println("cannot mkdir -p for ev logginf:", err)
+		slog.Error(
+			"cannot mkdir -p for debug event logging, not logging events",
+			"dir", dir,
+			"err", err)
+		return
 	}
 
 	var atom uint64
@@ -149,13 +158,22 @@ func dumpRawEvents(state *state.State, dir string) {
 			fmt.Sprintf("%05d-%d-%s.json", id, ev.OriginalCode, ev.OriginalType),
 		))
 		if err != nil {
-			log.Println("cannot log op:", err)
+			slog.Error(
+				"cannot create file to log one debug event",
+				"event_code", ev.OriginalCode,
+				"event_type", ev.OriginalType,
+				"err", err)
 			return
 		}
 		defer f.Close()
 
 		if _, err := f.Write(ev.Raw); err != nil {
-			log.Println("event json error:", err)
+			slog.Error(
+				"cannot write file to log one debug event",
+				"event_code", ev.OriginalCode,
+				"event_type", ev.OriginalType,
+				"err", err)
+			return
 		}
 	})
 }
@@ -230,7 +248,10 @@ func (s *State) BindWidget(w gtk.Widgetter, fn func(gateway.Event), filters ...g
 		}
 
 		w := ref.Get()
-		log.Printf("State: WidgetHandler: binding to %T...", w)
+		slog.Debug(
+			"binding state handler lifetime to widget",
+			"widget_type", fmt.Sprintf("%T", w),
+			"event_types", eventTypes)
 
 		unbind = s.AddSyncHandler(func(ev gateway.Event) {
 			// Optionally filter out events.
@@ -255,14 +276,29 @@ func (s *State) BindWidget(w gtk.Widgetter, fn func(gateway.Event), filters ...g
 
 	base := gtk.BaseWidget(w)
 	base.NotifyProperty("parent", func() {
+		if base.Parent() != nil {
+			return
+		}
+
 		if unbind != nil {
 			unbind()
 			unbind = nil
+
+			slog.Debug(
+				"widget unparented, unbinded handler",
+				"func", "BindWidget",
+				"widget_type", gtk.BaseWidget(w).Type())
 		}
-		if base.Parent() != nil {
-			bind()
-		} else {
-			log.Printf("State: WidgetHandler: unbinding from %T...", w)
+	})
+	base.ConnectDestroy(func() {
+		if unbind != nil {
+			unbind()
+			unbind = nil
+
+			slog.Debug(
+				"widget destroyed, unbinded handler",
+				"func", "BindWidget",
+				"widget_type", gtk.BaseWidget(w).Type())
 		}
 	})
 }

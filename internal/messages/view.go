@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"html"
-	"log"
 	"log/slog"
 	"sort"
 	"time"
@@ -223,10 +222,14 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 	outerBox.Append(composerClamp)
 
 	v.ToastOverlay = adw.NewToastOverlay()
-	v.ToastOverlay.SetChild(outerBox)
+	v.ToastOverlay.SetVAlign(gtk.AlignStart)
+
+	toastOuterOverlay := gtk.NewOverlay()
+	toastOuterOverlay.SetChild(outerBox)
+	toastOuterOverlay.AddOverlay(v.ToastOverlay)
 
 	// This becomes the outermost widget.
-	v.focused = v.ToastOverlay
+	v.focused = toastOuterOverlay
 
 	v.LoadablePage = adaptive.NewLoadablePage()
 	v.LoadablePage.SetTransitionDuration(125)
@@ -345,7 +348,10 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 			}
 
 		case *gateway.GuildMemberAddEvent:
-			log.Println("TODO: handle GuildMemberAddEvent")
+			slog.Debug(
+				"GuildMemberAddEvent not implemented",
+				"guildID", ev.GuildID,
+				"userID", ev.User.ID)
 
 		case *gateway.GuildMemberUpdateEvent:
 			if ev.GuildID != v.guildID {
@@ -358,7 +364,10 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 			}
 
 		case *gateway.GuildMemberRemoveEvent:
-			log.Println("TODO: handle GuildMemberDeleteEvent")
+			slog.Debug(
+				"GuildMemberRemoveEvent not implemented",
+				"guildID", ev.GuildID,
+				"userID", ev.User.ID)
 
 		case *gateway.GuildMembersChunkEvent:
 			// TODO: Discord isn't sending us this event. I'm not sure why.
@@ -526,19 +535,25 @@ func (v *View) messageSummaries() map[discord.MessageID]gateway.ConversationSumm
 }
 
 func (v *View) load() {
-	log.Println("loading message view for", v.chID)
+	slog.Debug(
+		"loading message view",
+		"channel", v.chID)
 
 	v.LoadablePage.SetLoading()
 	v.unload()
 
-	state := gtkcord.FromContext(v.ctx).Online()
+	state := gtkcord.FromContext(v.ctx)
+
+	ch, _ := state.Cabinet.Channel(v.chID)
+	if ch == nil {
+		v.LoadablePage.SetError(fmt.Errorf("channel not found"))
+		return
+	}
 
 	gtkutil.Async(v.ctx, func() func() {
-		msgs, err := state.Messages(v.chID, 15)
+		msgs, err := state.Online().Messages(v.chID, 15)
 		if err != nil {
-			return func() {
-				v.LoadablePage.SetError(err)
-			}
+			return func() { v.LoadablePage.SetError(err) }
 		}
 
 		sort.Slice(msgs, func(i, j int) bool {
@@ -546,12 +561,18 @@ func (v *View) load() {
 		})
 
 		return func() {
+			if len(msgs) == 0 && ch.Type == discord.DirectMessage {
+				v.LoadablePage.SetError(errors.New(
+					"refusing to load DM: please send a message via the official client first"))
+				return
+			}
+
 			v.setPageToMain()
 			v.Scroll.ScrollToBottom()
 
 			summariesMap := v.messageSummaries()
 
-			for _, msg := range v.filterIgnoredMessages(msgs) {
+			for _, msg := range msgs {
 				w := v.upsertMessage(msg.ID, newMessageInfo(&msg), 0)
 				w.Update(&gateway.MessageCreateEvent{Message: msg})
 				if summary, ok := summariesMap[msg.ID]; ok {
@@ -570,7 +591,9 @@ func (v *View) loadMore() {
 
 	firstID := firstRow.info.id
 
-	log.Println("loading more messages for", v.chID)
+	slog.Debug(
+		"loading more messages",
+		"channel", v.chID)
 
 	ctx := v.ctx
 	state := gtkcord.FromContext(ctx).Online()
@@ -578,8 +601,6 @@ func (v *View) loadMore() {
 	upsertMessages := func(msgs []discord.Message) {
 		unlock := v.Scroll.LockScroll()
 		glib.IdleAdd(unlock)
-
-		msgs = v.filterIgnoredMessages(msgs)
 
 		infos := make([]messageInfo, len(msgs))
 		for i := range msgs {
@@ -630,7 +651,10 @@ func (v *View) loadMore() {
 		var found bool
 		for i, m := range stateMessages {
 			if m.ID < firstID {
-				log.Println("found earlier message in state, content:", m.Content)
+				slog.Debug(
+					"while loading more messages, found earlier message in state",
+					"message_id", m.ID,
+					"content", m.Content)
 				stateMessages = stateMessages[i:]
 				found = true
 				break
@@ -678,31 +702,9 @@ func (v *View) unload() {
 	}
 }
 
-// filterIgnoredMessages filters in-place the given messages, removing any
-// messages that should be ignored.
-func (v *View) filterIgnoredMessages(msgs []discord.Message) []discord.Message {
-	if showBlockedMessages.Value() {
-		return msgs // doesn't matter
-	}
-
-	filtered := msgs[:0]
-	for i := range msgs {
-		if !v.ignoreMessage(&msgs[i]) {
-			filtered = append(filtered, msgs[i])
-		}
-	}
-	return filtered
-}
-
 func (v *View) ignoreMessage(msg *discord.Message) bool {
 	state := gtkcord.FromContext(v.ctx)
-
-	if !showBlockedMessages.Value() && state.UserIsBlocked(msg.Author.ID) {
-		log.Println("ignoring message from blocked user", msg.Author.Tag())
-		return true
-	}
-
-	return false
+	return showBlockedMessages.Value() && state.UserIsBlocked(msg.Author.ID)
 }
 
 type upsertFlags int
@@ -770,10 +772,16 @@ func (v *View) resetMessage(key messageKey) {
 	}
 
 	var message Message
-	if v.shouldBeCollapsed(row.info) {
-		message = NewCollapsedMessage(v.ctx, v)
+
+	shouldBeCollapsed := v.shouldBeCollapsed(row.info)
+	if _, isCollapsed := row.message.(*collapsedMessage); shouldBeCollapsed == isCollapsed {
+		message = row.message
 	} else {
-		message = NewCozyMessage(v.ctx, v)
+		if shouldBeCollapsed {
+			message = NewCollapsedMessage(v.ctx, v)
+		} else {
+			message = NewCozyMessage(v.ctx, v)
+		}
 	}
 
 	message.Update(&gateway.MessageCreateEvent{
@@ -839,23 +847,27 @@ func (v *View) deleteMessageKeyed(key messageKey) {
 func (v *View) shouldBeCollapsed(info messageInfo) bool {
 	var last messageRow
 	var lastOK bool
+
 	if curr, ok := v.rows[messageKeyID(info.id)]; ok {
 		prev, ok := v.prevMessageKey(curr)
 		if ok {
 			last, lastOK = v.rows[prev]
 		}
 	} else {
-		slog.Warn(
+		slog.Debug(
 			"shouldBeCollapsed called on non-existent message, assuming last",
 			"id", info.id,
+			"author_id", info.author.userID,
 			"timestamp", info.timestamp.Time())
 
 		// Assume we're about to append a new message.
 		last, lastOK = v.lastMessage()
 	}
+
 	if !lastOK || last.message == nil {
 		return false
 	}
+
 	return shouldBeCollapsed(info, last.info)
 }
 
@@ -863,10 +875,21 @@ func shouldBeCollapsed(curr, last messageInfo) bool {
 	return true &&
 		// same author
 		last.author == curr.author &&
+		last.author.userID.IsValid() &&
+		curr.author.userID.IsValid() &&
 		// within the last 10 minutes
 		last.timestamp.Time().Add(10*time.Minute).After(curr.timestamp.Time())
 }
 
+func (v *View) nextMessageKeyFromID(id discord.MessageID) (messageKey, bool) {
+	row, ok := v.rows[messageKeyID(id)]
+	if !ok {
+		return "", false
+	}
+	return v.nextMessageKey(row)
+}
+
+// nextMessageKey returns the key of the message after the given message.
 func (v *View) nextMessageKey(row messageRow) (messageKey, bool) {
 	next, _ := row.NextSibling().(*gtk.ListBoxRow)
 	if next != nil {
@@ -875,6 +898,15 @@ func (v *View) nextMessageKey(row messageRow) (messageKey, bool) {
 	return "", false
 }
 
+func (v *View) prevMessageKeyFromID(id discord.MessageID) (messageKey, bool) {
+	row, ok := v.rows[messageKeyID(id)]
+	if !ok {
+		return "", false
+	}
+	return v.prevMessageKey(row)
+}
+
+// prevMessageKey returns the key of the message before the given message.
 func (v *View) prevMessageKey(row messageRow) (messageKey, bool) {
 	prev, _ := row.PrevSibling().(*gtk.ListBoxRow)
 	if prev != nil {
@@ -1215,7 +1247,7 @@ func (v *View) Delete(id discord.MessageID) {
 			v.delete(id)
 		}
 	})
-	dialog.Show()
+	dialog.Present()
 }
 
 func (v *View) delete(id discord.MessageID) {
@@ -1277,7 +1309,11 @@ func (v *View) MarkRead() {
 
 	readState := state.ReadState.ReadState(v.ChannelID())
 	if readState != nil {
-		log.Println("message.View.MarkRead: marked", msgs[0].ID, "as read, last read", readState.LastMessageID)
+		slog.Debug(
+			"marked messages as read",
+			"channel", v.ChannelID(),
+			"last_message", msgs[0].ID,
+		)
 	}
 }
 

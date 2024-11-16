@@ -9,15 +9,19 @@
 	modules = ./gomod2nix.toml;
 
 	buildInputs = pkgs: with pkgs; [
-		# Optional
-		sound-theme-freedesktop
-		libcanberra-gtk3
+		# Required
+
 		gst_all_1.gstreamer
 		gst_all_1.gst-plugins-base
+		libadwaita
+		libspelling
+		gtksourceview5
+
+		# Optional
+
 		gst_all_1.gst-plugins-good
 		gst_all_1.gst-plugins-bad
 		gst_all_1.gst-plugins-ugly
-		libadwaita
 	];
 
 	files = {

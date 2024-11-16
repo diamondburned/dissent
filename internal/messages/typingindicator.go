@@ -2,7 +2,6 @@ package messages
 
 import (
 	"context"
-	"log/slog"
 	"slices"
 	"time"
 
@@ -190,13 +189,7 @@ func (t *TypingIndicator) updateAndScheduleNext() {
 			Add(typerTimeout).
 			Sub(now).
 			Seconds()) + 1
-	slog.Debug(
-		"schedule typing indicator update and cleanup",
-		"n_typers", len(t.typers),
-		"next_cleanup_sec", cleanUpInSeconds)
-	glib.TimeoutSecondsAdd(cleanUpInSeconds, func() {
-		t.updateAndScheduleNext()
-	})
+	glib.TimeoutSecondsAdd(cleanUpInSeconds, t.updateAndScheduleNext)
 }
 
 func renderTypingMarkup(typers []typingTyper) string {

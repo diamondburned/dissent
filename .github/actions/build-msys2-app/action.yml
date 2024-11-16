@@ -15,6 +15,9 @@ inputs:
   msys-dependencies:
     description: MSYS2 packages to install
     required: true
+  build-tags:
+    description: Build tags to use
+    default: ""
 runs:
   using: composite
   steps:
@@ -38,7 +41,7 @@ runs:
         out=$(realpath "$OUT_PATH")
 
         # Build Dissent
-        go build -ldflags "-H windowsgui" -o "$out/$EXE_NAME"
+        go build -ldflags "-H windowsgui" -o "$out/$EXE_NAME" -tags "$BUILD_TAGS"
 
         # copyDLLs copies all required DLLs of the given binaries to the
         # result directory.
@@ -91,3 +94,4 @@ runs:
         GOPATH: /mingw64
         EXE_NAME: ${{ inputs.exe-name }}
         OUT_PATH: ${{ inputs.out-path }}
+        BUILD_TAGS: ${{ inputs.build-tags }}

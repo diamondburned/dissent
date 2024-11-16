@@ -3,7 +3,6 @@ package sidebar
 
 import (
 	"context"
-	"log"
 	"log/slog"
 	"strings"
 
@@ -41,15 +40,15 @@ type Sidebar struct {
 var sidebarCSS = cssutil.Applier("sidebar-sidebar", `
 	@define-color sidebar_bg mix(@borders, @theme_bg_color, 0.25);
 
-	windowcontrols.end:not(.empty) {
-		margin-right: 4px;
-	}
-	windowcontrols.start:not(.empty) {
-		margin: 4px;
-		margin-right: 0;
-	}
 	.sidebar-guildside {
 		background-color: @sidebar_bg;
+	}
+	.sidebar-guildside windowcontrols:not(.empty) {
+		margin-left: 4px;
+		margin-right: 4px;
+	}
+	.sidebar-guildside windowcontrols:not(.empty) button {
+		margin: 0px 0;
 	}
 `)
 
@@ -253,7 +252,9 @@ func (s *Sidebar) SelectChannel(chID discord.ChannelID) {
 	state := gtkcord.FromContext(s.ctx)
 	ch, _ := state.Cabinet.Channel(chID)
 	if ch == nil {
-		log.Println("sidebar: channel with ID", chID, "not found")
+		slog.Error(
+			"cannot select channel in sidebar since it's not found in state",
+			"channel_id", chID)
 		return
 	}
 

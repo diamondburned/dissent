@@ -1,16 +1,29 @@
 package composer
 
 import (
-	"fmt"
-	"html"
+	"slices"
 	"strings"
 
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
+	"github.com/diamondburned/gotk4/pkg/core/glib"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/dustin/go-humanize"
 )
+
+const (
+	spoiledDisabledIcon = "visibility-symbolic"
+	spoiledEnabledIcon  = "visibility-off-symbolic"
+)
+
+func fileSpoilerIcon(file *File) string {
+	if file.IsSpoiler() {
+		return spoiledEnabledIcon
+	}
+	return spoiledDisabledIcon
+}
 
 func mimeIsText(mime string) bool {
 	// How is utf8_string a valid MIME type? GTK, what the fuck?
@@ -24,20 +37,35 @@ type UploadTray struct {
 }
 
 type uploadFile struct {
-	*gtk.Box
-	icon *gtk.Image
-	name *gtk.Label
-	del  *gtk.Button
+	gtk.Widgetter
+	box *gtk.CenterBox
+	bin *adw.BreakpointBin
 
-	file File
+	icon    *gtk.Image
+	name    *gtk.Label
+	size    *gtk.Label
+	spoiler *gtk.ToggleButton
+	delete  *gtk.Button
+
+	file *File
 }
 
 var uploadTrayCSS = cssutil.Applier("composer-upload-tray", `
-	.composer-upload-tray {
+	.composer-upload-item {
+		margin: 0.25em 0.65em;
+		margin-top: 0;
 	}
-	.composer-upload-item > image {
+	.composer-upload-file-name {
+		font-size: 0.9em;
+	}
+	.composer-upload-file-icon {
+		margin: 0 0.5em;
 		margin-bottom: 1px;
-		margin-right:  6px;
+	}
+	.composer-upload-file-size {
+		font-size: 0.75em;
+		opacity: 0.85;
+		margin: 0 0.25em;
 	}
 `)
 
@@ -50,39 +78,87 @@ func NewUploadTray() *UploadTray {
 }
 
 // AddFile adds a file into the tray.
-func (t *UploadTray) AddFile(file File) {
-	f := uploadFile{file: file}
+func (t *UploadTray) AddFile(f *File) {
+	u := uploadFile{file: f}
 
-	f.icon = gtk.NewImageFromIconName(mimeIcon(file.Type))
+	u.icon = gtk.NewImageFromIconName(mimeIcon(f.Type))
+	u.icon.AddCSSClass("composer-upload-file-icon")
 
-	f.name = gtk.NewLabel(file.Name)
-	f.name.SetEllipsize(pango.EllipsizeMiddle)
-	f.name.SetXAlign(0)
-	f.name.SetHExpand(true)
+	u.name = gtk.NewLabel(f.Name)
+	u.name.AddCSSClass("composer-upload-file-name")
+	u.name.SetEllipsize(pango.EllipsizeEnd)
+	u.name.SetVExpand(true)
+	u.name.SetVAlign(gtk.AlignBaseline)
 
-	if file.Size > 0 {
-		f.name.SetMarkup(fmt.Sprintf(
-			`%s <span size="small" alpha="85%%">%s</span>`,
-			html.EscapeString(file.Name), humanize.Bytes(uint64(file.Size)),
-		))
-	}
+	u.size = gtk.NewLabel(humanize.Bytes(uint64(f.Size)))
+	u.size.AddCSSClass("composer-upload-file-size")
+	u.size.SetVisible(f.Size > 0)
+	u.size.SetVExpand(true)
+	u.size.SetVAlign(gtk.AlignBaseline)
 
-	f.del = gtk.NewButtonFromIconName("edit-clear-all-symbolic")
-	f.del.SetHasFrame(false)
-	f.del.SetTooltipText(locale.Get("Remove File"))
+	u.spoiler = gtk.NewToggleButton()
+	u.spoiler.AddCSSClass("composer-upload-toggle-spoiler")
+	u.spoiler.SetIconName(fileSpoilerIcon(f))
+	u.spoiler.SetHasFrame(false)
+	u.spoiler.SetTooltipText(locale.Get("Spoiler"))
 
-	// TODO: hover to preview?
-	f.Box = gtk.NewBox(gtk.OrientationHorizontal, 0)
-	f.Box.AddCSSClass("composer-upload-item")
-	f.Box.SetHExpand(true)
-	f.Box.Append(f.icon)
-	f.Box.Append(f.name)
-	f.Box.Append(f.del)
+	u.delete = gtk.NewButtonFromIconName("edit-clear-all-symbolic")
+	u.delete.AddCSSClass("composer-upload-delete")
+	u.delete.SetHasFrame(false)
+	u.delete.SetTooltipText(locale.Get("Remove File"))
 
-	t.Box.Append(f)
-	t.files = append(t.files, f)
+	start := gtk.NewBox(gtk.OrientationHorizontal, 0)
+	start.Append(u.icon)
+	start.Append(u.name)
+	start.Append(u.size)
 
-	f.del.ConnectClicked(t.bindDelete(f))
+	end := gtk.NewBox(gtk.OrientationHorizontal, 0)
+	end.Append(u.spoiler)
+	end.Append(u.delete)
+
+	u.box = gtk.NewCenterBox()
+	u.box.AddCSSClass("composer-upload-item")
+	u.box.SetHExpand(true)
+	u.box.SetStartWidget(start)
+	u.box.SetEndWidget(end)
+
+	smallBreakpoint := adw.NewBreakpoint(adw.NewBreakpointConditionLength(
+		adw.BreakpointConditionMaxWidth,
+		275, adw.LengthUnitSp,
+	))
+
+	// Hide the size and icon on small screens.
+	smallBreakpoint.AddSetter(u.size, "visible", false)
+	smallBreakpoint.AddSetter(u.icon, "visible", false)
+
+	u.bin = adw.NewBreakpointBin()
+	u.bin.SetSizeRequest(100, 1)
+	u.bin.AddBreakpoint(smallBreakpoint)
+	u.bin.SetChild(u.box)
+
+	u.Widgetter = u.bin
+
+	t.Box.Append(u)
+	t.files = append(t.files, u)
+
+	u.delete.ConnectClicked(func() {
+		t.files = slices.DeleteFunc(t.files, func(searching uploadFile) bool {
+			if glib.ObjectEq(searching, u) {
+				t.Box.Remove(u)
+				return true
+			}
+			return false
+		})
+	})
+
+	u.spoiler.ConnectClicked(func() {
+		spoiler := !f.IsSpoiler()
+		f.SetSpoiler(spoiler)
+
+		u.name.SetText(f.Name)
+		u.spoiler.SetActive(spoiler)
+		u.spoiler.SetIconName(fileSpoilerIcon(u.file))
+	})
 }
 
 func mimeIcon(mime string) string {
@@ -102,21 +178,9 @@ func mimeIcon(mime string) string {
 	}
 }
 
-func (t *UploadTray) bindDelete(this uploadFile) func() {
-	return func() {
-		for i, f := range t.files {
-			if f.Box == this.Box {
-				t.Box.Remove(t.files[i])
-				t.files = append(t.files[:i], t.files[i+1:]...)
-				return
-			}
-		}
-	}
-}
-
 // Files returns the list of files in the tray.
-func (t *UploadTray) Files() []File {
-	files := make([]File, len(t.files))
+func (t *UploadTray) Files() []*File {
+	files := make([]*File, len(t.files))
 	for i, file := range t.files {
 		files[i] = file.file
 	}
@@ -124,13 +188,12 @@ func (t *UploadTray) Files() []File {
 }
 
 // Clear clears the tray and returns the list of paths that it held.
-func (t *UploadTray) Clear() []File {
-	files := make([]File, len(t.files))
+func (t *UploadTray) Clear() []*File {
+	files := make([]*File, len(t.files))
 	for i, file := range t.files {
 		files[i] = file.file
 		t.Remove(file)
 	}
-
 	t.files = nil
 	return files
 }

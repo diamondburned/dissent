@@ -2,7 +2,7 @@ package quickswitcher
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"slices"
 
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -53,9 +53,14 @@ func (idx *index) update(ctx context.Context) {
 	for i, guild := range guilds {
 		chs, err := state.Channels(guild.ID, allowedChannelTypes)
 		if err != nil {
-			log.Print("quickswitcher: cannot populate channels for guild ", guild.Name, ": ", err)
+			slog.Error(
+				"cannot populate channels for guild in quick switcher",
+				"guild", guild.Name,
+				"guild_id", guild.ID,
+				"err", err)
 			continue
 		}
+
 		items = append(items, newGuildItem(&guilds[i]))
 		for j := range chs {
 			items = append(items, newChannelItem(state, &guilds[i], &chs[j]))
