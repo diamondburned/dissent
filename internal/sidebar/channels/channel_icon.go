@@ -42,6 +42,7 @@ var channelIndicatorCSS = cssutil.Applier("channel-item-indicator", `
 var channelIconImageCSS = cssutil.Applier("channel-icon-image", `
 	.channel-icon-image {
 		min-width: 0px;
+                border-radius: 99px;
 	}
 `)
 
