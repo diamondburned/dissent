@@ -20,7 +20,7 @@ require (
 	github.com/yuin/goldmark v1.7.1
 	libdb.so/ctxt v0.0.0-20240229093153-2db38a5d3c12
 	libdb.so/gotk4-sourceview/pkg v0.0.0-20240818070527-98263515a466
-	libdb.so/gotk4-spelling/pkg v0.0.0-20240818082554-ee26db878626
+	libdb.so/gotk4-spelling/pkg v0.0.0-20241128063647-a9edc40bddb0
 )
 
 require (

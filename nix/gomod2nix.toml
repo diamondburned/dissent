@@ -119,5 +119,5 @@ schema = 3
     version = "v0.0.0-20240818070527-98263515a466"
     hash = "sha256-iPsTrm0Rzt/PqmWq4/dBJbNt1Bqe4vfPF1nmpwp/6Rk="
   [mod."libdb.so/gotk4-spelling/pkg"]
-    version = "v0.0.0-20240818082554-ee26db878626"
-    hash = "sha256-QTdC0aMytvkvk5XpfbQZpecHKJ8LqNfheawO6zRI22o="
+    version = "v0.0.0-20241128063647-a9edc40bddb0"
+    hash = "sha256-0q/N5Ui5kUM2JWpt2pgE310SniY5f4QU0ayD6YLag3w="
