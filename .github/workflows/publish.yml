@@ -117,7 +117,7 @@ jobs:
           echo name=$(ls result) >> "$GITHUB_OUTPUT"
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.build.outputs.name }}
           path: result
@@ -151,7 +151,7 @@ jobs:
           echo name=$(ls result) >> "$GITHUB_OUTPUT"
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.build.outputs.name }}
           path: result
@@ -220,7 +220,7 @@ jobs:
           out-name: ${{ steps.prepare.outputs.name }}.msi
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.prepare.outputs.name }}
           path: result
