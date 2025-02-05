@@ -1,0 +1,255 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: Jonáš Loskot <jonas@jonasloskot.cz>\n"
+"Language-Team: \n"
+"Language: cs\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.4.4\n"
+
+msgid "Added %s to the group."
+msgstr "Uživatel %s přidán do skupiny."
+
+msgid "Blocked Users"
+msgstr "Zablokovaní uživatelé"
+
+msgid "Boosted the server!"
+msgstr "Server boostnut!"
+
+msgid "Busy"
+msgstr "Zaneprázdněný"
+
+msgid "Calling you."
+msgstr "Volá ti."
+
+msgid "Cancel"
+msgstr "Zrušit"
+
+msgid "Changed the channel icon."
+msgstr "Ikona kanálu změněna."
+
+msgid "Changed the channel name to #"
+msgstr "Název kanálu změněn na #"
+
+msgid "Composer"
+msgstr "Skladatel"
+
+msgid "Connecting"
+msgstr "Připojování"
+
+msgid "Connecting..."
+msgstr "Připojování..."
+
+msgid "Decrypt (?)"
+msgstr "Dešifrovat (?)"
+
+msgid "Dependency Authors"
+msgstr "Autoři závislostí"
+
+msgid "Direct Messages"
+msgstr "Přímé zprávy"
+
+msgid "Discord"
+msgstr "Discord"
+
+msgid "Edit"
+msgstr "Upravit"
+
+msgid "Editing message"
+msgstr "Úprava zprávy"
+
+msgid "Email"
+msgstr "E-mail"
+
+msgid "Empty channel"
+msgstr "Prázdný kanál"
+
+msgid "Enable a semi-WYSIWYG feature that decorates the input Markdown text."
+msgstr "Povolit polo-WYSIWYG funkci, která zobrazí dekorace zadaného Markdown textu."
+
+msgid "Enter text here"
+msgstr "Sem zadej text"
+
+msgid "Entry"
+msgstr "Vstup"
+
+msgid "Error marshaing JSON: "
+msgstr "Chyba při zpracování souboru JSON: "
+
+msgid "Hide"
+msgstr "Skrýt"
+
+msgid "Idle"
+msgstr "Nečinný"
+
+msgid "In_visible"
+msgstr "Ne_viditelný"
+
+msgid "Invisible"
+msgstr "Neviditelný"
+
+msgid "Joined the server."
+msgstr "Připojil/a se k serveru."
+
+msgid "List of users whose messages you won't see."
+msgstr "Seznam uživatelů, jejichž zprávy neuvidíš."
+
+msgid "Loading..."
+msgstr "Načítání..."
+
+msgid "Login"
+msgstr "Přihlásit se"
+
+msgid "Log In"
+msgstr "Přihlásit se"
+
+msgid "Login using:"
+msgstr "Přihlásit se pomocí:"
+
+msgid "Message "
+msgstr "Zpráva "
+
+msgid "Message"
+msgstr "Zpráva"
+
+msgid "Messages"
+msgstr "Zprávy"
+
+msgid "Messages Width"
+msgstr "Šířka zpráv"
+
+msgid "Offline"
+msgstr "Offline"
+
+msgid "Online"
+msgstr "Online"
+
+msgid "Options:"
+msgstr "Možnosti:"
+
+msgid "Override Member Colors"
+msgstr "Přepsat barvy členů"
+
+msgid "Password"
+msgstr "Heslo"
+
+msgid "Pinned <a href=\"#message/%d\">a message</a>."
+msgstr "Připnuta <a href=\"#message/%d\">zpráva</a>."
+
+msgid "Quick Switcher"
+msgstr "QuickSwitcher"
+
+msgid "Redacted."
+msgstr "Skryto."
+
+msgid "Remember Account"
+msgstr "Zapamatovat účet"
+
+msgid "Removed %s from the group."
+msgstr "Uživatel %s odebrán ze skupiny."
+
+msgid "Remove File"
+msgstr "Smazat soubor"
+
+msgid "Reply"
+msgstr "Odpovědět"
+
+msgid "Replying to %s"
+msgstr "Odpovídáš %s"
+
+msgid "Rich Preview"
+msgstr "Pěkný náhled"
+
+msgid "Search"
+msgstr "Hledat"
+
+msgid "Search Users"
+msgstr "Hledat uživatele"
+
+msgid "Send Message on Enter"
+msgstr "Poslat zprávu po stisku Enteru"
+
+msgid "Send the message when the user hits the Enter key. Disable this for mobile."
+msgstr "Poslat zprávu, jakmile uživatel stiskne klávesu. Toto zakažte, pokud jste na mobilním zařízení."
+
+msgid "Set _Status"
+msgstr "Přidat _stav"
+
+msgid "Several people are typing..."
+msgstr "Několik lidí píše..."
+
+msgid "Show"
+msgstr "Zobrazit"
+
+msgid "Show All Emojis"
+msgstr "Zobrazit všechny smajlíky"
+
+msgid "Show (and autocomplete) all emojis even if the user doesn't have Nitro."
+msgstr "Zobrazit (a automaticky dokončit) všechny smajlíky, i když uživatel nemá Nitro."
+
+msgid "Show Blocked Messages"
+msgstr "Zobrazit zablokované zprávy"
+
+msgid "Show messages from blocked users as dimmed instead of completely hidden."
+msgstr "Zobrazit zprávy od zablokovaných uživatelů jako ztmavené, namísto kompletního skrytí."
+
+msgid "Show _Source"
+msgstr "Zobrazit _zdroj"
+
+msgid "Stop Editing"
+msgstr "Přestat upravovat"
+
+msgid "The server is now Nitro Boosted to Tier 1."
+msgstr "Server je nyní boostnut na úroveň 1."
+
+msgid "The server is now Nitro Boosted to Tier 2."
+msgstr "Server je nyní boostnut na úroveň 2."
+
+msgid "The server is now Nitro Boosted to Tier 3."
+msgstr "Server je nyní boostnut na úroveň 3."
+
+msgid "The width of the messages column."
+msgstr "Šířka sloupce se zprávami."
+
+msgid "Token"
+msgstr "Token"
+
+msgid "TOTP"
+msgstr "TOTP"
+
+msgid "Unblock"
+msgstr "Odblokovat"
+
+msgid "Unknown"
+msgstr "Neznámé"
+
+msgid "Unknown channel"
+msgstr "Neznámý kanál"
+
+msgid "Upload"
+msgstr "Nahrát"
+
+msgid "Upload File"
+msgstr "Nahrát soubor"
+
+msgid "Upload Files"
+msgstr "Nahrát soubory"
+
+msgid "Usage: %s [options] <name>...\n"
+msgstr "Použití: %s [možnosti] <název>...\n"
+
+msgid "Use generated colors instead of role colors for members."
+msgstr "U členů použít generované barvy, namísto barev rolí."
+
+msgid "User Settings"
+msgstr "Uživatelská nastavení"
+
+msgid "UTF-8"
+msgstr "UTF-8"
+
+msgid "Where would you like to go?"
+msgstr "Kam bys rád?"
