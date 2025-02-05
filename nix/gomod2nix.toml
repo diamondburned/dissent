@@ -29,8 +29,8 @@ schema = 3
     version = "v0.3.1"
     hash = "sha256-mj4oMN9b8ysyyXAqcvHWdBaSkJIYXXp5Qbqxn57iGl4="
   [mod."github.com/diamondburned/gotkit"]
-    version = "v0.0.0-20241016202055-5751b5af7e5e"
-    hash = "sha256-Yjw+SzCJ3BGQbJ1Naaz7vE7wfmjVLoPoyuCL1tcJ0lE="
+    version = "v0.0.0-20250205065408-ef2c4ad3893d"
+    hash = "sha256-52elQif+2tq8Gi4gTgADUBBCtbExoIEx0Fw0uxmRRj4="
   [mod."github.com/diamondburned/ningen/v3"]
     version = "v3.0.1-0.20240808103805-f1a24c0da3d8"
     hash = "sha256-YzTt65xJemnhxAng53R+xwyqnexVayRHtYfsrDrOsMg="
@@ -46,9 +46,6 @@ schema = 3
   [mod."github.com/godbus/dbus/v5"]
     version = "v5.1.0"
     hash = "sha256-xOCMJpQK3KTmHTPn/CdqI4j0eENCtMmJDgAIoYqYOEY="
-  [mod."github.com/gofrs/flock"]
-    version = "v0.12.1"
-    hash = "sha256-clC0E7x21vaNcDpnmbgn07KqVQdjHXqvwTRKwed5cjc="
   [mod."github.com/gorilla/schema"]
     version = "v1.4.1"
     hash = "sha256-1sWmntFnTzzy95TtHSJJEUJpEruVBy7eA38vX8kJ85k="
@@ -76,6 +73,9 @@ schema = 3
   [mod."github.com/sahilm/fuzzy"]
     version = "v0.1.1"
     hash = "sha256-f2VsDI6G+V2w31tSDzbZPi9EI2E7jRV6Aq8yeOorSZY="
+  [mod."github.com/stretchr/testify"]
+    version = "v1.9.0"
+    hash = "sha256-uUp/On+1nK+lARkTVtb5RxlW15zxtw2kaAFuIASA+J0="
   [mod."github.com/twmb/murmur3"]
     version = "v1.1.8"
     hash = "sha256-j5uSr5TfAFeiCWcG3I6WmVrwEuAe57FSHbEQ9tZbixg="
