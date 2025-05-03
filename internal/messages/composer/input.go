@@ -21,7 +21,6 @@ import (
 	"github.com/diamondburned/gotkit/app/prefs"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
-	"github.com/diamondburned/gotkit/gtkutil/textutil"
 	"github.com/diamondburned/gotkit/utils/osutil"
 	"github.com/pkg/errors"
 	"libdb.so/dissent/internal/gtkcord"
@@ -151,7 +150,7 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 		gtk.InputHintWordCompletion |
 		gtk.InputHintUppercaseSentences,
 	)
-	textutil.SetTabSize(i.TextView)
+	// textutil.SetTabSize(i.TextView)
 	inputCSS(i)
 
 	i.ac = autocomplete.New(ctx, i.TextView)

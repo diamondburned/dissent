@@ -56,16 +56,17 @@
         ]
       },
       "locked": {
-        "lastModified": 1710154385,
-        "narHash": "sha256-4c3zQ2YY4BZOufaBJB4v9VBBeN2dH7iVdoJw8SDNCfI=",
+        "lastModified": 1742209644,
+        "narHash": "sha256-jMy1XqXqD0/tJprEbUmKilTkvbDY/C0ZGSsJJH4TNCE=",
         "owner": "nix-community",
         "repo": "gomod2nix",
-        "rev": "872b63ddd28f318489c929d25f1f0a3c6039c971",
+        "rev": "8f3534eb8f6c5c3fce799376dc3b91bae6b11884",
         "type": "github"
       },
       "original": {
         "owner": "nix-community",
         "repo": "gomod2nix",
+        "rev": "8f3534eb8f6c5c3fce799376dc3b91bae6b11884",
         "type": "github"
       }
     },
@@ -83,27 +84,26 @@
         ]
       },
       "locked": {
-        "lastModified": 1712740835,
-        "narHash": "sha256-10ILAqai3IJTt8QXGVxKqYW0t3dE+tsNsiKSD4t7a3s=",
+        "lastModified": 1740268349,
+        "narHash": "sha256-Ch7kZn3WqYehYEmM0aOAHoHb4JYz0V25/ApNJFJIMDY=",
         "owner": "diamondburned",
         "repo": "gotk4-nix",
-        "rev": "711c9b1329179836028679610392394730156895",
+        "rev": "1bc28fdf8da92c581b0b84f842ef9d0762979caa",
         "type": "github"
       },
       "original": {
         "owner": "diamondburned",
-        "ref": "flake",
         "repo": "gotk4-nix",
         "type": "github"
       }
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1735291276,
-        "narHash": "sha256-NYVcA06+blsLG6wpAbSPTCyLvxD/92Hy4vlY9WxFI1M=",
+        "lastModified": 1746141548,
+        "narHash": "sha256-IgBWhX7A2oJmZFIrpRuMnw5RAufVnfvOgHWgIdds+hc=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "634fd46801442d760e09493a794c4f15db2d0cbb",
+        "rev": "f02fddb8acef29a8b32f10a335d44828d7825b78",
         "type": "github"
       },
       "original": {
