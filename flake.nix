@@ -38,6 +38,8 @@
           inherit pkgs;
           src = self;
         };
+
+      goPackage = "go_1_24";
     in
 
     (flake-utils.lib.eachDefaultSystem (
@@ -48,7 +50,7 @@
           gotk4-nix.overlays.patchelf
         ];
 
-        go = pkgs.go_1_24;
+        go = pkgs.${goPackage};
       in
 
       {
@@ -91,7 +93,7 @@
       lib = gotk4-nix.lib.mkLib rec {
         pkgs = nixpkgs.legacyPackages.${builtins.currentSystem};
         base = baseFunc pkgs;
-        inherit go;
+        go = pkgs.${goPackage};
       };
     };
 }
