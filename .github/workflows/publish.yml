@@ -25,7 +25,6 @@ jobs:
           ref: ${{ github.ref }}
 
       - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Generate
         run: go generate ./...
@@ -45,7 +44,6 @@ jobs:
           ref: ${{ github.ref }}
 
       - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Tidy up Go modules
         run: go mod tidy
@@ -70,7 +68,6 @@ jobs:
           ref: ${{ github.ref }}
 
       - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Format
         run: |
@@ -106,7 +103,6 @@ jobs:
           ref: ${{ github.ref }}
 
       - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Build
         id: build
@@ -139,7 +135,6 @@ jobs:
           ref: ${{ github.ref }}
 
       - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Build
         id: build
@@ -240,7 +235,6 @@ jobs:
           ref: ${{ github.ref }}
 
       - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -267,7 +261,6 @@ jobs:
           ref: ${{ github.ref }}
 
       - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
