@@ -1,0 +1,255 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: Malo Billoré <malo.billore@gmail.com>\n"
+"Language-Team: \n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.6\n"
+
+msgid "Added %s to the group."
+msgstr "A ajouté %s au groupe."
+
+msgid "Blocked Users"
+msgstr "Utilisateurs bloqués"
+
+msgid "Boosted the server!"
+msgstr "A boosté le serveur !"
+
+msgid "Busy"
+msgstr "Occupé"
+
+msgid "Calling you."
+msgstr "Vous appelle."
+
+msgid "Cancel"
+msgstr "Annuler"
+
+msgid "Changed the channel icon."
+msgstr "A changé l'icône du groupe."
+
+msgid "Changed the channel name to #"
+msgstr "A changé le nom du salon : #"
+
+msgid "Composer"
+msgstr "Zone de saisie"
+
+msgid "Connecting"
+msgstr "Connexion"
+
+msgid "Connecting..."
+msgstr "Connexion…"
+
+msgid "Decrypt (?)"
+msgstr "Décrypter (?)"
+
+msgid "Dependency Authors"
+msgstr "Auteurs des dépendances"
+
+msgid "Direct Messages"
+msgstr "Messages privés"
+
+msgid "Discord"
+msgstr "Discord"
+
+msgid "Edit"
+msgstr "Modifier"
+
+msgid "Editing message"
+msgstr "Modification du message"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Empty channel"
+msgstr "Salon vide"
+
+msgid "Enable a semi-WYSIWYG feature that decorates the input Markdown text."
+msgstr "Activer une fonctionnalité semi-WYSIWYG qui décore la saisie du texte Markdown."
+
+msgid "Enter text here"
+msgstr "Entrer le texte ici"
+
+msgid "Entry"
+msgstr "Entrée"
+
+msgid "Error marshaing JSON: "
+msgstr "Error marshaing JSON: "
+
+msgid "Hide"
+msgstr "Cacher"
+
+msgid "Idle"
+msgstr "Inactif"
+
+msgid "In_visible"
+msgstr "In_visible"
+
+msgid "Invisible"
+msgstr "Invisible"
+
+msgid "Joined the server."
+msgstr "A rejoint le serveur."
+
+msgid "List of users whose messages you won't see."
+msgstr "Liste des utilisateurs dont vous ne verrez pas les messages."
+
+msgid "Loading..."
+msgstr "Chargement…"
+
+msgid "Login"
+msgstr "Identifiant"
+
+msgid "Log In"
+msgstr "Se connecter"
+
+msgid "Login using:"
+msgstr "Se connecter avec :"
+
+msgid "Message "
+msgstr "Message "
+
+msgid "Message"
+msgstr "Message"
+
+msgid "Messages"
+msgstr "Messages"
+
+msgid "Messages Width"
+msgstr "Largeur des messages"
+
+msgid "Offline"
+msgstr "Hors-ligne"
+
+msgid "Online"
+msgstr "En ligne"
+
+msgid "Options:"
+msgstr "Options :"
+
+msgid "Override Member Colors"
+msgstr "Outrepasser les couleurs des membres"
+
+msgid "Password"
+msgstr "Mot de passe"
+
+msgid "Pinned <a href=\"#message/%d\">a message</a>."
+msgstr "A épignlé <a href=\"#message/%d\">un message</a>."
+
+msgid "Quick Switcher"
+msgstr "Quick Switcher"
+
+msgid "Redacted."
+msgstr "Rédigé."
+
+msgid "Remember Account"
+msgstr "Se souvenir du compte"
+
+msgid "Removed %s from the group."
+msgstr "A retiré %s du groupe."
+
+msgid "Remove File"
+msgstr "Retirer le fichier"
+
+msgid "Reply"
+msgstr "Répondre"
+
+msgid "Replying to %s"
+msgstr "Répondre à %s"
+
+msgid "Rich Preview"
+msgstr "Prévisualisation enrichie"
+
+msgid "Search"
+msgstr "Rechercher"
+
+msgid "Search Users"
+msgstr "Rechercher des utilisateurs"
+
+msgid "Send Message on Enter"
+msgstr "Envoyer le message avec entrée"
+
+msgid "Send the message when the user hits the Enter key. Disable this for mobile."
+msgstr "Envoyer le message lorsque l'utilisateur appuie sur la touche entrée. Désactivez ceci pour sur mobile."
+
+msgid "Set _Status"
+msgstr "Définir son _statut"
+
+msgid "Several people are typing..."
+msgstr "Plusieurs personnes sont en train d'écrire…"
+
+msgid "Show"
+msgstr "Afficher"
+
+msgid "Show All Emojis"
+msgstr "Afficher tous les emojis"
+
+msgid "Show (and autocomplete) all emojis even if the user doesn't have Nitro."
+msgstr "Afficher (et compléter automatiquement) tous les emojis même si l'utilisateur n'a pas Nitro."
+
+msgid "Show Blocked Messages"
+msgstr "Afficher les messages bloqués"
+
+msgid "Show messages from blocked users as dimmed instead of completely hidden."
+msgstr "Afficher les messages des utilisateurs comme grisés au lieu de complètement cachés."
+
+msgid "Show _Source"
+msgstr "Afficher la _source"
+
+msgid "Stop Editing"
+msgstr "Arrêter de modifier"
+
+msgid "The server is now Nitro Boosted to Tier 1."
+msgstr "Ce serveur est désormais boosté au palier 1."
+
+msgid "The server is now Nitro Boosted to Tier 2."
+msgstr "Ce serveur est désormais boosté au palier 2."
+
+msgid "The server is now Nitro Boosted to Tier 3."
+msgstr "Ce serveur est désormais boosté au palier 3."
+
+msgid "The width of the messages column."
+msgstr "La largeur de la colonne de messages."
+
+msgid "Token"
+msgstr "Jeton"
+
+msgid "TOTP"
+msgstr "TOTP"
+
+msgid "Unblock"
+msgstr "Débloquer"
+
+msgid "Unknown"
+msgstr "Inconnu"
+
+msgid "Unknown channel"
+msgstr "Salon inconnu"
+
+msgid "Upload"
+msgstr "Uploader"
+
+msgid "Upload File"
+msgstr "Uploader un fichier"
+
+msgid "Upload Files"
+msgstr "Uploader des fichiers"
+
+msgid "Usage: %s [options] <name>...\n"
+msgstr "Utilisation : %s [options] <name>...\r\n"
+
+msgid "Use generated colors instead of role colors for members."
+msgstr "Utiliser des couleurs générées à la place des couleurs de rôles pour les membres."
+
+msgid "User Settings"
+msgstr "Paramètres utilisateurs"
+
+msgid "UTF-8"
+msgstr "UTF-8"
+
+msgid "Where would you like to go?"
+msgstr "Où désirez-vous aller ?"
