@@ -17,8 +17,8 @@ schema = 3
     version = "v0.0.2-0.20221227093656-fa139be203a8"
     hash = "sha256-xIerrbYQf6FPbbRd60OnBStIJMl6mg/Qvl+LTmRbyIw="
   [mod."github.com/diamondburned/arikawa/v3"]
-    version = "v3.5.0"
-    hash = "sha256-0uq2o2YsnfZtDMW2KC7r25mnR3vqabJupwXC0b38XVw="
+    version = "v3.5.1-0.20250703053218-19d9c3f2e011"
+    hash = "sha256-bSo0g1kpxKUncmLqk1subLOSDYuGmNv++uBvQFEZ2yw="
   [mod."github.com/diamondburned/chatkit"]
     version = "v0.0.0-20240614105536-5788b19145bc"
     hash = "sha256-w6q9vDTUmSwAn6RDhPUzY2VIAvgduSbSxGzh46gLFqQ="
@@ -32,8 +32,8 @@ schema = 3
     version = "v0.0.0-20250223060613-69614d9e70a9"
     hash = "sha256-MPUrzotuqdXhSdLZthPEdRhk51pFzMbJounv+Gg9A/s="
   [mod."github.com/diamondburned/ningen/v3"]
-    version = "v3.0.1-0.20240808103805-f1a24c0da3d8"
-    hash = "sha256-YzTt65xJemnhxAng53R+xwyqnexVayRHtYfsrDrOsMg="
+    version = "v3.0.1-0.20250703054403-e5dc4cf15e84"
+    hash = "sha256-bpl5Ynwfish8jO55PJu4Exu7mAnXUBYu4aJ+wy5ZReU="
   [mod."github.com/dlclark/regexp2"]
     version = "v1.11.5"
     hash = "sha256-jN5+2ED+YbIoPIuyJ4Ou5pqJb2w1uNKzp5yTjKY6rEQ="
