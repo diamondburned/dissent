@@ -21,8 +21,8 @@ const (
 	GuildIconSize     = 48
 	ChannelIconSize   = 32
 	MessageAvatarSize = 42
-	EmbedMaxWidth     = 250
-	EmbedImgHeight    = 300
+	EmbedMaxWidth     = 350
+	EmbedImgHeight    = 400
 	InlineEmojiSize   = 22
 	LargeEmojiSize    = 48
 	StickerSize       = 92

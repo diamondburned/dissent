@@ -167,10 +167,10 @@ func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widg
 		)
 
 		image := embed.New(ctx, maxEmbedWidth.Value(), maxImageHeight.Value(), opts)
-		image.SetLayoutManager(gtk.NewBinLayout())
 		image.AddCSSClass("message-richframe")
-		image.SetHAlign(gtk.AlignStart)
 		image.SetHExpand(false)
+		image.SetVExpand(false)
+		image.SetHAlign(gtk.AlignStart)
 		image.SetName(name)
 
 		image.SetOpenURL(func() {
@@ -192,8 +192,9 @@ func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widg
 				maxEmbedWidth.Value(), maxImageHeight.Value(),
 			)
 
-			image.SetSizeRequest(-1, h)
-			image.Thumbnail.SetSizeRequest(-1, h)
+			image.SetSizeRequest(w, h)
+			image.Thumbnail.Picture.SetSizeRequest(w, h)
+
 			if mimeType == "image" {
 				scale := gtkutil.ScaleFactor()
 				w *= scale

@@ -149,12 +149,16 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 	v.LoadMore.AddCSSClass("message-show-more")
 	v.LoadMore.SetLabel(locale.Get("Show More"))
 	v.LoadMore.SetHExpand(true)
+	v.LoadMore.SetVExpand(true) // hack to push the messages to the bottom
+	v.LoadMore.SetVAlign(gtk.AlignStart)
 	v.LoadMore.SetSensitive(true)
 	v.LoadMore.ConnectClicked(v.loadMore)
 
 	v.List = gtk.NewListBox()
 	v.List.AddCSSClass("message-list")
 	v.List.SetSelectionMode(gtk.SelectionNone)
+	v.List.SetVExpand(false)
+	v.List.SetVAlign(gtk.AlignEnd)
 
 	clampBox := gtk.NewBox(gtk.OrientationVertical, 0)
 	clampBox.SetHExpand(true)
@@ -171,12 +175,10 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 
 	v.Scroll = autoscroll.NewWindow()
 	v.Scroll.AddCSSClass("message-scroll")
-	v.Scroll.SetVExpand(true)
-	v.Scroll.SetPolicy(gtk.PolicyNever, gtk.PolicyAutomatic)
 	v.Scroll.SetPropagateNaturalWidth(true)
 	v.Scroll.SetPropagateNaturalHeight(true)
+	v.Scroll.SetPolicy(gtk.PolicyNever, gtk.PolicyAutomatic)
 	v.Scroll.SetChild(clampScroll)
-
 	v.Scroll.OnBottomed(v.onScrollBottomed)
 
 	scrollAdjustment := v.Scroll.VAdjustment()
@@ -199,6 +201,8 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 
 	vp := v.Scroll.Viewport()
 	vp.SetScrollToFocus(true)
+	vp.SetVScrollPolicy(gtk.ScrollMinimum)
+	vp.SetHScrollPolicy(gtk.ScrollMinimum)
 	v.List.SetAdjustment(v.Scroll.VAdjustment())
 
 	v.Composer = composer.NewView(ctx, v, chID)
