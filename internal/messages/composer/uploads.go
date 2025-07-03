@@ -1,13 +1,19 @@
 package composer
 
 import (
+	"context"
+	"fmt"
+	"html"
+	"path/filepath"
 	"slices"
 	"strings"
 
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/core/glib"
+	"github.com/diamondburned/gotk4/pkg/gio/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
+	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/dustin/go-humanize"
@@ -33,7 +39,8 @@ func mimeIsText(mime string) bool {
 // UploadTray is the tray holding files to be uploaded.
 type UploadTray struct {
 	*gtk.Box
-	files []uploadFile
+	files         []uploadFile
+	maxUploadSize int64
 }
 
 type uploadFile struct {
@@ -77,8 +84,66 @@ func NewUploadTray() *UploadTray {
 	return &t
 }
 
+// SetMaxUploadSize sets the maximum upload size for the tray.
+// If the size is set to 0, it will not limit the upload size.
+// If a file exceeds this size, it will not be added to the tray, and an alert
+// will be shown to the user.
+func (t *UploadTray) SetMaxUploadSize(size int64) {
+	t.maxUploadSize = size
+}
+
 // AddFile adds a file into the tray.
-func (t *UploadTray) AddFile(f *File) {
+func (t *UploadTray) AddFile(ctx context.Context, f *File) {
+	if t.maxUploadSize > 0 && f.Size > t.maxUploadSize {
+		// Ellipsize the file name if it is too long. Preserve the file
+		// extension for convenience.
+		shortName := f.Name
+		if len(shortName) > 50 {
+			shortName = f.Name[:45] + "…" + strings.TrimPrefix(filepath.Ext(f.Name), ".")
+		}
+
+		alert := adw.NewAlertDialog(
+			locale.Get("File Too Large"),
+			fmt.Sprintf(
+				"%s\n%s",
+				locale.Sprintf(
+					"<i>%s</i> (%s) is larger than %s.",
+					html.EscapeString(shortName),
+					humanize.IBytes(uint64(f.Size)),
+					humanize.IBytes(uint64(t.maxUploadSize)),
+				),
+				locale.Get("Discord will not allow you to upload this file."),
+			))
+		alert.SetBodyUseMarkup(true)
+		alert.SetPreferWideLayout(true)
+
+		alert.AddResponse("continue", locale.Get("Continue (dangerous)"))
+		alert.AddResponse("skip", locale.Get("Skip"))
+		alert.SetResponseAppearance("continue", adw.ResponseDestructive)
+		alert.SetResponseAppearance("skip", adw.ResponseDefault)
+		alert.SetDefaultResponse("skip")
+		alert.SetCloseResponse("skip")
+		// Disable the continue response by default unless users start
+		// complaining in our issues otherwise.
+		alert.SetResponseEnabled("continue", false)
+
+		alert.Choose(ctx, app.WindowFromContext(ctx), func(res gio.AsyncResulter) {
+			response := alert.ChooseFinish(res)
+			switch response {
+			case "skip":
+				// do nothing
+			case "continue":
+				t.addFile(f)
+			}
+		})
+
+		return
+	}
+
+	t.addFile(f)
+}
+
+func (t *UploadTray) addFile(f *File) {
 	u := uploadFile{file: f}
 
 	u.icon = gtk.NewImageFromIconName(mimeIcon(f.Type))
@@ -90,7 +155,7 @@ func (t *UploadTray) AddFile(f *File) {
 	u.name.SetVExpand(true)
 	u.name.SetVAlign(gtk.AlignBaseline)
 
-	u.size = gtk.NewLabel(humanize.Bytes(uint64(f.Size)))
+	u.size = gtk.NewLabel(humanize.IBytes(uint64(f.Size)))
 	u.size.AddCSSClass("composer-upload-file-size")
 	u.size.SetVisible(f.Size > 0)
 	u.size.SetVExpand(true)

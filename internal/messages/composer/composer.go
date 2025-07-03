@@ -388,6 +388,8 @@ func (v *View) upload() {
 }
 
 func (v *View) addFiles(list gio.ListModeller) {
+	state := gtkcord.FromContext(v.ctx)
+
 	go func() {
 		var i uint
 		for v.ctx.Err() == nil {
@@ -419,7 +421,11 @@ func (v *View) addFiles(list gio.ListModeller) {
 				}
 			}
 
-			glib.IdleAdd(func() { v.UploadTray.AddFile(f) })
+			maxUploadSize := state.DetermineUploadSize(v.Input.GuildID())
+			glib.IdleAdd(func() {
+				v.UploadTray.SetMaxUploadSize(int64(maxUploadSize))
+				v.UploadTray.AddFile(v.ctx, f)
+			})
 			i++
 		}
 	}()
@@ -713,7 +719,7 @@ func (v inputControllerView) EditLastMessage() bool {
 }
 
 func (v inputControllerView) PasteClipboardFile(file *File) {
-	v.UploadTray.AddFile(file)
+	v.UploadTray.AddFile(v.ctx, file)
 }
 
 func (v inputControllerView) UpdateMessageLength(length int) {

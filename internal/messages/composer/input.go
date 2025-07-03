@@ -179,6 +179,16 @@ func NewInput(ctx context.Context, ctrl InputController, chID discord.ChannelID)
 	return &i
 }
 
+// ChannelID returns the channel ID of the channel that this input is in.
+func (i *Input) ChannelID() discord.ChannelID {
+	return i.chID
+}
+
+// GuildID returns the guild ID of the channel that this input is in.
+func (i *Input) GuildID() discord.GuildID {
+	return i.guildID
+}
+
 func (i *Input) onAutocompleted(row autocomplete.SelectedData) bool {
 	i.Buffer.BeginUserAction()
 	defer i.Buffer.EndUserAction()
