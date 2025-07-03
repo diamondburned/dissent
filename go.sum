@@ -39,8 +39,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8 h1:ZMe7aut1RcAE52EpSmfuIiKhaIw3MGVw9qOiCcj8R+w=
 github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8/go.mod h1:cLoCdQtpCp/TSJBJTgXe7W2FJNelXrmPv+X7luB6/Qg=
-github.com/diamondburned/arikawa/v3 v3.5.0 h1:Ct93e1kZBLqlwTB88oOSZ/B0zzqrn5MpRwfGYiH81d8=
-github.com/diamondburned/arikawa/v3 v3.5.0/go.mod h1:thocAM2X8lRDHuEZR5vWYaT4w+tb/vOKa1qm+r0gs5A=
+github.com/diamondburned/arikawa/v3 v3.5.1-0.20250703053218-19d9c3f2e011 h1:N8ylXHkkDXsbtsA/by/yZUDKmfWZJ1JjTXGpHmIiR9M=
+github.com/diamondburned/arikawa/v3 v3.5.1-0.20250703053218-19d9c3f2e011/go.mod h1:thocAM2X8lRDHuEZR5vWYaT4w+tb/vOKa1qm+r0gs5A=
 github.com/diamondburned/chatkit v0.0.0-20240614105536-5788b19145bc h1:SL8VaknB7joR9TfPhoxkh9JXc1k42f2IV7fXwAZkW2U=
 github.com/diamondburned/chatkit v0.0.0-20240614105536-5788b19145bc/go.mod h1:MYYap27uIo8zY2Odpz5/8moc6dNbBKHr+uFYXDX6xQ4=
 github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20250223021911-503726bcfce6 h1:QWtk8CfdqVuOh5ugq2SYalT1moDt6TkeYdU0xeSauis=
@@ -49,8 +49,8 @@ github.com/diamondburned/gotk4/pkg v0.3.1 h1:uhkXSUPUsCyz3yujdvl7DSN8jiLS2BgNTQE
 github.com/diamondburned/gotk4/pkg v0.3.1/go.mod h1:DqeOW+MxSZFg9OO+esk4JgQk0TiUJJUBfMltKhG+ub4=
 github.com/diamondburned/gotkit v0.0.0-20250223060613-69614d9e70a9 h1:wSmQpvhq+4WPPrGYGbgU4mjH/VlV/GAtZMRcYWL3tWo=
 github.com/diamondburned/gotkit v0.0.0-20250223060613-69614d9e70a9/go.mod h1:q1dOQM23dU0bHO6W2iwEy1dwxQBw3so4H0CZRp4O58Q=
-github.com/diamondburned/ningen/v3 v3.0.1-0.20240808103805-f1a24c0da3d8 h1:wgvgSzI4N+BHhCWhGhHKfW4gm0UtBVptiDaBGPdHmcs=
-github.com/diamondburned/ningen/v3 v3.0.1-0.20240808103805-f1a24c0da3d8/go.mod h1:UU1lud9g/GBl2+CZ8nPCe3Qk1U6fABEP1fk1sUzo7w0=
+github.com/diamondburned/ningen/v3 v3.0.1-0.20250703054403-e5dc4cf15e84 h1:O/6NA4fQimjVNuT5F02kodPT2cz9Ltq2U96vxKYL0oA=
+github.com/diamondburned/ningen/v3 v3.0.1-0.20250703054403-e5dc4cf15e84/go.mod h1:UU1lud9g/GBl2+CZ8nPCe3Qk1U6fABEP1fk1sUzo7w0=
 github.com/dlclark/regexp2 v1.4.0/go.mod h1:2pZnwuY/m+8K6iRw6wQdMtk+rH5tNGR1i55kozfMjCc=
 github.com/dlclark/regexp2 v1.11.5 h1:Q/sSnsKerHeCkc/jSTNq1oCm7KiVgUMZRDUoRu0JQZQ=
 github.com/dlclark/regexp2 v1.11.5/go.mod h1:DHkYz0B9wPfa6wondMfaivmHpzrQ3v9q8cnmRbL6yW8=

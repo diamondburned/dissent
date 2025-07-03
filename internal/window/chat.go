@@ -41,7 +41,7 @@ type ChatPage struct {
 	RightHeader *adw.HeaderBar
 	rightTitle  *adw.Bin
 
-	tabView       *adw.TabView
+	tabView *adw.TabView
 
 	lastGuildState   *app.TypedSingleState[discord.GuildID]
 	lastChannelState *app.TypedState[discord.ChannelID]
@@ -444,6 +444,7 @@ func (t *chatTab) switchToChannel(id discord.ChannelID) bool {
 
 	if id.IsValid() {
 		t.messageView = messages.NewView(t.ctx, id)
+		t.messageView.FetchBacklog()
 
 		t.Stack.AddChild(t.messageView)
 		t.Stack.SetVisibleChild(t.messageView)

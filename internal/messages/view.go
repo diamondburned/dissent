@@ -1,11 +1,12 @@
 package messages
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"html"
 	"log/slog"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/diamondburned/adaptive"
@@ -413,8 +414,6 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 		},
 	})
 
-	v.load()
-
 	viewCSS(v)
 	return v
 }
@@ -534,7 +533,9 @@ func (v *View) messageSummaries() map[discord.MessageID]gateway.ConversationSumm
 	return summariesMap
 }
 
-func (v *View) load() {
+// FetchBacklog fetches the initial backlog of messages for the channel that the
+// view belongs to.
+func (v *View) FetchBacklog() {
 	slog.Debug(
 		"loading message view",
 		"channel", v.chID)
@@ -544,43 +545,50 @@ func (v *View) load() {
 
 	state := gtkcord.FromContext(v.ctx)
 
-	ch, _ := state.Cabinet.Channel(v.chID)
-	if ch == nil {
-		v.LoadablePage.SetError(fmt.Errorf("channel not found"))
-		return
-	}
-
 	gtkutil.Async(v.ctx, func() func() {
 		msgs, err := state.Online().Messages(v.chID, 15)
 		if err != nil {
 			return func() { v.LoadablePage.SetError(err) }
 		}
 
-		sort.Slice(msgs, func(i, j int) bool {
-			return msgs[i].ID < msgs[j].ID
-		})
-
 		return func() {
+			state := gtkcord.FromContext(v.ctx)
+
+			ch, _ := state.Cabinet.Channel(v.chID)
+			if ch == nil {
+				v.LoadablePage.SetError(fmt.Errorf("channel not found"))
+				return
+			}
+
 			if len(msgs) == 0 && ch.Type == discord.DirectMessage {
 				v.LoadablePage.SetError(errors.New(
 					"refusing to load DM: please send a message via the official client first"))
 				return
 			}
 
-			v.setPageToMain()
-			v.Scroll.ScrollToBottom()
-
-			summariesMap := v.messageSummaries()
-
-			for _, msg := range msgs {
-				w := v.upsertMessage(msg.ID, newMessageInfo(&msg), 0)
-				w.Update(&gateway.MessageCreateEvent{Message: msg})
-				if summary, ok := summariesMap[msg.ID]; ok {
-					v.appendSummary(summary)
-				}
-			}
+			v.AddBacklog(msgs)
 		}
 	})
+}
+
+// AddBacklog adds the given messages to the message view as a backlog.
+func (v *View) AddBacklog(msgs []discord.Message) {
+	slices.SortFunc(msgs, func(a, b discord.Message) int {
+		return cmp.Compare(a.ID, b.ID)
+	})
+
+	v.setPageToMain()
+	v.Scroll.ScrollToBottom()
+
+	summariesMap := v.messageSummaries()
+
+	for _, msg := range msgs {
+		w := v.upsertMessage(msg.ID, newMessageInfo(&msg), 0)
+		w.Update(&gateway.MessageCreateEvent{Message: msg})
+		if summary, ok := summariesMap[msg.ID]; ok {
+			v.appendSummary(summary)
+		}
+	}
 }
 
 func (v *View) loadMore() {
@@ -598,6 +606,7 @@ func (v *View) loadMore() {
 	ctx := v.ctx
 	state := gtkcord.FromContext(ctx).Online()
 
+	// TODO: combine this with AddBacklog.
 	upsertMessages := func(msgs []discord.Message) {
 		unlock := v.Scroll.LockScroll()
 		glib.IdleAdd(unlock)
