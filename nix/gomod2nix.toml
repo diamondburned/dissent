@@ -23,8 +23,8 @@ schema = 3
     version = "v0.0.0-20240614105536-5788b19145bc"
     hash = "sha256-w6q9vDTUmSwAn6RDhPUzY2VIAvgduSbSxGzh46gLFqQ="
   [mod."github.com/diamondburned/gotk4-adwaita/pkg"]
-    version = "v0.0.0-20250703055525-b247e236f81a"
-    hash = "sha256-w+247y7qmFrl8wRQ55i2SaNEZkuCxiyZbigTnm3d3qM="
+    version = "v0.0.0-20250703085708-8e7f01e2c815"
+    hash = "sha256-9eLfZEPGrr7jQ39pRQSZIwMhxXUzzbcgT/AmAet2cCs="
   [mod."github.com/diamondburned/gotk4/pkg"]
     version = "v0.3.2-0.20250703063411-16654385f59a"
     hash = "sha256-ibmdoUgGi4lCxBWxBQi7EGHpwnJZO/xknskzATuYFmU="
