@@ -39,8 +39,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8 h1:ZMe7aut1RcAE52EpSmfuIiKhaIw3MGVw9qOiCcj8R+w=
 github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8/go.mod h1:cLoCdQtpCp/TSJBJTgXe7W2FJNelXrmPv+X7luB6/Qg=
-github.com/diamondburned/arikawa/v3 v3.5.1-0.20250703053218-19d9c3f2e011 h1:N8ylXHkkDXsbtsA/by/yZUDKmfWZJ1JjTXGpHmIiR9M=
-github.com/diamondburned/arikawa/v3 v3.5.1-0.20250703053218-19d9c3f2e011/go.mod h1:thocAM2X8lRDHuEZR5vWYaT4w+tb/vOKa1qm+r0gs5A=
+github.com/diamondburned/arikawa/v3 v3.6.0 h1:8sno6tO9F1TEkg1ChHfjuVX41a+uv3opcfWeNvbuhV4=
+github.com/diamondburned/arikawa/v3 v3.6.0/go.mod h1:thocAM2X8lRDHuEZR5vWYaT4w+tb/vOKa1qm+r0gs5A=
 github.com/diamondburned/chatkit v0.0.0-20240614105536-5788b19145bc h1:SL8VaknB7joR9TfPhoxkh9JXc1k42f2IV7fXwAZkW2U=
 github.com/diamondburned/chatkit v0.0.0-20240614105536-5788b19145bc/go.mod h1:MYYap27uIo8zY2Odpz5/8moc6dNbBKHr+uFYXDX6xQ4=
 github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20250703085708-8e7f01e2c815 h1:lJCjbwn1K4YaCxvvfttWXBUnoQeY8qHOBBfCC0XMR/A=

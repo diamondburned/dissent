@@ -44,9 +44,9 @@ func init() {
 
 	api.UserAgent = "Dissent (https://libdb.so/dissent)"
 	gateway.DefaultIdentity = gateway.IdentifyProperties{
-		OS:      runtime.GOOS,
-		Device:  "Arikawa",
-		Browser: "Dissent on " + hostname,
+		gateway.IdentifyOS:      runtime.GOOS,
+		gateway.IdentifyDevice:  "Arikawa",
+		gateway.IdentifyBrowser: "Dissent on " + hostname,
 	}
 }
 
