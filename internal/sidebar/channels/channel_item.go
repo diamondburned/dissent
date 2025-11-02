@@ -84,9 +84,10 @@ var _ = cssutil.WriteCSS(`
 	.channels-viewtree row:selected:hover .channel-item-outer {
 		background: alpha(@theme_fg_color, 0.175);
 	}
-	.channel-item {
+	.channel-item:not(.channel-item-category) {
 		padding: 0.35em 0;
-		opacity: 0.5;
+		opacity: 0.50;
+		font-weight: 600;
 	}
 	.channel-item > :first-child {
 		min-width: 2.5em;
@@ -98,7 +99,7 @@ var _ = cssutil.WriteCSS(`
 		margin-left: -0.35em;
 	}
 	.channel-item-muted .channel-item {
-		opacity: 0.35;
+		opacity: 0.25;
 	}
 	.channel-unread-indicator {
 		font-size: 0.75em;
