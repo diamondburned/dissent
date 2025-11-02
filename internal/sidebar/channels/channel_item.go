@@ -86,6 +86,7 @@ var _ = cssutil.WriteCSS(`
 	}
 	.channel-item {
 		padding: 0.35em 0;
+		opacity: 0.5;
 	}
 	.channel-item > :first-child {
 		min-width: 2.5em;
@@ -96,7 +97,7 @@ var _ = cssutil.WriteCSS(`
 		 * reason. */
 		margin-left: -0.35em;
 	}
-	.channel-item-muted {
+	.channel-item-muted .channel-item {
 		opacity: 0.35;
 	}
 	.channel-unread-indicator {
@@ -116,7 +117,7 @@ var _ = cssutil.WriteCSS(`
 		padding: 0;
 		margin: 0 1em;
 
-		outline: 1.5px solid @theme_fg_color;
+		background: alpha(@theme_fg_color, .75);
 		border-radius: 99px;
 	}
 	.channel-item-mentioned .channel-unread-indicator {
@@ -124,6 +125,9 @@ var _ = cssutil.WriteCSS(`
 		outline-color: @mentioned;
 		background: @mentioned;
 		color: @theme_bg_color;
+	}
+	.channel-item-unread .channel-item {
+		opacity: 1;
 	}
 `)
 
