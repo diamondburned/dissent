@@ -20,13 +20,10 @@ var rememberMeCSS = cssutil.Applier("login-rememberme", `
 	}
 `)
 
-func newRememberMeBox(ctx context.Context) *rememberMeBox {
-	b := rememberMeBox{}
+func newRememberMeBox(ctx context.Context, checkbox *gtk.CheckButton) *rememberMeBox {
+	b := rememberMeBox{CheckButton: checkbox}
 
 	keyring := secret.KeyringDriver(ctx)
-
-	b.CheckButton = gtk.NewCheckButtonWithLabel("Remember Account")
-	b.CheckButton.AddCSSClass("login-rememberme")
 	b.CheckButton.ConnectToggled(func() {
 		if !b.Active() {
 			b.driver = nil

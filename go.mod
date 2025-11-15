@@ -19,9 +19,13 @@ require (
 	github.com/sahilm/fuzzy v0.1.1
 	github.com/yuin/goldmark v1.7.11
 	libdb.so/ctxt v0.0.0-20240229093153-2db38a5d3c12
+	libdb.so/dissent/internal/gresources v0.0.1
 	libdb.so/gotk4-sourceview/pkg v0.0.0-20240818070527-98263515a466
 	libdb.so/gotk4-spelling/pkg v0.0.0-20241128063647-a9edc40bddb0
 )
+
+replace libdb.so/dissent/internal/gresources v0.0.1 => ./internal/gresources
+replace github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20250703085708-8e7f01e2c815 => ./external/gotk4-adwaita/pkg
 
 require (
 	al.essio.dev/pkg/shellescape v1.6.0 // indirect
@@ -48,3 +52,4 @@ require (
 	golang.org/x/time v0.11.0 // indirect
 	libdb.so/go-emoji v0.0.0-20240508073816-39776eee41ac // indirect
 )
+

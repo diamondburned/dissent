@@ -7,10 +7,12 @@ import (
 	"github.com/diamondburned/arikawa/v3/state"
 	"github.com/diamondburned/chatkit/kits/secret"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/pkg/errors"
 	"libdb.so/dissent/internal/gtkcord"
+	"libdb.so/dissent/internal/gresources"
 )
 
 // LoginController is the parent controller that Page controls.
@@ -30,7 +32,7 @@ type LoginController interface {
 
 // Page is the page containing the login forms.
 type Page struct {
-	*gtk.Box
+	*adw.ToolbarView
 	Header *gtk.HeaderBar
 	Login  *Component
 
@@ -47,18 +49,22 @@ func NewPage(ctx context.Context, ctrl LoginController) *Page {
 		ctrl: ctrl,
 	}
 
-	p.Header = gtk.NewHeaderBar()
-	p.Header.AddCSSClass("login-page-header")
-	p.Header.SetShowTitleButtons(true)
+	// p.Header = gtk.NewHeaderBar()
+	// p.Header.AddCSSClass("login-page-header")
+	// p.Header.SetShowTitleButtons(true)
 
+	// p.Login.SetVExpand(true)
+	// p.Login.SetHExpand(true)
+
+	// p.Box = gtk.NewBox(gtk.OrientationVertical, 0)
+	// p.Box.Append(p.Header)
+	// p.Box.Append(p.Login)
+	// pageCSS(p)
+
+	uiFile := gresources.New("login.ui")
+	p.ToolbarView = uiFile.GetRoot().(*adw.ToolbarView)
 	p.Login = NewComponent(ctx, &p)
-	p.Login.SetVExpand(true)
-	p.Login.SetHExpand(true)
-
-	p.Box = gtk.NewBox(gtk.OrientationVertical, 0)
-	p.Box.Append(p.Header)
-	p.Box.Append(p.Login)
-	pageCSS(p)
+	p.ToolbarView.SetContent(p.Login)
 
 	return &p
 }
@@ -69,12 +75,12 @@ func (p *Page) LoadKeyring() {
 }
 
 func (p *Page) asyncLoadFromSecrets(driver secret.Driver) {
-	p.Login.Loading.Show()
-	p.Login.SetSensitive(false)
+	p.Login.SetBusy()
+	// p.Login.SetSensitive(false)
 
 	done := func() {
-		p.Login.Loading.Hide()
-		p.Login.SetSensitive(true)
+		p.Login.SetDone()
+		//p.Login.SetSensitive(true)
 	}
 
 	gtkutil.Async(p.ctx, func() func() {
