@@ -48,7 +48,7 @@ type Window struct {
 
 	Stack   *gtk.Stack
 	Login   *login.Page
-	Loading *login.LoadingPage
+	// Loading *login.LoadingPage
 	Chat    *ChatPage
 }
 
@@ -73,12 +73,12 @@ func NewWindow(ctx context.Context) *Window {
 	w.Login = login.NewPage(ctx, &loginWindow{Window: &w})
 	w.Login.LoadKeyring()
 
-	w.Loading = login.NewLoadingPage(ctx)
+	// w.Loading = login.NewLoadingPage(ctx)
 
 	w.Stack = gtk.NewStack()
 	w.Stack.SetTransitionType(gtk.StackTransitionTypeCrossfade)
 	w.Stack.AddChild(w.Login)
-	w.Stack.AddChild(w.Loading)
+	// w.Stack.AddChild(w.Loading)
 	w.Stack.SetVisibleChild(w.Login)
 	win.SetContent(w.Stack)
 

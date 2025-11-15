@@ -8,6 +8,7 @@ import (
 	"github.com/diamondburned/adaptive"
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
+	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/app/prefs"
@@ -18,6 +19,7 @@ import (
 	"libdb.so/dissent/internal/gtkcord"
 	"libdb.so/dissent/internal/window"
 	"libdb.so/dissent/internal/window/about"
+	"libdb.so/dissent/internal/gresources"
 
 	_ "github.com/diamondburned/gotkit/gtkutil/aggressivegc"
 	_ "libdb.so/dissent/internal/icons"
@@ -58,6 +60,7 @@ func init() {
 	app.Hook(func(*app.Application) {
 		adw.Init()
 		adaptive.Init()
+		gresources.Init()
 	})
 }
 
@@ -69,6 +72,7 @@ func main() {
 		"app.about":       func() { about.New(m.win.Context()).Present(m.win) },
 		"app.logs":        func() { logui.ShowDefaultViewer(m.win.Context()) },
 		"app.quit":        func() { m.app.Quit() },
+		"app.shortcuts":   func() { m.showShortcutsDialog() },
 	})
 	m.app.AddActionCallbacks(map[string]gtkutil.ActionCallback{
 		"app.open-channel": m.forwardSignalToWindow("open-channel", gtkcord.SnowflakeVariant),
@@ -107,4 +111,11 @@ func (m *manager) activate(ctx context.Context) {
 			app.Error(ctx, err)
 		}
 	})
+}
+
+func (m *manager) showShortcutsDialog() {
+	uiFile := gresources.New("gtk/help-overlay.ui")
+	shortcutsDialog := uiFile.GetRoot().(*gtk.ShortcutsWindow)
+	shortcutsDialog.SetTransientFor(app.GTKWindowFromContext(m.win.Context()))
+	shortcutsDialog.Present()
 }
