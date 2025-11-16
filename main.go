@@ -15,11 +15,10 @@ import (
 	"github.com/diamondburned/gotkit/components/logui"
 	"github.com/diamondburned/gotkit/components/prefui"
 	"github.com/diamondburned/gotkit/gtkutil"
-	"github.com/diamondburned/gotkit/gtkutil/cssutil"
+	"libdb.so/dissent/internal/gresources"
 	"libdb.so/dissent/internal/gtkcord"
 	"libdb.so/dissent/internal/window"
 	"libdb.so/dissent/internal/window/about"
-	"libdb.so/dissent/internal/gresources"
 
 	_ "github.com/diamondburned/gotkit/gtkutil/aggressivegc"
 	_ "libdb.so/dissent/internal/icons"
@@ -37,24 +36,6 @@ func init() {
 var Version string
 
 func init() { about.SetVersion(Version) }
-
-var _ = cssutil.WriteCSS(`
-	window.background,
-	window.background.solid-csd {
-		background-color: @theme_bg_color;
-	}
-
-	avatar > image {
-		background: none;
-	}
-	avatar > label {
-		background: @borders;
-	}
-
-	.md-textblock {
-		line-height: 1.35em;
-	}
-`)
 
 func init() {
 	app.Hook(func(*app.Application) {
@@ -104,6 +85,13 @@ func (m *manager) activate(ctx context.Context) {
 	}
 
 	m.win = window.NewWindow(ctx)
+
+	// Load styles.css
+	cssErr := gresources.LoadStyles("styles.css")
+	if cssErr != nil {
+		app.Error(ctx, cssErr)
+	}
+
 	m.win.Present()
 
 	prefs.AsyncLoadSaved(ctx, func(err error) {

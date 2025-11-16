@@ -208,31 +208,6 @@ func formatSummary(state *gtkcord.State, guildID discord.GuildID, summary gatewa
 	return markups
 }
 
-var _ = cssutil.WriteCSS(`
-	.message-summaries-popover list {
-		background-color: transparent;
-	}
-	.message-summaries-popover > contents {
-		padding: 0;
-	}
-	.message-summary-item:first-child {
-		margin-top: 0.5em;
-	}
-	.message-summary-item:last-child {
-		margin-bottom: 0.5em;
-	}
-	.message-summary-item {
-		padding: 0.25em 0.5em;
-		margin: 0.25em 0;
-	}
-	.message-summary-item:not(:last-child) {
-		border-bottom: 1px solid @borders;
-	}
-	.message-summary-item label:nth-child(2) {
-		margin-top: 0.1em;
-	}
-`)
-
 func (v *View) initSummariesPopover(popover *gtk.Popover) bool {
 	popover.AddCSSClass("message-summaries-popover")
 	popover.SetOverflow(gtk.OverflowHidden)

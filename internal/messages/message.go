@@ -25,44 +25,6 @@ import (
 	"libdb.so/dissent/internal/gtkcord"
 )
 
-var _ = cssutil.WriteCSS(`
-	.message-box {
-		border: 2px solid transparent;
-		transition: linear 150ms background-color;
-	}
-	row:focus .message-box,
-	row:hover .message-box {
-		transition: none;
-	}
-	row:focus .message-box {
-		background-color: alpha(@theme_fg_color, 0.125);
-	}
-	row:hover .message-box {
-		background-color: alpha(@theme_fg_color, 0.075);
-	}
-	.message-box.message-editing,
-	.message-box.message-replying {
-		background-color: alpha(@theme_selected_bg_color, 0.15);
-		border-color: alpha(@theme_selected_bg_color, 0.55);
-	}
-	.message-box.message-sending {
-		opacity: 0.65;
-	}
-	.message-box.message-first-prepended {
-		border-bottom: 1.5px dashed alpha(@theme_fg_color, 0.25);
-		padding-bottom: 2.5px;
-	}
-	.message-mentioned {
-		border-left: 2px solid @mentioned;
-		border-top: 0;
-		border-bottom: 0;
-		background: alpha(@mentioned, 0.075);
-	}
-	row:hover .message-mentioned {
-		background: alpha(@mentioned, 0.125);
-	}
-`)
-
 // ExtraMenuSetter is an interface for types that implement SetExtraMenu.
 type ExtraMenuSetter interface {
 	SetExtraMenu(gio.MenuModeller)

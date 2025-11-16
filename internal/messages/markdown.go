@@ -11,7 +11,6 @@ import (
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/components/onlineimage"
-	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/imgutil"
 	"github.com/diamondburned/gotkit/gtkutil/textutil"
 	"github.com/diamondburned/ningen/v3/discordmd"
@@ -82,15 +81,6 @@ var htmlTagMap = map[discordmd.Attribute]string{
 	discordmd.AttrStrikethrough: "strike",
 	discordmd.AttrMonospace:     "code",
 }
-
-var _ = cssutil.WriteCSS(`
-	.md-spoiler {
-		color: mix(@theme_bg_color, black, 0.11);
-	}
-	.md-spoiler.dark {
-		color: mix(@theme_bg_color, black, 0.85);
-	}
-`)
 
 func getSpoilerColor(state *block.ContainerState, alpha float32) string {
 	l := gtk.NewLabel("")
