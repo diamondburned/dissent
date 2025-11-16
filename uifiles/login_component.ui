@@ -15,22 +15,158 @@
             <property name="hexpand">True</property>
             <property name="vexpand">True</property>
             <child>
-              <object class="AdwStatusPage">
-                <property name="child">
-                  <object class="GtkButton" id="LoginCarouselButton">
-                    <property name="halign">center</property>
-                    <property name="label">Get started</property>
-                    <style>
-                      <class name="pill"/>
-                      <class name="suggested-action"/>
-                    </style>
-                  </object>
-                </property>
-                <property name="description">The lightweight Discord client for your GNOME desktop</property>
+              <object class="AdwViewStack" id="GreeterStack">
                 <property name="hexpand">True</property>
-                <property name="icon-name">so.libdb.dissent</property>
-                <property name="title">Welcome to Dissent</property>
                 <property name="vexpand">True</property>
+                <child>
+                  <object class="AdwViewStackPage">
+                    <property name="child">
+                      <object class="AdwStatusPage">
+                        <property name="child">
+                          <object class="GtkButton">
+                            <property name="action-name">win.login-page</property>
+                            <property name="halign">center</property>
+                            <property name="label">Get started</property>
+                            <style>
+                              <class name="pill"/>
+                              <class name="suggested-action"/>
+                            </style>
+                          </object>
+                        </property>
+                        <property name="description">The lightweight Discord client for your GNOME desktop</property>
+                        <property name="icon-name">so.libdb.dissent</property>
+                        <property name="title">Welcome to Dissent</property>
+                      </object>
+                    </property>
+                    <property name="name">welcomePage</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwViewStackPage">
+                    <property name="child">
+                      <object class="AdwStatusPage">
+                        <property name="child">
+                          <object class="GtkBox">
+                            <property name="halign">center</property>
+                            <property name="spacing">20</property>
+                            <child>
+                              <object class="GtkButton" id="Decrypt">
+                                <property name="child">
+                                  <object class="AdwButtonContent">
+                                    <property name="icon-name">key-login-symbolic</property>
+                                    <property name="label">Decrypt</property>
+                                  </object>
+                                </property>
+                                <property name="halign">center</property>
+                                <style>
+                                  <class name="pill"/>
+                                  <class name="suggested-action"/>
+                                </style>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkButton">
+                                <property name="action-name">win.login-page</property>
+                                <property name="child">
+                                  <object class="AdwButtonContent">
+                                    <property name="icon-name">document-edit-symbolic</property>
+                                    <property name="label">Change login</property>
+                                  </object>
+                                </property>
+                                <property name="halign">center</property>
+                                <style>
+                                  <class name="pill"/>
+                                </style>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                        <property name="description">You've previously chosen to remember the token and may have used a password to encrypt it</property>
+                        <property name="icon-name">padlock2-symbolic</property>
+                        <property name="title">Login data is encrypted</property>
+                        <style/>
+                      </object>
+                    </property>
+                    <property name="name">encryptedPrompt</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwViewStackPage">
+                    <property name="child">
+                      <object class="AdwStatusPage">
+                        <property name="child">
+                          <object class="GtkBox">
+                            <property name="halign">center</property>
+                            <property name="spacing">20</property>
+                            <child>
+                              <object class="GtkButton">
+                                <property name="child">
+                                  <object class="AdwButtonContent">
+                                    <property name="icon-name">view-refresh</property>
+                                    <property name="label">Retry</property>
+                                  </object>
+                                </property>
+                                <property name="halign">center</property>
+                                <style>
+                                  <class name="pill"/>
+                                  <class name="suggested-action"/>
+                                </style>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkButton">
+                                <property name="action-name">win.login-page</property>
+                                <property name="child">
+                                  <object class="AdwButtonContent">
+                                    <property name="icon-name">document-edit-symbolic</property>
+                                    <property name="label">Change</property>
+                                  </object>
+                                </property>
+                                <property name="halign">center</property>
+                                <style>
+                                  <class name="pill"/>
+                                </style>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                        <property name="description">Discord rejected the connection</property>
+                        <property name="icon-name">key3-symbolic</property>
+                        <property name="title">Login error</property>
+                        <style/>
+                      </object>
+                    </property>
+                    <property name="name">invalid_httpcode</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwViewStackPage">
+                    <property name="child">
+                      <object class="AdwStatusPage">
+                        <property name="child">
+                          <object class="GtkButton">
+                            <property name="child">
+                              <object class="AdwButtonContent">
+                                <property name="icon-name">view-refresh</property>
+                                <property name="label">Retry</property>
+                              </object>
+                            </property>
+                            <property name="halign">center</property>
+                            <style>
+                              <class name="pill"/>
+                              <class name="suggested-action"/>
+                            </style>
+                          </object>
+                        </property>
+                        <property name="description">Please check you network settings and try again</property>
+                        <property name="icon-name">network-wireless-disabled-symbolic</property>
+                        <property name="title">No Internet connection</property>
+                        <style/>
+                      </object>
+                    </property>
+                    <property name="name">network_error</property>
+                  </object>
+                </child>
               </object>
             </child>
             <child>
@@ -120,17 +256,6 @@
                             <property name="margin-top">15</property>
                             <property name="spacing">20</property>
                             <child>
-                              <object class="GtkButton" id="Decrypt">
-                                <property name="label">Decrypt (?)</property>
-                                <property name="sensitive">False</property>
-                                <property name="tooltip-text">You've previously chosen to remember the token and may have used a password to encrypt it.
-This button unlocks that encrypted token and logs in using it.</property>
-                                <style>
-                                  <class name="pill"/>
-                                </style>
-                              </object>
-                            </child>
-                            <child>
                               <object class="GtkCheckButton" id="Remember">
                                 <property name="label">Remember</property>
                               </object>
@@ -217,82 +342,6 @@ This button unlocks that encrypted token and logs in using it.</property>
           </object>
         </property>
         <property name="name">loader</property>
-      </object>
-    </child>
-    <child>
-      <object class="AdwViewStackPage">
-        <property name="child">
-          <object class="AdwStatusPage">
-            <property name="child">
-              <object class="GtkBox">
-                <property name="halign">center</property>
-                <property name="spacing">20</property>
-                <child>
-                  <object class="GtkButton">
-                    <property name="child">
-                      <object class="AdwButtonContent">
-                        <property name="icon-name">view-refresh</property>
-                        <property name="label">Retry</property>
-                      </object>
-                    </property>
-                    <property name="halign">center</property>
-                    <style>
-                      <class name="pill"/>
-                      <class name="suggested-action"/>
-                    </style>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkButton">
-                    <property name="child">
-                      <object class="AdwButtonContent">
-                        <property name="icon-name">document-edit-symbolic</property>
-                        <property name="label">Change</property>
-                      </object>
-                    </property>
-                    <property name="halign">center</property>
-                    <style>
-                      <class name="pill"/>
-                    </style>
-                  </object>
-                </child>
-              </object>
-            </property>
-            <property name="description">Discord rejected the connection</property>
-            <property name="icon-name">key3-symbolic</property>
-            <property name="title">Login error</property>
-            <style/>
-          </object>
-        </property>
-        <property name="name">invalid_httpcode</property>
-      </object>
-    </child>
-    <child>
-      <object class="AdwViewStackPage">
-        <property name="child">
-          <object class="AdwStatusPage">
-            <property name="child">
-              <object class="GtkButton">
-                <property name="child">
-                  <object class="AdwButtonContent">
-                    <property name="icon-name">view-refresh</property>
-                    <property name="label">Retry</property>
-                  </object>
-                </property>
-                <property name="halign">center</property>
-                <style>
-                  <class name="pill"/>
-                  <class name="suggested-action"/>
-                </style>
-              </object>
-            </property>
-            <property name="description">Please check you network settings and try again</property>
-            <property name="icon-name">network-wireless-disabled-symbolic</property>
-            <property name="title">No Internet connection</property>
-            <style/>
-          </object>
-        </property>
-        <property name="name">network_error</property>
       </object>
     </child>
   </object>
