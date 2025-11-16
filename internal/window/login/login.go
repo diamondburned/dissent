@@ -115,7 +115,7 @@ func (p *Page) asyncUseToken(token string) {
 			case httputil.RequestError:
 				return func() {
 					p.ctrl.PromptLoginNoFocus()
-					p.Login.GreetNetworkError(err)
+					p.Login.GreetNetworkError()
 				}
 			// In case we'd want to improve the login error handling
 			// case httputil.HTTPError:
