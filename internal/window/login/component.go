@@ -25,12 +25,13 @@ type Component struct {
 	Inner *gtk.Box
 
 	//	Loading  *loading.PulsatingBar
-	Methods       *Methods
-	Bottom        *gtk.Box
-	Remember      *rememberMeBox
-	ErrorRev      *adw.Banner
-	LogIn         *gtk.Button
-	LoadInfoLabel *gtk.Label
+	Methods             *Methods
+	Bottom              *gtk.Box
+	Remember            *rememberMeBox
+	ErrorRev            *adw.Banner
+	LogIn               *gtk.Button
+	LoadInfoLabel       *gtk.Label
+	NetErrorRetryButton *gtk.Button
 
 	loginCarousel         *adw.Carousel
 	greeterStack          *adw.ViewStack
@@ -138,6 +139,8 @@ func NewComponent(ctx context.Context, p *Page) *Component {
 		}
 	})
 
+	c.NetErrorRetryButton = c.uiFile.GetComponent("NetErrorRetryButton").(*gtk.Button)
+
 	// c.Inner = gtk.NewBox(gtk.OrientationVertical, 0)
 	// c.Inner.Append(loginWith)
 	// c.Inner.Append(c.Methods)
@@ -171,6 +174,16 @@ func (c *Component) ShowError(err error) {
 	c.ErrorRev.SetTitle(err.Error())
 	c.ErrorRev.SetRevealed(true)
 }
+
+func (c *Component) GreetNetworkError() {
+	c.greeterStack.SetVisibleChildName("network_error")
+	// c.ShowError(err) // Useless because we show a custom message on the greeter
+}
+
+// func (c *Component) GreetHTTPError(err error) {
+// 	c.greeterStack.SetVisibleChildName("invalid_httpcode")
+// 	c.ShowError(err)
+// }
 
 // HideError hides the error label.
 func (c *Component) HideError() {

@@ -5,6 +5,6 @@
   <gresources filename="uifiles.gresource.xml" sha256="f846f442c6e62cdb024d2fea923faa288dbf39ceb9be6ebbb83fbb55f8961352"/>
   <ui filename="window.ui" sha256="40f878740aca6482572200c86050dc4c96ddf7cd6b2247312c5251b4f048b135"/>
   <ui filename="login.ui" sha256="2722806d0b1b0070c0b2820588a44431dbf31ca3c8db3d7e396ff69b7d1360aa"/>
-  <ui filename="login_component.ui" sha256="7aa970bf8378e4e4f1dfbf0ed6fe908739a00f1a38860fdc05bdc5c8fc1a3ecb"/>
+  <ui filename="login_component.ui" sha256="079257bbf6105dc80a23536888333be0438b12c2bade738614d3ee8756a041ac"/>
   <ui filename="gtk/help-overlay.ui" sha256="139c4440d6cd5f5df9622bbbd3501387070167db867c6d6b003003f5a0e40934"/>
 </cambalache-project>
