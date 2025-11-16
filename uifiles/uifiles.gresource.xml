@@ -1,7 +1,8 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version='1.0' encoding='UTF-8' ?>
 <!-- Created with Cambalache 0.96.1 -->
 <gresources>
   <gresource prefix="/so/libdb/dissent">
+    <file>styles.css</file>
     <file preprocess="xml-stripblanks">login.ui</file>
     <file preprocess="xml-stripblanks">login_component.ui</file>
     <file preprocess="xml-stripblanks">gtk/help-overlay.ui</file>

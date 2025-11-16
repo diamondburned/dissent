@@ -2,12 +2,15 @@ package gresources
 
 import (
 	_ "embed"
+	"errors"
 	"log"
 
+	"github.com/diamondburned/gotk4/pkg/gdk/v4"
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
-	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
+	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 )
+
 //go:generate glib-compile-resources --sourcedir=../../uifiles/ --target=uifiles.gresource ../../uifiles/uifiles.gresource.xml
 
 //go:embed uifiles.gresource
@@ -26,7 +29,6 @@ func (ui *UiFile) GetRoot() glib.Objector {
 	return ui.GetComponent("rootContent")
 }
 
-
 func Init() bool {
 	resources, err := gio.NewResourceFromData(glib.NewBytesWithGo(Resources))
 	if err != nil {
@@ -39,4 +41,16 @@ func Init() bool {
 
 func New(filename string) *UiFile {
 	return &UiFile{gtk.NewBuilderFromResource(resourcePath + "/" + filename)}
+}
+
+func LoadStyles(cssFile string) error {
+	display := gdk.DisplayGetDefault()
+	if display == nil {
+		return errors.New("Unable to apply " + cssFile + " : Could not get default display")
+	}
+	provider := gtk.NewCSSProvider()
+	provider.LoadFromResource(resourcePath + "/" + cssFile)
+
+	gtk.StyleContextAddProviderForDisplay(display, provider, uint(gtk.STYLE_PROVIDER_PRIORITY_APPLICATION))
+	return nil
 }
