@@ -137,6 +137,11 @@ func (w *loginWindow) Connected() {
 }
 
 func (w *loginWindow) PromptLogin() {
+	w.PromptLoginNoFocus()
+	w.Login.Login.ShowLoginPage()
+}
+
+func (w *loginWindow) PromptLoginNoFocus() {
 	w.Login.Login.SetDone()
 	w.Window.SwitchToLoginPage()
 }

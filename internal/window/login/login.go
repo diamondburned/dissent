@@ -5,14 +5,15 @@ import (
 	"log/slog"
 
 	"github.com/diamondburned/arikawa/v3/state"
+	"github.com/diamondburned/arikawa/v3/utils/httputil"
 	"github.com/diamondburned/chatkit/kits/secret"
-	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
+	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/pkg/errors"
-	"libdb.so/dissent/internal/gtkcord"
 	"libdb.so/dissent/internal/gresources"
+	"libdb.so/dissent/internal/gtkcord"
 )
 
 // LoginController is the parent controller that Page controls.
@@ -28,6 +29,7 @@ type LoginController interface {
 	// again, either because their credentials are wrong or Discord returns a
 	// server error.
 	PromptLogin()
+	PromptLoginNoFocus()
 }
 
 // Page is the page containing the login forms.
@@ -65,6 +67,8 @@ func NewPage(ctx context.Context, ctrl LoginController) *Page {
 	p.ToolbarView = uiFile.GetRoot().(*adw.ToolbarView)
 	p.Login = NewComponent(ctx, &p)
 	p.ToolbarView.SetContent(p.Login)
+
+	p.Login.NetErrorRetryButton.ConnectClicked(p.LoadKeyring)
 
 	return &p
 }
@@ -107,9 +111,23 @@ func (p *Page) asyncUseToken(token string) {
 
 	gtkutil.Async(p.ctx, func() func() {
 		if err := state.Open(p.ctx); err != nil {
-			return func() {
-				p.ctrl.PromptLogin()
-				p.Login.ShowError(errors.Wrap(err, "cannot open session"))
+			switch errors.Unwrap(err).(type) {
+			case httputil.RequestError:
+				return func() {
+					p.ctrl.PromptLoginNoFocus()
+					p.Login.GreetNetworkError(err)
+				}
+			// In case we'd want to improve the login error handling
+			// case httputil.HTTPError:
+			// 	return func() {
+			// 		p.ctrl.PromptLoginNoFocus()
+			// 		p.Login.GreetHTTPError(err)
+			// 	}
+			default:
+				return func() {
+					p.ctrl.PromptLogin()
+					p.Login.ShowError(errors.Wrap(err, "cannot open session"))
+				}
 			}
 		}
 

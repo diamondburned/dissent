@@ -13,6 +13,7 @@
             <property name="allow-mouse-drag">False</property>
             <property name="allow-scroll-wheel">False</property>
             <property name="hexpand">True</property>
+            <property name="interactive">False</property>
             <property name="vexpand">True</property>
             <child>
               <object class="AdwViewStack" id="GreeterStack">
@@ -99,7 +100,7 @@
                             <property name="halign">center</property>
                             <property name="spacing">20</property>
                             <child>
-                              <object class="GtkButton">
+                              <object class="GtkButton" id="HTTPErrorRetryButton">
                                 <property name="child">
                                   <object class="AdwButtonContent">
                                     <property name="icon-name">view-refresh</property>
@@ -144,7 +145,7 @@
                     <property name="child">
                       <object class="AdwStatusPage">
                         <property name="child">
-                          <object class="GtkButton">
+                          <object class="GtkButton" id="NetErrorRetryButton">
                             <property name="child">
                               <object class="AdwButtonContent">
                                 <property name="icon-name">view-refresh</property>
