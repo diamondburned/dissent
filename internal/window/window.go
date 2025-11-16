@@ -46,10 +46,10 @@ type Window struct {
 	win *app.Window
 	ctx context.Context
 
-	Stack   *gtk.Stack
-	Login   *login.Page
+	Stack *gtk.Stack
+	Login *login.Page
 	// Loading *login.LoadingPage
-	Chat    *ChatPage
+	Chat *ChatPage
 }
 
 // NewWindow creates a new Window.
@@ -72,6 +72,10 @@ func NewWindow(ctx context.Context) *Window {
 
 	w.Login = login.NewPage(ctx, &loginWindow{Window: &w})
 	w.Login.LoadKeyring()
+
+	gtkutil.AddActions(w, map[string]func(){
+		"login-page": func() { w.Login.Login.ShowLoginPage() },
+	})
 
 	// w.Loading = login.NewLoadingPage(ctx)
 

@@ -8,12 +8,13 @@ import (
 	"github.com/diamondburned/arikawa/v3/session"
 	"github.com/diamondburned/chatkit/components/secretdialog"
 	"github.com/diamondburned/chatkit/kits/secret"
-	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
+	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/pkg/errors"
+
 	//"libdb.so/dissent/internal/window/login/loading"
 	"libdb.so/dissent/internal/gresources"
 )
@@ -23,18 +24,21 @@ type Component struct {
 	*adw.ViewStack
 	Inner *gtk.Box
 
-//	Loading  *loading.PulsatingBar
-	Methods  *Methods
-	Bottom   *gtk.Box
-	Remember *rememberMeBox
-	ErrorRev *adw.Banner
-	LogIn    *gtk.Button
+	//	Loading  *loading.PulsatingBar
+	Methods       *Methods
+	Bottom        *gtk.Box
+	Remember      *rememberMeBox
+	ErrorRev      *adw.Banner
+	LogIn         *gtk.Button
 	LoadInfoLabel *gtk.Label
 
-	uiFile   *gresources.UiFile
+	loginCarousel         *adw.Carousel
+	greeterStack          *adw.ViewStack
+	loginCarouselTarget   *adw.ToolbarView
+	uiFile                *gresources.UiFile
 	pageNameBeforeLoading string
-	ctx  context.Context
-	page *Page
+	ctx                   context.Context
+	page                  *Page
 }
 
 var componentCSS = cssutil.Applier("login-component", `
@@ -92,6 +96,7 @@ func NewComponent(ctx context.Context, p *Page) *Component {
 
 	c.uiFile = gresources.New("login_component.ui")
 	c.ViewStack = c.uiFile.GetRoot().(*adw.ViewStack)
+	c.greeterStack = c.uiFile.GetComponent("GreeterStack").(*adw.ViewStack)
 	c.LoadInfoLabel = c.uiFile.GetComponent("LoaderLabel").(*gtk.Label)
 
 	//c.Loading = loading.NewPulsatingBar(loading.PulseFast | loading.PulseBarOSD)
@@ -127,9 +132,9 @@ func NewComponent(ctx context.Context, p *Page) *Component {
 
 	gtkutil.Async(ctx, func() func() {
 		if secret.IsEncrypted(ctx) {
-			return func() { decrypt.SetSensitive(true) }
+			return func() { c.greeterStack.SetVisibleChildName("encryptedPrompt") }
 		} else {
-			return func() { decrypt.Hide() }
+			return func() { c.greeterStack.SetVisibleChildName("welcomePage") }
 		}
 	})
 
@@ -148,14 +153,14 @@ func NewComponent(ctx context.Context, p *Page) *Component {
 	// c.Box.Append(c.Loading)
 	// c.Box.Append(c.Inner)
 
-	loginCarousel := c.uiFile.GetComponent("LoginCarousel").(*adw.Carousel)
-	loginCarouselTarget := c.uiFile.GetComponent("LoginCarouselTarget").(*adw.ToolbarView)
-	loginCarouselButton := c.uiFile.GetComponent("LoginCarouselButton").(*gtk.Button)
-	loginCarouselButton.ConnectClicked(func() {
-		loginCarousel.ScrollTo(loginCarouselTarget, true)
-	})
+	c.loginCarousel = c.uiFile.GetComponent("LoginCarousel").(*adw.Carousel)
+	c.loginCarouselTarget = c.uiFile.GetComponent("LoginCarouselTarget").(*adw.ToolbarView)
 
 	return &c
+}
+
+func (c *Component) ShowLoginPage() {
+	c.loginCarousel.ScrollTo(c.loginCarouselTarget, true)
 }
 
 // ShowError reveals the error label and shows it to the user.
@@ -264,7 +269,7 @@ type Methods struct {
 		*gtk.Box
 		Token *adw.PasswordEntryRow
 	}
-	AuthTabs     *adw.ToggleGroup
+	AuthTabs *adw.ToggleGroup
 }
 
 var methodsCSS = cssutil.Applier("login-methods", `
