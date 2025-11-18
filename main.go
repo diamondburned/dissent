@@ -87,10 +87,7 @@ func (m *manager) activate(ctx context.Context) {
 	m.win = window.NewWindow(ctx)
 
 	// Load styles.css
-	cssErr := gresources.LoadStyles("styles.css")
-	if cssErr != nil {
-		app.Error(ctx, cssErr)
-	}
+	gresources.LoadStyles("styles.css")
 
 	m.win.Present()
 
