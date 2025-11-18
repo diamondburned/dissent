@@ -14,6 +14,13 @@
             <property name="title" translatable="yes">General</property>
             <child>
               <object class="GtkShortcutsShortcut">
+                <property name="accelerator">&lt;Ctrl&gt;comma</property>
+                <property name="action-name">app.preferences</property>
+                <property name="title" translatable="yes">Preferences</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkShortcutsShortcut">
                 <property name="accelerator">&lt;Ctrl&gt;question</property>
                 <property name="action-name">win.show-help-overlay</property>
                 <property name="title" translatable="yes">Show Shortcuts</property>
@@ -34,8 +41,20 @@
             <child>
               <object class="GtkShortcutsShortcut">
                 <property name="accelerator">&lt;Ctrl&gt;K</property>
-                <property name="action-name">win.show-help-overlay</property>
+                <property name="action-name">app.quick-switcher</property>
                 <property name="title" translatable="yes">Open Quick Switcher</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkShortcutsGroup">
+            <property name="title" translatable="yes">Information</property>
+            <child>
+              <object class="GtkShortcutsShortcut">
+                <property name="accelerator">&lt;Ctrl&gt;&lt;Shift&gt;D</property>
+                <property name="action-name">win.logs</property>
+                <property name="title" translatable="yes">Open Logs</property>
               </object>
             </child>
           </object>
