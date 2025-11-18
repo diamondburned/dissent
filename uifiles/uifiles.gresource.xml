@@ -7,5 +7,6 @@
     <file preprocess="xml-stripblanks">login_component.ui</file>
     <file preprocess="xml-stripblanks">gtk/help-overlay.ui</file>
     <file preprocess="xml-stripblanks">sidebar.ui</file>
+    <file preprocess="xml-stripblanks">quickswitcher.ui</file>
   </gresource>
 </gresources>

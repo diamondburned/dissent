@@ -2,9 +2,9 @@
 <!-- Created with Cambalache 0.96.1 -->
 <interface>
   <!-- interface-name sidebar.ui -->
+  <requires lib="gio" version="2.0"/>
   <requires lib="gtk" version="4.18"/>
   <requires lib="libadwaita" version="1.4"/>
-  <requires lib="gio" version="2.0"/>
   <object class="GtkBox" id="rootContent">
     <child>
       <object class="GtkBox" id="Left">

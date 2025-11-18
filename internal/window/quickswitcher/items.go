@@ -2,26 +2,39 @@ package quickswitcher
 
 import (
 	"context"
+	"html"
 
 	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
-	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/components/onlineimage"
-	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/imgutil"
 	"libdb.so/dissent/internal/gtkcord"
 	"libdb.so/dissent/internal/sidebar/channels"
 )
 
-type indexItem interface {
-	Row(context.Context) *gtk.ListBoxRow
+// TODO : ABSOLUTE MESS TO REFACTOR
+type channelIndexItem interface {
 	String() string
+	ChannelID() discord.ChannelID
+	Row(context.Context) *gtk.ListBoxRow
+}
+type guildIndexItem interface {
+	String() string
+	GuildID() discord.GuildID
+	QSItem(context.Context) *gtk.Button
 }
 
-type indexItems []indexItem
+type guildIndexItems []guildIndexItem
+type channelIndexItems []channelIndexItem
 
-func (its indexItems) String(i int) string { return its[i].String() }
-func (its indexItems) Len() int            { return len(its) }
+func (its guildIndexItems) String(i int) string { return its[i].String() }
+func (its guildIndexItems) Len() int            { return len(its) }
+
+func (its channelIndexItems) String(i int) string { return its[i].String() }
+func (its channelIndexItems) Len() int            { return len(its) }
+
+// ========================
 
 type channelItem struct {
 	*discord.Channel
@@ -70,28 +83,8 @@ func newChannelItem(state *gtkcord.State, guild *discord.Guild, ch *discord.Chan
 	return item
 }
 
-func (it channelItem) String() string { return it.search }
-
-var channelCSS = cssutil.Applier("quickswitcher-channel", `
-	.quickswitcher-channel-icon {
-		margin: 2px 8px;
-		min-width:  {$inline_emoji_size};
-		min-height: {$inline_emoji_size};
-	}
-	.quickswitcher-channel-hash {
-		padding: 0px;
-	}
-	.quickswitcher-channel-image {
-		margin-right: 12px;
-	}
-	.quickswitcher-channel-guildname {
-		font-size: 0.85em;
-		color: alpha(@theme_fg_color, 0.75);
-		margin: 4px;
-		margin-left: 18px;
-		margin-bottom: calc(4px - 0.1em);
-	}
-`)
+func (it channelItem) String() string               { return it.search }
+func (it channelItem) ChannelID() discord.ChannelID { return it.ID }
 
 func (it channelItem) Row(ctx context.Context) *gtk.ListBoxRow {
 	tooltip := it.name
@@ -99,20 +92,35 @@ func (it channelItem) Row(ctx context.Context) *gtk.ListBoxRow {
 		tooltip += " (" + it.guild.Name + ")"
 	}
 
-	box := gtk.NewBox(gtk.OrientationHorizontal, 0)
+	box := adw.NewActionRow()
+	right_arrow := gtk.NewImage()
+	right_arrow.SetFromIconName("go-next")
+
+	box.SetTitle(html.EscapeString(it.name))
+	if it.guild != nil {
+		box.SetSubtitle(html.EscapeString(it.guild.Name))
+
+		guildIcon := onlineimage.NewAvatar(ctx, imgutil.HTTPProvider, gtkcord.InlineEmojiSize)
+		guildIcon.SetText(html.EscapeString(it.guild.Name))
+		guildIcon.SetFromURL(it.guild.IconURL())
+		box.AddSuffix(guildIcon)
+	} else {
+		box.SetSubtitle("<i>Direct Message</i>")
+	}
+
+	box.AddSuffix(right_arrow)
 
 	row := gtk.NewListBoxRow()
 	row.SetTooltipText(tooltip)
 	row.SetChild(box)
-	channelCSS(row)
 
 	switch it.Type {
 	case discord.DirectMessage, discord.GroupDM:
-		icon := onlineimage.NewAvatar(ctx, imgutil.HTTPProvider, gtkcord.InlineEmojiSize)
+		icon := onlineimage.NewAvatar(ctx, imgutil.HTTPProvider, gtkcord.ChannelIconSize)
 		icon.AddCSSClass("quickswitcher-channel-icon")
 		icon.AddCSSClass("quickswitcher-channel-image")
 		icon.SetHAlign(gtk.AlignCenter)
-		icon.SetText(it.name)
+		icon.SetText(html.EscapeString(it.name))
 		if len(it.DMRecipients) == 1 {
 			icon.SetFromURL(gtkcord.InjectAvatarSize(it.DMRecipients[0].AvatarURL()))
 		}
@@ -120,7 +128,7 @@ func (it channelItem) Row(ctx context.Context) *gtk.ListBoxRow {
 		anim := icon.EnableAnimation()
 		anim.ConnectMotion(row) // TODO: I wonder if this causes memory leaks.
 
-		box.Append(icon)
+		box.AddPrefix(icon)
 	default:
 		icon := channels.NewChannelIcon(it.Channel, func(t discord.ChannelType) (string, bool) {
 			_, isThread := threadTypes[t]
@@ -131,25 +139,8 @@ func (it channelItem) Row(ctx context.Context) *gtk.ListBoxRow {
 		icon.AddCSSClass("quickswitcher-channel-hash")
 		icon.SetHAlign(gtk.AlignCenter)
 
-		box.Append(icon)
+		box.AddPrefix(icon)
 	}
-
-	name := gtk.NewLabel(it.name)
-	name.AddCSSClass("quickswitcher-channel-name")
-	name.SetHExpand(true)
-	name.SetXAlign(0)
-	name.SetEllipsize(pango.EllipsizeEnd)
-
-	box.Append(name)
-
-	if it.guild != nil {
-		guildName := gtk.NewLabel(it.guild.Name)
-		guildName.AddCSSClass("quickswitcher-channel-guildname")
-		guildName.SetEllipsize(pango.EllipsizeEnd)
-
-		box.Append(guildName)
-	}
-
 	return row
 }
 
@@ -163,38 +154,23 @@ func newGuildItem(guild *discord.Guild) guildItem {
 	}
 }
 
-func (it guildItem) String() string { return it.Name }
+func (it guildItem) String() string           { return it.Name }
+func (it guildItem) GuildID() discord.GuildID { return it.ID }
 
-var guildCSS = cssutil.Applier("quickswitcher-guild", `
-	.quickswitcher-guild-icon {
-		margin: 2px 8px;
-		min-width:  {$inline_emoji_size};
-		min-height: {$inline_emoji_size};
-	}
-`)
+func (it guildItem) QSItem(ctx context.Context) *gtk.Button {
+	row := gtk.NewButton()
 
-func (it guildItem) Row(ctx context.Context) *gtk.ListBoxRow {
-	row := gtk.NewListBoxRow()
-	guildCSS(row)
-
-	icon := onlineimage.NewAvatar(ctx, imgutil.HTTPProvider, gtkcord.InlineEmojiSize)
-	icon.AddCSSClass("quickswitcher-guild-icon")
-	icon.SetText(it.Name)
+	icon := onlineimage.NewAvatar(ctx, imgutil.HTTPProvider, gtkcord.GuildIconSize)
+	icon.SetText(html.EscapeString(it.Name))
 	icon.SetFromURL(it.IconURL())
-	icon.SetHAlign(gtk.AlignCenter)
 
 	anim := icon.EnableAnimation()
 	anim.ConnectMotion(row)
 
-	name := gtk.NewLabel(it.Name)
-	name.AddCSSClass("quickswitcher-guild-name")
-	name.SetHExpand(true)
-	name.SetXAlign(0)
-
-	box := gtk.NewBox(gtk.OrientationHorizontal, 0)
-	box.Append(icon)
-	box.Append(name)
-
-	row.SetChild(box)
+	row.SetSizeRequest(48, 48)
+	row.SetVAlign(gtk.AlignCenter)
+	row.SetHAlign(gtk.AlignCenter)
+	row.AddCSSClass("circular")
+	row.SetChild(icon)
 	return row
 }

@@ -12,11 +12,14 @@ import (
 )
 
 type index struct {
-	items  indexItems
-	buffer indexItems
+	channelItems  channelIndexItems
+	guildItems    guildIndexItems
+	channelBuffer channelIndexItems
+	guildBuffer   guildIndexItems
 }
 
-const searchLimit = 25
+const channelsSearchLimit = 15
+const guildSearchLimit = 10
 
 var excludedChannelTypes = []discord.ChannelType{
 	discord.GuildCategory,
@@ -32,7 +35,8 @@ var allowedChannelTypes = slices.DeleteFunc(
 
 func (idx *index) update(ctx context.Context) {
 	state := gtkcord.FromContext(ctx).Offline()
-	items := make([]indexItem, 0, 250)
+	guildItems := make([]guildIndexItem, 0, 250)
+	channelItems := make([]channelIndexItem, 0, 250)
 
 	dms, err := state.PrivateChannels()
 	if err != nil {
@@ -41,7 +45,7 @@ func (idx *index) update(ctx context.Context) {
 	}
 
 	for i := range dms {
-		items = append(items, newChannelItem(state, nil, &dms[i]))
+		channelItems = append(channelItems, newChannelItem(state, nil, &dms[i]))
 	}
 
 	guilds, err := state.Guilds()
@@ -61,29 +65,43 @@ func (idx *index) update(ctx context.Context) {
 			continue
 		}
 
-		items = append(items, newGuildItem(&guilds[i]))
+		guildItems = append(guildItems, newGuildItem(&guilds[i]))
 		for j := range chs {
-			items = append(items, newChannelItem(state, &guilds[i], &chs[j]))
+			channelItems = append(channelItems, newChannelItem(state, &guilds[i], &chs[j]))
 		}
 	}
 
-	idx.items = items
+	idx.guildItems = guildItems
+	idx.channelItems = channelItems
 }
 
-func (idx *index) search(str string) []indexItem {
-	if idx.items == nil {
-		return nil
+func (idx *index) search(str string) ([]channelIndexItem, []guildIndexItem) {
+
+	if idx.channelItems != nil {
+		idx.channelBuffer = idx.channelBuffer[:0]
+		if idx.channelBuffer == nil {
+			idx.channelBuffer = make([]channelIndexItem, 0, channelsSearchLimit)
+		}
+		channelMatches := fuzzy.FindFrom(str, idx.channelItems)
+		for i := 0; i < len(channelMatches) && i < channelsSearchLimit; i++ {
+			idx.channelBuffer = append(idx.channelBuffer, idx.channelItems[channelMatches[i].Index])
+		}
+	} else {
+		idx.channelBuffer = nil
 	}
 
-	idx.buffer = idx.buffer[:0]
-	if idx.buffer == nil {
-		idx.buffer = make([]indexItem, 0, searchLimit)
+	if idx.guildItems != nil {
+		idx.guildBuffer = idx.guildBuffer[:0]
+		if idx.guildBuffer == nil {
+			idx.guildBuffer = make([]guildIndexItem, 0, channelsSearchLimit)
+		}
+		guildMatches := fuzzy.FindFrom(str, idx.guildItems)
+		for i := 0; i < len(guildMatches) && i < guildSearchLimit; i++ {
+			idx.guildBuffer = append(idx.guildBuffer, idx.guildItems[guildMatches[i].Index])
+		}
+	} else {
+		idx.guildBuffer = nil
 	}
 
-	matches := fuzzy.FindFrom(str, idx.items)
-	for i := 0; i < len(matches) && i < searchLimit; i++ {
-		idx.buffer = append(idx.buffer, idx.items[matches[i].Index])
-	}
-
-	return idx.buffer
+	return idx.channelBuffer, idx.guildBuffer
 }
