@@ -1,0 +1,148 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Cambalache 0.96.1 -->
+<interface>
+  <!-- interface-name sidebar.ui -->
+  <requires lib="gtk" version="4.18"/>
+  <requires lib="libadwaita" version="1.4"/>
+  <requires lib="gio" version="2.0"/>
+  <object class="GtkBox" id="rootContent">
+    <child>
+      <object class="GtkBox" id="Left">
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkWindowControls">
+            <property name="halign">center</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkScrolledWindow">
+            <property name="child">
+              <object class="GtkBox" id="leftBox">
+                <property name="orientation">vertical</property>
+              </object>
+            </property>
+            <property name="hscrollbar-policy">never</property>
+            <property name="vexpand">True</property>
+            <property name="vscrollbar-policy">external</property>
+          </object>
+        </child>
+        <style>
+          <class name="sidebar-guildside"/>
+        </style>
+      </object>
+    </child>
+    <child>
+      <object class="AdwToolbarView">
+        <property name="content">
+          <object class="GtkStack" id="Right">
+            <property name="hexpand">True</property>
+            <property name="transition-type">crossfade</property>
+            <property name="vexpand">True</property>
+            <child>
+              <object class="GtkStackPage">
+                <property name="child">
+                  <object class="GtkWindowHandle"/>
+                </property>
+                <property name="name">placeholder</property>
+              </object>
+            </child>
+          </object>
+        </property>
+        <child type="bottom">
+          <object class="GtkBox" id="UserRoot">
+            <child>
+              <object class="AdwAvatar" id="UserAvatar">
+                <property name="size">32</property>
+                <style>
+                  <class name="onlineimage"/>
+                </style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="UserName">
+                <property name="ellipsize">end</property>
+                <property name="hexpand">True</property>
+                <property name="selectable">True</property>
+                <property name="xalign">0.0</property>
+                <style>
+                  <class name="user-bar-name"/>
+                </style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuButton" id="UserStatus">
+                <property name="direction">up</property>
+                <property name="has-frame">False</property>
+                <property name="menu-model">UserStatuses</property>
+                <property name="tooltip-text">Main Menu</property>
+                <property name="valign">center</property>
+                <style>
+                  <class name="user-bar-status"/>
+                </style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuButton" id="UserMenu">
+                <property name="direction">up</property>
+                <property name="has-frame">False</property>
+                <property name="icon-name">menu-large-symbolic</property>
+                <property name="menu-model">MenuActions</property>
+                <property name="tooltip-text">Main Menu</property>
+                <property name="valign">center</property>
+                <style>
+                  <class name="user-bar-menu"/>
+                </style>
+              </object>
+            </child>
+            <style>
+              <class name="user-bar"/>
+            </style>
+          </object>
+        </child>
+        <style/>
+      </object>
+    </child>
+  </object>
+  <menu id="MenuActions">
+    <item>
+      <attribute name="action">win.quick-switcher</attribute>
+      <attribute name="label">Quick Switcher</attribute>
+    </item>
+    <section>
+      <item>
+        <attribute name="action">app.preferences</attribute>
+        <attribute name="label">_Preferences</attribute>
+      </item>
+      <item>
+        <attribute name="action">app.about</attribute>
+        <attribute name="label">_About</attribute>
+      </item>
+      <item>
+        <attribute name="action">app.logs</attribute>
+        <attribute name="label">_Logs</attribute>
+      </item>
+      <item>
+        <attribute name="action">app.quit</attribute>
+        <attribute name="label">_Quit</attribute>
+      </item>
+    </section>
+  </menu>
+  <menu id="UserStatuses">
+    <item>
+      <attribute name="action">win.set-online</attribute>
+      <attribute name="label">_Online</attribute>
+    </item>
+    <item>
+      <attribute name="action">win.set-idle</attribute>
+      <attribute name="label">_Idle</attribute>
+    </item>
+    <item>
+      <attribute name="action">win.set-dnd</attribute>
+      <attribute name="label">_Do Not Disturb</attribute>
+    </item>
+    <item>
+      <attribute name="action">win.set-invisible</attribute>
+      <attribute name="label">In_visible</attribute>
+    </item>
+  </menu>
+</interface>
