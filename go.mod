@@ -24,6 +24,7 @@ require (
 	libdb.so/gotk4-spelling/pkg v0.0.0-20241128063647-a9edc40bddb0
 )
 
+replace github.com/diamondburned/gotkit v0.0.0-20250223060613-69614d9e70a9 => ./external/gotkit
 replace libdb.so/dissent/internal/gresources v0.0.1 => ./internal/gresources
 replace github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20250703085708-8e7f01e2c815 => ./external/gotk4-adwaita/pkg
 
@@ -52,4 +53,3 @@ require (
 	golang.org/x/time v0.11.0 // indirect
 	libdb.so/go-emoji v0.0.0-20240508073816-39776eee41ac // indirect
 )
-
