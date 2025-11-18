@@ -60,7 +60,10 @@ func main() {
 		"app.open-guild":   m.forwardSignalToWindow("open-guild", gtkcord.SnowflakeVariant),
 	})
 	m.app.AddActionShortcuts(map[string]string{
-		"<Ctrl>Q": "app.quit",
+		"<Ctrl>Q":        "app.quit",
+		"<Ctrl>question": "app.shortcuts",
+		"<Ctrl>comma":    "app.preferences",
+		"<Ctrl><Shift>D": "app.logs",
 	})
 	m.app.ConnectActivate(func() { m.activate(m.app.Context()) })
 	m.app.RunMain()
