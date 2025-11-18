@@ -1,0 +1,97 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Cambalache 0.96.1 -->
+<interface>
+  <!-- interface-name quickswitcher.ui -->
+  <requires lib="gtk" version="4.18"/>
+  <requires lib="libadwaita" version="1.6"/>
+  <object class="AdwDialog" id="rootContent">
+    <property name="content-height">400</property>
+    <property name="content-width">500</property>
+    <child>
+      <object class="AdwToolbarView">
+        <child type="top">
+          <object class="AdwHeaderBar">
+            <property name="title-widget">
+              <object class="GtkSearchEntry" id="Search">
+                <property name="activates-default">True</property>
+                <property name="hexpand">True</property>
+                <property name="placeholder-text">Where would you like to go?</property>
+                <property name="search-delay">100</property>
+              </object>
+            </property>
+            <child type="start">
+              <object class="GtkImage">
+                <property name="icon-name">compass2-symbolic</property>
+                <property name="margin-start">6</property>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="AdwViewStack" id="QSStack">
+            <property name="enable-transitions">True</property>
+            <child>
+              <object class="AdwViewStackPage">
+                <property name="child">
+                  <object class="AdwStatusPage">
+                    <property name="icon-name">system-search</property>
+                    <property name="title">Where would you like to go?</property>
+                    <style>
+                      <class name="compact"/>
+                      <class name="dimmed"/>
+                    </style>
+                  </object>
+                </property>
+                <property name="name">emptyPage</property>
+              </object>
+            </child>
+            <child>
+              <object class="AdwViewStackPage">
+                <property name="child">
+                  <object class="AdwPreferencesPage">
+                    <child>
+                      <object class="AdwPreferencesGroup">
+                        <child>
+                          <object class="GtkBox">
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <object class="GtkScrolledWindow">
+                                <property name="hscrollbar-policy">external</property>
+                                <property name="vscrollbar-policy">never</property>
+                                <child>
+                                  <object class="GtkBox" id="GuildListBox">
+                                    <property name="spacing">10</property>
+                                  </object>
+                                </child>
+                                <style>
+                                  <class name="undershoot-end"/>
+                                  <class name="undershoot-start"/>
+                                </style>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="AdwPreferencesGroup">
+                        <child>
+                          <object class="GtkListBox" id="ChannelsListBox">
+                            <style>
+                              <class name="boxed-list"/>
+                            </style>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </property>
+                <property name="name">searchResults</property>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>
