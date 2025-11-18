@@ -11,6 +11,9 @@
     <file preprocess="xml-stripblanks" alias="channel-voice-symbolic.svg">scalable/actions/channel-voice-symbolic.svg</file>
     <file preprocess="xml-stripblanks" alias="chat-bubble-simple-symbolic.svg">scalable/actions/chat-bubble-simple-symbolic.svg</file>
     <file preprocess="xml-stripblanks" alias="chat-bubbles-empty-symbolic.svg">scalable/actions/chat-bubbles-empty-symbolic.svg</file>
+    <file preprocess="xml-stripblanks" alias="key-login-symbolic.svg">scalable/actions/key-login-symbolic.svg</file>
+    <file preprocess="xml-stripblanks" alias="padlock2-symbolic.svg">scalable/actions/padlock2-symbolic.svg</file>
+    <file preprocess="xml-stripblanks" alias="compass2-symbolic.svg">scalable/actions/compass2-symbolic.svg</file>
     <file preprocess="xml-stripblanks" alias="document-edit-symbolic.svg">scalable/actions/document-edit-symbolic.svg</file>
     <file preprocess="xml-stripblanks" alias="earth-symbolic.svg">scalable/actions/earth-symbolic.svg</file>
     <file preprocess="xml-stripblanks" alias="edit-clear-all-symbolic.svg">scalable/actions/edit-clear-all-symbolic.svg</file>

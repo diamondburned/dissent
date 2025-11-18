@@ -119,15 +119,6 @@ func newSticker(ctx context.Context, sticker *discord.StickerItem) gtk.Widgetter
 	}
 }
 
-var _ = cssutil.WriteCSS(`
-	.message-richframe:not(:first-child) {
-		margin-top: 4px;
-	}
-	.message-embed-spoiler .onlineimage {
-		filter: blur(45px);
-	}
-`)
-
 var messageAttachmentCSS = cssutil.Applier("message-attachment", `
 	.message-attachment-filename {
 		padding-left: 0.35em;

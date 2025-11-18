@@ -8,13 +8,14 @@ import (
 	"github.com/diamondburned/adaptive"
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
+	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/app/prefs"
 	"github.com/diamondburned/gotkit/components/logui"
 	"github.com/diamondburned/gotkit/components/prefui"
 	"github.com/diamondburned/gotkit/gtkutil"
-	"github.com/diamondburned/gotkit/gtkutil/cssutil"
+	"libdb.so/dissent/internal/gresources"
 	"libdb.so/dissent/internal/gtkcord"
 	"libdb.so/dissent/internal/window"
 	"libdb.so/dissent/internal/window/about"
@@ -36,28 +37,11 @@ var Version string
 
 func init() { about.SetVersion(Version) }
 
-var _ = cssutil.WriteCSS(`
-	window.background,
-	window.background.solid-csd {
-		background-color: @theme_bg_color;
-	}
-
-	avatar > image {
-		background: none;
-	}
-	avatar > label {
-		background: @borders;
-	}
-
-	.md-textblock {
-		line-height: 1.35em;
-	}
-`)
-
 func init() {
 	app.Hook(func(*app.Application) {
 		adw.Init()
 		adaptive.Init()
+		gresources.Init()
 	})
 }
 
@@ -69,13 +53,17 @@ func main() {
 		"app.about":       func() { about.New(m.win.Context()).Present(m.win) },
 		"app.logs":        func() { logui.ShowDefaultViewer(m.win.Context()) },
 		"app.quit":        func() { m.app.Quit() },
+		"app.shortcuts":   func() { m.showShortcutsDialog() },
 	})
 	m.app.AddActionCallbacks(map[string]gtkutil.ActionCallback{
 		"app.open-channel": m.forwardSignalToWindow("open-channel", gtkcord.SnowflakeVariant),
 		"app.open-guild":   m.forwardSignalToWindow("open-guild", gtkcord.SnowflakeVariant),
 	})
 	m.app.AddActionShortcuts(map[string]string{
-		"<Ctrl>Q": "app.quit",
+		"<Ctrl>Q":        "app.quit",
+		"<Ctrl>question": "app.shortcuts",
+		"<Ctrl>comma":    "app.preferences",
+		"<Ctrl><Shift>D": "app.logs",
 	})
 	m.app.ConnectActivate(func() { m.activate(m.app.Context()) })
 	m.app.RunMain()
@@ -100,6 +88,10 @@ func (m *manager) activate(ctx context.Context) {
 	}
 
 	m.win = window.NewWindow(ctx)
+
+	// Load styles.css
+	gresources.LoadStyles("styles.css")
+
 	m.win.Present()
 
 	prefs.AsyncLoadSaved(ctx, func(err error) {
@@ -107,4 +99,11 @@ func (m *manager) activate(ctx context.Context) {
 			app.Error(ctx, err)
 		}
 	})
+}
+
+func (m *manager) showShortcutsDialog() {
+	uiFile := gresources.New("gtk/help-overlay.ui")
+	shortcutsDialog := uiFile.GetRoot().(*gtk.ShortcutsWindow)
+	shortcutsDialog.SetTransientFor(app.GTKWindowFromContext(m.win.Context()))
+	shortcutsDialog.Present()
 }

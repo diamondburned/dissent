@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/gdk/v4"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
-	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/gtkutil"
-	"github.com/diamondburned/gotkit/gtkutil/cssutil"
-	"github.com/diamondburned/gotkit/gtkutil/textutil"
+	"libdb.so/dissent/internal/gresources"
 	"libdb.so/dissent/internal/gtkcord"
 )
 
@@ -19,56 +18,42 @@ import (
 // quickly jumping to them. It replicates the Ctrl+K dialog of the desktop
 // client.
 type QuickSwitcher struct {
-	*gtk.Box
+	*adw.Dialog
 	ctx   gtkutil.Cancellable
 	text  string
 	index index
 
 	search     *gtk.SearchEntry
 	chosenFunc func()
+	qsStack    *adw.ViewStack
 
-	entryScroll *gtk.ScrolledWindow
-	entryList   *gtk.ListBox
-	entries     []entry
+	entryScroll     *gtk.ScrolledWindow
+	guildsEntryList *gtk.Box
+	entryList       *gtk.ListBox
+	entries         []channelEntry
 }
 
-type entry struct {
+type channelEntry struct {
 	*gtk.ListBoxRow
-	indexItem indexItem
+	indexItem channelIndexItem
 }
 
-var qsCSS = cssutil.Applier("quickswitcher", `
-	.quickswitcher-search {
-		font-size: 1.15em;
-		margin: 0;
-	}
-	.quickswitcher-search image {
-		min-width:  32px;
-		min-height: 32px;
-	}
-	.quickswitcher-searchbar > revealer > box {
-		padding: 12px;
-	}
-	.quickswitcher-list {
-		font-size: 1.05em;
-		background: none;
-		margin: 8px;
-		margin-top: 0;
-	}
-	.quickswitcher-list > row {
-		padding: 4px 2px;
-	}
-`)
+// ShowDialog shows a new Quick Switcher dialog.
+func ShowDialog(ctx context.Context) {
+	d := NewQuickSwitcher(ctx)
+	d.Present(app.GTKWindowFromContext(ctx))
+}
 
 // NewQuickSwitcher creates a new Quick Switcher instance.
 func NewQuickSwitcher(ctx context.Context) *QuickSwitcher {
-	var qs QuickSwitcher
+	uiFile := gresources.New("quickswitcher.ui")
+	qs := QuickSwitcher{Dialog: uiFile.GetRoot().(*adw.Dialog)}
+	qs.search = uiFile.GetComponent("Search").(*gtk.SearchEntry)
+	qs.qsStack = uiFile.GetComponent("QSStack").(*adw.ViewStack)
 	qs.index.update(ctx)
 
-	qs.search = gtk.NewSearchEntry()
-	qs.search.AddCSSClass("quickswitcher-search")
-	qs.search.SetHExpand(true)
-	qs.search.SetObjectProperty("placeholder-text", "Search")
+	qs.SetTitle(app.FromContext(ctx).SuffixedTitle("Quick Switcher"))
+
 	qs.search.ConnectActivate(func() { qs.selectEntry() })
 	qs.search.ConnectNextMatch(func() { qs.moveDown() })
 	qs.search.ConnectPreviousMatch(func() { qs.moveUp() })
@@ -77,10 +62,14 @@ func NewQuickSwitcher(ctx context.Context) *QuickSwitcher {
 		qs.do()
 	})
 
-	if qs.search.ObjectProperty("search-delay") != nil {
-		// Only GTK v4.8 and onwards.
-		qs.search.SetObjectProperty("search-delay", 100)
-	}
+	qs.ConnectShow(func() {
+		qs.Clear()
+		qs.search.GrabFocus()
+	})
+
+	qs.ConnectChosen(func() {
+		qs.Close()
+	})
 
 	keyCtrl := gtk.NewEventControllerKey()
 	keyCtrl.ConnectKeyPressed(func(val, _ uint, state gdk.ModifierType) bool {
@@ -89,61 +78,26 @@ func NewQuickSwitcher(ctx context.Context) *QuickSwitcher {
 			return qs.moveUp()
 		case gdk.KEY_Down, gdk.KEY_Tab:
 			return qs.moveDown()
+		case gdk.KEY_Escape:
+			qs.Close()
+			return true
 		default:
 			return false
 		}
 	})
 	qs.search.AddController(keyCtrl)
 
-	qs.entryList = gtk.NewListBox()
-	qs.entryList.AddCSSClass("quickswitcher-list")
-	qs.entryList.SetVExpand(true)
-	qs.entryList.SetSelectionMode(gtk.SelectionSingle)
-	qs.entryList.SetActivateOnSingleClick(true)
-	qs.entryList.SetPlaceholder(qsListPlaceholder())
+	qs.guildsEntryList = uiFile.GetComponent("GuildListBox").(*gtk.Box)
+	qs.entryList = uiFile.GetComponent("ChannelsListBox").(*gtk.ListBox)
+
 	qs.entryList.ConnectRowActivated(func(row *gtk.ListBoxRow) {
-		qs.choose(row.Index())
+		qs.chooseChannel(row.Index())
 	})
-
-	entryViewport := gtk.NewViewport(nil, nil)
-	entryViewport.SetScrollToFocus(true)
-	entryViewport.SetChild(qs.entryList)
-
-	qs.entryScroll = gtk.NewScrolledWindow()
-	qs.entryScroll.AddCSSClass("quickswitcher-scroll")
-	qs.entryScroll.SetPolicy(gtk.PolicyNever, gtk.PolicyAutomatic)
-	qs.entryScroll.SetChild(entryViewport)
-	qs.entryScroll.SetVExpand(true)
-
-	qs.Box = gtk.NewBox(gtk.OrientationVertical, 0)
-	qs.Box.SetVExpand(true)
-	qs.Box.Append(qs.search)
-	qs.Box.Append(qs.entryScroll)
 
 	qs.ctx = gtkutil.WithVisibility(ctx, qs.search)
 	qs.search.SetKeyCaptureWidget(qs)
 
-	qsCSS(qs.Box)
 	return &qs
-}
-
-func qsListLoading() gtk.Widgetter {
-	loading := gtk.NewSpinner()
-	loading.SetSizeRequest(24, 24)
-	loading.SetVAlign(gtk.AlignCenter)
-	loading.SetHAlign(gtk.AlignCenter)
-	loading.Start()
-	return loading
-}
-
-func qsListPlaceholder() gtk.Widgetter {
-	l := gtk.NewLabel("Where would you like to go?")
-	l.SetAttributes(textutil.Attrs(
-		pango.NewAttrScale(1.15),
-	))
-	l.SetVAlign(gtk.AlignCenter)
-	l.SetHAlign(gtk.AlignCenter)
-	return l
 }
 
 func (qs *QuickSwitcher) Clear() {
@@ -153,47 +107,79 @@ func (qs *QuickSwitcher) Clear() {
 }
 
 func (qs *QuickSwitcher) do() {
-	for i, e := range qs.entries {
-		qs.entryList.Remove(e)
-		qs.entries[i] = entry{}
+	if qs.text == "" {
+		qs.qsStack.SetVisibleChildName("emptyPage")
+	} else {
+		qs.qsStack.SetVisibleChildName("searchResults")
 	}
-	qs.entries = qs.entries[:0]
+
+	qs.entryList.RemoveAll()
+
+	for child := qs.guildsEntryList.FirstChild(); child != nil; child = qs.guildsEntryList.FirstChild() {
+		qs.guildsEntryList.Remove(child)
+	}
 
 	if qs.text == "" {
 		return
 	}
 
-	for _, match := range qs.index.search(qs.text) {
-		e := entry{
-			ListBoxRow: match.Row(qs.ctx.Take()),
+	channelsFound, guildsFound := qs.index.search(qs.text)
+	for _, match := range channelsFound {
+		channelItem := match.Row(qs.ctx.Take())
+		e := channelEntry{
+			ListBoxRow: channelItem,
 			indexItem:  match,
 		}
 
-		qs.entries = append(qs.entries, e)
-		qs.entryList.Append(e)
+		qs.entryList.Append(channelItem)
+
+		for len(qs.entries) <= channelItem.Index() {
+			qs.entries = append(qs.entries, channelEntry{})
+		}
+
+		qs.entries[channelItem.Index()] = e
+	}
+
+	for _, match := range guildsFound {
+		guildIcon := match.QSItem(qs.ctx.Take())
+		guildIcon.ConnectClicked(func() {
+			qs.chooseGuild(match)
+		})
+		qs.guildsEntryList.Append(guildIcon)
 	}
 
 	if len(qs.entries) > 0 {
-		qs.entryList.SelectRow(qs.entries[0].ListBoxRow)
+		qs.entryList.SelectRow(qs.entryList.RowAtIndex(0))
 	}
 }
 
-func (qs *QuickSwitcher) choose(n int) {
+func (qs *QuickSwitcher) chooseChannel(n int) {
 	entry := qs.entries[n]
 	parent := gtk.BaseWidget(qs.Parent())
 
 	var ok bool
-	switch item := entry.indexItem.(type) {
-	case channelItem:
-		ok = parent.ActivateAction("app.open-channel", gtkcord.NewChannelIDVariant(item.ID))
-	case guildItem:
-		ok = parent.ActivateAction("app.open-guild", gtkcord.NewGuildIDVariant(item.ID))
-	}
+	ok = parent.ActivateAction("app.open-channel", gtkcord.NewChannelIDVariant(entry.indexItem.ChannelID()))
+
 	if !ok {
 		slog.Error(
 			"failed to activate opening action from quick switcher",
 			"parent", fmt.Sprintf("%T", qs.Parent()),
 			"item", fmt.Sprintf("%T", entry.indexItem))
+	}
+
+	if qs.chosenFunc != nil {
+		qs.chosenFunc()
+	}
+}
+func (qs *QuickSwitcher) chooseGuild(match guildIndexItem) {
+	parent := gtk.BaseWidget(qs.Parent())
+	ok := parent.ActivateAction("app.open-guild", gtkcord.NewGuildIDVariant(match.GuildID()))
+
+	if !ok {
+		slog.Error(
+			"failed to activate opening action from quick switcher",
+			"parent", fmt.Sprintf("%T", qs.Parent()),
+			"item", fmt.Sprintf("%T", match.String()))
 	}
 
 	if qs.chosenFunc != nil {
@@ -224,7 +210,7 @@ func (qs *QuickSwitcher) selectEntry() bool {
 		return false
 	}
 
-	qs.choose(row.Index())
+	qs.chooseChannel(row.Index())
 	return true
 }
 
@@ -238,24 +224,25 @@ func (qs *QuickSwitcher) move(down bool) bool {
 
 	row := qs.entryList.SelectedRow()
 	if row == nil {
-		qs.entryList.SelectRow(qs.entries[0].ListBoxRow)
+		qs.entryList.SelectRow(qs.entryList.RowAtIndex(0))
 		return true
 	}
 
 	ix := row.Index()
+	var newFocusedRow *gtk.ListBoxRow
 	if down {
-		ix++
-		if ix == len(qs.entries) {
-			ix = 0
-		}
+		ix += 1
+		newFocusedRow = qs.entryList.RowAtIndex(ix)
 	} else {
-		ix--
-		if ix == -1 {
-			ix = len(qs.entries) - 1
-		}
+		ix -= 1
+		newFocusedRow = qs.entryList.RowAtIndex(ix)
 	}
 
-	qs.entryList.SelectRow(qs.entries[ix].ListBoxRow)
+	if newFocusedRow == nil {
+		return false
+	}
+
+	qs.entryList.SelectRow(newFocusedRow)
 
 	// Steal focus. This is a hack to scroll to the selected item without having
 	// to manually calculate the coordinates.

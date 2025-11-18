@@ -5,11 +5,14 @@ import (
 	"log/slog"
 
 	"github.com/diamondburned/arikawa/v3/state"
+	"github.com/diamondburned/arikawa/v3/utils/httputil"
 	"github.com/diamondburned/chatkit/kits/secret"
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/pkg/errors"
+	"libdb.so/dissent/internal/gresources"
 	"libdb.so/dissent/internal/gtkcord"
 )
 
@@ -26,11 +29,12 @@ type LoginController interface {
 	// again, either because their credentials are wrong or Discord returns a
 	// server error.
 	PromptLogin()
+	PromptLoginNoFocus()
 }
 
 // Page is the page containing the login forms.
 type Page struct {
-	*gtk.Box
+	*adw.ToolbarView
 	Header *gtk.HeaderBar
 	Login  *Component
 
@@ -47,18 +51,24 @@ func NewPage(ctx context.Context, ctrl LoginController) *Page {
 		ctrl: ctrl,
 	}
 
-	p.Header = gtk.NewHeaderBar()
-	p.Header.AddCSSClass("login-page-header")
-	p.Header.SetShowTitleButtons(true)
+	// p.Header = gtk.NewHeaderBar()
+	// p.Header.AddCSSClass("login-page-header")
+	// p.Header.SetShowTitleButtons(true)
 
+	// p.Login.SetVExpand(true)
+	// p.Login.SetHExpand(true)
+
+	// p.Box = gtk.NewBox(gtk.OrientationVertical, 0)
+	// p.Box.Append(p.Header)
+	// p.Box.Append(p.Login)
+	// pageCSS(p)
+
+	uiFile := gresources.New("login.ui")
+	p.ToolbarView = uiFile.GetRoot().(*adw.ToolbarView)
 	p.Login = NewComponent(ctx, &p)
-	p.Login.SetVExpand(true)
-	p.Login.SetHExpand(true)
+	p.ToolbarView.SetContent(p.Login)
 
-	p.Box = gtk.NewBox(gtk.OrientationVertical, 0)
-	p.Box.Append(p.Header)
-	p.Box.Append(p.Login)
-	pageCSS(p)
+	p.Login.NetErrorRetryButton.ConnectClicked(p.LoadKeyring)
 
 	return &p
 }
@@ -69,12 +79,12 @@ func (p *Page) LoadKeyring() {
 }
 
 func (p *Page) asyncLoadFromSecrets(driver secret.Driver) {
-	p.Login.Loading.Show()
-	p.Login.SetSensitive(false)
+	p.Login.SetBusy()
+	// p.Login.SetSensitive(false)
 
 	done := func() {
-		p.Login.Loading.Hide()
-		p.Login.SetSensitive(true)
+		p.Login.SetDone()
+		//p.Login.SetSensitive(true)
 	}
 
 	gtkutil.Async(p.ctx, func() func() {
@@ -101,9 +111,23 @@ func (p *Page) asyncUseToken(token string) {
 
 	gtkutil.Async(p.ctx, func() func() {
 		if err := state.Open(p.ctx); err != nil {
-			return func() {
-				p.ctrl.PromptLogin()
-				p.Login.ShowError(errors.Wrap(err, "cannot open session"))
+			switch errors.Unwrap(err).(type) {
+			case httputil.RequestError:
+				return func() {
+					p.ctrl.PromptLoginNoFocus()
+					p.Login.GreetNetworkError()
+				}
+			// In case we'd want to improve the login error handling
+			// case httputil.HTTPError:
+			// 	return func() {
+			// 		p.ctrl.PromptLoginNoFocus()
+			// 		p.Login.GreetHTTPError(err)
+			// 	}
+			default:
+				return func() {
+					p.ctrl.PromptLogin()
+					p.Login.ShowError(errors.Wrap(err, "cannot open session"))
+				}
 			}
 		}
 

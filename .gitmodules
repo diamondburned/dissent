@@ -1,0 +1,7 @@
+[submodule "external/gotk4-adwaita"]
+	path = external/gotk4-adwaita
+	url = https://github.com/diamondburned/gotk4-adwaita.git
+	branch = adw-1.7
+[submodule "external/gotkit"]
+	path = external/gotkit
+	url = https://github.com/diamondburned/gotkit.git

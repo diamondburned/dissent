@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<!DOCTYPE cambalache-project SYSTEM "cambalache-project.dtd">
+<!-- Created with Cambalache 0.96.1 -->
+<cambalache-project version="0.96.0" target_tk="gtk-4.0">
+  <gresources filename="uifiles.gresource.xml" sha256="4ebe4329d32783db09f8f5354ae1675bb6164574d02bed359d9afc060cb29747"/>
+  <ui filename="window.ui" sha256="40f878740aca6482572200c86050dc4c96ddf7cd6b2247312c5251b4f048b135"/>
+  <ui filename="login.ui" sha256="2722806d0b1b0070c0b2820588a44431dbf31ca3c8db3d7e396ff69b7d1360aa"/>
+  <ui filename="login_component.ui" sha256="079257bbf6105dc80a23536888333be0438b12c2bade738614d3ee8756a041ac"/>
+  <ui filename="gtk/help-overlay.ui" sha256="9bc94b2e6c0524ea26b171b5e247779dae885a13e06fa86dccc81f2d0ee15337"/>
+  <ui filename="chat.ui" sha256="679cd251e9ffe7132ae4f9de9aa7221b42a83c551acd032adc757766de6138ba"/>
+  <ui filename="sidebar.ui" sha256="7738fd2f81ecbf8a7b1f0017acea3f1a6a0c8b0311a8b71cbd93206a2314aff8"/>
+  <ui filename="quickswitcher.ui" sha256="40bf076c6dac0c7837a6d0a2a092073df2a6001193b244d980d83beba910c710"/>
+</cambalache-project>

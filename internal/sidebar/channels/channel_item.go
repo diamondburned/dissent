@@ -12,7 +12,6 @@ import (
 	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/app/locale"
-	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/imgutil"
 	"github.com/diamondburned/ningen/v3"
 	"github.com/diamondburned/ningen/v3/states/read"
@@ -69,68 +68,6 @@ func channelIDFromItem(item *glib.Object) discord.ChannelID {
 
 	return discord.ChannelID(id)
 }
-
-var _ = cssutil.WriteCSS(`
-	.channels-viewtree row:hover,
-	.channels-viewtree row:selected {
-		background: none;
-	}
-	.channels-viewtree row:hover .channel-item-outer {
-		background: alpha(@theme_fg_color, 0.075);
-	}
-	.channels-viewtree row:selected .channel-item-outer {
-		background: alpha(@theme_fg_color, 0.125);
-	}
-	.channels-viewtree row:selected:hover .channel-item-outer {
-		background: alpha(@theme_fg_color, 0.175);
-	}
-	.channel-item:not(.channel-item-category) {
-		padding: 0.35em 0;
-		opacity: 0.50;
-		font-weight: 600;
-	}
-	.channel-item > :first-child {
-		min-width: 2.5em;
-		margin: 0;
-	}
-	.channel-item expander + * {
-		/* Weird workaround because GTK is adding extra padding here for some
-		 * reason. */
-		margin-left: -0.35em;
-	}
-	.channel-item-muted .channel-item {
-		opacity: 0.25;
-	}
-	.channel-unread-indicator {
-		font-size: 0.75em;
-		font-weight: 700;
-	}
-	.channel-item-unread .channel-unread-indicator,
-	.channel-item-mentioned .channel-unread-indicator {
-		font-size: 0.7em;
-		font-weight: 900;
-		font-family: monospace;
-
-		min-width: 1em;
-		min-height: 1em;
-		line-height: 1em;
-
-		padding: 0;
-		margin: 0 1em;
-
-		background: alpha(@theme_fg_color, .75);
-		border-radius: 99px;
-	}
-	.channel-item-mentioned .channel-unread-indicator {
-		font-size: 0.8em;
-		outline-color: @mentioned;
-		background: @mentioned;
-		color: @theme_bg_color;
-	}
-	.channel-item-unread .channel-item {
-		opacity: 1;
-	}
-`)
 
 type channelItem struct {
 	state  *gtkcord.State
@@ -314,13 +251,6 @@ func (i *channelItem) updateIndicator(unread ningen.UnreadIndication) {
 	}
 }
 
-var _ = cssutil.WriteCSS(`
-	.channel-item-unknown {
-		opacity: 0.35;
-		font-style: italic;
-	}
-`)
-
 func newUnknownChannelItem(name string) gtk.Widgetter {
 	icon := NewChannelIcon(nil)
 
@@ -336,17 +266,6 @@ func newUnknownChannelItem(name string) gtk.Widgetter {
 
 	return box
 }
-
-var _ = cssutil.WriteCSS(`
-	.channel-item-thread {
-		padding: 0.25em 0;
-		opacity: 0.5;
-	}
-	.channel-item-unread .channel-item-thread,
-	.channel-item-mention .channel-item-thread {
-		opacity: 1;
-	}
-`)
 
 func newChannelItemText(ch *discord.Channel) gtk.Widgetter {
 	icon := NewChannelIcon(ch)
@@ -373,15 +292,6 @@ func newChannelItemText(ch *discord.Channel) gtk.Widgetter {
 	return box
 }
 
-var _ = cssutil.WriteCSS(`
-	.channel-item-forum {
-		padding: 0.35em 0;
-	}
-	.channel-item-forum label {
-		padding: 0;
-	}
-`)
-
 func newChannelItemForum(ch *discord.Channel, row *gtk.TreeListRow) gtk.Widgetter {
 	label := gtk.NewLabel(ch.Name)
 	label.SetEllipsize(pango.EllipsizeEnd)
@@ -400,25 +310,6 @@ func newChannelItemForum(ch *discord.Channel, row *gtk.TreeListRow) gtk.Widgette
 
 	return expander
 }
-
-var _ = cssutil.WriteCSS(`
-	.channels-viewtree row:not(:first-child) .channel-item-category-outer {
-		margin-top: 0.75em;
-	}
-	.channels-viewtree row:hover .channel-item-category-outer {
-		background: none;
-	}
-	.channel-item-category {
-		padding: 0.4em 0;
-	}
-	.channel-item-category label {
-		margin-bottom: -0.2em;
-		padding: 0;
-		font-size: 0.85em;
-		font-weight: 700;
-		text-transform: uppercase;
-	}
-`)
 
 func newChannelItemCategory(ch *discord.Channel, row *gtk.TreeListRow, reveal *app.TypedState[bool]) gtk.Widgetter {
 	label := gtk.NewLabel(ch.Name)
@@ -470,26 +361,6 @@ func newChannelItemCategory(ch *discord.Channel, row *gtk.TreeListRow, reveal *a
 
 	return expander
 }
-
-var _ = cssutil.WriteCSS(`
-	.channel-item-voice .mauthor-chip {
-		margin: 0.15em 0;
-		margin-left: 2.5em;
-		margin-right: 1em;
-	}
-	.channel-item-voice .mauthor-chip:nth-child(2) {
-		margin-top: 0;
-	}
-	.channel-item-voice .mauthor-chip:last-child {
-		margin-bottom: 0.3em;
-	}
-	.channel-item-voice-counter {
-		margin-left: 0.5em;
-		margin-right: 0.5em;
-		font-size: 0.8em;
-		opacity: 0.75;
-	}
-`)
 
 func newChannelItemVoice(state *gtkcord.State, ch *discord.Channel) gtk.Widgetter {
 	icon := NewChannelIcon(ch)
