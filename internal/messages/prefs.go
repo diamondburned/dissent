@@ -9,7 +9,6 @@ import (
 	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/app/prefs"
 	"github.com/diamondburned/gotkit/gtkutil"
-	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/pkg/errors"
 	"libdb.so/dissent/internal/gtkcord"
 )
@@ -95,27 +94,6 @@ var collapsedMessageTimestamp = prefs.NewEnumList(
 		},
 	},
 )
-
-var _ = cssutil.WriteCSS(`
-	.message-blockedusers-expander {
-		margin-top: 4px;
-	}
-	.message-blockedusers-expander expander {
-		min-width:  16px;
-		min-height: 16px;
-		padding: 4px;
-	}
-	.message-blockedusers {
-		font-size: 0.95em;
-		margin-left: 24px;
-	}
-	.message-blockedusers > *:not(:first-child) {
-		margin-top: 4px;
-	}
-	.message-blockedusers button {
-		padding: 4px 8px;
-	}
-`)
 
 type blockedUsersPrefs struct{}
 

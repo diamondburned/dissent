@@ -1,0 +1,269 @@
+/* hoverpopovere.go */
+.popover-label {
+    padding: 0 0.25em;
+}
+
+/* userbar.go */
+.user-bar .onlineimage {
+    padding: 6px;
+}
+.user-bar .user-bar-menu {
+    margin: 0 6px;
+}
+/* sidebar.go */
+@define-color sidebar_bg mix(@borders, @theme_bg_color, 0.25);
+
+.sidebar-sidebar .sidebar-guildside {
+    background-color: @sidebar_bg;
+}
+.sidebar-sidebar .sidebar-guildside windowcontrols:not(.empty) {
+    margin-left: 4px;
+    margin-right: 4px;
+}
+.sidebar-sidebar .sidebar-guildside windowcontrols:not(.empty) button {
+    margin: 0px 0;
+}
+
+/* dimensions.go */
+/* Use of CSS Variables makes migration impossible */
+
+/* autocomplete_emoji.go */
+.autocompleter-unicode {
+    font-size: 26px;
+}
+
+/* embed.go */
+.message-richframe:not(:first-child) {
+    margin-top: 4px;
+}
+.message-embed-spoiler .onlineimage {
+    filter: blur(45px);
+}
+
+/* markdown.go */
+.md-spoiler {
+    color: mix(@theme_bg_color, black, 0.11);
+}
+.md-spoiler.dark {
+    color: mix(@theme_bg_color, black, 0.85);
+}
+
+/* message.go */
+.message-box {
+    border: 2px solid transparent;
+    transition: linear 150ms background-color;
+}
+row:focus .message-box,
+row:hover .message-box {
+    transition: none;
+}
+row:focus .message-box {
+    background-color: alpha(@theme_fg_color, 0.125);
+}
+row:hover .message-box {
+    background-color: alpha(@theme_fg_color, 0.075);
+}
+.message-box.message-editing,
+.message-box.message-replying {
+    background-color: alpha(@theme_selected_bg_color, 0.15);
+    border-color: alpha(@theme_selected_bg_color, 0.55);
+}
+.message-box.message-sending {
+    opacity: 0.65;
+}
+.message-box.message-first-prepended {
+    border-bottom: 1.5px dashed alpha(@theme_fg_color, 0.25);
+    padding-bottom: 2.5px;
+}
+.message-mentioned {
+    border-left: 2px solid @mentioned;
+    border-top: 0;
+    border-bottom: 0;
+    background: alpha(@mentioned, 0.075);
+}
+row:hover .message-mentioned {
+    background: alpha(@mentioned, 0.125);
+}
+
+/* prefs.go */
+.message-blockedusers-expander {
+    margin-top: 4px;
+}
+.message-blockedusers-expander expander {
+    min-width: 16px;
+    min-height: 16px;
+    padding: 4px;
+}
+.message-blockedusers {
+    font-size: 0.95em;
+    margin-left: 24px;
+}
+.message-blockedusers > *:not(:first-child) {
+    margin-top: 4px;
+}
+.message-blockedusers button {
+    padding: 4px 8px;
+}
+
+/* summary.go */
+.message-summaries-popover list {
+    background-color: transparent;
+}
+.message-summaries-popover > contents {
+    padding: 0;
+}
+.message-summary-item:first-child {
+    margin-top: 0.5em;
+}
+.message-summary-item:last-child {
+    margin-bottom: 0.5em;
+}
+.message-summary-item {
+    padding: 0.25em 0.5em;
+    margin: 0.25em 0;
+}
+.message-summary-item:not(:last-child) {
+    border-bottom: 1px solid @borders;
+}
+.message-summary-item label:nth-child(2) {
+    margin-top: 0.1em;
+}
+
+/* channel_item.go */
+.channels-viewtree row:hover,
+.channels-viewtree row:selected {
+    background: none;
+}
+.channels-viewtree row:hover .channel-item-outer {
+    background: alpha(@theme_fg_color, 0.075);
+}
+.channels-viewtree row:selected .channel-item-outer {
+    background: alpha(@theme_fg_color, 0.125);
+}
+.channels-viewtree row:selected:hover .channel-item-outer {
+    background: alpha(@theme_fg_color, 0.175);
+}
+.channel-item:not(.channel-item-category) {
+    padding: 0.35em 0;
+    opacity: 0.5;
+    font-weight: 600;
+}
+.channel-item > :first-child {
+    min-width: 2.5em;
+    margin: 0;
+}
+.channel-item expander + * {
+    /* Weird workaround because GTK is adding extra padding here for some
+		 * reason. */
+    margin-left: -0.35em;
+}
+.channel-item-muted .channel-item {
+    opacity: 0.25;
+}
+.channel-unread-indicator {
+    font-size: 0.75em;
+    font-weight: 700;
+}
+.channel-item-unread .channel-unread-indicator,
+.channel-item-mentioned .channel-unread-indicator {
+    font-size: 0.7em;
+    font-weight: 900;
+    font-family: monospace;
+
+    min-width: 1em;
+    min-height: 1em;
+    line-height: 1em;
+
+    padding: 0;
+    margin: 0 1em;
+
+    background: alpha(@theme_fg_color, 0.75);
+    border-radius: 99px;
+}
+.channel-item-mentioned .channel-unread-indicator {
+    font-size: 0.8em;
+    outline-color: @mentioned;
+    background: @mentioned;
+    color: @theme_bg_color;
+}
+.channel-item-unread .channel-item {
+    opacity: 1;
+}
+.channel-item-unknown {
+    opacity: 0.35;
+    font-style: italic;
+}
+.channel-item-thread {
+    padding: 0.25em 0;
+    opacity: 0.5;
+}
+.channel-item-unread .channel-item-thread,
+.channel-item-mention .channel-item-thread {
+    opacity: 1;
+}
+.channel-item-forum {
+    padding: 0.35em 0;
+}
+.channel-item-forum label {
+    padding: 0;
+}
+.channels-viewtree row:not(:first-child) .channel-item-category-outer {
+    margin-top: 0.75em;
+}
+.channels-viewtree row:hover .channel-item-category-outer {
+    background: none;
+}
+.channel-item-category {
+    padding: 0.4em 0;
+}
+.channel-item-category label {
+    margin-bottom: -0.2em;
+    padding: 0;
+    font-size: 0.85em;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.channel-item-voice .mauthor-chip {
+    margin: 0.15em 0;
+    margin-left: 2.5em;
+    margin-right: 1em;
+}
+.channel-item-voice .mauthor-chip:nth-child(2) {
+    margin-top: 0;
+}
+.channel-item-voice .mauthor-chip:last-child {
+    margin-bottom: 0.3em;
+}
+.channel-item-voice-counter {
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+    font-size: 0.8em;
+    opacity: 0.75;
+}
+
+/* view.go */
+.direct-searchbar > revealer > box {
+    border-bottom: 0;
+    background: none;
+    box-shadow: none;
+}
+.direct-searchbar > revealer > box > entry {
+    min-height: 28px;
+}
+
+/* main.go */
+window.background,
+window.background.solid-csd {
+    background-color: @theme_bg_color;
+}
+
+avatar > image {
+    background: none;
+}
+avatar > label {
+    background: @borders;
+}
+
+.md-textblock {
+    line-height: 1.35em;
+}

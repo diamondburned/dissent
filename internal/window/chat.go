@@ -77,6 +77,7 @@ var chatPageCSS = cssutil.Applier("window-chatpage", `
 	}
 `)
 
+// TODO: Move to Cambalache
 func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	p := ChatPage{
 		ctx:              ctx,
@@ -469,6 +470,7 @@ func (t *chatTab) switchToChannel(id discord.ChannelID) bool {
 	return true
 }
 
+// TODO: Move to Cambalache
 func newEmptyMessagePlaceholder() gtk.Widgetter {
 	status := adaptive.NewStatusPage()
 	status.SetIconName("chat-bubbles-empty-symbolic")

@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Cambalache 0.96.1 -->
+<interface>
+  <!-- interface-name window.ui -->
+  <requires lib="libadwaita" version="1.4"/>
+  <object class="AdwToolbarView" id="content">
+    <child type="top">
+      <object class="AdwHeaderBar"/>
+    </child>
+    <child>
+      <object class="AdwStatusPage">
+        <property name="description">Go can load UI files!</property>
+        <property name="icon-name">checkmark-symbolic</property>
+        <property name="title">Welcome from Go!</property>
+      </object>
+    </child>
+  </object>
+  <object class="AdwApplicationWindow" id="contentRoot"/>
+</interface>

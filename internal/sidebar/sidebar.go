@@ -10,7 +10,7 @@ import (
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/gtkutil"
-	"github.com/diamondburned/gotkit/gtkutil/cssutil"
+	"libdb.so/dissent/internal/gresources"
 	"libdb.so/dissent/internal/gtkcord"
 	"libdb.so/dissent/internal/sidebar/channels"
 	"libdb.so/dissent/internal/sidebar/direct"
@@ -32,25 +32,9 @@ type Sidebar struct {
 		w gtk.Widgetter
 		// id discord.GuildID
 	}
-	placeholder gtk.Widgetter
 
 	ctx context.Context
 }
-
-var sidebarCSS = cssutil.Applier("sidebar-sidebar", `
-	@define-color sidebar_bg mix(@borders, @theme_bg_color, 0.25);
-
-	.sidebar-guildside {
-		background-color: @sidebar_bg;
-	}
-	.sidebar-guildside windowcontrols:not(.empty) {
-		margin-left: 4px;
-		margin-right: 4px;
-	}
-	.sidebar-guildside windowcontrols:not(.empty) button {
-		margin: 0px 0;
-	}
-`)
 
 // NewSidebar creates a new Sidebar.
 func NewSidebar(ctx context.Context) *Sidebar {
@@ -58,72 +42,40 @@ func NewSidebar(ctx context.Context) *Sidebar {
 		ctx: ctx,
 	}
 
+	// Open the UI file and attach it to the struct
+	uiFile := gresources.New("sidebar.ui")
+	s.Box = uiFile.GetRoot().(*gtk.Box)
+
+	// Guild list in the left sidebar
 	s.Guilds = guilds.NewView(ctx)
 	s.Guilds.Invalidate()
 
+	// DM button on the to left corner + unread DMs
 	s.DMView = directbutton.NewView(ctx)
 	s.DMView.Invalidate()
 
 	dmSeparator := gtk.NewSeparator(gtk.OrientationHorizontal)
 	dmSeparator.AddCSSClass("sidebar-dm-separator")
 
+	s.Left = uiFile.GetComponent("Left").(*gtk.Box)
+
 	// leftBox holds just the DM button and the guild view, as opposed to s.Left
 	// which holds the scrolled window and the window controls.
-	leftBox := gtk.NewBox(gtk.OrientationVertical, 0)
+	leftBox := uiFile.GetComponent("leftBox").(*gtk.Box)
 	leftBox.Append(s.DMView)
 	leftBox.Append(dmSeparator)
 	leftBox.Append(s.Guilds)
 
-	leftScroll := gtk.NewScrolledWindow()
-	leftScroll.SetVExpand(true)
-	leftScroll.SetPolicy(gtk.PolicyNever, gtk.PolicyExternal)
-	leftScroll.SetChild(leftBox)
+	s.Right = uiFile.GetComponent("Right").(*gtk.Stack)
 
-	leftCtrl := gtk.NewWindowControls(gtk.PackStart)
-	leftCtrl.SetHAlign(gtk.AlignCenter)
-
-	s.Left = gtk.NewBox(gtk.OrientationVertical, 0)
-	s.Left.AddCSSClass("sidebar-guildside")
-	s.Left.Append(leftCtrl)
-	s.Left.Append(leftScroll)
-
-	s.placeholder = gtk.NewWindowHandle()
-
-	s.Right = gtk.NewStack()
-	s.Right.SetSizeRequest(channels.ChannelsWidth, -1)
-	s.Right.SetVExpand(true)
-	s.Right.SetHExpand(true)
-	s.Right.AddChild(s.placeholder)
-	s.Right.SetVisibleChild(s.placeholder)
-	s.Right.SetTransitionType(gtk.StackTransitionTypeCrossfade)
-
-	userBar := newUserBar(ctx, []gtkutil.PopoverMenuItem{
-		gtkutil.MenuItem("Quick Switcher", "win.quick-switcher"),
-		gtkutil.MenuSeparator("User Settings"),
-		gtkutil.Submenu("Set _Status", []gtkutil.PopoverMenuItem{
-			gtkutil.MenuItem("_Online", "win.set-online"),
-			gtkutil.MenuItem("_Idle", "win.set-idle"),
-			gtkutil.MenuItem("_Do Not Disturb", "win.set-dnd"),
-			gtkutil.MenuItem("In_visible", "win.set-invisible"),
-		}),
-		gtkutil.MenuSeparator(""),
-		gtkutil.MenuItem("_Preferences", "app.preferences"),
-		gtkutil.MenuItem("_About", "app.about"),
-		gtkutil.MenuItem("_Logs", "app.logs"),
-		gtkutil.MenuItem("_Quit", "app.quit"),
-	})
-
-	// TODO: consider if we can merge this ToolbarView with the one in channels
-	// and direct.
-	rightWrap := adw.NewToolbarView()
-	rightWrap.AddBottomBar(userBar)
-	rightWrap.SetContent(s.Right)
-
-	s.Box = gtk.NewBox(gtk.OrientationHorizontal, 0)
-	s.Box.SetHExpand(false)
-	s.Box.Append(s.Left)
-	s.Box.Append(rightWrap)
-	sidebarCSS(s)
+	setupUserBar(
+		ctx, // Login context
+		uiFile.GetComponent("UserRoot").(*gtk.Box),          // UserbarRootContent
+		uiFile.GetComponent("UserAvatar").(*adw.Avatar),     // Avatar
+		uiFile.GetComponent("UserName").(*gtk.Label),        // Nametag
+		uiFile.GetComponent("UserStatus").(*gtk.MenuButton), // Status button
+		uiFile.GetComponent("UserMenu").(*gtk.MenuButton),   // Menu button
+	)
 
 	return &s
 }
@@ -147,7 +99,7 @@ func (s *Sidebar) stackSelect(w gtk.Widgetter) {
 	s.current.w = w
 
 	if w == nil {
-		s.Right.SetVisibleChild(s.placeholder)
+		s.Right.SetVisibleChildName("placeholder")
 	} else {
 		// This should do nothing if the widget is already in the stack.
 		// Maybe???
@@ -225,7 +177,7 @@ func (s *Sidebar) unselect() {
 // Unselect unselects the current guild or channel.
 func (s *Sidebar) Unselect() {
 	s.unselect()
-	s.Right.SetVisibleChild(s.placeholder)
+	s.Right.SetVisibleChildName("placeholder")
 }
 
 // SetSelectedGuild marks the guild with the given ID as selected.

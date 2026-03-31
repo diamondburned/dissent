@@ -12,7 +12,6 @@ import (
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/gtkutil"
-	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/ningen/v3/states/read"
 	"libdb.so/dissent/internal/gtkcord"
 )
@@ -33,17 +32,6 @@ type ChannelView struct {
 	channels map[discord.ChannelID]*Channel
 	selectID discord.ChannelID // delegate to be selected later
 }
-
-var _ = cssutil.WriteCSS(`
-	.direct-searchbar > revealer > box {
-		border-bottom: 0;
-		background: none;
-		box-shadow: none;
-	}
-	.direct-searchbar > revealer > box > entry {
-		min-height: 28px;
-	}
-`)
 
 // NewChannelView creates a new view.
 func NewChannelView(ctx context.Context) *ChannelView {

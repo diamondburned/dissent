@@ -46,10 +46,10 @@ type Window struct {
 	win *app.Window
 	ctx context.Context
 
-	Stack   *gtk.Stack
-	Login   *login.Page
-	Loading *login.LoadingPage
-	Chat    *ChatPage
+	Stack *gtk.Stack
+	Login *login.Page
+	// Loading *login.LoadingPage
+	Chat *ChatPage
 }
 
 // NewWindow creates a new Window.
@@ -73,12 +73,16 @@ func NewWindow(ctx context.Context) *Window {
 	w.Login = login.NewPage(ctx, &loginWindow{Window: &w})
 	w.Login.LoadKeyring()
 
-	w.Loading = login.NewLoadingPage(ctx)
+	gtkutil.AddActions(w, map[string]func(){
+		"login-page": func() { w.Login.Login.ShowLoginPage() },
+	})
+
+	// w.Loading = login.NewLoadingPage(ctx)
 
 	w.Stack = gtk.NewStack()
 	w.Stack.SetTransitionType(gtk.StackTransitionTypeCrossfade)
 	w.Stack.AddChild(w.Login)
-	w.Stack.AddChild(w.Loading)
+	// w.Stack.AddChild(w.Loading)
 	w.Stack.SetVisibleChild(w.Login)
 	win.SetContent(w.Stack)
 

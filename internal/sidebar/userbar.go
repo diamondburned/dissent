@@ -7,11 +7,10 @@ import (
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
-	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/components/onlineimage"
 	"github.com/diamondburned/gotkit/gtkutil"
-	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/gotkit/gtkutil/imgutil"
 	"libdb.so/dissent/internal/gtkcord"
 )
@@ -21,56 +20,28 @@ type userBar struct {
 	*gtk.Box
 	avatar *onlineimage.Avatar
 	name   *gtk.Label
-	status *gtk.Image
-	menu   *gtk.ToggleButton
+	status *gtk.MenuButton
+	menu   *gtk.MenuButton
 
 	ctx context.Context
 }
 
-var userBarCSS = cssutil.Applier("user-bar", `
-	.user-bar-avatar {
-		padding: 6px;
+func setupUserBar(ctx context.Context, box *gtk.Box, avatar *adw.Avatar, username *gtk.Label, status *gtk.MenuButton, menu *gtk.MenuButton) {
+	b := userBar{
+		Box:    box,
+		ctx:    ctx,
+		name:   username,
+		status: status,
+		menu:   menu,
 	}
-	.user-bar-menu {
-		margin: 0 6px;
-	}
-`)
+	b.avatar = onlineimage.CreateAvatarFromObj(
+		ctx,
+		avatar,
+		imgutil.HTTPProvider,
+		gtkcord.UserBarAvatarSize,
+	)
 
-func newUserBar(ctx context.Context, menuActions []gtkutil.PopoverMenuItem) *userBar {
-	b := userBar{ctx: ctx}
-	b.avatar = onlineimage.NewAvatar(ctx, imgutil.HTTPProvider, gtkcord.UserBarAvatarSize)
-	b.avatar.AddCSSClass("user-bar-avatar")
-
-	b.name = gtk.NewLabel("")
-	b.name.AddCSSClass("user-bar-name")
-	b.name.SetSelectable(true)
-	b.name.SetXAlign(0)
-	b.name.SetHExpand(true)
-	b.name.SetWrap(false)
-	b.name.SetEllipsize(pango.EllipsizeEnd)
-
-	b.status = gtk.NewImage()
-	b.status.AddCSSClass("user-bar-status")
 	b.updatePresence(nil)
-
-	b.menu = gtk.NewToggleButton()
-	b.menu.AddCSSClass("user-bar-menu")
-	b.menu.SetIconName("menu-large-symbolic")
-	b.menu.SetTooltipText("Main Menu")
-	b.menu.SetHasFrame(false)
-	b.menu.SetVAlign(gtk.AlignCenter)
-	b.menu.ConnectClicked(func() {
-		p := gtkutil.NewPopoverMenuCustom(b.menu, gtk.PosTop, menuActions)
-		p.ConnectHide(func() { b.menu.SetActive(false) })
-		gtkutil.PopupFinally(p)
-	})
-
-	b.Box = gtk.NewBox(gtk.OrientationHorizontal, 0)
-	b.Box.Append(b.avatar)
-	b.Box.Append(b.name)
-	b.Box.Append(b.status)
-	b.Box.Append(b.menu)
-	userBarCSS(b)
 
 	anim := b.avatar.EnableAnimation()
 	anim.ConnectMotion(b)
@@ -105,8 +76,6 @@ func newUserBar(ctx context.Context, menuActions []gtkutil.PopoverMenuItem) *use
 		b.updateUser(me)
 
 	}
-
-	return &b
 }
 
 var discriminatorRe = regexp.MustCompile(`#\d{1,4}$`)
@@ -138,7 +107,7 @@ func (b *userBar) updateUser(me *discord.User) {
 func (b *userBar) updatePresence(presence *discord.Presence) {
 	if presence == nil {
 		b.status.SetTooltipText(statusText(discord.UnknownStatus))
-		b.status.SetFromIconName(statusIcon(discord.UnknownStatus))
+		b.status.SetIconName(statusIcon(discord.UnknownStatus))
 		return
 	}
 
@@ -147,7 +116,7 @@ func (b *userBar) updatePresence(presence *discord.Presence) {
 	}
 
 	b.status.SetTooltipText(statusText(presence.Status))
-	b.status.SetFromIconName(statusIcon(presence.Status))
+	b.status.SetIconName(statusIcon(presence.Status))
 }
 
 func (b *userBar) invalidatePresence() {

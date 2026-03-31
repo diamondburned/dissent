@@ -124,8 +124,7 @@ func (w *loginWindow) Ready(state *gtkcord.State) {
 }
 
 func (w *loginWindow) Reconnecting() {
-	w.Stack.SetVisibleChild(w.Loading)
-	w.SetTitle("Connecting")
+	w.Login.Login.SetBusy("Connecting...")
 }
 
 func (w *loginWindow) Connected() {
@@ -134,8 +133,15 @@ func (w *loginWindow) Connected() {
 		w.initActions()
 	})
 	w.Window.SwitchToChatPage()
+	// w.Login.Login.SetDone()
 }
 
 func (w *loginWindow) PromptLogin() {
+	w.PromptLoginNoFocus()
+	w.Login.Login.ShowLoginPage()
+}
+
+func (w *loginWindow) PromptLoginNoFocus() {
+	w.Login.Login.SetDone()
 	w.Window.SwitchToLoginPage()
 }

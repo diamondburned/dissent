@@ -1,0 +1,349 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Cambalache 0.96.1 -->
+<interface>
+  <!-- interface-name login_component.ui -->
+  <requires lib="gtk" version="4.18"/>
+  <requires lib="libadwaita" version="1.7"/>
+  <object class="AdwViewStack" id="rootContent">
+    <property name="enable-transitions">True</property>
+    <child>
+      <object class="AdwViewStackPage">
+        <property name="child">
+          <object class="AdwCarousel" id="LoginCarousel">
+            <property name="allow-mouse-drag">False</property>
+            <property name="allow-scroll-wheel">False</property>
+            <property name="hexpand">True</property>
+            <property name="interactive">False</property>
+            <property name="vexpand">True</property>
+            <child>
+              <object class="AdwViewStack" id="GreeterStack">
+                <property name="hexpand">True</property>
+                <property name="vexpand">True</property>
+                <child>
+                  <object class="AdwViewStackPage">
+                    <property name="child">
+                      <object class="AdwStatusPage">
+                        <property name="child">
+                          <object class="GtkButton">
+                            <property name="action-name">win.login-page</property>
+                            <property name="halign">center</property>
+                            <property name="label">Get started</property>
+                            <style>
+                              <class name="pill"/>
+                              <class name="suggested-action"/>
+                            </style>
+                          </object>
+                        </property>
+                        <property name="description">The lightweight Discord client for your GNOME desktop</property>
+                        <property name="icon-name">so.libdb.dissent</property>
+                        <property name="title">Welcome to Dissent</property>
+                      </object>
+                    </property>
+                    <property name="name">welcomePage</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwViewStackPage">
+                    <property name="child">
+                      <object class="AdwStatusPage">
+                        <property name="child">
+                          <object class="GtkBox">
+                            <property name="halign">center</property>
+                            <property name="spacing">20</property>
+                            <child>
+                              <object class="GtkButton" id="Decrypt">
+                                <property name="child">
+                                  <object class="AdwButtonContent">
+                                    <property name="icon-name">key-login-symbolic</property>
+                                    <property name="label">Decrypt</property>
+                                  </object>
+                                </property>
+                                <property name="halign">center</property>
+                                <style>
+                                  <class name="pill"/>
+                                  <class name="suggested-action"/>
+                                </style>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkButton">
+                                <property name="action-name">win.login-page</property>
+                                <property name="child">
+                                  <object class="AdwButtonContent">
+                                    <property name="icon-name">document-edit-symbolic</property>
+                                    <property name="label">Change login</property>
+                                  </object>
+                                </property>
+                                <property name="halign">center</property>
+                                <style>
+                                  <class name="pill"/>
+                                </style>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                        <property name="description">You've previously chosen to remember the token and may have used a password to encrypt it</property>
+                        <property name="icon-name">padlock2-symbolic</property>
+                        <property name="title">Login data is encrypted</property>
+                        <style/>
+                      </object>
+                    </property>
+                    <property name="name">encryptedPrompt</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwViewStackPage">
+                    <property name="child">
+                      <object class="AdwStatusPage">
+                        <property name="child">
+                          <object class="GtkBox">
+                            <property name="halign">center</property>
+                            <property name="spacing">20</property>
+                            <child>
+                              <object class="GtkButton" id="HTTPErrorRetryButton">
+                                <property name="child">
+                                  <object class="AdwButtonContent">
+                                    <property name="icon-name">view-refresh</property>
+                                    <property name="label">Retry</property>
+                                  </object>
+                                </property>
+                                <property name="halign">center</property>
+                                <style>
+                                  <class name="pill"/>
+                                  <class name="suggested-action"/>
+                                </style>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkButton">
+                                <property name="action-name">win.login-page</property>
+                                <property name="child">
+                                  <object class="AdwButtonContent">
+                                    <property name="icon-name">document-edit-symbolic</property>
+                                    <property name="label">Change</property>
+                                  </object>
+                                </property>
+                                <property name="halign">center</property>
+                                <style>
+                                  <class name="pill"/>
+                                </style>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                        <property name="description">Discord rejected the connection</property>
+                        <property name="icon-name">key3-symbolic</property>
+                        <property name="title">Login error</property>
+                        <style/>
+                      </object>
+                    </property>
+                    <property name="name">invalid_httpcode</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="AdwViewStackPage">
+                    <property name="child">
+                      <object class="AdwStatusPage">
+                        <property name="child">
+                          <object class="GtkButton" id="NetErrorRetryButton">
+                            <property name="child">
+                              <object class="AdwButtonContent">
+                                <property name="icon-name">view-refresh</property>
+                                <property name="label">Retry</property>
+                              </object>
+                            </property>
+                            <property name="halign">center</property>
+                            <style>
+                              <class name="pill"/>
+                              <class name="suggested-action"/>
+                            </style>
+                          </object>
+                        </property>
+                        <property name="description">Please check you network settings and try again</property>
+                        <property name="icon-name">network-wireless-disabled-symbolic</property>
+                        <property name="title">No Internet connection</property>
+                        <style/>
+                      </object>
+                    </property>
+                    <property name="name">network_error</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="AdwToolbarView" id="LoginCarouselTarget">
+                <child type="top">
+                  <object class="AdwBanner" id="ErrorRev"/>
+                </child>
+                <child>
+                  <object class="AdwStatusPage">
+                    <property name="child">
+                      <object class="GtkCenterBox">
+                        <property name="center-widget">
+                          <object class="AdwClamp">
+                            <child>
+                              <object class="AdwViewStack" id="login_opts">
+                                <property name="visible-child-name" bind-source="AuthTabs" bind-property="active-name"/>
+                                <child>
+                                  <object class="AdwViewStackPage">
+                                    <property name="child">
+                                      <object class="AdwPreferencesGroup">
+                                        <property name="description">You will need to manually retrive your token when you login on the official website or client.</property>
+                                        <property name="title">Token authentication</property>
+                                        <child>
+                                          <object class="AdwPasswordEntryRow" id="Token">
+                                            <property name="title">Token</property>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </property>
+                                    <property name="name">token</property>
+                                  </object>
+                                </child>
+                                <child>
+                                  <object class="AdwViewStackPage">
+                                    <property name="child">
+                                      <object class="AdwPreferencesGroup">
+                                        <property name="description">Note that they will be only used to retrive a token, and will not be directly stored as-is.</property>
+                                        <property name="title">Basic authentication</property>
+                                        <child>
+                                          <object class="AdwEntryRow" id="Email">
+                                            <property name="input-purpose">email</property>
+                                            <property name="title">Username or email</property>
+                                          </object>
+                                        </child>
+                                        <child>
+                                          <object class="AdwPreferencesRow">
+                                            <property name="activatable">False</property>
+                                            <property name="focusable">False</property>
+                                            <property name="selectable">False</property>
+                                            <child>
+                                              <object class="GtkBox">
+                                                <child>
+                                                  <object class="AdwPasswordEntryRow" id="Password">
+                                                    <property name="hexpand">True</property>
+                                                    <property name="title">Password</property>
+                                                  </object>
+                                                </child>
+                                                <child>
+                                                  <object class="AdwClamp">
+                                                    <property name="maximum-size">125</property>
+                                                    <child>
+                                                      <object class="AdwEntryRow" id="TOTP">
+                                                        <property name="input-purpose">pin</property>
+                                                        <property name="max-length">6</property>
+                                                        <property name="title">OTP Code</property>
+                                                        <property name="width-chars">6</property>
+                                                      </object>
+                                                    </child>
+                                                  </object>
+                                                </child>
+                                              </object>
+                                            </child>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </property>
+                                    <property name="name">basic</property>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                        <property name="end-widget">
+                          <object class="GtkBox">
+                            <property name="halign">center</property>
+                            <property name="margin-top">15</property>
+                            <property name="spacing">20</property>
+                            <child>
+                              <object class="GtkCheckButton" id="Remember">
+                                <property name="label">Remember</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="LogIn">
+                                <property name="label">Login</property>
+                                <style>
+                                  <class name="pill"/>
+                                  <class name="suggested-action"/>
+                                </style>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                        <property name="orientation">vertical</property>
+                        <property name="start-widget">
+                          <object class="AdwToggleGroup" id="AuthTabs">
+                            <property name="active">0</property>
+                            <property name="halign">center</property>
+                            <child>
+                              <object class="AdwToggle">
+                                <property name="icon-name">content-loading-symbolic</property>
+                                <property name="label">Token</property>
+                                <property name="name">token</property>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="AdwToggle">
+                                <property name="icon-name">dialog-password</property>
+                                <property name="label">Basic Auth</property>
+                                <property name="name">basic</property>
+                              </object>
+                            </child>
+                          </object>
+                        </property>
+                      </object>
+                    </property>
+                    <property name="description">Login with you credentials, or use an authentication token</property>
+                    <property name="hexpand">True</property>
+                    <property name="icon-name">dialog-password-symbolic</property>
+                    <property name="title">Login to your account</property>
+                    <property name="vexpand">True</property>
+                    <style>
+                      <class name="compact"/>
+                    </style>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </property>
+        <property name="name">account_setup</property>
+      </object>
+    </child>
+    <child>
+      <object class="AdwViewStackPage">
+        <property name="child">
+          <object class="AdwStatusPage">
+            <property name="icon-name">so.libdb.dissent-symbolic</property>
+            <child>
+              <object class="GtkBox">
+                <property name="orientation">vertical</property>
+                <property name="spacing">15</property>
+                <child>
+                  <object class="AdwSpinner">
+                    <property name="height-request">32</property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="LoaderLabel">
+                    <property name="label">Loading...</property>
+                    <property name="visible">False</property>
+                    <style>
+                      <class name="dimmed"/>
+                    </style>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <style>
+              <class name="compact"/>
+            </style>
+          </object>
+        </property>
+        <property name="name">loader</property>
+      </object>
+    </child>
+  </object>
+</interface>
