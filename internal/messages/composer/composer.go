@@ -245,7 +245,7 @@ func NewView(ctx context.Context, ctrl Controller, chID discord.ChannelID) *View
 	v.emojiButton.SetIconName(emojiIcon)
 	v.emojiButton.AddCSSClass("flat")
 	v.emojiButton.SetTooltipText(locale.Get("Choose Emoji"))
-	v.emojiButton.SetPopover(v.EmojiChooser)
+	v.emojiButton.SetPopover(&v.EmojiChooser.Popover)
 
 	v.sendButton = gtk.NewButtonFromIconName(sendIcon)
 	v.sendButton.AddCSSClass("composer-send")

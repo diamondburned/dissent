@@ -5,7 +5,7 @@
     flake-compat.url = "https://flakehub.com/f/edolstra/flake-compat/1.tar.gz";
 
     gomod2nix = {
-      url = "github:nix-community/gomod2nix/8f3534eb8f6c5c3fce799376dc3b91bae6b11884";
+      url = "github:nix-community/gomod2nix";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.flake-utils.follows = "flake-utils";
     };
@@ -39,7 +39,7 @@
           src = self;
         };
 
-      goPackage = "go_1_24";
+      goPackage = "go_1_27";
     in
 
     (flake-utils.lib.eachDefaultSystem (
