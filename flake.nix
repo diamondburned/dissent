@@ -67,6 +67,15 @@
             (callPackage ./.github/tools { })
           ];
           inherit go;
+
+          # Disable Gstreamer registry caching.
+          #
+          # I ran into issues with Dissent crashing with an error: `GstPlay:
+          # 'playbin3' element not found, please check your setup`.
+          # `gst-inspect-1.0 playbin3` yielded "blacklisted".
+          # This was only fixed after running `rm -r ~/.cache/gstreamer-1.0` and
+          # re-running this command.
+          GST_REGISTRY = "/dev/null";
         };
 
         packages.default = gotk4-nix.lib.mkPackage {
