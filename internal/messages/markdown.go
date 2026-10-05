@@ -10,13 +10,13 @@ import (
 	"github.com/diamondburned/chatkit/md/mdrender"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
-	"github.com/diamondburned/gotkit/components/onlineimage"
 	"github.com/diamondburned/gotkit/gtkutil/imgutil"
 	"github.com/diamondburned/gotkit/gtkutil/textutil"
 	"github.com/diamondburned/ningen/v3/discordmd"
 	"github.com/yuin/goldmark/ast"
 	"libdb.so/ctxt"
 	"libdb.so/dissent/internal/gtkcord"
+	"libdb.so/dissent/internal/onlineimage"
 )
 
 type markdownState struct {

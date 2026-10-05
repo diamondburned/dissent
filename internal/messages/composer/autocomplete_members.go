@@ -10,10 +10,10 @@ import (
 	"github.com/diamondburned/chatkit/components/autocomplete"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
-	"github.com/diamondburned/gotkit/components/onlineimage"
 	"github.com/diamondburned/gotkit/gtkutil/imgutil"
 	"github.com/sahilm/fuzzy"
 	"libdb.so/dissent/internal/gtkcord"
+	"libdb.so/dissent/internal/onlineimage"
 )
 
 const memberCacheExpiry = 2 * time.Second

@@ -24,7 +24,6 @@ require (
 	libdb.so/gotk4-spelling/pkg v0.0.0-20241128063647-a9edc40bddb0
 )
 
-replace github.com/diamondburned/gotkit v0.0.0-20250223060613-69614d9e70a9 => ./external/gotkit
 replace libdb.so/dissent/internal/gresources v0.0.1 => ./internal/gresources
 
 require (
