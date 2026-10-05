@@ -41,7 +41,6 @@ func init() {
 	app.Hook(func(*app.Application) {
 		adw.Init()
 		adaptive.Init()
-		gresources.Init()
 	})
 }
 

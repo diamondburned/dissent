@@ -28,14 +28,12 @@ func (ui *UiFile) GetRoot() glib.Objector {
 	return ui.GetComponent("rootContent")
 }
 
-func Init() bool {
+func init() {
 	resources, err := gio.NewResourceFromData(glib.NewBytesWithGo(Resources))
 	if err != nil {
 		log.Panicln("Failed to create resources: ", err)
-		return false
 	}
 	gio.ResourcesRegister(resources)
-	return true
 }
 
 func New(filename string) *UiFile {
