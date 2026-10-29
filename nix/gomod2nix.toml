@@ -14,12 +14,12 @@ schema = 3
     hash = 'sha256-xIerrbYQf6FPbbRd60OnBStIJMl6mg/Qvl+LTmRbyIw='
 
   [mod.'github.com/diamondburned/arikawa/v3']
-    version = 'v3.6.0'
-    hash = 'sha256-FxQG+xXZ8EIpV1IYCwoN20BK+V+b1uiZWPcP98lhBuw='
+    version = 'v3.6.1-0.20260518050745-b430932b3ee1'
+    hash = 'sha256-8yNjv/Rq23fVDBK7BCitm+uI4YFRfEai44JJldjPyGs='
 
   [mod.'github.com/diamondburned/chatkit']
-    version = 'v0.0.0-20240614105536-5788b19145bc'
-    hash = 'sha256-w6q9vDTUmSwAn6RDhPUzY2VIAvgduSbSxGzh46gLFqQ='
+    version = 'v0.0.0-20260810231946-28477b5698eb'
+    hash = 'sha256-hkVMkrWi95hkHolMT0smTL9H4Lt3kKl0eAj9BCkWWg8='
 
   [mod.'github.com/diamondburned/gotk4-adwaita/pkg']
     version = 'v0.0.0-20260808200908-d4aecaa0ff32'
@@ -34,16 +34,16 @@ schema = 3
     hash = 'sha256-6/Ow9vCb0pJlL62c5BKmdzL4Eb4pelopCn4uZ7jX/Tg='
 
   [mod.'github.com/diamondburned/ningen/v3']
-    version = 'v3.0.1-0.20250703054403-e5dc4cf15e84'
-    hash = 'sha256-bpl5Ynwfish8jO55PJu4Exu7mAnXUBYu4aJ+wy5ZReU='
+    version = 'v3.0.1-0.20260226220604-93f1e60c3cdb'
+    hash = 'sha256-IrU0l9o3E5D1bS/b59y/v1vzRhcsizi+BhyGtSl6Kxs='
 
   [mod.'github.com/dlclark/regexp2']
     version = 'v1.12.0'
     hash = 'sha256-PVX2rDCkiG0vyA1CbDi3bzLeZ2T8hcqJv3pZ5YwGzMI='
 
   [mod.'github.com/dustin/go-humanize']
-    version = 'v1.0.1'
-    hash = 'sha256-yuvxYYngpfVkUg9yAmG99IUVmADTQA0tMbBXe0Fq0Mc='
+    version = 'v1.1.0'
+    hash = 'sha256-Qa7BSAXtgH7CB5STBiXTTOCgivWUiA65u3KxDOSZCkQ='
 
   [mod.'github.com/enescakir/emoji']
     version = 'v1.0.0'
@@ -62,8 +62,8 @@ schema = 3
     hash = 'sha256-vTIGEFMEi+30ZdO6ffMNJ/kId6pZs5bbyqov8xe9BM0='
 
   [mod.'github.com/ianlancetaylor/cgosymbolizer']
-    version = 'v0.0.0-20260706211533-3db786f0ca59'
-    hash = 'sha256-tznv0R5dMxSDVUdgKHrycIZOKEMrGJm2JInVYg2C9/M='
+    version = 'v0.0.0-20260903193033-d2f22a62e960'
+    hash = 'sha256-Y3KGRmv+zpFmjTWHuQXcjGQGBpzRggDdkfsHmTwFwBE='
 
   [mod.'github.com/leonelquinteros/gotext']
     version = 'v1.7.2'
@@ -98,8 +98,8 @@ schema = 3
     hash = 'sha256-Ww4EEsieMo7UzQYRBFaJNfNiIMPajCPANGABNeHFL0U='
 
   [mod.'github.com/yuin/goldmark']
-    version = 'v1.8.5'
-    hash = 'sha256-h3K8bFnBVwoAUzqRNP66GEhMUKGIA27f7PA7M1r6rp4='
+    version = 'v1.8.6'
+    hash = 'sha256-rAwGzzmVrhhtzr8OSGid+F+NM5YWMyYYW6BSTWaDIGE='
 
   [mod.'github.com/zalando/go-keyring']
     version = 'v0.2.8'
