@@ -1,8 +1,9 @@
 package channels
 
 import (
+	"cmp"
 	"log/slog"
-	"sort"
+	"slices"
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
@@ -143,7 +144,7 @@ func (l *channelList) CalculatePosition(target discord.Channel) uint {
 			continue
 		}
 
-		if ch.Position > target.Position {
+		if compareChannels(target, *ch) < 0 {
 			return uint(i)
 		}
 	}
@@ -221,7 +222,7 @@ func (l *channelList) ClearAndAppend(chs []discord.Channel) {
 	}
 
 	ids := make([]string, len(chs))
-	l.ids = make([]discord.ChannelID, len(chs))
+	l.ids = make([]discord.ChannelID, 0, len(chs))
 
 	for i, ch := range chs {
 		ids[i] = ch.ID.String()
@@ -260,15 +261,32 @@ func fetchSortedChannels(state *gtkcord.State, guildID discord.GuildID, parentID
 		}
 	}
 
-	// Sort so that the channels are in increasing order.
-	sort.Slice(filtered, func(i, j int) bool {
-		a := filtered[i]
-		b := filtered[j]
-		if a.Position == b.Position {
-			return a.ID < b.ID
-		}
-		return a.Position < b.Position
-	})
+	slices.SortFunc(filtered, compareChannels)
 
 	return filtered
+}
+
+// channelSortGroup returns the group a channel is sorted into. Discord's
+// client positions categories and channels independently, so the same
+// Position value can be shared by a category and a channel. Within one parent,
+// non-voice channels come first, then voice channels, then categories.
+func channelSortGroup(ch discord.Channel) int {
+	switch ch.Type {
+	case discord.GuildCategory:
+		return 2
+	case discord.GuildVoice, discord.GuildStageVoice:
+		return 1
+	default:
+		return 0
+	}
+}
+
+// compareChannels compares a and b by the order they are shown in the channel
+// list.
+func compareChannels(a, b discord.Channel) int {
+	return cmp.Or(
+		cmp.Compare(channelSortGroup(a), channelSortGroup(b)),
+		cmp.Compare(a.Position, b.Position),
+		cmp.Compare(a.ID, b.ID),
+	)
 }
