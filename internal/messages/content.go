@@ -205,6 +205,13 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 
 	c.mdview = nil
 
+	content := m.Content
+	if content == "" {
+		// Messages using Components V2 have no content and instead put
+		// their text inside components.
+		content = componentsText(m.Components)
+	}
+
 	switch {
 	case messageMarkup != "":
 		msg := gtk.NewLabel("")
@@ -238,8 +245,8 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 
 	// We render a big content if the content itself is literally a Unicode
 	// emoji.
-	case m.Content != "" && md.IsUnicodeEmoji(m.Content):
-		l := gtk.NewLabel(m.Content)
+	case content != "" && md.IsUnicodeEmoji(content):
+		l := gtk.NewLabel(content)
 		l.SetAttributes(gtkcord.EmojiAttrs)
 		l.SetHExpand(true)
 		l.SetXAlign(0)
@@ -250,10 +257,10 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 
 	// We don't render the message content if all it is is the URL to the
 	// embedded image, because that's what the official client does.
-	case m.Content != "" &&
-		!(len(m.Embeds) == 1 && m.Embeds[0].Type == discord.ImageEmbed && m.Embeds[0].URL == m.Content):
+	case content != "" &&
+		!(len(m.Embeds) == 1 && m.Embeds[0].Type == discord.ImageEmbed && m.Embeds[0].URL == content):
 
-		src := []byte(m.Content)
+		src := []byte(content)
 		node := discordmd.ParseWithMessage(src, *state.Cabinet, m, true)
 
 		c.mdview = mdrender.NewMarkdownViewer(
@@ -283,6 +290,35 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 
 	c.SetReactions(m.Reactions)
 	c.setMenu()
+}
+
+// componentsText returns the Markdown text of all text display components
+// within the given components, including those nested in containers and
+// sections.
+func componentsText(components discord.TopLevelComponents) string {
+	var texts []string
+
+	var walk func(discord.Component)
+	walk = func(component discord.Component) {
+		switch component := component.(type) {
+		case *discord.TextDisplayComponent:
+			texts = append(texts, component.Content)
+		case *discord.SectionComponent:
+			for _, child := range component.Components {
+				walk(child)
+			}
+		case *discord.ContainerComponent:
+			for _, child := range component.Components {
+				walk(child)
+			}
+		}
+	}
+
+	for _, component := range components {
+		walk(component)
+	}
+
+	return strings.Join(texts, "\n\n")
 }
 
 func (c *Content) newReplyBox(m *discord.Message) gtk.Widgetter {

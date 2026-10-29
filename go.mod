@@ -6,12 +6,12 @@ go 1.25.0
 
 require (
 	github.com/diamondburned/adaptive v0.0.2-0.20221227093656-fa139be203a8
-	github.com/diamondburned/arikawa/v3 v3.6.0
+	github.com/diamondburned/arikawa/v3 v3.6.1-0.20260518050745-b430932b3ee1
 	github.com/diamondburned/chatkit v0.0.0-20240614105536-5788b19145bc
 	github.com/diamondburned/gotk4-adwaita/pkg v0.0.0-20260808200908-d4aecaa0ff32
 	github.com/diamondburned/gotk4/pkg v0.4.1
 	github.com/diamondburned/gotkit v0.0.0-20260808214113-d0c316dcdb4e
-	github.com/diamondburned/ningen/v3 v3.0.1-0.20250703054403-e5dc4cf15e84
+	github.com/diamondburned/ningen/v3 v3.0.1-0.20260226220604-93f1e60c3cdb
 	github.com/dustin/go-humanize v1.0.1
 	github.com/enescakir/emoji v1.0.0
 	github.com/ianlancetaylor/cgosymbolizer v0.0.0-20260706211533-3db786f0ca59
