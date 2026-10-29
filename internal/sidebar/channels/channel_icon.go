@@ -55,6 +55,8 @@ func channelIconBase(chType discord.ChannelType) (string, bool) {
 		return "channel-symbolic", true
 	case discord.GuildAnnouncement:
 		return "channel-broadcast-symbolic", true
+	case discord.GuildForum:
+		return "forum-symbolic", true
 	case discord.GuildPublicThread, discord.GuildPrivateThread, discord.GuildAnnouncementThread:
 		return "thread-branch-symbolic", true
 	case discord.GuildVoice, discord.GuildStageVoice:

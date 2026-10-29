@@ -256,19 +256,14 @@ func (i *channelItem) Invalidate() {
 	} else {
 		switch ch.Type {
 		case
-			discord.GuildText, discord.GuildAnnouncement,
+			discord.GuildText, discord.GuildAnnouncement, discord.GuildForum,
 			discord.GuildPublicThread, discord.GuildPrivateThread, discord.GuildAnnouncementThread:
 
 			i.child.content = newChannelItemText(ch)
 
-		case discord.GuildCategory, discord.GuildForum:
-			switch ch.Type {
-			case discord.GuildCategory:
-				i.child.content = newChannelItemCategory(ch, i.row, i.reveal)
-				i.item.SetSelectable(false)
-			case discord.GuildForum:
-				i.child.content = newChannelItemForum(ch, i.row)
-			}
+		case discord.GuildCategory:
+			i.child.content = newChannelItemCategory(ch, i.row, i.reveal)
+			i.item.SetSelectable(false)
 
 		case discord.GuildVoice, discord.GuildStageVoice:
 			i.child.content = newChannelItemVoice(i.state, ch)
@@ -366,39 +361,13 @@ func newChannelItemText(ch *discord.Channel) gtk.Widgetter {
 		box.AddCSSClass("channel-item-text")
 	case discord.GuildAnnouncement:
 		box.AddCSSClass("channel-item-announcement")
+	case discord.GuildForum:
+		box.AddCSSClass("channel-item-forum")
 	case discord.GuildPublicThread, discord.GuildPrivateThread, discord.GuildAnnouncementThread:
 		box.AddCSSClass("channel-item-thread")
 	}
 
 	return box
-}
-
-var _ = cssutil.WriteCSS(`
-	.channel-item-forum {
-		padding: 0.35em 0;
-	}
-	.channel-item-forum label {
-		padding: 0;
-	}
-`)
-
-func newChannelItemForum(ch *discord.Channel, row *gtk.TreeListRow) gtk.Widgetter {
-	label := gtk.NewLabel(ch.Name)
-	label.SetEllipsize(pango.EllipsizeEnd)
-	label.SetXAlign(0)
-	bindLabelTooltip(label, false)
-
-	expander := gtk.NewTreeExpander()
-	expander.AddCSSClass("channel-item")
-	expander.AddCSSClass("channel-item-forum")
-	expander.SetHExpand(true)
-	expander.SetListRow(row)
-	expander.SetChild(label)
-
-	// GTK 4.10 or later only.
-	expander.SetObjectProperty("indent-for-depth", false)
-
-	return expander
 }
 
 var _ = cssutil.WriteCSS(`
