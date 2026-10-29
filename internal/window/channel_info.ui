@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Channel information, shown when the channel name in the header is clicked. -->
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkPopover" id="rootContent">
+    <style>
+      <class name="channel-info-popover"/>
+    </style>
+    <property name="child">
+      <object class="GtkBox">
+        <property name="orientation">vertical</property>
+        <property name="spacing">6</property>
+        <property name="width-request">300</property>
+        <child>
+          <object class="GtkBox">
+            <property name="spacing">6</property>
+            <child>
+              <object class="GtkLabel" id="name">
+                <property name="xalign">0</property>
+                <property name="hexpand">true</property>
+                <property name="wrap">true</property>
+                <property name="wrap-mode">word-char</property>
+                <style>
+                  <class name="title-4"/>
+                </style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkLabel" id="nsfw">
+                <property name="label">NSFW</property>
+                <property name="valign">center</property>
+                <property name="visible">false</property>
+                <property name="tooltip-text">This channel is NSFW.</property>
+                <style>
+                  <class name="caption-heading"/>
+                  <class name="channel-info-nsfw"/>
+                </style>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="topic">
+            <property name="xalign">0</property>
+            <property name="wrap">true</property>
+            <property name="wrap-mode">word-char</property>
+            <property name="max-width-chars">50</property>
+          </object>
+        </child>
+      </object>
+    </property>
+  </object>
+</interface>

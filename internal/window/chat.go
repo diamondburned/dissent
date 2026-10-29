@@ -2,6 +2,7 @@ package window
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
 	"log/slog"
 	"strings"
@@ -12,6 +13,7 @@ import (
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/gdk/v4"
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
+	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/app"
@@ -79,6 +81,18 @@ var chatPageCSS = cssutil.Applier("window-chatpage", `
 	}
 	.right-header-channel-icon {
 		margin-right: 4px;
+	}
+	.right-header-title-button {
+		padding: 0 6px;
+	}
+	.channel-info-popover > contents {
+		padding: 12px;
+	}
+	.channel-info-nsfw {
+		padding: 1px 6px;
+		border-radius: 99px;
+		color: var(--error-fg-color);
+		background-color: var(--error-bg-color);
 	}
 `)
 
@@ -407,7 +421,42 @@ func (p *ChatPage) onActiveTabChange(page *adw.TabPage) {
 	box.Append(chIcon)
 	box.Append(label)
 
-	p.rightTitle.SetChild(box)
+	if ch == nil || !ch.GuildID.IsValid() {
+		p.rightTitle.SetChild(box)
+		return
+	}
+
+	// Clicking the channel name shows the channel information.
+	title := gtk.NewMenuButton()
+	title.AddCSSClass("flat")
+	title.AddCSSClass("right-header-title-button")
+	title.SetHAlign(gtk.AlignStart)
+	title.SetTooltipText(locale.Get("Channel Info"))
+	title.SetChild(box)
+	title.SetPopover(newChannelInfoPopover(ch))
+
+	p.rightTitle.SetChild(title)
+}
+
+//go:embed channel_info.ui
+var channelInfoUI string
+
+func newChannelInfoPopover(ch *discord.Channel) *gtk.Popover {
+	ui := gtk.NewBuilderFromString(channelInfoUI)
+	get := func(name string) glib.Objector { return ui.GetObject(name).Cast() }
+
+	get("name").(*gtk.Label).SetText(gtkcord.ChannelNameWithoutHash(ch))
+	get("nsfw").(*gtk.Label).SetVisible(ch.NSFW)
+
+	topic := get("topic").(*gtk.Label)
+	if ch.Topic != "" {
+		topic.SetText(ch.Topic)
+	} else {
+		topic.SetText(locale.Get("No topic set."))
+		topic.AddCSSClass("dim-label")
+	}
+
+	return get("rootContent").(*gtk.Popover)
 }
 
 // newThreadsButton creates the button that toggles between the messages and
@@ -426,7 +475,7 @@ func (p *ChatPage) newThreadsButton(page *adw.TabPage, tab *chatTab) *gtk.Toggle
 	}
 
 	button := gtk.NewToggleButton()
-	button.SetIconName("thread-branch-symbolic")
+	button.SetIconName("forum-symbolic")
 	button.SetTooltipText(locale.Get("Threads"))
 	button.SetActive(tab.threads)
 	button.ConnectToggled(func() {

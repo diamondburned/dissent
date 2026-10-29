@@ -1,12 +1,13 @@
 package messages
 
 import (
-	"fmt"
+	_ "embed"
 	"html"
 	"strings"
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
+	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/app/locale"
@@ -159,47 +160,8 @@ type summaryMarkups struct {
 func formatSummary(state *gtkcord.State, guildID discord.GuildID, summary gateway.ConversationSummary) summaryMarkups {
 	var markups summaryMarkups
 
-	if len(summary.People) > 0 {
-		var header strings.Builder
-		header.WriteString("<small>")
-
-		names := make([]string, 0, min(3, len(summary.People)))
-		for _, uID := range summary.People {
-			name, _ := state.MemberDisplayName(guildID, uID)
-			if name != "" {
-				name = "<b>" + html.EscapeString(name) + "</b>"
-			} else {
-				name = locale.Get("?")
-			}
-			names = append(names, name)
-			if len(names) == 3 {
-				break
-			}
-		}
-
-		switch len(summary.People) {
-		case 1:
-			header.WriteString(names[0])
-		case 2:
-			header.WriteString(names[0])
-			header.WriteString(locale.Get(" and "))
-			header.WriteString(names[1])
-		case 3:
-			header.WriteString(names[0])
-			header.WriteString(locale.Get(", "))
-			header.WriteString(names[1])
-			header.WriteString(locale.Get(" and "))
-			header.WriteString(names[2])
-		default:
-			header.WriteString(names[0])
-			header.WriteString(locale.Get(", "))
-			header.WriteString(names[1])
-			header.WriteString(locale.Get(" and "))
-			header.WriteString(locale.Sprintf("%d others", len(summary.People)-2))
-		}
-
-		header.WriteString(":</small>")
-		markups.header = header.String()
+	if people := summaryPeople(state, guildID, summary); people != "" {
+		markups.header = "<small>" + people + ":</small>"
 	}
 
 	markups.title = "<b>" + html.EscapeString(summary.Topic) + "</b>"
@@ -208,93 +170,104 @@ func formatSummary(state *gtkcord.State, guildID discord.GuildID, summary gatewa
 	return markups
 }
 
-var _ = cssutil.WriteCSS(`
-	.message-summaries-popover list {
-		background-color: transparent;
+// summaryPeople returns the markup listing the people in the summary, or an
+// empty string if there are none.
+func summaryPeople(state *gtkcord.State, guildID discord.GuildID, summary gateway.ConversationSummary) string {
+	if len(summary.People) == 0 {
+		return ""
 	}
+
+	names := make([]string, 0, min(3, len(summary.People)))
+	for _, uID := range summary.People {
+		name, _ := state.MemberDisplayName(guildID, uID)
+		if name != "" {
+			name = "<b>" + html.EscapeString(name) + "</b>"
+		} else {
+			name = locale.Get("?")
+		}
+		names = append(names, name)
+		if len(names) == 3 {
+			break
+		}
+	}
+
+	var people strings.Builder
+	switch len(summary.People) {
+	case 1:
+		people.WriteString(names[0])
+	case 2:
+		people.WriteString(names[0])
+		people.WriteString(locale.Get(" and "))
+		people.WriteString(names[1])
+	case 3:
+		people.WriteString(names[0])
+		people.WriteString(locale.Get(", "))
+		people.WriteString(names[1])
+		people.WriteString(locale.Get(" and "))
+		people.WriteString(names[2])
+	default:
+		people.WriteString(names[0])
+		people.WriteString(locale.Get(", "))
+		people.WriteString(names[1])
+		people.WriteString(locale.Get(" and "))
+		people.WriteString(locale.Sprintf("%d others", len(summary.People)-2))
+	}
+
+	return people.String()
+}
+
+var (
+	//go:embed summaries.ui
+	summariesUI string
+	//go:embed summary_row.ui
+	summaryRowUI string
+)
+
+var _ = cssutil.WriteCSS(`
 	.message-summaries-popover > contents {
 		padding: 0;
 	}
-	.message-summary-item:first-child {
-		margin-top: 0.5em;
+	.message-summaries-heading {
+		margin: 12px 12px 0 12px;
 	}
-	.message-summary-item:last-child {
-		margin-bottom: 0.5em;
+	.message-summaries-list {
+		margin: 12px;
 	}
 	.message-summary-item {
-		padding: 0.25em 0.5em;
-		margin: 0.25em 0;
-	}
-	.message-summary-item:not(:last-child) {
-		border-bottom: 1px solid @borders;
-	}
-	.message-summary-item label:nth-child(2) {
-		margin-top: 0.1em;
+		padding: 10px 12px;
 	}
 `)
 
 func (v *View) initSummariesPopover(popover *gtk.Popover) bool {
 	popover.AddCSSClass("message-summaries-popover")
-	popover.SetOverflow(gtk.OverflowHidden)
 	state := gtkcord.FromContext(v.ctx).Offline()
 
-	summaries := state.SummaryState.Summaries(v.chID)
-	if len(summaries) == 0 {
-		placeholder := gtk.NewLabel(locale.Get("No message summaries available."))
-		placeholder.AddCSSClass("message-summaries-placeholder")
+	ui := gtk.NewBuilderFromString(summariesUI)
+	list := ui.GetObject("list").Cast().(*gtk.ListBox)
 
-		popover.SetChild(placeholder)
-		return true
-	}
+	for _, summary := range state.SummaryState.Summaries(v.chID) {
+		row := gtk.NewBuilderFromString(summaryRowUI)
+		get := func(name string) glib.Objector { return row.GetObject(name).Cast() }
 
-	list := gtk.NewBox(gtk.OrientationVertical, 0)
-	list.AddCSSClass("message-summaries-list")
-	list.SetHExpand(true)
+		start := summary.StartID.Time()
 
-	for _, summary := range summaries {
-		markups := formatSummary(state, v.guildID, summary)
+		meta := get("meta").(*gtk.Label)
+		meta.SetText(locale.TimeAgo(start) + " · " + locale.Sprintf("%d messages", summary.Count))
+		meta.SetTooltipText(locale.Time(start, true) + " – " + locale.Time(summary.EndID.Time(), true))
 
-		header := gtk.NewLabel(fmt.Sprintf(
-			`<span size="x-small">%s</span>`+"\n%s",
-			locale.TimeAgo(summary.EndID.Time()),
-			markups.header,
-		))
+		get("topic").(*gtk.Label).SetText(summary.Topic)
+		get("summary").(*gtk.Label).SetText(summary.ShortSummary)
 
-		bottom := gtk.NewLabel(fmt.Sprintf(
-			"%s\n%s",
-			markups.title,
-			markups.body,
-		))
-
-		for _, label := range []*gtk.Label{header, bottom} {
-			label.AddCSSClass("popover-label")
-			label.SetXAlign(0)
-			label.SetHExpand(true)
-			label.SetWrap(true)
-			label.SetWrapMode(pango.WrapWordChar)
-			label.SetUseMarkup(true)
+		if people := summaryPeople(state, v.guildID, summary); people != "" {
+			label := get("people").(*gtk.Label)
+			label.SetMarkup(people)
+			label.SetVisible(true)
 		}
 
-		box := gtk.NewBox(gtk.OrientationVertical, 0)
-		box.AddCSSClass("message-summary-item")
-		box.Append(header)
-		box.Append(bottom)
-
-		// TODO: add little user icons for participants.
-		// we should probably use a grid for that.
-
 		// TODO: scroll to message on click.
-		list.Append(box)
+		list.Append(get("rootContent").(*gtk.ListBoxRow))
 	}
 
-	scroll := gtk.NewScrolledWindow()
-	scroll.SetPropagateNaturalWidth(true)
-	scroll.SetPropagateNaturalHeight(true)
-	scroll.SetMaxContentHeight(500)
-	scroll.SetMaxContentWidth(300)
-	scroll.SetPolicy(gtk.PolicyNever, gtk.PolicyAutomatic)
-	scroll.SetChild(list)
-
-	popover.SetChild(scroll)
+	popover.SetChild(ui.GetObject("rootContent").Cast().(gtk.Widgetter))
 	return true
 }

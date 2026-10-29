@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A single conversation summary in the message summaries popover. -->
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkListBoxRow" id="rootContent">
+    <property name="activatable">false</property>
+    <property name="child">
+      <object class="GtkBox">
+        <property name="orientation">vertical</property>
+        <property name="spacing">4</property>
+        <style>
+          <class name="message-summary-item"/>
+        </style>
+        <child>
+          <object class="GtkLabel" id="meta">
+            <property name="xalign">0</property>
+            <property name="wrap">true</property>
+            <style>
+              <class name="caption"/>
+              <class name="dim-label"/>
+            </style>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="topic">
+            <property name="xalign">0</property>
+            <property name="wrap">true</property>
+            <property name="wrap-mode">word-char</property>
+            <style>
+              <class name="heading"/>
+            </style>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="summary">
+            <property name="xalign">0</property>
+            <property name="wrap">true</property>
+            <property name="wrap-mode">word-char</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="people">
+            <property name="xalign">0</property>
+            <property name="wrap">true</property>
+            <property name="use-markup">true</property>
+            <property name="visible">false</property>
+            <style>
+              <class name="caption"/>
+              <class name="dim-label"/>
+            </style>
+          </object>
+        </child>
+      </object>
+    </property>
+  </object>
+</interface>
