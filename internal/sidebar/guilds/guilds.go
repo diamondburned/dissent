@@ -118,19 +118,33 @@ func (v *View) Invalidate() {
 	state := gtkcord.FromContext(v.ctx)
 	ready := state.Ready()
 
-	if ready.UserSettings != nil {
-		switch {
-		case ready.UserSettings.GuildFolders != nil:
-			v.SetFolders(ready.UserSettings.GuildFolders)
-		case ready.UserSettings.GuildPositions != nil:
-			v.SetGuildsFromIDs(ready.UserSettings.GuildPositions)
-		}
-	}
-
 	guilds, err := state.Cabinet.Guilds()
 	if err != nil {
 		app.Error(v.ctx, errors.Wrap(err, "cannot get guilds"))
 		return
+	}
+
+	// The user settings may still list guilds that we've since left, either
+	// because Discord didn't clean them up or because the Ready event is
+	// stale. Only keep guilds that we're actually in, which are either in the
+	// cabinet or were unavailable at Ready.
+	joined := make(map[discord.GuildID]bool, len(guilds))
+	for _, guild := range guilds {
+		joined[guild.ID] = true
+	}
+	for _, guild := range ready.Guilds {
+		if guild.Unavailable {
+			joined[guild.ID] = true
+		}
+	}
+
+	if ready.UserSettings != nil {
+		switch {
+		case ready.UserSettings.GuildFolders != nil:
+			v.SetFolders(filterFolders(ready.UserSettings.GuildFolders, joined))
+		case ready.UserSettings.GuildPositions != nil:
+			v.SetGuildsFromIDs(filterGuildIDs(ready.UserSettings.GuildPositions, joined))
+		}
 	}
 
 	// Sort so that the guilds that we've joined last are at the bottom.
@@ -168,6 +182,27 @@ func (v *View) Invalidate() {
 		// Prepend the guild.
 		v.prepend(g)
 	}
+}
+
+func filterGuildIDs(ids []discord.GuildID, joined map[discord.GuildID]bool) []discord.GuildID {
+	filtered := make([]discord.GuildID, 0, len(ids))
+	for _, id := range ids {
+		if joined[id] {
+			filtered = append(filtered, id)
+		}
+	}
+	return filtered
+}
+
+func filterFolders(folders []gateway.GuildFolder, joined map[discord.GuildID]bool) []gateway.GuildFolder {
+	filtered := make([]gateway.GuildFolder, 0, len(folders))
+	for _, folder := range folders {
+		folder.GuildIDs = filterGuildIDs(folder.GuildIDs, joined)
+		if len(folder.GuildIDs) > 0 {
+			filtered = append(filtered, folder)
+		}
+	}
+	return filtered
 }
 
 // SetFolders sets the guild folders to use.
