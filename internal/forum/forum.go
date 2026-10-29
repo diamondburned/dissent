@@ -14,6 +14,7 @@ import (
 
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
@@ -61,7 +62,9 @@ type View struct {
 	errorPage    *adw.StatusPage
 	emptyPage    *adw.StatusPage
 
-	posts        map[*gtk.ListBoxRow]*post
+	// posts is keyed by row pointer. gotk4 wraps the same row in a new Go
+	// value for every callback, so the Go pointer cannot be the key.
+	posts        map[uintptr]*post
 	selectedTags map[discord.TagID]bool
 
 	// generation is bumped on every reload, so that results of requests made
@@ -73,6 +76,7 @@ type View struct {
 }
 
 type post struct {
+	row       *gtk.ListBoxRow
 	thread    discord.Channel
 	preview   *gtk.Label
 	thumbnail *adw.Clamp
@@ -86,7 +90,7 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 
 	v := View{
 		ctx:          ctx,
-		posts:        make(map[*gtk.ListBoxRow]*post),
+		posts:        make(map[uintptr]*post),
 		selectedTags: make(map[discord.TagID]bool),
 	}
 
@@ -140,10 +144,10 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 
 	v.postList.SetFilterFunc(v.filter)
 	v.postList.SetSortFunc(func(row1, row2 *gtk.ListBoxRow) int {
-		return v.comparePosts(v.posts[row1], v.posts[row2])
+		return v.comparePosts(v.postOf(row1), v.postOf(row2))
 	})
 	v.postList.ConnectRowActivated(func(row *gtk.ListBoxRow) {
-		v.openPost(v.posts[row])
+		v.openPost(v.postOf(row))
 	})
 
 	scroll := get("postScroll").(*gtk.ScrolledWindow)
@@ -152,6 +156,24 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 			v.loadMore()
 		}
 	})
+
+	// Active threads arrive in THREAD_LIST_SYNC after the guild is subscribed
+	// to, which may be after this view is created.
+	state.BindWidget(v.ToolbarView, func(ev gateway.Event) {
+		switch ev := ev.(type) {
+		case *gateway.ThreadListSyncEvent:
+			if ev.GuildID == v.channel.GuildID {
+				for _, thread := range ev.Threads {
+					v.addActivePost(thread)
+				}
+			}
+		case *gateway.ThreadCreateEvent:
+			v.addActivePost(ev.Channel)
+		}
+	},
+		(*gateway.ThreadListSyncEvent)(nil),
+		(*gateway.ThreadCreateEvent)(nil),
+	)
 
 	v.reload()
 	return &v
@@ -191,8 +213,8 @@ func (v *View) reload() {
 	v.hasMore = true
 	v.loading = false
 
-	for row := range v.posts {
-		v.postList.Remove(row)
+	for _, p := range v.posts {
+		v.postList.Remove(p.row)
 	}
 	clear(v.posts)
 
@@ -202,17 +224,30 @@ func (v *View) reload() {
 		slog.Error("cannot get forum threads", "channel_id", v.channel.ID, "err", err)
 	}
 	for _, thread := range threads {
-		if thread.ParentID != v.channel.ID ||
-			(thread.ThreadMetadata != nil && thread.ThreadMetadata.Archived) {
-			continue
-		}
-		p := v.addPost(thread)
-		if v.isForum() {
-			v.fetchFirstMessage(p)
-		}
+		v.addActivePost(thread)
 	}
 
 	v.loadMore()
+}
+
+// addActivePost adds thread if it is an active post in this channel that is
+// not yet shown. Active posts are not returned by the archived post search.
+func (v *View) addActivePost(thread discord.Channel) {
+	if thread.ParentID != v.channel.ID ||
+		(thread.ThreadMetadata != nil && thread.ThreadMetadata.Archived) {
+		return
+	}
+	for _, p := range v.posts {
+		if p.thread.ID == thread.ID {
+			return
+		}
+	}
+
+	p := v.addPost(thread)
+	if v.isForum() {
+		v.fetchFirstMessage(p)
+	}
+	v.refilter()
 }
 
 // fetchFirstMessage fetches the first message of an active post. The archived
@@ -324,7 +359,8 @@ func (v *View) addPost(thread discord.Channel) *post {
 	tagsBox.SetVisible(tagsBox.FirstChild() != nil)
 
 	row := get("rootContent").(*gtk.ListBoxRow)
-	v.posts[row] = p
+	p.row = row
+	v.posts[rowKey(row)] = p
 	v.postList.Append(row)
 
 	return p
@@ -357,8 +393,19 @@ func (v *View) setFirstMessage(p *post, msg *discord.Message) {
 	}
 }
 
+func rowKey(row *gtk.ListBoxRow) uintptr {
+	return row.Object.Native()
+}
+
+func (v *View) postOf(row *gtk.ListBoxRow) *post {
+	if row == nil {
+		return nil
+	}
+	return v.posts[rowKey(row)]
+}
+
 func (v *View) filter(row *gtk.ListBoxRow) bool {
-	p := v.posts[row]
+	p := v.postOf(row)
 	if p == nil {
 		return false
 	}
@@ -402,9 +449,9 @@ func (v *View) refilter() {
 
 // updatePage shows the posts, the loading spinner or the empty page.
 func (v *View) updatePage() {
-	for row := range v.posts {
+	for _, p := range v.posts {
 		// GtkListBox hides filtered rows using child-visible.
-		if row.ChildVisible() {
+		if p.row.ChildVisible() {
 			v.stack.SetVisibleChildName("posts")
 			return
 		}
