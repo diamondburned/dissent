@@ -76,9 +76,19 @@ func (m *modelManager) Model(chID discord.ChannelID) *gtk.StringList {
 			if ev.GuildID != m.guildID {
 				return
 			}
-			if ev.Channel.ParentID == chID {
+			if ev.Channel.ParentID == chID && m.state.ThreadState.ThreadIsJoined(ev.Channel.ID) {
 				list.Append(ev.Channel)
 			}
+		}),
+		// Only joined threads are shown, so update the list when we join or
+		// leave one.
+		m.state.AddHandler(func(ev *gateway.ThreadMembersUpdateEvent) {
+			if ev.GuildID == m.guildID {
+				m.invalidateThread(chID, ev.ID, list)
+			}
+		}),
+		m.state.AddHandler(func(ev *gateway.ThreadMemberUpdateEvent) {
+			m.invalidateThread(chID, ev.ID, list)
 		}),
 		m.state.AddHandler(func(ev *gateway.ThreadDeleteEvent) {
 			if ev.GuildID != m.guildID {
@@ -111,6 +121,14 @@ func (m *modelManager) Model(chID discord.ChannelID) *gtk.StringList {
 
 	m.invalidateAll(chID, list)
 	return model
+}
+
+// invalidateThread invalidates the list if it is the parent of the thread.
+func (m *modelManager) invalidateThread(parentID, threadID discord.ChannelID, list *channelList) {
+	thread, _ := m.state.Cabinet.Channel(threadID)
+	if thread != nil && thread.ParentID == parentID {
+		m.invalidateAll(parentID, list)
+	}
 }
 
 func (m *modelManager) invalidateAll(parentID discord.ChannelID, list *channelList) {
@@ -253,9 +271,13 @@ func fetchSortedChannels(state *gtkcord.State, guildID discord.GuildID, parentID
 		return nil
 	}
 
-	// Filter out all channels that are not in the same parent channel.
+	// Filter out all channels that are not in the same parent channel. Only
+	// show threads that we've joined; the rest are in the thread browser.
 	filtered := channels[:0]
 	for i, ch := range channels {
+		if isThread(ch) && !state.ThreadState.ThreadIsJoined(ch.ID) {
+			continue
+		}
 		if ch.ParentID == parentID || (parentID == 0 && !ch.ParentID.IsValid()) {
 			filtered = append(filtered, channels[i])
 		}
@@ -289,4 +311,13 @@ func compareChannels(a, b discord.Channel) int {
 		cmp.Compare(a.Position, b.Position),
 		cmp.Compare(a.ID, b.ID),
 	)
+}
+
+func isThread(ch discord.Channel) bool {
+	switch ch.Type {
+	case discord.GuildPublicThread, discord.GuildPrivateThread, discord.GuildAnnouncementThread:
+		return true
+	default:
+		return false
+	}
 }

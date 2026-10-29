@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A single post card in the forum browser. -->
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <requires lib="libadwaita" version="1.7"/>
+  <object class="GtkListBoxRow" id="rootContent">
+    <property name="activatable">true</property>
+    <style>
+      <class name="forum-post"/>
+    </style>
+    <property name="child">
+      <object class="GtkBox">
+        <property name="spacing">12</property>
+        <child>
+          <object class="GtkBox">
+            <property name="orientation">vertical</property>
+            <property name="spacing">6</property>
+            <property name="hexpand">true</property>
+            <child>
+              <object class="AdwWrapBox" id="tags">
+                <property name="child-spacing">4</property>
+                <property name="line-spacing">4</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkBox">
+                <property name="spacing">6</property>
+                <child>
+                  <object class="GtkImage" id="pinnedIcon">
+                    <property name="icon-name">view-pin-symbolic</property>
+                    <property name="tooltip-text">Pinned</property>
+                    <property name="visible">false</property>
+                    <style>
+                      <class name="forum-post-pinned"/>
+                    </style>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="title">
+                    <property name="xalign">0</property>
+                    <property name="hexpand">true</property>
+                    <property name="single-line-mode">true</property>
+                    <property name="ellipsize">end</property>
+                    <style>
+                      <class name="forum-post-title"/>
+                    </style>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkImage" id="lockedIcon">
+                    <property name="icon-name">changes-prevent-symbolic</property>
+                    <property name="tooltip-text">Locked</property>
+                    <property name="visible">false</property>
+                    <style>
+                      <class name="dim-label"/>
+                    </style>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <!-- "<b>author:</b> first message", as one label so that the
+                   preview wraps under the author name. -->
+              <object class="GtkLabel" id="preview">
+                <property name="visible">false</property>
+                <property name="xalign">0</property>
+                <property name="use-markup">true</property>
+                <property name="wrap">true</property>
+                <property name="wrap-mode">word-char</property>
+                <property name="lines">2</property>
+                <property name="ellipsize">end</property>
+                <style>
+                  <class name="forum-post-preview"/>
+                </style>
+              </object>
+            </child>
+            <child>
+              <object class="GtkBox">
+                <property name="spacing">12</property>
+                <style>
+                  <class name="forum-post-footer"/>
+                </style>
+                <child>
+                  <object class="GtkBox">
+                    <property name="spacing">4</property>
+                    <property name="tooltip-text">Messages</property>
+                    <child>
+                      <object class="GtkImage">
+                        <property name="icon-name">chat-message-new-symbolic</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="messageCount"/>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="activity">
+                    <property name="xalign">0</property>
+                    <style>
+                      <class name="dim-label"/>
+                    </style>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+        <child>
+          <!-- The first image attachment of the post, if any. The picture is
+               added by code. Clamp the width: GtkPicture otherwise grows to
+               the image's natural width. -->
+          <object class="AdwClamp" id="thumbnailClamp">
+            <property name="visible">false</property>
+            <property name="valign">center</property>
+            <property name="maximum-size">88</property>
+            <property name="tightening-threshold">88</property>
+            <property name="overflow">hidden</property>
+            <style>
+              <class name="forum-post-thumbnail"/>
+            </style>
+          </object>
+        </child>
+      </object>
+    </property>
+  </object>
+</interface>

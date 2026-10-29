@@ -191,11 +191,10 @@ func NewView(ctx context.Context, guildID discord.GuildID) *View {
 		}
 
 		switch ch.Type {
-		case discord.GuildCategory, discord.GuildForum:
+		case discord.GuildCategory:
 			// We cannot display these channel types.
-			// TODO: implement forum browsing
 			slog.Warn(
-				"category or forum channel selected, ignoring",
+				"category channel selected, ignoring",
 				"channel_type", ch.Type,
 				"channel_id", chID)
 			return

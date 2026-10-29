@@ -1,0 +1,46 @@
+.forum-filter-bar {
+	padding: 6px 12px 10px 12px;
+}
+
+.forum-post-list {
+	margin: 12px;
+}
+
+.forum-post {
+	padding: 12px 14px;
+}
+
+.forum-post-title {
+	font-weight: bold;
+	font-size: 1.05em;
+}
+
+.forum-post-pinned {
+	color: var(--accent-color);
+}
+
+.forum-post-footer {
+	font-size: 0.9em;
+}
+
+.forum-post-thumbnail {
+	border-radius: 8px;
+}
+
+/* Tag pills, both in the filter bar and on posts. */
+.forum-tag {
+	font-size: 0.85em;
+	padding: 1px 8px;
+	min-height: 0;
+	border-radius: 99px;
+	background-color: alpha(currentColor, 0.1);
+}
+
+button.forum-tag {
+	padding: 3px 10px;
+}
+
+button.forum-tag:checked {
+	color: var(--accent-fg-color);
+	background-color: var(--accent-bg-color);
+}

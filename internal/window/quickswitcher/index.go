@@ -20,7 +20,6 @@ const searchLimit = 25
 
 var excludedChannelTypes = []discord.ChannelType{
 	discord.GuildCategory,
-	discord.GuildForum,
 }
 
 var allowedChannelTypes = slices.DeleteFunc(

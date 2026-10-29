@@ -15,10 +15,12 @@ import (
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/app"
+	"github.com/diamondburned/gotkit/app/locale"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/diamondburned/ningen/v3/states/read"
 	"libdb.so/ctxt"
+	"libdb.so/dissent/internal/forum"
 	"libdb.so/dissent/internal/gtkcord"
 	"libdb.so/dissent/internal/messages"
 	"libdb.so/dissent/internal/sidebar"
@@ -40,6 +42,8 @@ type ChatPage struct {
 	Sidebar     *sidebar.Sidebar
 	RightHeader *adw.HeaderBar
 	rightTitle  *adw.Bin
+	// startButtons holds the header buttons that the view packs at the start.
+	startButtons *gtk.Box
 
 	tabView *adw.TabView
 
@@ -50,7 +54,8 @@ type ChatPage struct {
 
 	// lastButtons keeps tracks of the header buttons of the previous view.
 	// On view change, these buttons will be removed.
-	lastButtons []gtk.Widgetter
+	lastButtons      []gtk.Widgetter
+	lastStartButtons []gtk.Widgetter
 
 	tabs map[uintptr]*chatTab // K: *adw.TabPage
 	ctx  context.Context
@@ -107,6 +112,8 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	p.rightTitle.AddCSSClass("right-header-bin")
 	p.rightTitle.SetHExpand(true)
 
+	p.startButtons = gtk.NewBox(gtk.OrientationHorizontal, 6)
+
 	back := backbutton.New()
 
 	newTabButton := gtk.NewButtonFromIconName("list-add-symbolic")
@@ -121,6 +128,7 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	p.RightHeader.SetShowBackButton(false) // this is useless with OverlaySplitView
 	p.RightHeader.SetShowTitle(false)
 	p.RightHeader.PackStart(back)
+	p.RightHeader.PackStart(p.startButtons)
 	p.RightHeader.PackStart(p.rightTitle)
 	p.RightHeader.PackEnd(newTabButton)
 
@@ -316,6 +324,10 @@ func (p *ChatPage) onActiveTabChange(page *adw.TabPage) {
 		p.RightHeader.Remove(button)
 	}
 	p.lastButtons = nil
+	for _, button := range p.lastStartButtons {
+		p.startButtons.Remove(button)
+	}
+	p.lastStartButtons = nil
 
 	p.updateWindowTitle()
 
@@ -332,11 +344,28 @@ func (p *ChatPage) onActiveTabChange(page *adw.TabPage) {
 		chID = tab.channelID()
 
 		// Add the new header buttons.
-		if tab.messageView != nil {
-			p.lastButtons = tab.messageView.HeaderButtons()
-			for i := len(p.lastButtons) - 1; i >= 0; i-- {
-				button := p.lastButtons[i]
-				p.RightHeader.PackEnd(button)
+		if threadsButton := p.newThreadsButton(page, tab); threadsButton != nil {
+			p.RightHeader.PackEnd(threadsButton)
+			p.lastButtons = append(p.lastButtons, threadsButton)
+		}
+
+		if backButton := p.newBackButton(page, tab); backButton != nil {
+			p.startButtons.Append(backButton)
+			p.lastStartButtons = append(p.lastStartButtons, backButton)
+		}
+
+		if tab.view != nil {
+			buttons := tab.view.HeaderButtons()
+			p.lastButtons = append(p.lastButtons, buttons...)
+			for i := len(buttons) - 1; i >= 0; i-- {
+				p.RightHeader.PackEnd(buttons[i])
+			}
+
+			if view, ok := tab.view.(interface{ HeaderStartButtons() []gtk.Widgetter }); ok {
+				for _, button := range view.HeaderStartButtons() {
+					p.startButtons.Append(button)
+					p.lastStartButtons = append(p.lastStartButtons, button)
+				}
 			}
 		}
 	}
@@ -381,6 +410,70 @@ func (p *ChatPage) onActiveTabChange(page *adw.TabPage) {
 	p.rightTitle.SetChild(box)
 }
 
+// newThreadsButton creates the button that toggles between the messages and
+// the threads of the tab's channel. It returns nil if the channel cannot have
+// threads.
+func (p *ChatPage) newThreadsButton(page *adw.TabPage, tab *chatTab) *gtk.ToggleButton {
+	chID := tab.channelID()
+	if !chID.IsValid() {
+		return nil
+	}
+
+	state := gtkcord.FromContext(p.ctx)
+	ch, _ := state.Cabinet.Channel(chID)
+	if ch == nil || (ch.Type != discord.GuildText && ch.Type != discord.GuildAnnouncement) {
+		return nil
+	}
+
+	button := gtk.NewToggleButton()
+	button.SetIconName("thread-branch-symbolic")
+	button.SetTooltipText(locale.Get("Threads"))
+	button.SetActive(tab.threads)
+	button.ConnectToggled(func() {
+		tab.switchTo(chID, button.Active())
+		p.onActiveTabChange(page)
+	})
+
+	return button
+}
+
+// newBackButton returns a button that goes back to the parent channel's
+// thread or forum browser if the tab shows a thread. Otherwise, it returns nil.
+func (p *ChatPage) newBackButton(page *adw.TabPage, tab *chatTab) *gtk.Button {
+	if tab.threads {
+		return nil
+	}
+
+	state := gtkcord.FromContext(p.ctx)
+
+	ch, _ := state.Cabinet.Channel(tab.channelID())
+	if ch == nil || !ch.ParentID.IsValid() {
+		return nil
+	}
+
+	switch ch.Type {
+	case discord.GuildPublicThread, discord.GuildPrivateThread, discord.GuildAnnouncementThread:
+	default:
+		return nil
+	}
+
+	parent, _ := state.Cabinet.Channel(ch.ParentID)
+	if parent == nil {
+		return nil
+	}
+
+	button := gtk.NewButtonFromIconName("go-previous-symbolic")
+	button.SetTooltipText(locale.Sprintf("Back to %s", parent.Name))
+	button.ConnectClicked(func() {
+		// Forums are always shown as a browser, so this is only needed for
+		// text channels.
+		tab.switchTo(parent.ID, parent.Type != discord.GuildForum)
+		p.onActiveTabChange(page)
+	})
+
+	return button
+}
+
 func (p *ChatPage) updateWindowTitle() {
 	var title string
 	if page := p.tabView.SelectedPage(); page != nil {
@@ -399,11 +492,22 @@ func (p *ChatPage) updateWindowTitle() {
 	win.SetTitle(title)
 }
 
+// chatView is a view shown in a chat tab: either a message view or a forum
+// browser.
+type chatView interface {
+	gtk.Widgetter
+	ChannelID() discord.ChannelID
+	HeaderButtons() []gtk.Widgetter
+}
+
 type chatTab struct {
 	*gtk.Stack
 	placeholder gtk.Widgetter
-	messageView *messages.View // nilable
-	ctx         context.Context
+	view        chatView // nilable
+	// threads is true if the view is the thread browser of a channel that is
+	// not a forum.
+	threads bool
+	ctx     context.Context
 }
 
 func newChatTab(ctx context.Context) *chatTab {
@@ -425,10 +529,10 @@ func (t *chatTab) alreadyOpens(id discord.ChannelID) bool {
 }
 
 func (t *chatTab) channelID() discord.ChannelID {
-	if t.messageView == nil {
+	if t.view == nil {
 		return 0
 	}
-	return t.messageView.ChannelID()
+	return t.view.ChannelID()
 }
 
 func (t *chatTab) switchToPlaceholder() bool {
@@ -436,23 +540,36 @@ func (t *chatTab) switchToPlaceholder() bool {
 }
 
 func (t *chatTab) switchToChannel(id discord.ChannelID) bool {
-	if t.alreadyOpens(id) {
+	return t.switchTo(id, false)
+}
+
+// switchTo switches the tab to the given channel, showing its threads instead
+// of its messages if threads is true.
+func (t *chatTab) switchTo(id discord.ChannelID, threads bool) bool {
+	if t.alreadyOpens(id) && t.threads == threads {
 		return false
 	}
 
-	old := t.messageView
+	old := t.view
+	t.threads = threads
 
 	if id.IsValid() {
-		t.messageView = messages.NewView(t.ctx, id)
-		t.messageView.FetchBacklog()
+		state := gtkcord.FromContext(t.ctx)
+		if ch, _ := state.Cabinet.Channel(id); threads || (ch != nil && ch.Type == discord.GuildForum) {
+			t.view = forum.NewView(t.ctx, id)
+		} else {
+			messageView := messages.NewView(t.ctx, id)
+			messageView.FetchBacklog()
+			t.view = messageView
+		}
 
-		t.Stack.AddChild(t.messageView)
-		t.Stack.SetVisibleChild(t.messageView)
+		t.Stack.AddChild(t.view)
+		t.Stack.SetVisibleChild(t.view)
 
-		viewWidget := gtk.BaseWidget(t.messageView)
+		viewWidget := gtk.BaseWidget(t.view)
 		viewWidget.GrabFocus()
 	} else {
-		t.messageView = nil
+		t.view = nil
 		t.Stack.SetVisibleChild(t.placeholder)
 	}
 
