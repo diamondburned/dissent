@@ -5,7 +5,6 @@ import (
 	"log/slog"
 
 	"github.com/diamondburned/arikawa/v3/discord"
-	"github.com/diamondburned/chatkit/md"
 	"github.com/diamondburned/chatkit/md/block"
 	"github.com/diamondburned/chatkit/md/mdrender"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
@@ -59,10 +58,14 @@ func renderEmoji(ctx context.Context, r *mdrender.Renderer, n ast.Node) ast.Walk
 	picture.SetTooltipText(emoji.Name)
 	picture.SetURL(gtkcord.EmojiURL(emoji.ID, emoji.GIF))
 
-	var inlineImage *md.InlineImage
+	// Don't use md.InsertCustomImageWidget: it works around an old GTK bug
+	// by giving the TextView a negative bottom margin as large as the image,
+	// which on newer GTK versions makes large emojis overlap the content
+	// below them.
+	// See https://github.com/diamondburned/dissent/issues/381.
 	makeInlineImage := func(size int) {
-		inlineImage = md.InsertCustomImageWidget(text.TextView, text.Buffer.CreateChildAnchor(text.Iter), picture)
-		inlineImage.SetSizeRequest(size, size)
+		picture.SetSizeRequest(size, size)
+		text.TextView.AddChildAtAnchor(picture, text.Buffer.CreateChildAnchor(text.Iter))
 	}
 
 	if emoji.Large {
