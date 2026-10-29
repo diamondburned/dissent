@@ -1,0 +1,37 @@
+.message-poll {
+	margin: 4px 0;
+	padding: 12px;
+	border-radius: 12px;
+	background-color: alpha(@theme_fg_color, 0.05);
+}
+
+.message-poll-question {
+	font-weight: bold;
+}
+
+.message-poll-answer {
+	padding: 0;
+	border-radius: 8px;
+	background-color: alpha(@theme_fg_color, 0.06);
+}
+
+.message-poll-answer:hover {
+	background-color: alpha(@theme_fg_color, 0.1);
+}
+
+.message-poll-answer.selected {
+	box-shadow: inset 0 0 0 2px @accent_bg_color;
+}
+
+.message-poll-answer-content {
+	padding: 8px 10px;
+	font-weight: normal;
+}
+
+.message-poll-answer.winner .message-poll-answer-content {
+	font-weight: bold;
+}
+
+.message-poll-percent {
+	font-weight: bold;
+}

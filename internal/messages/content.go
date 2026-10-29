@@ -34,6 +34,7 @@ type Content struct {
 	menu   *gio.Menu
 	mdview *mdrender.MarkdownViewer
 	react  *contentReactions
+	poll   *poll
 	child  []gtk.Widgetter
 
 	chID  discord.ChannelID
@@ -201,6 +202,8 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 		messageMarkup = locale.Get("The server is now Nitro Boosted to Tier 2.")
 	case discord.NitroTier3Message:
 		messageMarkup = locale.Get("The server is now Nitro Boosted to Tier 3.")
+	case discord.PollResultMessage:
+		messageMarkup = pollResultMarkup(m)
 	}
 
 	c.mdview = nil
@@ -280,8 +283,17 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 	}
 
 	for i := range m.Embeds {
+		if m.Embeds[i].Type == discord.PollResultEmbed {
+			continue // shown by pollResultMarkup
+		}
 		v := newEmbed(c.ctx, m, &m.Embeds[i])
 		c.append(v)
+	}
+
+	c.poll = nil
+	if m.Poll != nil {
+		c.poll = newPoll(c.ctx, c.view, m)
+		c.append(c.poll)
 	}
 
 	for _, custom := range customs {
@@ -490,6 +502,13 @@ func (c *Content) Redact() {
 	red.SetXAlign(0)
 	redactedContentCSS(red)
 	c.append(red)
+}
+
+// SetPoll updates the poll inside the message, if it has one.
+func (c *Content) SetPoll(data *discord.Poll) {
+	if c.poll != nil && data != nil {
+		c.poll.Update(data)
+	}
 }
 
 // SetReactions sets the reactions inside the message.

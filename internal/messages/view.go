@@ -341,6 +341,18 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 			}
 			v.updateMessageReactions(ev.MessageID)
 
+		case *gateway.MessagePollVoteAddEvent:
+			if ev.ChannelID != v.chID {
+				return
+			}
+			v.updateMessagePoll(ev.MessageID)
+
+		case *gateway.MessagePollVoteRemoveEvent:
+			if ev.ChannelID != v.chID {
+				return
+			}
+			v.updateMessagePoll(ev.MessageID)
+
 		case *gateway.MessageDeleteBulkEvent:
 			if ev.ChannelID != v.chID {
 				return
@@ -968,6 +980,23 @@ func (v *View) updateMessageReactions(id discord.MessageID) {
 
 	content := widget.message.Content()
 	content.SetReactions(msg.Reactions)
+}
+
+func (v *View) updateMessagePoll(id discord.MessageID) {
+	widget, ok := v.rows[messageKeyID(id)]
+	if !ok || widget.message == nil {
+		return
+	}
+
+	state := gtkcord.FromContext(v.ctx)
+
+	msg, _ := state.Cabinet.Message(v.chID, id)
+	if msg == nil {
+		return
+	}
+
+	content := widget.message.Content()
+	content.SetPoll(msg.Poll)
 }
 
 // SendMessage implements composer.Controller.

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A single answer of a poll. Its results are drawn as the background. -->
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkButton" id="rootContent">
+    <style>
+      <class name="message-poll-answer"/>
+    </style>
+    <property name="child">
+      <object class="GtkBox">
+        <property name="spacing">8</property>
+        <style>
+          <class name="message-poll-answer-content"/>
+        </style>
+        <child>
+          <object class="GtkImage" id="check">
+            <property name="icon-name">checkbox-symbolic</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkBox" id="emoji"/>
+        </child>
+        <child>
+          <object class="GtkLabel" id="text">
+            <property name="xalign">0</property>
+            <property name="hexpand">true</property>
+            <property name="wrap">true</property>
+            <property name="wrap-mode">word-char</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkImage" id="voted">
+            <property name="icon-name">object-select-symbolic</property>
+            <property name="visible">false</property>
+            <property name="tooltip-text">You voted for this.</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="percent">
+            <style>
+              <class name="numeric"/>
+              <class name="message-poll-percent"/>
+            </style>
+          </object>
+        </child>
+      </object>
+    </property>
+  </object>
+</interface>
