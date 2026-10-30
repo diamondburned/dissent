@@ -64,6 +64,11 @@ var contentCSS = cssutil.Applier("message-content-box", `
 	.message-header-blockquote > * {
 		font-size: 0.9em;
 	}
+	/* chatkit pulls text views with chips up by a line to hide a blank line
+	 * that GTK no longer adds, which clips the last line of text. */
+	.message-content-box .mauthor-haschip {
+		margin-bottom: 0;
+	}
 	.message-interaction-name {
 		margin-left: 0.25em;
 		font-family: monospace;
