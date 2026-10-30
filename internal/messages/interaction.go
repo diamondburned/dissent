@@ -14,9 +14,32 @@ import (
 	"libdb.so/dissent/internal/gtkcord"
 )
 
-// errInteractionFailed is returned when the application does not respond to
-// an interaction in time.
-var errInteractionFailed = errors.New("the application did not respond")
+// interactionFailedError is returned when Discord reports that an interaction
+// failed.
+type interactionFailedError struct {
+	reason gateway.InteractionFailureReason
+}
+
+func (err interactionFailedError) Error() string {
+	return "interaction failed: " + err.reason.String()
+}
+
+// interactionFailureMessage returns the message to show for err if it is an
+// interactionFailedError.
+func interactionFailureMessage(err error) (string, bool) {
+	var failed interactionFailedError
+	if !errors.As(err, &failed) {
+		return "", false
+	}
+	switch failed.reason {
+	case gateway.InteractionFailureTimeout:
+		return locale.Get("The application did not respond"), true
+	case gateway.InteractionFailureUnknown:
+		return locale.Get("Interaction failed"), true
+	default:
+		return failed.reason.String(), true
+	}
+}
 
 // interactionTarget describes where an interaction happens.
 type interactionTarget struct {
@@ -101,7 +124,7 @@ func (v *View) handleInteractionEvent(ev gateway.Event) {
 	case *gateway.InteractionSuccessEvent:
 		v.finishInteraction(ev.Nonce, nil)
 	case *gateway.InteractionFailureEvent:
-		v.finishInteraction(ev.Nonce, errInteractionFailed)
+		v.finishInteraction(ev.Nonce, interactionFailedError{ev.ReasonCode})
 	case *gateway.InteractionModalCreateEvent:
 		if v.finishInteraction(ev.Nonce, nil) {
 			newComponentModal(v, ev).Present(v)
@@ -111,9 +134,9 @@ func (v *View) handleInteractionEvent(ev gateway.Event) {
 
 // interactionToast shows an error toast for a failed interaction.
 func (v *View) interactionToast(err error) {
-	msg := locale.Get("Interaction failed")
-	if errors.Is(err, errInteractionFailed) {
-		msg = locale.Get("The application did not respond")
+	msg, ok := interactionFailureMessage(err)
+	if !ok {
+		msg = locale.Get("Interaction failed")
 	}
 	toast := adw.NewToast(msg)
 	toast.SetTimeout(5)

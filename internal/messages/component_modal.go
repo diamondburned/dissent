@@ -136,14 +136,15 @@ func newComponentModal(v *View, ev *gateway.InteractionModalCreateEvent) *compon
 			submitStack.SetVisibleChildName("label")
 			submit.SetSensitive(true)
 
-			switch {
-			case errors.Is(err, errInteractionFailed):
-				m.toast(locale.Get("The application did not respond"))
-			case err != nil:
-				m.toast(locale.Get("Cannot submit the form"))
-			default:
+			if err == nil {
 				m.Close()
+				return
 			}
+			msg, ok := interactionFailureMessage(err)
+			if !ok {
+				msg = locale.Get("Cannot submit the form")
+			}
+			m.toast(msg)
 		})
 	})
 
