@@ -11,7 +11,7 @@ inputs:
     default: result
   msys-system:
     description: MSYS2 system to use
-    default: MINGW64
+    default: UCRT64
   msys-dependencies:
     description: MSYS2 packages to install
     required: true
@@ -24,7 +24,7 @@ runs:
     - name: Install MSYS2 Environment
       uses: msys2/setup-msys2@v2
       with:
-        msystem: MINGW64
+        msystem: ${{ inputs.msys-system }}
         update: true
         install: |
           git
@@ -35,7 +35,10 @@ runs:
     - name: Build
       id: build
       run: |
-        export PATH="/mingw64/bin:$PATH"
+        # MINGW_PREFIX is the prefix of the MSYS2 system, e.g. /ucrt64.
+        export PATH="$MINGW_PREFIX/bin:$PATH"
+        export GOROOT="$MINGW_PREFIX/lib/go"
+        export GOPATH="$MINGW_PREFIX"
 
         mkdir "$OUT_PATH"
         out=$(realpath "$OUT_PATH")
@@ -47,9 +50,9 @@ runs:
         # result directory.
         copyDLLs() {
           ldd "$@" \
-            | { grep "=> /mingw64/bin/" || true; } \
+            | { grep "=> $MINGW_PREFIX/bin/" || true; } \
             | cut -d ' ' -f1 \
-            | xargs -I{} cp /mingw64/bin/{} $out/
+            | xargs -I{} cp "$MINGW_PREFIX/bin/{}" $out/
         }
 
         # Copy all of the binary's dependencies to the result directory.
@@ -74,13 +77,13 @@ runs:
 
         # Copy the RSVG and GDBus stuff.
         cp \
-          /mingw64/bin/librsvg*.dll \
-          /mingw64/bin/gdbus.exe \
+          "$MINGW_PREFIX"/bin/librsvg*.dll \
+          "$MINGW_PREFIX/bin/gdbus.exe" \
           $out
 
         # Copy the GLib schemas and GTK resources.
         (
-          cd /mingw64
+          cd "$MINGW_PREFIX"
           cp --parents -r \
             share/glib-2.0/schemas/gschemas.compiled \
             share/gtk-4.0 \
@@ -90,8 +93,6 @@ runs:
         )
       shell: msys2 {0}
       env:
-        GOROOT: /mingw64/lib/go
-        GOPATH: /mingw64
         EXE_NAME: ${{ inputs.exe-name }}
         OUT_PATH: ${{ inputs.out-path }}
         BUILD_TAGS: ${{ inputs.build-tags }}

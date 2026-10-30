@@ -168,13 +168,13 @@ jobs:
         uses: ./.github/actions/build-msys2-app
         with:
           msys-dependencies: |
-            mingw-w64-x86_64-gcc 
-            mingw-w64-x86_64-pkg-config
-            mingw-w64-x86_64-gtk4
-            mingw-w64-x86_64-libadwaita
-            mingw-w64-x86_64-gobject-introspection
-            mingw-w64-x86_64-glib2
-            mingw-w64-x86_64-go
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-pkg-config
+            mingw-w64-ucrt-x86_64-gtk4
+            mingw-w64-ucrt-x86_64-libadwaita
+            mingw-w64-ucrt-x86_64-gobject-introspection
+            mingw-w64-ucrt-x86_64-glib2
+            mingw-w64-ucrt-x86_64-go
           out-path: ${{ runner.temp }}/exe
           exe-name: dissent.exe
           build-tags: nogtksource
