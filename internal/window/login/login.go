@@ -4,28 +4,17 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/diamondburned/arikawa/v3/state"
 	"github.com/diamondburned/chatkit/kits/secret"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
-	"github.com/pkg/errors"
-	"libdb.so/dissent/internal/gtkcord"
 )
 
 // LoginController is the parent controller that Page controls.
 type LoginController interface {
-	// Hook is called before the state is opened and before Ready is called. It
-	// is meant to be called for hooking the handlers.
-	Hook(*gtkcord.State)
-	// Ready is called once the user has fully logged in. The session given to
-	// the controller will have already been opened and have received the Ready
-	// event.
-	Ready(*gtkcord.State)
-	// PromptLogin is called by the login page if the user needs to log in
-	// again, either because their credentials are wrong or Discord returns a
-	// server error.
-	PromptLogin()
+	// Login logs in using the given token. The controller is responsible for
+	// switching away from the login page or showing errors.
+	Login(token string)
 }
 
 // Page is the page containing the login forms.
@@ -63,11 +52,6 @@ func NewPage(ctx context.Context, ctrl LoginController) *Page {
 	return &p
 }
 
-// LoadKeyring loads the session from the keyring.
-func (p *Page) LoadKeyring() {
-	p.asyncLoadFromSecrets(secret.KeyringDriver(p.ctx))
-}
-
 func (p *Page) asyncLoadFromSecrets(driver secret.Driver) {
 	p.Login.Loading.Show()
 	p.Login.SetSensitive(false)
@@ -93,22 +77,7 @@ func (p *Page) asyncLoadFromSecrets(driver secret.Driver) {
 	})
 }
 
-// asyncUseToken connects with the given token. If driver != nil, then the token
-// is stored.
+// asyncUseToken logs in using the given token.
 func (p *Page) asyncUseToken(token string) {
-	state := gtkcord.Wrap(state.New(token))
-	p.ctrl.Hook(state)
-
-	gtkutil.Async(p.ctx, func() func() {
-		if err := state.Open(p.ctx); err != nil {
-			return func() {
-				p.ctrl.PromptLogin()
-				p.Login.ShowError(errors.Wrap(err, "cannot open session"))
-			}
-		}
-
-		return func() {
-			p.ctrl.Ready(state)
-		}
-	})
+	p.ctrl.Login(token)
 }

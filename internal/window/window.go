@@ -9,42 +9,26 @@ import (
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/app"
-	"github.com/diamondburned/gotkit/app/prefs"
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 	"github.com/pkg/errors"
 	"libdb.so/ctxt"
 	"libdb.so/dissent/internal/gtkcord"
+	"libdb.so/dissent/internal/session"
 	"libdb.so/dissent/internal/window/login"
 	"libdb.so/dissent/internal/window/quickswitcher"
 )
-
-var useDiscordColorScheme = prefs.NewBool(true, prefs.PropMeta{
-	Name:        "Use Discord's color preference",
-	Section:     "Discord",
-	Description: "Whether or not to use Discord's dark/light mode preference.",
-})
-
-// SetPreferDarkTheme sets whether or not GTK should use a dark theme.
-func SetPreferDarkTheme(prefer bool) {
-	if !useDiscordColorScheme.Value() {
-		return
-	}
-
-	scheme := adw.ColorSchemePreferLight
-	if prefer {
-		scheme = adw.ColorSchemePreferDark
-	}
-
-	adwStyles := adw.StyleManagerGetDefault()
-	adwStyles.SetColorScheme(scheme)
-}
 
 // Window is the main gtkcord window.
 type Window struct {
 	*adw.ApplicationWindow
 	win *app.Window
 	ctx context.Context
+	// baseCtx is ctx without the session's state.
+	baseCtx context.Context
+
+	session   *session.Session
+	chatState *gtkcord.State
 
 	Stack   *gtk.Stack
 	Login   *login.Page
@@ -52,13 +36,19 @@ type Window struct {
 	Chat    *ChatPage
 }
 
-// NewWindow creates a new Window.
-func NewWindow(ctx context.Context) *Window {
+// NewWindow creates a new Window showing the given session.
+func NewWindow(ctx context.Context, sess *session.Session) *Window {
 	appInstance := app.FromContext(ctx)
 
 	win := adw.NewApplicationWindow(appInstance.Application)
 	win.SetSizeRequest(320, 320)
 	win.SetDefaultSize(800, 600)
+
+	// A closed window is never destroyed while Go still references it, so
+	// hide and reuse it instead of creating a new one every time.
+	session.RunInBackground.SubscribeWidget(win, func() {
+		win.SetHideOnClose(session.RunInBackground.Value())
+	})
 
 	appWindow := app.WrapWindow(appInstance, &win.ApplicationWindow)
 	ctx = app.WithWindow(ctx, appWindow)
@@ -66,12 +56,12 @@ func NewWindow(ctx context.Context) *Window {
 	w := Window{
 		ApplicationWindow: win,
 		win:               appWindow,
-		ctx:               ctx,
+		session:           sess,
 	}
-	w.ctx = ctxt.With(w.ctx, &w)
+	w.baseCtx = ctxt.With(ctx, &w)
+	w.ctx = w.baseCtx
 
-	w.Login = login.NewPage(ctx, &loginWindow{Window: &w})
-	w.Login.LoadKeyring()
+	w.Login = login.NewPage(ctx, sess)
 
 	w.Loading = login.NewLoadingPage(ctx)
 
@@ -82,17 +72,14 @@ func NewWindow(ctx context.Context) *Window {
 	w.Stack.SetVisibleChild(w.Login)
 	win.SetContent(w.Stack)
 
-	w.SwitchToLoginPage()
+	w.updateSession()
+	win.ConnectDestroy(sess.Subscribe(w.updateSession))
+
 	return &w
 }
 
 func (w *Window) Context() context.Context {
 	return w.ctx
-}
-
-func (w *Window) initChatPage() {
-	w.Chat = NewChatPage(w.ctx, w)
-	w.Stack.AddChild(w.Chat)
 }
 
 // It's not happy with how this requires a check for ChatPage, but it makes
@@ -147,10 +134,6 @@ func (w *Window) SwitchToChatPage() {
 func (w *Window) SwitchToLoginPage() {
 	w.Stack.SetVisibleChild(w.Login)
 	w.SetTitle("Login")
-}
-
-func (w *Window) SetLoading() {
-	panic("not implemented")
 }
 
 // SetTitle sets the window title.
