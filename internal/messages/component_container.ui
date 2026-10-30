@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A container, which can be hidden behind a spoiler. -->
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkStack" id="rootContent">
+    <property name="hhomogeneous">false</property>
+    <property name="vhomogeneous">false</property>
+    <property name="transition-type">crossfade</property>
+    <child>
+      <object class="GtkStackPage">
+        <property name="name">content</property>
+        <property name="child">
+          <object class="GtkBox" id="content">
+            <property name="orientation">vertical</property>
+            <property name="spacing">8</property>
+            <style>
+              <class name="message-component-container"/>
+            </style>
+          </object>
+        </property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkStackPage">
+        <property name="name">spoiler</property>
+        <property name="child">
+          <object class="GtkButton" id="spoiler">
+            <property name="label" translatable="yes">Spoiler</property>
+            <property name="tooltip-text" translatable="yes">Show spoiler</property>
+            <property name="halign">start</property>
+            <style>
+              <class name="message-component-spoiler"/>
+            </style>
+          </object>
+        </property>
+      </object>
+    </child>
+  </object>
+</interface>

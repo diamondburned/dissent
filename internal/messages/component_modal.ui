@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A modal form sent by an application. Fields come from modal_field.ui. -->
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <requires lib="libadwaita" version="1.6"/>
+  <object class="AdwDialog" id="rootContent">
+    <property name="content-width">440</property>
+    <property name="follows-content-size">true</property>
+    <child>
+      <object class="AdwToastOverlay" id="toasts">
+        <child>
+          <object class="AdwToolbarView">
+            <child type="top">
+              <object class="AdwHeaderBar">
+                <property name="show-start-title-buttons">false</property>
+                <property name="show-end-title-buttons">false</property>
+                <property name="title-widget">
+                  <object class="AdwWindowTitle" id="title"/>
+                </property>
+                <child type="start">
+                  <object class="GtkButton" id="cancel">
+                    <property name="label" translatable="yes">Cancel</property>
+                  </object>
+                </child>
+                <child type="end">
+                  <object class="GtkButton" id="submit">
+                    <style>
+                      <class name="suggested-action"/>
+                    </style>
+                    <child>
+                      <object class="GtkStack" id="submitStack">
+                        <property name="hhomogeneous">false</property>
+                        <child>
+                          <object class="GtkStackPage">
+                            <property name="name">label</property>
+                            <property name="child">
+                              <object class="GtkLabel">
+                                <property name="label" translatable="yes">Submit</property>
+                              </object>
+                            </property>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkStackPage">
+                            <property name="name">busy</property>
+                            <property name="child">
+                              <object class="AdwSpinner"/>
+                            </property>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <property name="content">
+              <object class="GtkScrolledWindow">
+                <property name="hscrollbar-policy">never</property>
+                <property name="propagate-natural-height">true</property>
+                <child>
+                  <object class="AdwClamp">
+                    <property name="maximum-size">440</property>
+                    <child>
+                      <object class="GtkBox" id="fields">
+                        <property name="orientation">vertical</property>
+                        <property name="spacing">18</property>
+                        <property name="margin-top">12</property>
+                        <property name="margin-bottom">18</property>
+                        <property name="margin-start">18</property>
+                        <property name="margin-end">18</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

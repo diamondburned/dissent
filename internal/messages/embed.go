@@ -147,6 +147,12 @@ var messageAttachmentCSS = cssutil.Applier("message-attachment", `
 `)
 
 func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widgetter {
+	return newAttachmentSized(ctx, attachment, maxEmbedWidth.Value(), maxImageHeight.Value())
+}
+
+// newAttachmentSized is like newAttachment, but images and videos are at most
+// maxW by maxH.
+func newAttachmentSized(ctx context.Context, attachment *discord.Attachment, maxW, maxH int) gtk.Widgetter {
 	var mimeType string
 	if attachment.ContentType != "" {
 		mimeType, _, _ = strings.Cut(attachment.ContentType, "/")
@@ -173,8 +179,6 @@ func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widg
 			attachment.Filename,
 			humanize.Bytes(attachment.Size),
 		)
-
-		maxW, maxH := maxEmbedWidth.Value(), maxImageHeight.Value()
 
 		src := attachment.Proxy
 		if mimeType == "image" && attachment.Width > 0 && attachment.Height > 0 {

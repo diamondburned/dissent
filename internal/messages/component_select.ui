@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A select menu. Options are added from component_select_option.ui. -->
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkMenuButton" id="rootContent">
+    <property name="halign">start</property>
+    <property name="popover">popover</property>
+    <style>
+      <class name="message-component-select"/>
+    </style>
+    <child>
+      <!-- Gets a sizer in code, so that the menu is wide but can shrink. -->
+      <object class="GtkOverlay" id="sizer">
+        <child>
+          <object class="GtkBox">
+            <property name="spacing">6</property>
+            <child>
+              <object class="GtkLabel" id="summary">
+                <property name="xalign">0</property>
+                <property name="hexpand">true</property>
+                <property name="ellipsize">end</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkStack" id="indicator">
+                <child>
+                  <object class="GtkStackPage">
+                    <property name="name">arrow</property>
+                    <property name="child">
+                      <object class="GtkImage">
+                        <property name="icon-name">pan-down-symbolic</property>
+                      </object>
+                    </property>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkStackPage">
+                    <property name="name">busy</property>
+                    <property name="child">
+                      <object class="AdwSpinner"/>
+                    </property>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkPopover" id="popover">
+    <style>
+      <class name="message-component-select-popover"/>
+    </style>
+    <child>
+      <object class="GtkBox">
+        <property name="orientation">vertical</property>
+        <property name="spacing">6</property>
+        <property name="width-request">280</property>
+        <child>
+          <object class="GtkSearchEntry" id="search">
+            <property name="visible">false</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="hint">
+            <property name="xalign">0</property>
+            <property name="margin-start">6</property>
+            <style>
+              <class name="caption"/>
+              <class name="dim-label"/>
+            </style>
+          </object>
+        </child>
+        <child>
+          <object class="GtkScrolledWindow">
+            <property name="hscrollbar-policy">never</property>
+            <property name="propagate-natural-height">true</property>
+            <property name="max-content-height">320</property>
+            <child>
+              <object class="GtkListBox" id="options">
+                <property name="selection-mode">none</property>
+                <style>
+                  <class name="message-component-select-options"/>
+                </style>
+                <child type="placeholder">
+                  <object class="GtkLabel">
+                    <property name="label" translatable="yes">No options</property>
+                    <property name="margin-top">12</property>
+                    <property name="margin-bottom">12</property>
+                    <style>
+                      <class name="dim-label"/>
+                    </style>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

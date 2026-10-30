@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A labeled input inside component_modal.ui. -->
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkBox" id="rootContent">
+    <property name="orientation">vertical</property>
+    <property name="spacing">6</property>
+    <child>
+      <object class="GtkBox">
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child>
+          <object class="GtkLabel" id="label">
+            <property name="xalign">0</property>
+            <property name="wrap">true</property>
+            <style>
+              <class name="heading"/>
+            </style>
+          </object>
+        </child>
+        <child>
+          <object class="GtkLabel" id="description">
+            <property name="xalign">0</property>
+            <property name="wrap">true</property>
+            <property name="visible">false</property>
+            <style>
+              <class name="caption"/>
+              <class name="dim-label"/>
+            </style>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkBox" id="input">
+        <property name="orientation">vertical</property>
+        <property name="spacing">6</property>
+      </object>
+    </child>
+  </object>
+</interface>

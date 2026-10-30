@@ -1,0 +1,59 @@
+.message-components {
+	margin-top: 4px;
+}
+.message-component-row {
+	margin-bottom: 0;
+}
+.message-component-button.success {
+	background-color: @success_bg_color;
+	color: @success_fg_color;
+}
+.message-component-container {
+	padding: 12px;
+	border-radius: 8px;
+	background-color: alpha(@theme_fg_color, 0.05);
+}
+.message-component-spoiler {
+	padding: 24px 48px;
+	border-radius: 8px;
+}
+.message-component-separator {
+	background: none;
+}
+.message-component-separator.divider {
+	background-color: alpha(@theme_fg_color, 0.15);
+	min-height: 1px;
+}
+.message-component-thumbnail {
+	border-radius: 8px;
+}
+.message-component-select-options {
+	background: none;
+}
+.message-component-select-options row {
+	border-radius: 6px;
+}
+.message-component-gallery-item {
+	padding: 0;
+	border-radius: 0;
+	background: none;
+}
+.message-component-gallery-item.top.left     { border-top-left-radius: 8px; }
+.message-component-gallery-item.top.right    { border-top-right-radius: 8px; }
+.message-component-gallery-item.bottom.left  { border-bottom-left-radius: 8px; }
+.message-component-gallery-item.bottom.right { border-bottom-right-radius: 8px; }
+.message-component-gallery-more {
+	background-color: alpha(black, 0.6);
+	color: white;
+	font-size: 2em;
+	font-weight: bold;
+}
+.message-component-gallery-alt {
+	margin: 6px;
+	padding: 2px 6px;
+	border-radius: 6px;
+	background-color: alpha(black, 0.7);
+	color: white;
+	font-size: 0.8em;
+	font-weight: bold;
+}

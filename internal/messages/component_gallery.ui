@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A media gallery collage. Items from component_gallery_item.ui are
+     attached to the grid in code. -->
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkGrid" id="rootContent">
+    <property name="column-spacing">4</property>
+    <property name="row-spacing">4</property>
+    <property name="column-homogeneous">true</property>
+    <property name="row-homogeneous">true</property>
+    <style>
+      <class name="message-component-gallery"/>
+    </style>
+  </object>
+</interface>

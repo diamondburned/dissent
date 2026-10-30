@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A section: text with an accessory, a button or thumbnail, on its side. -->
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkBox" id="rootContent">
+    <property name="spacing">12</property>
+    <style>
+      <class name="message-component-section"/>
+    </style>
+    <child>
+      <object class="GtkBox" id="texts">
+        <property name="orientation">vertical</property>
+        <property name="spacing">4</property>
+        <property name="hexpand">true</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkBox" id="accessory">
+        <property name="valign">start</property>
+      </object>
+    </child>
+  </object>
+</interface>

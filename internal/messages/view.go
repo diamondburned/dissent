@@ -88,6 +88,10 @@ type View struct {
 
 	ctx  context.Context
 	chID discord.ChannelID
+
+	// interactions maps the nonces of pending interactions to their
+	// callbacks.
+	interactions map[string]func(error)
 }
 
 var viewCSS = cssutil.Applier("message-view", `
@@ -309,6 +313,11 @@ func NewView(ctx context.Context, chID discord.ChannelID) *View {
 					Member:  ev.Member,
 				})
 			}
+
+		case *gateway.InteractionSuccessEvent,
+			*gateway.InteractionFailureEvent,
+			*gateway.InteractionModalCreateEvent:
+			v.handleInteractionEvent(ev)
 
 		case *gateway.MessageDeleteEvent:
 			if ev.ChannelID != v.chID {

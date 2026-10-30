@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- An image inside component_gallery.ui. The picture is set in code. -->
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <object class="GtkButton" id="rootContent">
+    <property name="overflow">hidden</property>
+    <style>
+      <class name="message-component-gallery-item"/>
+    </style>
+    <child>
+      <object class="GtkOverlay" id="overlay">
+        <child type="overlay">
+          <object class="GtkLabel" id="alt">
+            <property name="visible">false</property>
+            <property name="label">ALT</property>
+            <property name="halign">start</property>
+            <property name="valign">end</property>
+            <style>
+              <class name="message-component-gallery-alt"/>
+            </style>
+          </object>
+        </child>
+        <child type="overlay">
+          <object class="GtkLabel" id="more">
+            <property name="visible">false</property>
+            <style>
+              <class name="message-component-gallery-more"/>
+            </style>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+</interface>

@@ -209,11 +209,6 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 	c.mdview = nil
 
 	content := m.Content
-	if content == "" {
-		// Messages using Components V2 have no content and instead put
-		// their text inside components.
-		content = componentsText(m.Components)
-	}
 
 	switch {
 	case messageMarkup != "":
@@ -290,6 +285,10 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 		c.append(v)
 	}
 
+	if len(m.Components) > 0 {
+		c.append(newMessageComponents(c.ctx, c.view, m))
+	}
+
 	c.poll = nil
 	if m.Poll != nil {
 		c.poll = newPoll(c.ctx, c.view, m)
@@ -302,35 +301,6 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 
 	c.SetReactions(m.Reactions)
 	c.setMenu()
-}
-
-// componentsText returns the Markdown text of all text display components
-// within the given components, including those nested in containers and
-// sections.
-func componentsText(components discord.TopLevelComponents) string {
-	var texts []string
-
-	var walk func(discord.Component)
-	walk = func(component discord.Component) {
-		switch component := component.(type) {
-		case *discord.TextDisplayComponent:
-			texts = append(texts, component.Content)
-		case *discord.SectionComponent:
-			for _, child := range component.Components {
-				walk(child)
-			}
-		case *discord.ContainerComponent:
-			for _, child := range component.Components {
-				walk(child)
-			}
-		}
-	}
-
-	for _, component := range components {
-		walk(component)
-	}
-
-	return strings.Join(texts, "\n\n")
 }
 
 func (c *Content) newReplyBox(m *discord.Message) gtk.Widgetter {
