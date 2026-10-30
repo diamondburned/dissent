@@ -7,12 +7,12 @@
     <property name="spacing">8</property>
     <property name="halign">start</property>
     <property name="valign">start</property>
-    <property name="width-request">360</property>
     <style>
       <class name="message-poll"/>
     </style>
     <child>
-      <object class="GtkBox">
+      <!-- Gets a sizer in code, so that the poll is wide but can shrink. -->
+      <object class="GtkBox" id="header">
         <property name="orientation">vertical</property>
         <property name="spacing">2</property>
         <child>

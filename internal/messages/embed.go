@@ -32,6 +32,9 @@ var trustedCDNHosts = []string{
 	"cdn.discordapp.com",
 }
 
+// embedFieldColumns is the number of inline embed fields in a row.
+const embedFieldColumns = 3
+
 var defaultEmbedOpts = embed.Opts{
 	Provider:    imgutil.HTTPProvider,
 	IgnoreWidth: true,
@@ -270,9 +273,6 @@ var normalEmbedCSS = cssutil.Applier("message-normalembed", `
 	.message-normalembed-body > *:not(:last-child) {
 		margin-bottom: 0.5em;
 	}
-	.message-normalembed-body > .thumbnail-embed-bin {
-		margin-top: 0.5em;
-	}
 	.message-embed-author,
 	.message-embed-description {
 		font-size: 0.9em;
@@ -379,20 +379,23 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 	}
 
 	if len(msgEmbed.Fields) > 0 {
-		fields := gtk.NewGrid()
+		// Boxes are used instead of a grid, which asks for the height of its
+		// wrapped labels at the grid's minimum width.
+		fields := gtk.NewBox(gtk.OrientationVertical, 7)
 		fields.AddCSSClass("message-embed-fields")
-		fields.SetRowSpacing(uint(7))
-		fields.SetColumnSpacing(uint(14))
 
 		bodyBox.Append(fields)
 		hasBody = true
 
-		col, row := 0, 0
+		var row *gtk.Box
+		var col int
 
 		for _, field := range msgEmbed.Fields {
 			text := gtk.NewLabel("")
-			text.SetEllipsize(pango.EllipsizeEnd)
+			text.SetWrap(true)
+			text.SetWrapMode(pango.WrapWordChar)
 			text.SetXAlign(0.0)
+			text.SetVAlign(gtk.AlignStart)
 			text.SetMarkup(fmt.Sprintf(
 				`<span weight="heavy">%s</span>`+"\n"+`<span weight="light">%s</span>`,
 				html.EscapeString(field.Name),
@@ -400,24 +403,21 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 			))
 			text.SetTooltipText(field.Name + "\n" + field.Value)
 
-			// I have no idea what this does. It's just improvised.
-			if field.Inline && col < 3 {
-				fields.Attach(text, col, row, 1, 1)
-				col++
-			} else {
-				if col > 0 {
-					row++
-				}
-
-				col = 0
-				fields.Attach(text, col, row, 1, 1)
-
-				if !field.Inline {
-					row++
-				} else {
-					col++
-				}
+			// Inline fields share rows of up to 3, and other fields take up a
+			// whole row.
+			if !field.Inline {
+				fields.Append(text)
+				row = nil
+				continue
 			}
+			if row == nil || col == embedFieldColumns {
+				row = gtk.NewBox(gtk.OrientationHorizontal, 14)
+				row.SetHomogeneous(true)
+				fields.Append(row)
+				col = 0
+			}
+			row.Append(text)
+			col++
 		}
 	}
 
@@ -461,28 +461,34 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 		hasBody = true
 	}
 
-	embedBox := bodyBox
+	embedBox := gtk.Widgetter(bodyBox)
+	var embedOverlay *gtk.Overlay
 	if hasBody {
-		// bodyBox.SetHAlign(gtk.AlignFill)
-		// bodyBox.SetHExpand(false)
-
-		embedBox = gtk.NewBox(gtk.OrientationHorizontal, 0)
-		embedBox.SetHAlign(gtk.AlignStart)
-		embedBox.Append(bodyBox)
-		normalEmbedCSS(embedBox)
+		// The thumbnail is laid over the body instead of next to it in a
+		// horizontal box. Such a box measures the body's width for its height,
+		// which makes wrapping labels as wide as their whole text.
+		embedOverlay = gtk.NewOverlay()
+		embedOverlay.SetHAlign(gtk.AlignStart)
+		embedOverlay.SetVAlign(gtk.AlignStart)
+		embedOverlay.SetChild(bodyBox)
+		normalEmbedCSS(embedOverlay)
 
 		if msgEmbed.Color != discord.NullColor {
-			cssutil.Applyf(embedBox, embedColorCSSf, msgEmbed.Color.String())
+			cssutil.Applyf(embedOverlay, embedColorCSSf, msgEmbed.Color.String())
 		}
+		embedBox = embedOverlay
 	}
+
+	// Big thumbnails are shown below the body, and others are next to it.
+	bigThumbnail := msgEmbed.Thumbnail != nil && (!hasBody ||
+		msgEmbed.Type == discord.GIFVEmbed ||
+		msgEmbed.Type == discord.ImageEmbed ||
+		msgEmbed.Type == discord.VideoEmbed ||
+		msgEmbed.Type == discord.ArticleEmbed)
 
 	if msgEmbed.Thumbnail != nil {
 		thumb := msgEmbed.Thumbnail
-		big := !hasBody ||
-			msgEmbed.Type == discord.GIFVEmbed ||
-			msgEmbed.Type == discord.ImageEmbed ||
-			msgEmbed.Type == discord.VideoEmbed ||
-			msgEmbed.Type == discord.ArticleEmbed
+		big := bigThumbnail
 
 		maxW := 80
 		maxH := 80
@@ -561,16 +567,20 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 			})
 		}
 
+		frame := newEmbedImageFrame(image, int(thumb.Width), int(thumb.Height), maxW, maxH)
 		if big {
-			image.SetHAlign(gtk.AlignStart)
-			bodyBox.Append(image)
+			bodyBox.Append(frame)
 		} else {
-			image.SetHAlign(gtk.AlignEnd)
-			embedBox.Append(image)
+			frame.SetHAlign(gtk.AlignEnd)
+			bodyBox.SetMarginEnd(maxW + 8)
+			embedOverlay.AddOverlay(frame)
+			embedOverlay.SetMeasureOverlay(frame, true)
 		}
 	}
 
-	if msgEmbed.Thumbnail == nil && (msgEmbed.Image != nil || msgEmbed.Video != nil) {
+	// Show the image unless the thumbnail already took its place, such as for
+	// videos and links to images.
+	if !bigThumbnail && (msgEmbed.Image != nil || (msgEmbed.Thumbnail == nil && msgEmbed.Video != nil)) {
 		opts := defaultEmbedOpts
 		var img discord.EmbedImage
 
@@ -586,7 +596,6 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 		}
 
 		image := embed.New(ctx, maxEmbedWidth.Value(), maxImageHeight.Value(), opts)
-		image.SetSizeRequest(int(img.Width), int(img.Height))
 
 		image.SetOpenURL(func() {
 			openViewer(ctx, img.URL, opts)
@@ -604,11 +613,36 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 			image.SetFromURL(img.Proxy)
 		}
 
-		bodyBox.Append(image)
+		bodyBox.Append(newEmbedImageFrame(
+			image, int(img.Width), int(img.Height),
+			maxEmbedWidth.Value(), maxImageHeight.Value()))
 	}
 
-	embedBox.AddCSSClass("message-richframe")
+	gtk.BaseWidget(embedBox).AddCSSClass("message-richframe")
 	return embedBox
+}
+
+// newEmbedImageFrame shows an embed image with the size of w by h, fitted into
+// maxW by maxH. It shrinks with the window while keeping its aspect ratio. The
+// size is taken from the image once it loads if w or h is unknown.
+func newEmbedImageFrame(image *embed.Embed, w, h, maxW, maxH int) *aspectFrame {
+	frame := newAspectFrame(image, 0, 0)
+	if w > 0 && h > 0 {
+		frame.SetSize(imgutil.MaxSize(w, h, maxW, maxH))
+	}
+
+	image.SetHAlign(gtk.AlignFill)
+	image.SetVAlign(gtk.AlignFill)
+	image.Bin.SetSizeRequest(-1, -1)
+	image.NotifyImage(func() {
+		// The frame sizes the image instead.
+		image.Bin.SetSizeRequest(-1, -1)
+		if p := image.Thumbnail.Paintable(); p != nil && (w <= 0 || h <= 0) {
+			frame.SetSize(imgutil.MaxSize(p.IntrinsicWidth(), p.IntrinsicHeight(), maxW, maxH))
+		}
+	})
+
+	return frame
 }
 
 func openViewer(ctx context.Context, uri string, opts embed.Opts) {

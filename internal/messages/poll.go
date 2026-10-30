@@ -32,6 +32,9 @@ var (
 
 var _ = cssutil.WriteCSS(pollCSS)
 
+// pollWidth is the natural width of a poll.
+const pollWidth = 360
+
 // pollAnswerBarCSSf draws an answer's share of the votes as its background.
 const pollAnswerBarCSSf = `
 	.message-poll-answer {
@@ -77,6 +80,10 @@ func newPoll(ctx context.Context, v *View, m *discord.Message) *poll {
 		action:   ui.GetObject("action").Cast().(*gtk.Button),
 		selected: make(map[int]bool),
 	}
+
+	// Prefer being wide without stopping the window from getting narrower.
+	header := ui.GetObject("header").Cast().(*gtk.Box)
+	header.Prepend(newSizer(pollWidth, 0))
 
 	p.results.ConnectClicked(func() {
 		p.showResults = !p.showResults
