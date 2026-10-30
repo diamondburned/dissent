@@ -14,6 +14,7 @@ import (
 	"github.com/diamondburned/chatkit/md"
 	"github.com/diamondburned/chatkit/md/mdrender"
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
+	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/app"
@@ -301,6 +302,11 @@ func (c *Content) Update(m *discord.Message, customs ...gtk.Widgetter) {
 
 	c.SetReactions(m.Reactions)
 	c.setMenu()
+
+	// A text view only knows its height after laying out its text, and the
+	// resize it queues then is lost if the message list is allocating it, so
+	// an edited message is measured again once that is done.
+	glib.IdleAdd(c.Box.QueueResize)
 }
 
 func (c *Content) newReplyBox(m *discord.Message) gtk.Widgetter {
