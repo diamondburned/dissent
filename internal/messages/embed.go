@@ -13,6 +13,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/chatkit/components/embed"
 	"github.com/diamondburned/chatkit/md/mdrender"
+	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotk4/pkg/pango"
 	"github.com/diamondburned/gotkit/app"
@@ -34,6 +35,10 @@ var trustedCDNHosts = []string{
 
 // embedFieldColumns is the number of inline embed fields in a row.
 const embedFieldColumns = 3
+
+// maxRichEmbedWidth is the maximum width of an embed with a body, which is the
+// same as the official client's.
+const maxRichEmbedWidth = 520
 
 var defaultEmbedOpts = embed.Opts{
 	Provider:    imgutil.HTTPProvider,
@@ -453,7 +458,17 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 		if msgEmbed.Color != discord.NullColor {
 			cssutil.Applyf(embedOverlay, embedColorCSSf, msgEmbed.Color.String())
 		}
-		embedBox = embedOverlay
+
+		// Keep long text from making the embed as wide as the message list,
+		// like the official client does.
+		clamp := adw.NewClamp()
+		clamp.SetUnit(adw.LengthUnitPx)
+		clamp.SetMaximumSize(maxRichEmbedWidth)
+		clamp.SetTighteningThreshold(maxRichEmbedWidth)
+		clamp.SetHAlign(gtk.AlignStart)
+		clamp.SetVAlign(gtk.AlignStart)
+		clamp.SetChild(embedOverlay)
+		embedBox = clamp
 	}
 
 	// Big thumbnails are shown below the body, and others are next to it.
