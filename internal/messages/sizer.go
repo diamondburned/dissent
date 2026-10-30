@@ -20,8 +20,9 @@ func newSizer(w, h int) *gtk.Picture {
 // stopping it from getting narrower.
 type aspectFrame struct {
 	*gtk.Overlay
-	sizer *gtk.Picture
-	w, h  int
+	sizer   *gtk.Picture
+	resizer *gtk.DrawingArea
+	w, h    int
 	// width is the allocated width, or 0 if the frame is not allocated yet.
 	width int
 }
@@ -37,16 +38,19 @@ func newAspectFrame(child gtk.Widgetter, w, h int) *aspectFrame {
 	f.SetChild(f.sizer)
 
 	// The message list gives its children their minimum height, which is 0
-	// for the sizer, so the height is requested once the width is known.
-	resizer := gtk.NewDrawingArea()
-	resizer.SetCanTarget(false)
-	resizer.ConnectResize(func(width, _ int) {
+	// for the sizer, so the height is requested once the width is known. It
+	// is requested by the resizer rather than the frame, since a size request
+	// on the frame would include its CSS margin.
+	f.resizer = gtk.NewDrawingArea()
+	f.resizer.SetCanTarget(false)
+	f.resizer.ConnectResize(func(width, _ int) {
 		f.width = width
 		glib.IdleAdd(f.updateHeight)
 	})
 
 	// The child is laid over the frame without being measured.
-	f.AddOverlay(resizer)
+	f.AddOverlay(f.resizer)
+	f.SetMeasureOverlay(f.resizer, true)
 	f.AddOverlay(child)
 	f.SetSize(w, h)
 	return f
@@ -64,7 +68,7 @@ func (f *aspectFrame) updateHeight() {
 	if f.width > 0 && f.width < f.w {
 		h = f.width * f.h / f.w
 	}
-	if _, current := f.SizeRequest(); current != h {
-		f.SetSizeRequest(-1, h)
+	if _, current := f.resizer.SizeRequest(); current != h {
+		f.resizer.SetSizeRequest(-1, h)
 	}
 }

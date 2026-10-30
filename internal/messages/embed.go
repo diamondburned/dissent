@@ -169,13 +169,20 @@ func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widg
 			humanize.Bytes(attachment.Size),
 		)
 
-		image := embed.New(ctx, maxEmbedWidth.Value(), maxImageHeight.Value(), opts)
-		image.AddCSSClass("message-richframe")
-		image.SetHExpand(false)
-		image.SetVExpand(false)
-		image.SetHAlign(gtk.AlignStart)
-		image.SetName(name)
+		maxW, maxH := maxEmbedWidth.Value(), maxImageHeight.Value()
 
+		src := attachment.Proxy
+		if mimeType == "image" && attachment.Width > 0 && attachment.Height > 0 {
+			// Fetch the image at the size that it is shown at, since large
+			// images tank performance on Cairo renderers.
+			w, h := imgutil.MaxSize(int(attachment.Width), int(attachment.Height), maxW, maxH)
+			scale := gtkutil.ScaleFactor()
+			src = resizeURL(attachment.URL, attachment.Proxy, w*scale, h*scale)
+		}
+
+		image, frame := newEmbedImage(ctx, opts, src,
+			int(attachment.Width), int(attachment.Height), maxW, maxH)
+		image.SetName(name)
 		image.SetOpenURL(func() {
 			openViewer(ctx, attachment.URL, opts)
 		})
@@ -184,38 +191,8 @@ func newAttachment(ctx context.Context, attachment *discord.Attachment) gtk.Widg
 			image.AddCSSClass("message-embed-spoiler")
 		}
 
-		if attachment.Width > 0 && attachment.Height > 0 {
-			origW := int(attachment.Width)
-			origH := int(attachment.Height)
-
-			// Work around to prevent GTK from rendering the image at its
-			// original size, which tanks performance on Cairo renderers.
-			w, h := imgutil.MaxSize(
-				origW, origH,
-				maxEmbedWidth.Value(), maxImageHeight.Value(),
-			)
-
-			image.SetSizeRequest(w, h)
-			image.Thumbnail.Picture.SetSizeRequest(w, h)
-
-			if mimeType == "image" {
-				scale := gtkutil.ScaleFactor()
-				w *= scale
-				h *= scale
-
-				image.SetFromURL(resizeURL(
-					attachment.URL,
-					attachment.Proxy,
-					w, h,
-				))
-			} else {
-				image.SetFromURL(attachment.Proxy)
-			}
-		} else {
-			image.SetFromURL(attachment.Proxy)
-		}
-
-		return image
+		frame.AddCSSClass("message-richframe")
+		return frame
 	default:
 		icon := gtk.NewImageFromIconName(mimeIcon(mimeType))
 		icon.AddCSSClass("message-attachment-icon")
@@ -507,20 +484,9 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 			opts.Type = embed.EmbedTypeGIFV
 		}
 
-		image := embed.New(ctx, maxW, maxH, opts)
-		image.SetVAlign(gtk.AlignStart)
-		if thumb.Width > 0 && thumb.Height > 0 {
-			// Enforce this image's own dimensions if possible.
-			image.ShrinkMaxSize(int(thumb.Width), int(thumb.Height))
-			image.SetSizeRequest(int(thumb.Width), int(thumb.Height))
-		}
-
-		image.SetFromURL(resizeURL(
-			thumb.URL,
-			thumb.Proxy,
-			int(thumb.Width),
-			int(thumb.Height),
-		))
+		image, frame := newEmbedImage(ctx, opts,
+			resizeURL(thumb.URL, thumb.Proxy, int(thumb.Width), int(thumb.Height)),
+			int(thumb.Width), int(thumb.Height), maxW, maxH)
 
 		switch {
 		case msgEmbed.Image != nil:
@@ -567,7 +533,6 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 			})
 		}
 
-		frame := newEmbedImageFrame(image, int(thumb.Width), int(thumb.Height), maxW, maxH)
 		if big {
 			bodyBox.Append(frame)
 		} else {
@@ -595,37 +560,33 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 			opts.Provider = imgutil.FFmpegProvider
 		}
 
-		image := embed.New(ctx, maxEmbedWidth.Value(), maxImageHeight.Value(), opts)
+		src := img.Proxy
+		if msgEmbed.Image != nil {
+			// The server can only resize images.
+			src = resizeURL(img.URL, img.Proxy, int(img.Width), int(img.Height))
+		}
 
+		image, frame := newEmbedImage(ctx, opts, src,
+			int(img.Width), int(img.Height), maxEmbedWidth.Value(), maxImageHeight.Value())
 		image.SetOpenURL(func() {
 			openViewer(ctx, img.URL, opts)
 		})
 
-		if msgEmbed.Image != nil {
-			// The server can only resize images.
-			image.SetFromURL(resizeURL(
-				img.URL,
-				img.Proxy,
-				int(img.Width),
-				int(img.Height),
-			))
-		} else {
-			image.SetFromURL(img.Proxy)
-		}
-
-		bodyBox.Append(newEmbedImageFrame(
-			image, int(img.Width), int(img.Height),
-			maxEmbedWidth.Value(), maxImageHeight.Value()))
+		bodyBox.Append(frame)
 	}
 
 	gtk.BaseWidget(embedBox).AddCSSClass("message-richframe")
 	return embedBox
 }
 
-// newEmbedImageFrame shows an embed image with the size of w by h, fitted into
-// maxW by maxH. It shrinks with the window while keeping its aspect ratio. The
-// size is taken from the image once it loads if w or h is unknown.
-func newEmbedImageFrame(image *embed.Embed, w, h, maxW, maxH int) *aspectFrame {
+// newEmbedImage creates an embed that shows src with the size of w by h, fitted
+// into maxW by maxH. The returned frame holds the embed and is what should be
+// added. It shrinks with the window while keeping its aspect ratio. The size is
+// taken from the image once it loads if w or h is unknown.
+func newEmbedImage(ctx context.Context, opts embed.Opts, src string, w, h, maxW, maxH int) (*embed.Embed, *aspectFrame) {
+	image := embed.New(ctx, maxW, maxH, opts)
+	image.SetFromURL(src)
+
 	frame := newAspectFrame(image, 0, 0)
 	if w > 0 && h > 0 {
 		frame.SetSize(imgutil.MaxSize(w, h, maxW, maxH))
@@ -642,7 +603,7 @@ func newEmbedImageFrame(image *embed.Embed, w, h, maxW, maxH int) *aspectFrame {
 		}
 	})
 
-	return frame
+	return image, frame
 }
 
 func openViewer(ctx context.Context, uri string, opts embed.Opts) {
