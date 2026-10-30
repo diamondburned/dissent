@@ -1,13 +1,18 @@
 package window
 
 import (
+	coreglib "github.com/diamondburned/gotk4/pkg/core/glib"
+
 	"libdb.so/dissent/internal/gtkcord"
 	"libdb.so/dissent/internal/session"
 )
 
 // updateSession switches the window's page to match the session's status.
 func (w *Window) updateSession() {
-	switch w.session.Status() {
+	status := w.session.Status()
+	w.setLoading(status == session.Connecting)
+
+	switch status {
 	case session.LoggedOut:
 		w.SwitchToLoginPage()
 		if err := w.session.Err(); err != nil {
@@ -15,15 +20,27 @@ func (w *Window) updateSession() {
 		}
 
 	case session.Connecting:
-		w.Stack.SetVisibleChild(w.Loading)
 		w.SetTitle("Connecting")
 
 	case session.Connected:
 		if w.Chat == nil || w.chatState != w.session.State() {
 			w.initChatPage(w.session.State())
 		}
-		w.SwitchToChatPage()
+		// Only switch if needed, so reconnecting keeps the opened channel and
+		// its scroll position as they were.
+		if !coreglib.ObjectEq(w.Stack.VisibleChild(), w.Chat) {
+			w.SwitchToChatPage()
+		} else {
+			w.SetTitle("")
+		}
 	}
+}
+
+// setLoading shows or hides the loading page on top of the current page.
+func (w *Window) setLoading(loading bool) {
+	w.loading.SetRevealChild(loading)
+	// A hidden revealer still covers the page, so let clicks through.
+	w.loading.SetCanTarget(loading)
 }
 
 // initChatPage creates a new ChatPage for the given state, replacing the

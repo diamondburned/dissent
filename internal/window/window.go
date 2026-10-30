@@ -34,6 +34,10 @@ type Window struct {
 	Login   *login.Page
 	Loading *login.LoadingPage
 	Chat    *ChatPage
+
+	// loading covers the stack while connecting. It is an overlay so that
+	// the chat page stays mapped while reconnecting.
+	loading *gtk.Revealer
 }
 
 // NewWindow creates a new Window showing the given session.
@@ -64,13 +68,21 @@ func NewWindow(ctx context.Context, sess *session.Session) *Window {
 	w.Login = login.NewPage(ctx, sess)
 
 	w.Loading = login.NewLoadingPage(ctx)
+	w.Loading.AddCSSClass("background")
+
+	w.loading = gtk.NewRevealer()
+	w.loading.SetTransitionType(gtk.RevealerTransitionTypeCrossfade)
+	w.loading.SetChild(w.Loading)
 
 	w.Stack = gtk.NewStack()
 	w.Stack.SetTransitionType(gtk.StackTransitionTypeCrossfade)
 	w.Stack.AddChild(w.Login)
-	w.Stack.AddChild(w.Loading)
 	w.Stack.SetVisibleChild(w.Login)
-	win.SetContent(w.Stack)
+
+	overlay := gtk.NewOverlay()
+	overlay.SetChild(w.Stack)
+	overlay.AddOverlay(w.loading)
+	win.SetContent(overlay)
 
 	w.updateSession()
 	win.ConnectDestroy(sess.Subscribe(w.updateSession))
