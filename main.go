@@ -4,9 +4,11 @@ import (
 	"context"
 	"embed"
 	"io/fs"
+	"os"
 
 	"github.com/diamondburned/adaptive"
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
+	"github.com/diamondburned/gotk4/pkg/gio/v2"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotkit/app"
 	"github.com/diamondburned/gotkit/app/locale"
@@ -19,6 +21,8 @@ import (
 	"libdb.so/dissent/internal/session"
 	"libdb.so/dissent/internal/window"
 	"libdb.so/dissent/internal/window/about"
+
+	coreglib "github.com/diamondburned/gotk4/pkg/core/glib"
 
 	_ "github.com/diamondburned/gotkit/gtkutil/aggressivegc"
 	_ "libdb.so/dissent/internal/icons"
@@ -55,74 +59,103 @@ var _ = cssutil.WriteCSS(`
 	}
 `)
 
-func init() {
-	app.Hook(func(*app.Application) {
-		adw.Init()
-		adaptive.Init()
-	})
-}
-
 func main() {
-	m := manager{}
-	m.app = app.New(context.Background(), "so.libdb.dissent", "Dissent")
-	m.app.AddJSONActions(map[string]interface{}{
-		"app.preferences": func() { prefui.ShowDialog(m.window().Context()) },
-		"app.about":       func() { about.New(m.window().Context()).Present(m.window()) },
-		"app.logs":        func() { logui.ShowDefaultViewer(m.window().Context()) },
-		"app.quit":        func() { m.app.Quit() },
-	})
-	m.app.AddActionCallbacks(map[string]gtkutil.ActionCallback{
-		"app.open-channel": m.forwardSignalToWindow("open-channel", gtkcord.SnowflakeVariant),
-		"app.open-guild":   m.forwardSignalToWindow("open-guild", gtkcord.SnowflakeVariant),
-	})
-	m.app.AddActionShortcuts(map[string]string{
-		"<Ctrl>Q": "app.quit",
-	})
-	m.app.ConnectStartup(func() { m.startup(m.app.Context()) })
-	m.app.ConnectActivate(func() { m.window().Present() })
-	m.app.RunMain()
+	os.Exit(NewApplication(context.Background()).Run(os.Args))
 }
 
-type manager struct {
+// Application is the Dissent application.
+type Application struct {
+	adw.Application
 	app     *app.Application
 	session *session.Session
 	win     *window.Window
 }
 
-func (m *manager) forwardSignalToWindow(name string, t *glib.VariantType) gtkutil.ActionCallback {
+var applicationType = coreglib.RegisterSubclass[*Application](
+	coreglib.WithGTypeName("DissentApplication"),
+	coreglib.WithOverrides(func(a *Application) gio.ApplicationOverrides {
+		return gio.ApplicationOverrides{
+			Startup:  a.startup,
+			Activate: a.activate,
+			Shutdown: a.shutdown,
+		}
+	}),
+)
+
+// NewApplication creates a new Dissent application.
+func NewApplication(ctx context.Context) *Application {
+	a := applicationType.NewWithProperties(map[string]any{
+		"application-id": "so.libdb.dissent",
+	})
+	a.app = app.Wrap(ctx, &a.Application.Application, "Dissent")
+	return a
+}
+
+// Run runs the application until it quits or the process is interrupted.
+func (a *Application) Run(args []string) int {
+	return a.app.Run(args)
+}
+
+// startup starts the Discord session. It runs once per process, including when
+// Dissent is started in the background as a D-Bus service.
+func (a *Application) startup() {
+	coreglib.ParentOverrides[gio.ApplicationOverrides](a).Startup()
+	adaptive.Init()
+
+	a.app.AddJSONActions(map[string]interface{}{
+		"app.preferences": func() { prefui.ShowDialog(a.window().Context()) },
+		"app.about":       func() { about.New(a.window().Context()).Present(a.window()) },
+		"app.logs":        func() { logui.ShowDefaultViewer(a.window().Context()) },
+		"app.quit":        func() { a.app.Quit() },
+	})
+	a.app.AddActionCallbacks(map[string]gtkutil.ActionCallback{
+		"app.open-channel": a.forwardActionToWindow("open-channel", gtkcord.SnowflakeVariant),
+		"app.open-guild":   a.forwardActionToWindow("open-guild", gtkcord.SnowflakeVariant),
+	})
+	a.app.AddActionShortcuts(map[string]string{
+		"<Ctrl>Q": "app.quit",
+	})
+
+	ctx := a.app.Context()
+	a.session = session.New(ctx)
+
+	prefs.AsyncLoadSaved(ctx, func(err error) {
+		if err != nil {
+			app.Error(ctx, err)
+		}
+		a.session.StartBackgroundPortal()
+	})
+
+	a.session.LoadKeyring()
+}
+
+func (a *Application) activate() {
+	a.window().Present()
+}
+
+func (a *Application) shutdown() {
+	a.session.Close()
+	coreglib.ParentOverrides[gio.ApplicationOverrides](a).Shutdown()
+}
+
+func (a *Application) forwardActionToWindow(name string, t *glib.VariantType) gtkutil.ActionCallback {
 	return gtkutil.ActionCallback{
 		ArgType: t,
 		Func: func(args *glib.Variant) {
 			// Present after the action, otherwise a window that was hidden
 			// comes back at its minimum size.
-			win := m.window()
+			win := a.window()
 			win.ActivateAction(name, args)
 			win.Present()
 		},
 	}
 }
 
-// startup starts the Discord session. It runs once per process, including when
-// Dissent is started in the background as a D-Bus service.
-func (m *manager) startup(ctx context.Context) {
-	m.session = session.New(ctx)
-
-	prefs.AsyncLoadSaved(ctx, func(err error) {
-		if err != nil {
-			app.Error(ctx, err)
-		}
-		m.session.StartBackgroundPortal()
-	})
-
-	m.session.LoadKeyring()
-	m.app.ConnectShutdown(m.session.Close)
-}
-
 // window returns the window, creating it if it was closed or never opened.
-func (m *manager) window() *window.Window {
-	if m.win == nil {
-		m.win = window.NewWindow(m.app.Context(), m.session)
-		m.win.ConnectDestroy(func() { m.win = nil })
+func (a *Application) window() *window.Window {
+	if a.win == nil {
+		a.win = window.NewWindow(a.app.Context(), a.session)
+		a.win.ConnectDestroy(func() { a.win = nil })
 	}
-	return m.win
+	return a.win
 }
