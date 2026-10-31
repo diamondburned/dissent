@@ -18,20 +18,20 @@ schema = 3
     hash = 'sha256-QvGDrsOnwGHULIg5oZ8UcQT36Kdh6iQq0kQfkz3M3eY='
 
   [mod.'github.com/diamondburned/chatkit']
-    version = 'v0.0.0-20260810231946-28477b5698eb'
-    hash = 'sha256-hkVMkrWi95hkHolMT0smTL9H4Lt3kKl0eAj9BCkWWg8='
+    version = 'v0.0.0-20261031204703-9ef48f54f871'
+    hash = 'sha256-MO8XHZDL/EN5Su4oWdAffrsH9Pch0Kfixn56r8o9ft8='
 
   [mod.'github.com/diamondburned/gotk4-adwaita/pkg']
-    version = 'v0.0.0-20260808200908-d4aecaa0ff32'
-    hash = 'sha256-GbOZg9FPkwsGl0lA4kbNax7vBtBJc8lllLAOPBv74Wg='
+    version = 'v0.0.0-20261031204147-41c057c79b39'
+    hash = 'sha256-vGUVibfVdVOYJgF5wHoIEjSf7hjlEPFn4ydTY9BGfLo='
 
   [mod.'github.com/diamondburned/gotk4/pkg']
-    version = 'v0.4.1'
-    hash = 'sha256-ByHw9QuTw3gYsalDt+HUCLYZjL6sEX+aE63lOlwX8wc='
+    version = 'v0.4.2-0.20261031093702-169e0f82bca8'
+    hash = 'sha256-S6oR6zDgrV9RpvEJsjNL68TYCZaWr1KjGOi/Iu3fLck='
 
   [mod.'github.com/diamondburned/gotkit']
-    version = 'v0.0.0-20260808214113-d0c316dcdb4e'
-    hash = 'sha256-6/Ow9vCb0pJlL62c5BKmdzL4Eb4pelopCn4uZ7jX/Tg='
+    version = 'v0.0.0-20261031204637-f5304451c287'
+    hash = 'sha256-7uuAVThTrrKo/YTuRmOfsnv0oGsoUxyXkGPeK9lz8LA='
 
   [mod.'github.com/diamondburned/ningen/v3']
     version = 'v3.0.1-0.20260226220604-93f1e60c3cdb'
