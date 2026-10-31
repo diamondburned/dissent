@@ -625,7 +625,7 @@ func (v *View) StartReplyingTo(msg *discord.Message) {
 
 	mentionToggle := gtk.NewToggleButton()
 	mentionToggle.AddCSSClass("composer-mention-toggle")
-	mentionToggle.SetIconName("online-symbolic")
+	mentionToggle.SetIconName("alternate-email-symbolic")
 	mentionToggle.SetHasFrame(false)
 	mentionToggle.SetActive(true)
 	mentionToggle.SetHAlign(gtk.AlignCenter)
