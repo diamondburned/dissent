@@ -2,12 +2,18 @@ package about
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"log/slog"
+	"net/http"
 	"path"
 	"runtime/debug"
+	"slices"
 	"strings"
+	"sync"
 
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
+	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/components/logui"
 )
@@ -26,6 +32,24 @@ func New(ctx context.Context) *adw.AboutDialog {
 		"diamondburned",
 		"Dissent contributors",
 	})
+
+	if contributors != nil {
+		about.SetDevelopers(contributors)
+	} else {
+		ctx, cancel := context.WithCancel(ctx)
+		about.ConnectClosed(cancel)
+		go func() {
+			developers, err := fetchContributors(ctx)
+			if err != nil {
+				slog.Warn("cannot fetch contributors for the about dialog", "err", err)
+				return
+			}
+			glib.IdleAdd(func() {
+				contributors = developers
+				about.SetDevelopers(developers)
+			})
+		}()
+	}
 
 	about.AddCreditSection("Sound Files", []string{
 		"freedesktop.org https://www.freedesktop.org/wiki/",
@@ -48,6 +72,72 @@ func New(ctx context.Context) *adw.AboutDialog {
 	}
 
 	return about
+}
+
+// contributors is the list of contributors once it has been fetched. It is kept
+// for the rest of the session, since fetching it takes a request per
+// contributor and GitHub only allows 60 requests an hour without signing in.
+var contributors []string
+
+// fetchContributors fetches the contributors of Dissent from GitHub, ordered by
+// their number of commits.
+func fetchContributors(ctx context.Context) ([]string, error) {
+	var users []struct {
+		Login   string `json:"login"`
+		URL     string `json:"url"`
+		HTMLURL string `json:"html_url"`
+		Type    string `json:"type"`
+	}
+	err := getJSON(ctx, "https://api.github.com/repos/diamondburned/dissent/contributors?per_page=100", &users)
+	if err != nil {
+		return nil, err
+	}
+
+	developers := make([]string, len(users))
+	var wg sync.WaitGroup
+	for i, user := range users {
+		if user.Type == "Bot" {
+			continue
+		}
+		wg.Go(func() {
+			name := user.Login
+			var profile struct {
+				Name string `json:"name"`
+			}
+			// Fall back to the username if the profile cannot be fetched.
+			if getJSON(ctx, user.URL, &profile) == nil &&
+				profile.Name != "" && !strings.EqualFold(profile.Name, user.Login) {
+				name = fmt.Sprintf("%s (%s)", profile.Name, user.Login)
+			}
+			// AdwAboutDialog links names that are followed by a URL.
+			developers[i] = name + " " + user.HTMLURL
+		})
+	}
+	wg.Wait()
+
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	return slices.DeleteFunc(developers, func(s string) bool { return s == "" }), nil
+}
+
+func getJSON(ctx context.Context, url string, v any) error {
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Accept", "application/vnd.github+json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status %s", resp.Status)
+	}
+	return json.NewDecoder(resp.Body).Decode(v)
 }
 
 var customVersion string
