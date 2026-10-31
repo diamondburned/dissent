@@ -27,9 +27,6 @@ type zoomView struct {
 	zoom float64
 	// pointer is the last position of the pointer in the view.
 	pointer [2]float64
-	// size is the size of the image, which is kept to tell a new image apart
-	// from the next frame of an animation.
-	size [2]int
 }
 
 func newZoomView(picture *gtk.Picture) *zoomView {
@@ -41,13 +38,8 @@ func newZoomView(picture *gtk.Picture) *zoomView {
 
 	z.picture.SetCanShrink(true)
 	z.picture.SetContentFit(gtk.ContentFitContain)
-	z.picture.NotifyProperty("paintable", func() {
-		w, h, _ := z.imageSize()
-		if size := [2]int{int(w), int(h)}; size != z.size {
-			z.size = size
-			z.fit()
-		}
-	})
+	z.picture.Paintable().ConnectInvalidateSize(z.fit)
+	z.fit()
 
 	z.sizer.SetCanTarget(false)
 

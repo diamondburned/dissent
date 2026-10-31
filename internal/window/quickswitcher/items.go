@@ -117,8 +117,7 @@ func (it channelItem) Row(ctx context.Context) *gtk.ListBoxRow {
 			icon.SetFromURL(gtkcord.InjectAvatarSize(it.DMRecipients[0].AvatarURL()))
 		}
 
-		anim := icon.EnableAnimation()
-		anim.ConnectMotion(row) // TODO: I wonder if this causes memory leaks.
+		icon.Paintable.PlayOnHover(row)
 
 		box.Append(icon)
 	default:
@@ -183,8 +182,7 @@ func (it guildItem) Row(ctx context.Context) *gtk.ListBoxRow {
 	icon.SetFromURL(it.IconURL())
 	icon.SetHAlign(gtk.AlignCenter)
 
-	anim := icon.EnableAnimation()
-	anim.ConnectMotion(row)
+	icon.Paintable.PlayOnHover(row)
 
 	name := gtk.NewLabel(it.Name)
 	name.AddCSSClass("quickswitcher-guild-name")

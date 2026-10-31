@@ -382,10 +382,13 @@ func (v *View) setFirstMessage(p *post, msg *discord.Message) {
 			continue
 		}
 
-		picture := onlineimage.NewPicture(v.ctx, imgutil.HTTPProvider)
+		paintable := onlineimage.NewPaintable(v.ctx, imgutil.HTTPProvider)
+		paintable.SetURL(gtkcord.InjectSize(att.Proxy, thumbnailSize))
+
+		picture := gtk.NewPictureForPaintable(paintable)
 		picture.SetContentFit(gtk.ContentFitCover)
+		picture.SetCanShrink(true)
 		picture.SetSizeRequest(thumbnailSize, thumbnailSize)
-		picture.SetURL(gtkcord.InjectSize(att.Proxy, thumbnailSize))
 
 		p.thumbnail.SetChild(picture)
 		p.thumbnail.SetVisible(true)

@@ -349,7 +349,7 @@ func NewCozyMessage(ctx context.Context, v *View) Message {
 	m.Avatar = onlineimage.NewAvatar(ctx, imgutil.HTTPProvider, gtkcord.MessageAvatarSize)
 	m.Avatar.AddCSSClass("message-cozy-avatar")
 	m.Avatar.SetVAlign(gtk.AlignStart)
-	m.Avatar.EnableAnimation().OnHover()
+	m.Avatar.Paintable.PlayOnHover(m.Avatar)
 
 	m.Box = gtk.NewBox(gtk.OrientationHorizontal, 0)
 	m.Box.Append(m.Avatar)

@@ -610,6 +610,9 @@ func newEmbedImage(ctx context.Context, opts embed.Opts, src string, w, h, maxW,
 	frame := newAspectFrame(image, 0, 0)
 	if w > 0 && h > 0 {
 		frame.SetSize(imgutil.MaxSize(w, h, maxW, maxH))
+	} else {
+		// The frame has no size to draw the image in until it is fetched.
+		image.Image.FetchOnMap(frame)
 	}
 
 	image.SetHAlign(gtk.AlignFill)
@@ -618,8 +621,8 @@ func newEmbedImage(ctx context.Context, opts embed.Opts, src string, w, h, maxW,
 	image.NotifyImage(func() {
 		// The frame sizes the image instead.
 		image.Bin.SetSizeRequest(-1, -1)
-		if p := image.Thumbnail.Paintable(); p != nil && (w <= 0 || h <= 0) {
-			frame.SetSize(imgutil.MaxSize(p.IntrinsicWidth(), p.IntrinsicHeight(), maxW, maxH))
+		if iw, ih := image.ImageSize(); iw > 0 && ih > 0 && (w <= 0 || h <= 0) {
+			frame.SetSize(imgutil.MaxSize(iw, ih, maxW, maxH))
 		}
 	})
 

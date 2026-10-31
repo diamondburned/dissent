@@ -22,7 +22,8 @@ const (
 type Banner struct {
 	*gtk.Overlay
 	Shadows *gtk.Box
-	Picture *onlineimage.Picture
+	Picture *gtk.Picture
+	Image   *onlineimage.Paintable
 	ctx     context.Context
 	gID     discord.GuildID
 }
@@ -72,7 +73,9 @@ func NewBanner(ctx context.Context, guildID discord.GuildID) *Banner {
 		gID: guildID,
 	}
 
-	b.Picture = onlineimage.NewPicture(ctx, imgutil.HTTPProvider)
+	b.Image = onlineimage.NewPaintable(ctx, imgutil.HTTPProvider)
+
+	b.Picture = gtk.NewPictureForPaintable(b.Image)
 	b.Picture.SetLayoutManager(gtk.NewBinLayout()) // magically force min size
 	b.Picture.SetContentFit(gtk.ContentFitCover)
 	b.Picture.SetSizeRequest(bannerWidth, bannerHeight)
@@ -124,7 +127,7 @@ func (b *Banner) HasBanner() bool {
 	return b.Visible()
 }
 
-func (b *Banner) SetURL(url string) { b.Picture.SetURL(url) }
+func (b *Banner) SetURL(url string) { b.Image.SetURL(url) }
 
 // SetScrollOpacity sets the opacity of the shadow depending on the scroll
 // level. If the scroll goes past the banner, then scrolled is true.

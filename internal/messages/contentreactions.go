@@ -291,20 +291,14 @@ func (r *contentReaction) SetReaction(ctx context.Context, flowBox *gtk.FlowBox,
 	r.client = gtkcord.FromContext(ctx).Online()
 
 	if reaction.Emoji.IsCustom() {
-		emoji := onlineimage.NewPicture(ctx, imgutil.HTTPProvider)
+		paintable := onlineimage.NewPaintable(ctx, imgutil.HTTPProvider)
+		paintable.SetURL(reaction.Emoji.EmojiURL())
+		paintable.PlayOnHover(r)
+
+		emoji := gtk.NewImageFromPaintable(paintable)
 		emoji.AddCSSClass("message-reaction-emoji")
 		emoji.AddCSSClass("message-reaction-emoji-custom")
-		emoji.SetSizeRequest(gtkcord.InlineEmojiSize, gtkcord.InlineEmojiSize)
-		emoji.SetKeepAspectRatio(true)
-		emoji.SetURL(reaction.Emoji.EmojiURL())
-
-		// TODO: get this working:
-		// Currently, it just jitters in size. The button itself can still be
-		// sized small, FlowBox is just forcing it to be big. This does mean
-		// that it's not the GIF that is causing this.
-
-		// anim := emoji.EnableAnimation()
-		// anim.ConnectMotion(r)
+		emoji.SetPixelSize(gtkcord.InlineEmojiSize)
 
 		r.iconBin.SetChild(emoji)
 	} else {

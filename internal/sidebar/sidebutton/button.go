@@ -77,8 +77,7 @@ func NewButton(ctx context.Context, open func()) *Button {
 		open()
 	})
 
-	iconAnimation := g.Icon.EnableAnimation()
-	iconAnimation.ConnectMotion(g.Button)
+	g.Icon.Paintable.PlayOnHover(g.Button)
 
 	g.Pill = NewPill()
 

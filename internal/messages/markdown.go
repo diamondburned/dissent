@@ -52,11 +52,12 @@ func renderEmoji(ctx context.Context, r *mdrender.Renderer, n ast.Node) ast.Walk
 	emoji := n.(*discordmd.Emoji)
 	text := r.State(ctx).TextBlock()
 
-	picture := onlineimage.NewPicture(ctx, imgutil.HTTPProvider)
-	picture.EnableAnimation().OnHover()
-	picture.SetContentFit(gtk.ContentFitContain)
-	picture.SetTooltipText(emoji.Name)
-	picture.SetURL(gtkcord.EmojiURL(emoji.ID, emoji.GIF))
+	paintable := onlineimage.NewPaintable(ctx, imgutil.HTTPProvider)
+	paintable.SetURL(gtkcord.EmojiURL(emoji.ID, emoji.GIF))
+
+	image := gtk.NewImageFromPaintable(paintable)
+	image.SetTooltipText(emoji.Name)
+	paintable.PlayOnHover(image)
 
 	// Don't use md.InsertCustomImageWidget: it works around an old GTK bug
 	// by giving the TextView a negative bottom margin as large as the image,
@@ -64,8 +65,8 @@ func renderEmoji(ctx context.Context, r *mdrender.Renderer, n ast.Node) ast.Walk
 	// below them.
 	// See https://github.com/diamondburned/dissent/issues/381.
 	makeInlineImage := func(size int) {
-		picture.SetSizeRequest(size, size)
-		text.TextView.AddChildAtAnchor(picture, text.Buffer.CreateChildAnchor(text.Iter))
+		image.SetPixelSize(size)
+		text.TextView.AddChildAtAnchor(image, text.Buffer.CreateChildAnchor(text.Iter))
 	}
 
 	if emoji.Large {

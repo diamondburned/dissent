@@ -207,9 +207,11 @@ func (p *poll) newAnswer(answer discord.PollAnswer, total, highest int) gtk.Widg
 
 	if e := answer.PollMedia.Emoji; e != nil {
 		if e.IsCustom() {
-			image := onlineimage.NewPicture(p.ctx, imgutil.HTTPProvider)
-			image.SetSizeRequest(gtkcord.InlineEmojiSize, gtkcord.InlineEmojiSize)
-			image.SetURL(e.EmojiURL())
+			paintable := onlineimage.NewPaintable(p.ctx, imgutil.HTTPProvider)
+			paintable.SetURL(e.EmojiURL())
+
+			image := gtk.NewImageFromPaintable(paintable)
+			image.SetPixelSize(gtkcord.InlineEmojiSize)
 			emoji.Append(image)
 		} else {
 			emoji.Append(gtk.NewLabel(e.Name))

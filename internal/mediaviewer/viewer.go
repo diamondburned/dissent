@@ -259,21 +259,16 @@ func (v *Viewer) newImage(opts embed.Opts) gtk.Widgetter {
 		provider = imgutil.HTTPProvider
 	}
 
-	picture := onlineimage.NewPicture(ctx, provider)
-	picture.NotifyProperty("paintable", func() {
-		spinner.SetVisible(picture.Paintable() == nil)
+	paintable := onlineimage.NewPaintable(ctx, provider)
+	paintable.SetPlaying(opts.Type == embed.EmbedTypeGIF)
+	paintable.SetURL(v.url)
+	paintable.ConnectInvalidateSize(func() {
+		spinner.SetVisible(!paintable.HasImage())
 	})
 
-	var anim *onlineimage.AnimationController
-	if opts.Type == embed.EmbedTypeGIF {
-		anim = picture.EnableAnimation()
-	}
-	picture.SetURL(v.url)
-	if anim != nil {
-		anim.Start()
-	}
-
-	v.zoom = newZoomView(picture.Picture)
+	picture := gtk.NewPictureForPaintable(paintable)
+	paintable.FetchOnMap(picture)
+	v.zoom = newZoomView(picture)
 	overlay.SetChild(v.zoom)
 
 	return overlay

@@ -72,8 +72,7 @@ func newUserBar(ctx context.Context, menuActions []gtkutil.PopoverMenuItem) *use
 	b.Box.Append(b.menu)
 	userBarCSS(b)
 
-	anim := b.avatar.EnableAnimation()
-	anim.ConnectMotion(b)
+	b.avatar.Paintable.PlayOnHover(b)
 
 	vis := gtkutil.WithVisibility(ctx, b)
 

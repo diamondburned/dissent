@@ -153,10 +153,12 @@ func (d EmojiData) Row(ctx context.Context) *gtk.ListBoxRow {
 
 		b.Append(l)
 	} else {
-		i := onlineimage.NewImage(ctx, imgutil.HTTPProvider)
+		emoji := onlineimage.NewPaintable(ctx, imgutil.HTTPProvider)
+		emoji.SetURL(gtkcord.EmojiURL(d.Emoji.ID.String(), false))
+
+		i := gtk.NewImageFromPaintable(emoji)
 		i.AddCSSClass("autocompleter-customemoji")
-		i.SetSizeRequest(emojiSize, emojiSize)
-		i.SetFromURL(gtkcord.EmojiURL(d.Emoji.ID.String(), false))
+		i.SetPixelSize(emojiSize)
 
 		b.Append(i)
 

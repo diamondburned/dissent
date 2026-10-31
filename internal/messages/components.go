@@ -293,7 +293,9 @@ func newGalleryItem(ctx context.Context, item discord.MediaGalleryComponentItem,
 		provider = imgutil.FFmpegProvider
 	}
 
-	picture := onlineimage.NewPicture(ctx, provider)
+	paintable := onlineimage.NewPaintable(ctx, provider)
+
+	picture := gtk.NewPictureForPaintable(paintable)
 	picture.SetContentFit(gtk.ContentFitCover)
 	picture.SetCanShrink(true)
 	overlay.SetChild(picture)
@@ -304,9 +306,9 @@ func newGalleryItem(ctx context.Context, item discord.MediaGalleryComponentItem,
 	}
 	if opts.Type == embed.EmbedTypeImage {
 		size := max(w, h) * gtkutil.ScaleFactor()
-		picture.SetURL(resizeURL(item.Media.URL, proxy, size, size))
+		paintable.SetURL(resizeURL(item.Media.URL, proxy, size, size))
 	} else {
-		picture.SetURL(proxy)
+		paintable.SetURL(proxy)
 	}
 
 	if item.Description != "" {
@@ -456,9 +458,11 @@ func setComponentEmoji(ctx context.Context, box *gtk.Box, e *discord.ComponentEm
 
 	if e.ID.IsValid() {
 		emoji := discord.Emoji{ID: e.ID, Name: e.Name, Animated: e.Animated}
-		image := onlineimage.NewPicture(ctx, imgutil.HTTPProvider)
-		image.SetSizeRequest(gtkcord.InlineEmojiSize, gtkcord.InlineEmojiSize)
-		image.SetURL(emoji.EmojiURL())
+		paintable := onlineimage.NewPaintable(ctx, imgutil.HTTPProvider)
+		paintable.SetURL(emoji.EmojiURL())
+
+		image := gtk.NewImageFromPaintable(paintable)
+		image.SetPixelSize(gtkcord.InlineEmojiSize)
 		box.Append(image)
 	} else {
 		box.Append(gtk.NewLabel(e.Name))
