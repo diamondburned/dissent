@@ -2,8 +2,9 @@ package messages
 
 import (
 	"github.com/diamondburned/gotk4/pkg/gdk/v4"
-	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
+
+	coreglib "github.com/diamondburned/gotk4/pkg/core/glib"
 )
 
 // newSizer creates an empty widget with the natural size of w by h. It can
@@ -19,39 +20,32 @@ func newSizer(w, h int) *gtk.Picture {
 // its size when there is space, but it shrinks with the window instead of
 // stopping it from getting narrower.
 type aspectFrame struct {
-	*gtk.Overlay
-	sizer   *gtk.Picture
-	resizer *gtk.DrawingArea
-	w, h    int
-	// width is the allocated width, or 0 if the frame is not allocated yet.
-	width int
+	gtk.Widget
+	child gtk.Widgetter
+	w, h  int
 }
 
+var aspectFrameType = coreglib.RegisterSubclass[*aspectFrame](
+	coreglib.WithGTypeName("DissentAspectFrame"),
+	coreglib.WithOverrides(func(f *aspectFrame) coreglib.ObjectOverrides {
+		return coreglib.ObjectOverrides{Dispose: f.dispose}
+	}),
+	coreglib.WithOverrides(func(f *aspectFrame) gtk.WidgetOverrides {
+		return gtk.WidgetOverrides{
+			RequestMode:  f.requestMode,
+			Measure:      f.measure,
+			SizeAllocate: f.sizeAllocate,
+		}
+	}),
+)
+
 func newAspectFrame(child gtk.Widgetter, w, h int) *aspectFrame {
-	f := &aspectFrame{
-		Overlay: gtk.NewOverlay(),
-		sizer:   newSizer(w, h),
-	}
+	f := aspectFrameType.New()
 	// Neither align fills, or GTK finds the natural width for the height.
 	f.SetHAlign(gtk.AlignStart)
 	f.SetVAlign(gtk.AlignStart)
-	f.SetChild(f.sizer)
-
-	// The message list gives its children their minimum height, which is 0
-	// for the sizer, so the height is requested once the width is known. It
-	// is requested by the resizer rather than the frame, since a size request
-	// on the frame would include its CSS margin.
-	f.resizer = gtk.NewDrawingArea()
-	f.resizer.SetCanTarget(false)
-	f.resizer.ConnectResize(func(width, _ int) {
-		f.width = width
-		glib.IdleAdd(f.updateHeight)
-	})
-
-	// The child is laid over the frame without being measured.
-	f.AddOverlay(f.resizer)
-	f.SetMeasureOverlay(f.resizer, true)
-	f.AddOverlay(child)
+	f.child = child
+	gtk.BaseWidget(child).SetParent(f)
 	f.SetSize(w, h)
 	return f
 }
@@ -59,16 +53,42 @@ func newAspectFrame(child gtk.Widgetter, w, h int) *aspectFrame {
 // SetSize sets the size of the frame when there is enough space for it.
 func (f *aspectFrame) SetSize(w, h int) {
 	f.w, f.h = w, h
-	f.sizer.SetPaintable(gdk.NewPaintableEmpty(w, h))
-	f.updateHeight()
+	f.QueueResize()
 }
 
-func (f *aspectFrame) updateHeight() {
-	h := f.h
-	if f.width > 0 && f.width < f.w {
-		h = f.width * f.h / f.w
+func (f *aspectFrame) requestMode() gtk.SizeRequestMode {
+	return gtk.SizeRequestHeightForWidth
+}
+
+// measure asks for the size of the frame, and for a height that keeps its
+// aspect ratio at narrower widths. The child is not measured, so it shrinks
+// with the frame.
+func (f *aspectFrame) measure(orientation gtk.Orientation, forSize int) (minimum, natural, minimumBaseline, naturalBaseline int) {
+	if orientation == gtk.OrientationHorizontal {
+		return 0, f.w, -1, -1
 	}
-	if _, current := f.resizer.SizeRequest(); current != h {
-		f.resizer.SetSizeRequest(-1, h)
+	if forSize < 0 {
+		// The frame can be as narrow as nothing, so it can be as short too.
+		// Containers like GtkBox take this as the least height they can have.
+		return 0, f.h, -1, -1
+	}
+	h := f.h
+	if forSize >= 0 && forSize < f.w {
+		h = forSize * f.h / f.w
+	}
+	return h, h, -1, -1
+}
+
+func (f *aspectFrame) sizeAllocate(width, height, baseline int) {
+	// GTK wants children to be measured before they are allocated.
+	child := gtk.BaseWidget(f.child)
+	child.Measure(gtk.OrientationHorizontal, -1)
+	child.Allocate(width, height, baseline, nil)
+}
+
+func (f *aspectFrame) dispose() {
+	if f.child != nil {
+		gtk.BaseWidget(f.child).Unparent()
+		f.child = nil
 	}
 }
