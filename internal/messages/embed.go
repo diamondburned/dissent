@@ -25,6 +25,7 @@ import (
 	"github.com/diamondburned/ningen/v3/discordmd"
 	"github.com/dustin/go-humanize"
 	"libdb.so/dissent/internal/gtkcord"
+	"libdb.so/dissent/internal/mediaviewer"
 )
 
 // TODO: allow disable fetching videos.
@@ -626,13 +627,7 @@ func newEmbedImage(ctx context.Context, opts embed.Opts, src string, w, h, maxW,
 }
 
 func openViewer(ctx context.Context, uri string, opts embed.Opts) {
-	embedViewer, err := embed.NewViewer(ctx, uri, opts)
-	if err != nil {
-		app.Error(ctx, err)
-		return
-	}
-
-	embedViewer.Show()
+	mediaviewer.Open(ctx, uri, opts)
 }
 
 func fixNatWrap(label *gtk.Label) {
