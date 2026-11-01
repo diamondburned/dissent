@@ -75,15 +75,13 @@ var chatPageCSS = cssutil.Applier("window-chatpage", `
 	.right-header {
 		border-radius: 0;
 		box-shadow: none;
+		padding-left: 6px;
 	}
 	.right-header-label {
 		font-weight: bold;
 	}
 	.right-header-channel-icon {
 		margin-right: 4px;
-	}
-	.right-header-title-button {
-		padding: 0 6px;
 	}
 	.channel-info-popover > contents {
 		padding: 12px;
@@ -126,7 +124,7 @@ func NewChatPage(ctx context.Context, w *Window) *ChatPage {
 	p.rightTitle.AddCSSClass("right-header-bin")
 	p.rightTitle.SetHExpand(true)
 
-	p.startButtons = gtk.NewBox(gtk.OrientationHorizontal, 6)
+	p.startButtons = gtk.NewBox(gtk.OrientationHorizontal, 0)
 
 	back := backbutton.New()
 

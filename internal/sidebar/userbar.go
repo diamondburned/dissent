@@ -29,7 +29,7 @@ type userBar struct {
 
 var userBarCSS = cssutil.Applier("user-bar", `
 	.user-bar-avatar {
-		padding: 6px;
+		padding: 8px;
 	}
 	.user-bar-menu {
 		margin: 0 6px;

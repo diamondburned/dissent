@@ -146,17 +146,20 @@ type View struct {
 }
 
 var viewCSS = cssutil.Applier("composer-view", `
+	.composer-view {
+		min-height: 44px;
+	}
 	.composer-view * {
 		/* Fix spacing for certain GTK themes such as stock Adwaita. */
 		min-height: 0;
 	}
 	.composer-left-actions button,
 	.composer-right-actions button {
-		padding-top: 0.5em;
-		padding-bottom: 0.5em;
+		padding-top: 0.6em;
+		padding-bottom: 0.6em;
 	}
 	.composer-left-actions {
-		margin: 4px 0.65em;
+		margin: 9px 0.65em;
 	}
 	.composer-right-actions button.toggle:checked {
 		background-color: alpha(@accent_color, 0.25);
@@ -169,7 +172,7 @@ var viewCSS = cssutil.Applier("composer-view", `
 		margin-left: 4px;
 	}
 	.composer-placeholder {
-		padding: 12px 2px;
+		padding: 15px 2px;
 		color: alpha(@theme_fg_color, 0.65);
 	}
 	.composer-msg-length {
