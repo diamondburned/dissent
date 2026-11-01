@@ -21,7 +21,9 @@ import (
 	"libdb.so/dissent/internal/signaling"
 )
 
-var revealStateKey = app.NewStateKey[bool]("collapsed-channels-state")
+// The state is versioned, since earlier versions saved every category as
+// collapsed when the guild was closed.
+var revealStateKey = app.NewStateKey[bool]("collapsed-channels-state-v2")
 
 type channelItemState struct {
 	state  *gtkcord.State
@@ -415,7 +417,10 @@ func newChannelItemCategory(ch *discord.Channel, row *gtk.TreeListRow, reveal *a
 
 		row.NotifyProperty("expanded", func() {
 			row := ref.Get()
-			if row == nil {
+			// GTK also notifies when the row is destroyed, such as when the
+			// guild is closed. The row then reads as collapsed, but the user
+			// never collapsed it.
+			if row == nil || row.Item() == nil {
 				return
 			}
 

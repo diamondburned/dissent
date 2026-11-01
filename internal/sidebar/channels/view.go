@@ -49,7 +49,7 @@ type View struct {
 	selection *gtk.SingleSelection
 
 	guildID  discord.GuildID
-	selectID discord.ChannelID // delegate to select later
+	selectID discord.ChannelID // the channel to keep selected
 }
 
 var viewCSS = cssutil.Applier("channels-view", `
@@ -201,10 +201,10 @@ func NewView(ctx context.Context, guildID discord.GuildID) *View {
 		}
 
 		slog.Debug(
-			"selection change signal emitted, selecting channel and clearing selectID",
+			"selection change signal emitted, selecting channel",
 			"channel_type", ch.Type,
 			"channel_id", chID)
-		v.selectID = 0
+		v.selectID = chID
 
 		row := v.model.Row(v.selection.Selected())
 		row.SetExpanded(true)
@@ -213,10 +213,14 @@ func NewView(ctx context.Context, guildID discord.GuildID) *View {
 		parent.ActivateAction("win.open-channel", gtkcord.NewChannelIDVariant(chID))
 	})
 
-	// Bind to a signal that selects any channel that we need to be selected.
-	// This lets the channel be lazy-loaded.
+	// Keep the selected channel selected when the list changes. The selection
+	// is lost when its item is replaced, such as when the list is refreshed or
+	// its category is collapsed, and the channel may not be loaded yet.
 	v.selection.ConnectAfter("items-changed", func() {
 		if v.selectID == 0 {
+			return
+		}
+		if item := v.selection.SelectedItem(); item != nil && channelIDFromItem(item) == v.selectID {
 			return
 		}
 
@@ -227,7 +231,6 @@ func NewView(ctx context.Context, guildID discord.GuildID) *View {
 				"channel_id", v.selectID,
 				"channel_index", i)
 			v.selection.SelectItem(i, true)
-			v.selectID = 0
 		} else {
 			slog.Debug(
 				"items-changed signal emitted but stored channel not found",
@@ -239,24 +242,23 @@ func NewView(ctx context.Context, guildID discord.GuildID) *View {
 	return &v
 }
 
-// SelectChannel selects a known channel. If none is known, then it is selected
-// later when the list is changed or never selected if the user selects
-// something else.
+// SelectChannel selects a channel. If it is not in the list yet, then it is
+// selected once it is, unless the user selects something else first.
 func (v *View) SelectChannel(selectID discord.ChannelID) bool {
+	v.selectID = selectID
+
 	i, ok := v.findChannelItem(selectID)
 	if ok && v.selection.SelectItem(i, true) {
 		slog.Debug(
 			"channel found and selected immediately",
 			"channel_id", selectID,
 			"channel_index", i)
-		v.selectID = 0
 		return true
 	}
 
 	slog.Debug(
 		"channel not found, selecting later",
 		"channel_id", selectID)
-	v.selectID = selectID
 	return false
 }
 
