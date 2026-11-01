@@ -303,7 +303,7 @@ func (m *message) ShowSource() {
 
 // cozyMessage is a large cozy message with an avatar.
 type cozyMessage struct {
-	*gtk.Box
+	*gtk.Grid
 	Avatar   *onlineimage.Avatar
 	RightBox *gtk.Box
 	TopLabel *gtk.Label
@@ -351,9 +351,12 @@ func NewCozyMessage(ctx context.Context, v *View) Message {
 	m.Avatar.SetVAlign(gtk.AlignStart)
 	m.Avatar.Paintable.PlayOnHover(m.Avatar)
 
-	m.Box = gtk.NewBox(gtk.OrientationHorizontal, 0)
-	m.Box.Append(m.Avatar)
-	m.Box.Append(m.RightBox)
+	// A grid measures the height of a column at the width it gives the column,
+	// unlike a box, which can give the content less height than its images
+	// need.
+	m.Grid = gtk.NewGrid()
+	m.Grid.Attach(m.Avatar, 0, 0, 1, 1)
+	m.Grid.Attach(m.RightBox, 1, 0, 1, 1)
 
 	cozyCSS(m)
 	return &m
@@ -406,7 +409,7 @@ func (m *cozyMessage) updateAuthor(message *gateway.MessageCreateEvent) {
 
 // collapsedMessage is a collapsed cozy message.
 type collapsedMessage struct {
-	*gtk.Box
+	*gtk.Grid
 	Timestamp *gtk.Label
 
 	message
@@ -446,9 +449,10 @@ func NewCollapsedMessage(ctx context.Context, v *View) Message {
 	m.Timestamp.SetWrapMode(pango.WrapWordChar)
 	m.Timestamp.SetNaturalWrapMode(gtk.NaturalWrapWord)
 
-	m.Box = gtk.NewBox(gtk.OrientationHorizontal, 0)
-	m.Box.Append(m.Timestamp)
-	m.Box.Append(m.message.content)
+	// See NewCozyMessage for why this is a grid.
+	m.Grid = gtk.NewGrid()
+	m.Grid.Attach(m.Timestamp, 0, 0, 1, 1)
+	m.Grid.Attach(m.message.content, 1, 0, 1, 1)
 
 	collapsedCSS(m)
 	return &m
