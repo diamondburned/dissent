@@ -306,7 +306,7 @@ func newGalleryItem(ctx context.Context, item discord.MediaGalleryComponentItem,
 	}
 	if opts.Type == embed.EmbedTypeImage {
 		size := max(w, h) * gtkutil.ScaleFactor()
-		paintable.SetURL(resizeURL(item.Media.URL, proxy, size, size))
+		paintable.SetURL(resizeURL(item.Media.URL, proxy, size, size, size, size))
 	} else {
 		paintable.SetURL(proxy)
 	}

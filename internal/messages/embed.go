@@ -46,10 +46,17 @@ var defaultEmbedOpts = embed.Opts{
 	IgnoreWidth: true,
 }
 
-func resizeURL(directURL, proxyURL string, w, h int) string {
+// maxProxySize is the largest width or height that Discord's media proxy can
+// resize an image to.
+const maxProxySize = 4096
+
+// resizeURL returns the URL to fetch an image of size w by h at, when it is
+// shown fitted into maxW by maxH.
+func resizeURL(directURL, proxyURL string, w, h, maxW, maxH int) string {
 	if w == 0 || h == 0 {
 		return proxyURL
 	}
+	w, h = imgutil.MaxSize(w, h, maxW, maxH)
 
 	// Grab the maximum scale factor that we've ever seen. Plugging in another
 	// monitor while we've already rendered will not update this, but it's good
@@ -59,6 +66,7 @@ func resizeURL(directURL, proxyURL string, w, h int) string {
 		// Fetching 2x shouldn't be too bad, though.
 		scale = 2
 	}
+	w, h = imgutil.MaxSize(w*scale, h*scale, maxProxySize, maxProxySize)
 
 	u, err := url.Parse(proxyURL)
 	if err != nil {
@@ -79,14 +87,10 @@ func resizeURL(directURL, proxyURL string, w, h int) string {
 	if q.Has("size") {
 		// If we even have a size, then we can just assume that the size is
 		// the larger dimension.
-		if w > h {
-			q.Set("size", strconv.Itoa(w*scale))
-		} else {
-			q.Set("size", strconv.Itoa(h*scale))
-		}
+		q.Set("size", strconv.Itoa(max(w, h)))
 	} else {
-		q.Set("width", strconv.Itoa(w*scale))
-		q.Set("height", strconv.Itoa(h*scale))
+		q.Set("width", strconv.Itoa(w))
+		q.Set("height", strconv.Itoa(h))
 	}
 
 	u.RawQuery = q.Encode()
@@ -185,9 +189,8 @@ func newAttachmentSized(ctx context.Context, attachment *discord.Attachment, max
 		if mimeType == "image" && attachment.Width > 0 && attachment.Height > 0 {
 			// Fetch the image at the size that it is shown at, since large
 			// images tank performance on Cairo renderers.
-			w, h := imgutil.MaxSize(int(attachment.Width), int(attachment.Height), maxW, maxH)
-			scale := gtkutil.ScaleFactor()
-			src = resizeURL(attachment.URL, attachment.Proxy, w*scale, h*scale)
+			src = resizeURL(attachment.URL, attachment.Proxy,
+				int(attachment.Width), int(attachment.Height), maxW, maxH)
 		}
 
 		image, frame := newEmbedImage(ctx, opts, src,
@@ -505,7 +508,7 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 		}
 
 		image, frame := newEmbedImage(ctx, opts,
-			resizeURL(thumb.URL, thumb.Proxy, int(thumb.Width), int(thumb.Height)),
+			resizeURL(thumb.URL, thumb.Proxy, int(thumb.Width), int(thumb.Height), maxW, maxH),
 			int(thumb.Width), int(thumb.Height), maxW, maxH)
 
 		switch {
@@ -583,7 +586,8 @@ func newNormalEmbed(ctx context.Context, msg *discord.Message, msgEmbed *discord
 		src := img.Proxy
 		if msgEmbed.Image != nil {
 			// The server can only resize images.
-			src = resizeURL(img.URL, img.Proxy, int(img.Width), int(img.Height))
+			src = resizeURL(img.URL, img.Proxy, int(img.Width), int(img.Height),
+				maxEmbedWidth.Value(), maxImageHeight.Value())
 		}
 
 		image, frame := newEmbedImage(ctx, opts, src,
