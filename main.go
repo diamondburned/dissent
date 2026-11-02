@@ -86,6 +86,9 @@ var applicationType = coreglib.RegisterSubclass[*Application](
 func NewApplication(ctx context.Context) *Application {
 	a := applicationType.NewWithProperties(map[string]any{
 		"application-id": "so.libdb.dissent",
+		// GTK before 4.22 only tracks screensaver-active, which the away
+		// timeout uses, if the session is registered.
+		"register-session": true,
 	})
 	a.app = app.Wrap(ctx, &a.Application.Application, "Dissent")
 	return a

@@ -31,6 +31,7 @@ type Window struct {
 	session     *session.Session
 	chatState   *gtkcord.State
 	unsubscribe func()
+	afk         *afkTracker
 
 	Stack   *gtk.Stack
 	Login   *login.Page
@@ -84,6 +85,8 @@ func NewWindow(ctx context.Context, sess *session.Session) *Window {
 	overlay.SetChild(w.Stack)
 	overlay.AddOverlay(w.loading)
 	w.SetContent(overlay)
+
+	w.afk = newAFKTracker(w)
 
 	w.updateSession()
 	w.unsubscribe = sess.Subscribe(w.updateSession)

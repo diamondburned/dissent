@@ -53,6 +53,7 @@ func (w *Window) initChatPage(state *gtkcord.State) {
 	}
 
 	w.chatState = state
+	w.afk.bind(state)
 	w.ctx = gtkcord.InjectState(w.baseCtx, state)
 
 	w.Chat = NewChatPage(w.ctx, w)
