@@ -28,6 +28,7 @@ import (
 var _ = cssutil.WriteCSS(`
 	.message-box {
 		border: 2px solid transparent;
+		padding-right: 14px;
 		transition: linear 150ms background-color;
 	}
 	row:focus .message-box,

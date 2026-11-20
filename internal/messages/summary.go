@@ -27,6 +27,9 @@ var summaryCSS = cssutil.Applier("message-summary-row", `
 	.message-summary-title {
 		margin: 0.1em 0;
 	}
+	.message-summary-right {
+		padding-right: 14px;
+	}
 `)
 
 type messageSummaryWidget struct {

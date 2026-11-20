@@ -43,9 +43,6 @@ type Content struct {
 }
 
 var contentCSS = cssutil.Applier("message-content-box", `
-	.message-content-box {
-		margin-right: 4px;
-	}
 	.message-content-box > *:not(:first-child) {
 		margin-top: 0.15em;
 	}
