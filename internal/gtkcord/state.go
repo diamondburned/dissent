@@ -6,12 +6,10 @@ import (
 	"html"
 	"log/slog"
 	"math"
-	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
-	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -21,6 +19,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/state"
+	"github.com/diamondburned/arikawa/v3/utils/httputil"
 	"github.com/diamondburned/arikawa/v3/utils/httputil/httpdriver"
 	"github.com/diamondburned/arikawa/v3/utils/ws"
 	"github.com/diamondburned/chatkit/components/author"
@@ -32,22 +31,14 @@ import (
 	"github.com/diamondburned/ningen/v3"
 	"github.com/diamondburned/ningen/v3/discordmd"
 	"libdb.so/dissent/internal/colorhash"
+	clienthttp "libdb.so/dissent/internal/http"
 
 	coreglib "github.com/diamondburned/gotk4/pkg/core/glib"
 )
 
 func init() {
-	hostname, err := os.Hostname()
-	if err != nil {
-		hostname = "PC"
-	}
-
-	api.UserAgent = "Dissent (https://libdb.so/dissent)"
-	gateway.DefaultIdentity = gateway.IdentifyProperties{
-		gateway.IdentifyOS:      runtime.GOOS,
-		gateway.IdentifyDevice:  "Arikawa",
-		gateway.IdentifyBrowser: "Dissent on " + hostname,
-	}
+	api.UserAgent = clienthttp.BrowserUserAgent()
+	gateway.DefaultIdentity = clienthttp.IdentifyProperties()
 }
 
 // AllowedChannelTypes are the channel types that are shown.
@@ -88,24 +79,27 @@ func FromContext(ctx context.Context) *State {
 // Wrap wraps the given state.
 func Wrap(state *state.State) *State {
 	c := state.Client.Client
-	c.OnRequest = append(c.OnRequest, func(r httpdriver.Request) error {
-		// req := (*http.Request)(r.(*httpdriver.DefaultRequest))
-		// log.Println("Discord API:", req.Method, req.URL.Path)
-		return nil
-	})
+	c.OnRequest = append(c.OnRequest, httputil.WithHeaders(clienthttp.Headers()))
 	c.OnResponse = append(c.OnResponse, func(dreq httpdriver.Request, dresp httpdriver.Response) error {
-		req := (*http.Request)(dreq.(*httpdriver.DefaultRequest))
 		if dresp == nil {
 			return nil
 		}
 
-		resp := (*http.Response)(dresp.(*httpdriver.DefaultResponse))
-		if resp.StatusCode >= 400 {
+		status := dresp.GetStatus()
+		if status >= 400 {
+			var method string
+			switch r := dreq.(type) {
+			case interface{ GetMethod() string }:
+				method = r.GetMethod()
+			case *httpdriver.DefaultRequest:
+				method = r.Method
+			}
+
 			slog.Warn(
 				"Discord API returned HTTP error",
-				"method", req.Method,
-				"path", req.URL.Path,
-				"status", resp.Status)
+				"method", method,
+				"path", dreq.GetPath(),
+				"status", status)
 		}
 
 		return nil

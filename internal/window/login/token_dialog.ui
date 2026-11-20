@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <requires lib="libadwaita" version="1.6"/>
+  <object class="AdwDialog" id="rootContent">
+    <property name="title" translatable="yes">Input Token</property>
+    <property name="content-width">400</property>
+    <property name="follows-content-size">true</property>
+    <child>
+      <object class="AdwToolbarView">
+        <child type="top">
+          <object class="AdwHeaderBar">
+            <property name="show-start-title-buttons">false</property>
+            <property name="show-end-title-buttons">false</property>
+            <property name="title-widget">
+              <object class="AdwWindowTitle">
+                <property name="title" translatable="yes">Input Token</property>
+              </object>
+            </property>
+            <child type="start">
+              <object class="GtkButton" id="cancelButton">
+                <property name="label" translatable="yes">Cancel</property>
+              </object>
+            </child>
+            <child type="end">
+              <object class="GtkButton" id="submitButton">
+                <property name="label" translatable="yes">Log in</property>
+                <property name="sensitive">false</property>
+                <style>
+                  <class name="suggested-action"/>
+                </style>
+              </object>
+            </child>
+          </object>
+        </child>
+        <property name="content">
+          <object class="AdwClamp">
+            <property name="maximum-size">400</property>
+            <property name="margin-top">12</property>
+            <property name="margin-bottom">18</property>
+            <property name="margin-start">18</property>
+            <property name="margin-end">18</property>
+            <child>
+              <object class="AdwPreferencesGroup">
+                <property name="description" translatable="yes">Paste your Discord account token below.</property>
+                <child>
+                  <object class="AdwPasswordEntryRow" id="tokenEntry">
+                    <property name="title" translatable="yes">Token</property>
+                    <property name="activates-default">true</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+        </property>
+      </object>
+    </child>
+  </object>
+</interface>

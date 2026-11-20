@@ -75,7 +75,16 @@
           # `gst-inspect-1.0 playbin3` yielded "blacklisted".
           # This was only fixed after running `rm -r ~/.cache/gstreamer-1.0` and
           # re-running this command.
-          GST_REGISTRY = "/dev/null";
+          #
+          # Use GST_REGISTRY_1_0 instead of GST_REGISTRY: WebKitGTK's bubblewrap
+          # sandbox bind-mounts dirname(GST_REGISTRY) read-write, so
+          # GST_REGISTRY=/dev/null overmounts /dev with MS_NODEV and breaks
+          # /dev/urandom inside WebKitWebProcess.
+          GST_REGISTRY_1_0 = "/dev/null";
+
+          shellHook = ''
+            export GIO_EXTRA_MODULES="${pkgs.glib-networking}/lib/gio/modules:${pkgs.dconf.lib}/lib/gio/modules"
+          '';
         };
 
         packages.default = gotk4-nix.lib.mkPackage {

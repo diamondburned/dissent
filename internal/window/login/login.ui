@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <requires lib="libadwaita" version="1.6"/>
+  <menu id="loginMenu">
+    <section>
+      <item>
+        <attribute name="label" translatable="yes">Remember Account</attribute>
+        <attribute name="action">login.remember</attribute>
+      </item>
+    </section>
+    <section>
+      <item>
+        <attribute name="label" translatable="yes">_About</attribute>
+        <attribute name="action">app.about</attribute>
+      </item>
+      <item>
+        <attribute name="label" translatable="yes">_Quit</attribute>
+        <attribute name="action">app.quit</attribute>
+      </item>
+    </section>
+  </menu>
+  <object class="AdwNavigationView" id="rootContent">
+    <child>
+      <object class="AdwNavigationPage" id="greeterPage">
+        <property name="title" translatable="yes">Log in</property>
+        <property name="tag">greeter</property>
+        <property name="child">
+          <object class="AdwToolbarView" id="greeterToolbar">
+            <child type="top">
+              <object class="AdwHeaderBar">
+                <property name="show-title">false</property>
+                <child type="end">
+                  <object class="GtkMenuButton" id="menuButton">
+                    <property name="icon-name">view-more-symbolic</property>
+                    <property name="tooltip-text" translatable="yes">Main Menu</property>
+                    <property name="popover">
+                      <object class="GtkPopoverMenu">
+                        <property name="menu-model">loginMenu</property>
+                      </object>
+                    </property>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child type="top">
+              <object class="AdwBanner" id="errorBanner">
+                <property name="button-label" translatable="yes">Dismiss</property>
+              </object>
+            </child>
+            <property name="content">
+              <object class="AdwStatusPage" id="statusPage">
+                <property name="icon-name">logo</property>
+                <property name="title" translatable="yes">Dissent</property>
+                <property name="description" translatable="yes">Log in with your Discord account or paste an existing token.</property>
+                <property name="child">
+                  <object class="AdwClamp">
+                    <property name="maximum-size">360</property>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="orientation">vertical</property>
+                        <property name="spacing">18</property>
+                        <child>
+                          <object class="GtkBox">
+                            <property name="orientation">vertical</property>
+                            <property name="spacing">10</property>
+                            <property name="halign">center</property>
+                            <child>
+                              <object class="GtkButton" id="loginDiscordButton">
+                                <property name="halign">center</property>
+                                <property name="width-request">220</property>
+                                <style>
+                                  <class name="suggested-action"/>
+                                  <class name="pill"/>
+                                </style>
+                                <child>
+                                  <object class="GtkStack" id="loginButtonStack">
+                                    <property name="hhomogeneous">false</property>
+                                    <child>
+                                      <object class="GtkStackPage">
+                                        <property name="name">label</property>
+                                        <property name="child">
+                                          <object class="GtkLabel">
+                                            <property name="label" translatable="yes">Log in via Discord</property>
+                                          </object>
+                                        </property>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkStackPage">
+                                        <property name="name">busy</property>
+                                        <property name="child">
+                                          <object class="AdwSpinner"/>
+                                        </property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="tokenButton">
+                                <property name="label" translatable="yes">Input a token...</property>
+                                <property name="halign">center</property>
+                                <property name="width-request">220</property>
+                                <style>
+                                  <class name="pill"/>
+                                </style>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="AdwPreferencesGroup" id="decryptGroup">
+                            <property name="visible">false</property>
+                            <child>
+                              <object class="AdwActionRow" id="decryptRow">
+                                <property name="title" translatable="yes">Unlock Saved Account</property>
+                                <property name="subtitle" translatable="yes">Decrypt previously saved token</property>
+                                <property name="activatable">true</property>
+                                <child type="suffix">
+                                  <object class="GtkImage">
+                                    <property name="icon-name">go-next-symbolic</property>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </property>
+              </object>
+            </property>
+          </object>
+        </property>
+      </object>
+    </child>
+  </object>
+</interface>

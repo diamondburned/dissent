@@ -22,6 +22,9 @@
       libspelling
       gtksourceview5
       pcre2 # for gtksourceview5 which didn't get propagated
+      webkitgtk_6_0
+      libsoup_3
+      glib-networking
 
       # Optional
 

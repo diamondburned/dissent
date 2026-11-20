@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk" version="4.0"/>
+  <requires lib="libadwaita" version="1.6"/>
+  <object class="AdwToolbarView" id="rootContent">
+    <child type="top">
+      <object class="AdwHeaderBar">
+        <property name="show-title">false</property>
+      </object>
+    </child>
+    <property name="content">
+      <object class="GtkWindowHandle">
+        <property name="child">
+          <object class="AdwStatusPage" id="statusPage">
+            <property name="title" translatable="yes">Connecting...</property>
+          </object>
+        </property>
+      </object>
+    </property>
+  </object>
+</interface>

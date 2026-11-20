@@ -5,30 +5,31 @@ import (
 
 	"github.com/diamondburned/chatkit/components/secretdialog"
 	"github.com/diamondburned/chatkit/kits/secret"
+	"github.com/diamondburned/gotk4/pkg/gio/v2"
+	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
-	"github.com/diamondburned/gotkit/gtkutil/cssutil"
 )
 
 type rememberMeBox struct {
-	*gtk.CheckButton
+	action *gio.SimpleAction
 	driver secret.Driver
 }
 
-var rememberMeCSS = cssutil.Applier("login-rememberme", `
-	.login-rememberme {
-		margin-bottom: 4px;
-	}
-`)
-
-func newRememberMeBox(ctx context.Context) *rememberMeBox {
+func newRememberMeBox(ctx context.Context, target gtk.Widgetter) *rememberMeBox {
 	b := rememberMeBox{}
-
 	keyring := secret.KeyringDriver(ctx)
 
-	b.CheckButton = gtk.NewCheckButtonWithLabel("Remember Account")
-	b.CheckButton.AddCSSClass("login-rememberme")
-	b.CheckButton.ConnectToggled(func() {
-		if !b.Active() {
+	initial := keyring.IsAvailable()
+	if initial {
+		b.driver = keyring
+	}
+
+	b.action = gio.NewSimpleActionStateful("remember", nil, glib.NewVariantBoolean(initial))
+	b.action.ConnectChangeState(func(value *glib.Variant) {
+		active := value != nil && value.Boolean()
+		b.action.SetState(glib.NewVariantBoolean(active))
+
+		if !active {
 			b.driver = nil
 			return
 		}
@@ -42,14 +43,19 @@ func newRememberMeBox(ctx context.Context) *rememberMeBox {
 			ctx, secretdialog.PromptEncrypt,
 			func(ok bool, enc *secret.EncryptedFile) {
 				if !ok {
-					// User didn't want this, so untick the box.
-					b.SetActive(false)
+					// User didn't want this, so untick the checkbox.
+					b.action.SetState(glib.NewVariantBoolean(false))
+					b.driver = nil
 				} else {
 					b.driver = enc
 				}
 			},
 		)
 	})
+
+	group := gio.NewSimpleActionGroup()
+	group.AddAction(b.action)
+	gtk.BaseWidget(target).InsertActionGroup("login", group)
 
 	return &b
 }

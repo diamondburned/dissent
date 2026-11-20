@@ -4,13 +4,21 @@
 package session
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
+	stderrors "errors"
 	"fmt"
 	"log/slog"
+	"os"
+	"path/filepath"
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
+	"github.com/diamondburned/arikawa/v3/session"
 	"github.com/diamondburned/arikawa/v3/state"
+	"github.com/diamondburned/arikawa/v3/state/store/defaultstore"
+	"github.com/diamondburned/arikawa/v3/utils/handler"
 	"github.com/diamondburned/arikawa/v3/utils/ws"
 	"github.com/diamondburned/chatkit/kits/secret"
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
@@ -21,7 +29,10 @@ import (
 	"github.com/diamondburned/gotkit/gtkutil"
 	"github.com/diamondburned/ningen/v3"
 	"github.com/pkg/errors"
+	"github.com/zalando/go-keyring"
+	clientgateway "libdb.so/dissent/internal/gateway"
 	"libdb.so/dissent/internal/gtkcord"
+	clienthttp "libdb.so/dissent/internal/http"
 )
 
 // RunInBackground keeps Dissent connected after its window is closed.
@@ -130,15 +141,66 @@ func (s *Session) LoadKeyring() {
 			return func() { s.setStatus(LoggedOut, nil) }
 		}
 
-		return func() { s.Login(string(b)) }
+		token := string(bytes.TrimSpace(b))
+		if token == "" {
+			return func() { s.setStatus(LoggedOut, nil) }
+		}
+
+		return func() { s.Login(token) }
 	})
+}
+
+const closeCodeAuthFailed = 4004
+
+func isAuthFailedError(err error) bool {
+	var closeEv *ws.CloseEvent
+	if stderrors.As(err, &closeEv) && closeEv.Code == closeCodeAuthFailed {
+		return true
+	}
+
+	var discEv *ningen.DisconnectedEvent
+	if stderrors.As(err, &discEv) && discEv.Code == closeCodeAuthFailed {
+		return true
+	}
+
+	return false
+}
+
+func (s *Session) forgetToken() {
+	if s.app == nil {
+		return
+	}
+	slog.Warn("Discord authentication failed (4004), forgetting saved token")
+	forgetStoredAccount(s.app.IDDot("secrets"), s.app.ConfigPath("secrets"))
+}
+
+func forgetStoredAccount(service, secretsDir string) {
+	if service != "" {
+		if err := keyring.Delete(service, "account"); err != nil && !stderrors.Is(err, keyring.ErrNotFound) {
+			slog.Warn("failed to delete token from keyring", "err", err)
+		}
+	}
+
+	if secretsDir != "" {
+		accountFile := base64.RawStdEncoding.EncodeToString([]byte("account"))
+		secretPath := filepath.Join(secretsDir, accountFile)
+		if err := os.Remove(secretPath); err != nil && !stderrors.Is(err, os.ErrNotExist) {
+			slog.Warn("failed to remove encrypted token file", "err", err)
+		}
+	}
 }
 
 // Login logs in using the given token, replacing the current session.
 func (s *Session) Login(token string) {
 	s.closeState(false)
 
-	state := gtkcord.Wrap(state.New(token))
+	id := gateway.DefaultIdentifier(token)
+	id.Properties = clienthttp.IdentifyProperties()
+
+	sess := session.NewWithGateway(clientgateway.New(id), handler.New())
+	sess.Client = clienthttp.NewClient(token)
+
+	state := gtkcord.Wrap(state.NewFromSession(sess, defaultstore.New()))
 	s.state = state
 	s.ctx = gtkcord.InjectState(s.baseCtx, state)
 	s.unbind = state.AddHandler(s.handleEvent)
@@ -147,6 +209,9 @@ func (s *Session) Login(token string) {
 	ctx := s.ctx
 	gtkutil.Async(ctx, func() func() {
 		err := state.Open(ctx)
+		if err != nil && isAuthFailedError(err) {
+			s.forgetToken()
+		}
 		return func() {
 			if err == nil || s.state != state {
 				return
@@ -244,12 +309,22 @@ func (s *Session) handleEvent(ev gateway.Event) {
 			"Discord gateway closed",
 			"err", ev.Err,
 			"code", ev.Code)
+		if ev.Code == closeCodeAuthFailed {
+			s.forgetToken()
+		}
 
 	case *ningen.DisconnectedEvent:
 		slog.Info(
 			"Discord gateway disconnected",
 			"err", ev.Err,
 			"code", ev.Code)
+
+		if ev.Code == closeCodeAuthFailed {
+			s.forgetToken()
+			s.closeState(false)
+			s.setStatus(LoggedOut, ev.Err)
+			return
+		}
 
 		if ev.IsLoggedOut() {
 			s.closeState(false)
