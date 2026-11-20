@@ -10,6 +10,7 @@ import (
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/diamondburned/gotkit/app"
+	"libdb.so/dissent/internal/testutil"
 )
 
 type stubLoginController struct {
@@ -21,13 +22,10 @@ func (s *stubLoginController) Login(token string) {
 }
 
 func TestLoginUIFiles(t *testing.T) {
-	if !gtk.InitCheck() {
-		t.Skip("GTK display not available")
-	}
-	adw.Init()
+	testutil.RequireGTK(t)
 
 	ctx := context.Background()
-	gtkApp := adw.NewApplication("so.libdb.dissent.test", gio.ApplicationFlagsNone)
+	gtkApp := adw.NewApplication("so.libdb.dissent.test", gio.ApplicationDefaultFlags)
 	ctx = app.WithApplication(ctx, app.Wrap(ctx, &gtkApp.Application, "Dissent"))
 	ctrl := &stubLoginController{}
 

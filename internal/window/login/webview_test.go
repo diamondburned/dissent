@@ -8,13 +8,11 @@ import (
 	"github.com/diamondburned/gotk4-adwaita/pkg/adw"
 	webkit "github.com/diamondburned/gotk4-webkitgtk/pkg/webkit/v6"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
+	"libdb.so/dissent/internal/testutil"
 )
 
 func TestNewEphemeralWebView(t *testing.T) {
-	if !gtk.InitCheck() {
-		t.Skip("GTK display not available")
-	}
-	adw.Init()
+	testutil.RequireGTK(t)
 
 	ui := gtk.NewBuilderFromString(webviewUI)
 	root := ui.GetObject("rootContent")
