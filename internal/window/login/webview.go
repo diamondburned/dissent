@@ -40,6 +40,7 @@ func newEphemeralWebView() *webkit.WebView {
 	view := webLoginViewType.NewWithProperties(map[string]any{
 		"network-session": session,
 	})
+	view.SetZoomLevel(0.9)
 	return &view.WebView
 }
 

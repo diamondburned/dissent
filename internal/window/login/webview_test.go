@@ -31,6 +31,9 @@ func TestNewEphemeralWebView(t *testing.T) {
 	if !view.NetworkSession().IsEphemeral() {
 		t.Fatal("expected ephemeral network session")
 	}
+	if got := view.ZoomLevel(); got != 0.9 {
+		t.Fatalf("ZoomLevel() = %v, want 0.9", got)
+	}
 
 	ucm := view.UserContentManager()
 	ucm.AddScript(webkit.NewUserScript(
