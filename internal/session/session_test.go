@@ -76,3 +76,35 @@ func TestForgetStoredAccountRemovesEncryptedFile(t *testing.T) {
 		t.Fatalf("expected .hash to remain intact: %v", err)
 	}
 }
+
+func TestSessionLogoutResetsStatusAndAdvancesGeneration(t *testing.T) {
+	s := New(context.Background())
+
+	var updates []Status
+	unsub := s.Subscribe(func() {
+		updates = append(updates, s.Status())
+	})
+	defer unsub()
+
+	s.gen = 3
+	s.setStatus(Connecting, errors.New("stale error"))
+	prevGen := s.gen
+
+	s.Logout()
+
+	if s.Status() != LoggedOut {
+		t.Fatalf("Status() = %v, want %v", s.Status(), LoggedOut)
+	}
+	if s.Err() != nil {
+		t.Fatalf("Err() = %v, want nil", s.Err())
+	}
+	if s.State() != nil {
+		t.Fatalf("State() = %v, want nil", s.State())
+	}
+	if s.gen <= prevGen {
+		t.Fatalf("gen = %d, want > %d", s.gen, prevGen)
+	}
+	if len(updates) != 2 || updates[0] != Connecting || updates[1] != LoggedOut {
+		t.Fatalf("subscriber updates = %v, want [Connecting LoggedOut]", updates)
+	}
+}

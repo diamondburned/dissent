@@ -86,6 +86,7 @@ type Session struct {
 	unbind func()
 	status Status
 	err    error
+	gen    uint64
 
 	reconnecting glib.SourceHandle
 	held         bool
@@ -129,6 +130,8 @@ func (s *Session) Subscribe(f func()) (unsubscribe func()) {
 
 // LoadKeyring logs in using the token stored in the keyring, if there is one.
 func (s *Session) LoadKeyring() {
+	s.gen++
+	gen := s.gen
 	s.setStatus(Connecting, nil)
 
 	driver := secret.KeyringDriver(s.baseCtx)
@@ -138,15 +141,30 @@ func (s *Session) LoadKeyring() {
 			slog.Info(
 				"account not found in keyring",
 				"err", err)
-			return func() { s.setStatus(LoggedOut, nil) }
+			return func() {
+				if s.gen != gen {
+					return
+				}
+				s.setStatus(LoggedOut, nil)
+			}
 		}
 
 		token := string(bytes.TrimSpace(b))
 		if token == "" {
-			return func() { s.setStatus(LoggedOut, nil) }
+			return func() {
+				if s.gen != gen {
+					return
+				}
+				s.setStatus(LoggedOut, nil)
+			}
 		}
 
-		return func() { s.Login(token) }
+		return func() {
+			if s.gen != gen {
+				return
+			}
+			s.Login(token)
+		}
 	})
 }
 
@@ -166,21 +184,38 @@ func isAuthFailedError(err error) bool {
 	return false
 }
 
-func (s *Session) forgetToken() {
+func (s *Session) forgetToken(async bool) {
 	if s.app == nil {
 		return
 	}
-	slog.Warn("Discord authentication failed (4004), forgetting saved token")
-	forgetStoredAccount(s.app.IDDot("secrets"), s.app.ConfigPath("secrets"))
+	service := s.app.IDDot("secrets")
+	secretsDir := s.app.ConfigPath("secrets")
+
+	// Remove the local encrypted token file synchronously so any UI refreshing
+	// immediately on LoggedOut sees the updated state without racing.
+	removeEncryptedAccountFile(secretsDir)
+
+	if async {
+		go deleteKeyringAccount(service)
+	} else {
+		deleteKeyringAccount(service)
+	}
 }
 
 func forgetStoredAccount(service, secretsDir string) {
+	deleteKeyringAccount(service)
+	removeEncryptedAccountFile(secretsDir)
+}
+
+func deleteKeyringAccount(service string) {
 	if service != "" {
 		if err := keyring.Delete(service, "account"); err != nil && !stderrors.Is(err, keyring.ErrNotFound) {
 			slog.Warn("failed to delete token from keyring", "err", err)
 		}
 	}
+}
 
+func removeEncryptedAccountFile(secretsDir string) {
 	if secretsDir != "" {
 		accountFile := base64.RawStdEncoding.EncodeToString([]byte("account"))
 		secretPath := filepath.Join(secretsDir, accountFile)
@@ -192,6 +227,7 @@ func forgetStoredAccount(service, secretsDir string) {
 
 // Login logs in using the given token, replacing the current session.
 func (s *Session) Login(token string) {
+	s.gen++
 	s.closeState(false)
 
 	id := gateway.DefaultIdentifier(token)
@@ -210,7 +246,8 @@ func (s *Session) Login(token string) {
 	gtkutil.Async(ctx, func() func() {
 		err := state.Open(ctx)
 		if err != nil && isAuthFailedError(err) {
-			s.forgetToken()
+			slog.Warn("Discord authentication failed (4004), forgetting saved token")
+			s.forgetToken(false)
 		}
 		return func() {
 			if err == nil || s.state != state {
@@ -220,6 +257,15 @@ func (s *Session) Login(token string) {
 			s.setStatus(LoggedOut, errors.Wrap(err, "cannot open session"))
 		}
 	})
+}
+
+// Logout closes the current session, forgets any saved account token, and
+// transitions the session back to LoggedOut.
+func (s *Session) Logout() {
+	s.gen++
+	s.closeState(false)
+	s.forgetToken(true)
+	s.setStatus(LoggedOut, nil)
 }
 
 // Close closes the session and waits for it to disconnect. It is meant to be
@@ -271,6 +317,10 @@ func (s *Session) setStatus(status Status, err error) {
 // updateHold keeps the application running without any windows for as long as
 // the session isn't logged out.
 func (s *Session) updateHold() {
+	if s.app == nil {
+		return
+	}
+
 	hold := s.status != LoggedOut && RunInBackground.Value()
 	if hold == s.held {
 		return
@@ -310,7 +360,8 @@ func (s *Session) handleEvent(ev gateway.Event) {
 			"err", ev.Err,
 			"code", ev.Code)
 		if ev.Code == closeCodeAuthFailed {
-			s.forgetToken()
+			slog.Warn("Discord authentication failed (4004), forgetting saved token")
+			s.forgetToken(true)
 		}
 
 	case *ningen.DisconnectedEvent:
@@ -320,7 +371,8 @@ func (s *Session) handleEvent(ev gateway.Event) {
 			"code", ev.Code)
 
 		if ev.Code == closeCodeAuthFailed {
-			s.forgetToken()
+			slog.Warn("Discord authentication failed (4004), forgetting saved token")
+			s.forgetToken(true)
 			s.closeState(false)
 			s.setStatus(LoggedOut, ev.Err)
 			return
