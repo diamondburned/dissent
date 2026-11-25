@@ -87,6 +87,7 @@ func NewWindow(ctx context.Context, sess *session.Session) *Window {
 	w.SetContent(overlay)
 
 	w.afk = newAFKTracker(w)
+	w.initActions()
 
 	w.updateSession()
 	w.unsubscribe = sess.Subscribe(w.updateSession)

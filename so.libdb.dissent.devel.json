@@ -1,0 +1,63 @@
+{
+  "id": "so.libdb.dissent.Devel",
+  "runtime": "org.gnome.Platform",
+  "runtime-version": "master",
+  "sdk": "org.gnome.Sdk",
+  "command": "dissent",
+  "sdk-extensions": [
+    "org.freedesktop.Sdk.Extension.golang"
+  ],
+  "build-options": {
+    "append-path": "/usr/lib/sdk/golang/bin",
+    "build-args": [
+      "--share=network"
+    ],
+    "env": {
+      "GOROOT": "/usr/lib/sdk/golang",
+      "GOFLAGS": "-modcacherw"
+    }
+  },
+  "finish-args": [
+    "--socket=wayland",
+    "--socket=fallback-x11",
+    "--socket=pulseaudio",
+    "--share=ipc",
+    "--share=network",
+    "--talk-name=org.freedesktop.Notifications",
+    "--talk-name=org.freedesktop.secrets",
+    "--talk-name=org.kde.kwalletd5",
+    "--talk-name=org.kde.StatusNotifierWatcher",
+    "--filesystem=xdg-run/keyring",
+    "--device=dri"
+  ],
+  "modules": [
+    {
+      "name": "libspelling",
+      "buildsystem": "meson",
+      "config-opts": [
+        "-Ddocs=false"
+      ],
+      "sources": [
+        {
+          "type": "git",
+          "url": "https://gitlab.gnome.org/GNOME/libspelling.git",
+          "tag": "0.4.10",
+          "commit": "1facdde8e1c0fd72bed806f9a9be2fbec83af5f2"
+        }
+      ]
+    },
+    {
+      "name": "dissent",
+      "buildsystem": "meson",
+      "config-opts": [
+        "-Dprofile=development"
+      ],
+      "sources": [
+        {
+          "type": "dir",
+          "path": "."
+        }
+      ]
+    }
+  ]
+}

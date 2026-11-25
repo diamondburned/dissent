@@ -128,15 +128,24 @@ func (t *afkTracker) updateCheckTimer() {
 	}
 }
 
-// bind keeps track of our session's presence in the given state.
-func (t *afkTracker) bind(state *gtkcord.State) {
+// unbindState detaches the tracker from the current state.
+func (t *afkTracker) unbindState() {
 	if t.unbind != nil {
 		t.unbind()
+		t.unbind = nil
 	}
 
-	t.state = state
+	t.state = nil
+	t.sessionID = ""
 	t.status = ""
 	t.activities = nil
+}
+
+// bind keeps track of our session's presence in the given state.
+func (t *afkTracker) bind(state *gtkcord.State) {
+	t.unbindState()
+
+	t.state = state
 
 	// We're only bound once connected, so READY has already arrived.
 	ready := state.Ready()

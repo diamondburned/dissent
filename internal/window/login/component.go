@@ -59,14 +59,18 @@ func newComponent(ctx context.Context, p *Page, get func(string) glib.Objector) 
 		c.StatusPage.SetDescription("Input your Discord account token to sign in.")
 	}
 
-	gtkutil.Async(ctx, func() func() {
-		if secret.IsEncrypted(ctx) {
-			return func() { c.decryptGroup.SetVisible(true) }
-		}
-		return nil
-	})
+	c.RefreshEncryptedState()
 
 	return &c
+}
+
+// RefreshEncryptedState updates the visibility of the encrypted token
+// decryption option to match whether an encrypted token file exists.
+func (c *Component) RefreshEncryptedState() {
+	gtkutil.Async(c.ctx, func() func() {
+		encrypted := secret.IsEncrypted(c.ctx)
+		return func() { c.decryptGroup.SetVisible(encrypted) }
+	})
 }
 
 // ShowError reveals the error banner and shows the error to the user.

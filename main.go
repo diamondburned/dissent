@@ -39,6 +39,10 @@ func init() {
 // Version is connected to about.SetVersion.
 var Version string
 
+// AppID is the GApplication ID. It can be overridden at build time via
+// -ldflags "-X main.AppID=so.libdb.dissent.Devel" for side-by-side dev builds.
+var AppID = "so.libdb.dissent"
+
 func init() { about.SetVersion(Version) }
 
 var _ = cssutil.WriteCSS(`
@@ -85,7 +89,8 @@ var applicationType = coreglib.RegisterSubclass[*Application](
 // NewApplication creates a new Dissent application.
 func NewApplication(ctx context.Context) *Application {
 	a := applicationType.NewWithProperties(map[string]any{
-		"application-id": "so.libdb.dissent",
+		"application-id":     AppID,
+		"resource-base-path": "/so/libdb/dissent",
 		// GTK before 4.22 only tracks screensaver-active, which the away
 		// timeout uses, if the session is registered.
 		"register-session": true,
@@ -109,6 +114,7 @@ func (a *Application) startup() {
 		"app.preferences": func() { prefui.ShowDialog(a.window().Context()) },
 		"app.about":       func() { about.New(a.window().Context()).Present(a.window()) },
 		"app.logs":        func() { logui.ShowDefaultViewer(a.window().Context()) },
+		"app.logout":      func() { a.confirmLogout() },
 		"app.quit":        func() { a.app.Quit() },
 	})
 	a.app.AddActionCallbacks(map[string]gtkutil.ActionCallback{
@@ -152,6 +158,32 @@ func (a *Application) forwardActionToWindow(name string, t *glib.VariantType) gt
 			win.Present()
 		},
 	}
+}
+
+// confirmLogout asks the user to confirm before logging out of the current
+// Discord session.
+func (a *Application) confirmLogout() {
+	if a.session.Status() == session.LoggedOut {
+		return
+	}
+
+	win := a.window()
+	ctx := win.Context()
+
+	alert := adw.NewAlertDialog(
+		locale.Get("Log Out?"),
+		locale.Get("You will need to sign in again to use Dissent."),
+	)
+	alert.AddResponse("cancel", locale.Get("Cancel"))
+	alert.AddResponse("logout", locale.Get("Log Out"))
+	alert.SetResponseAppearance("logout", adw.ResponseDestructive)
+	alert.SetDefaultResponse("cancel")
+	alert.SetCloseResponse("cancel")
+	alert.Choose(ctx, win, func(res gio.AsyncResulter) {
+		if alert.ChooseFinish(res) == "logout" {
+			a.session.Logout()
+		}
+	})
 }
 
 // window returns the window, creating it if it was closed or never opened.

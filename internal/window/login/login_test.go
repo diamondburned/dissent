@@ -65,6 +65,12 @@ func TestLoginUIFiles(t *testing.T) {
 	if loading == nil {
 		t.Fatal("NewLoadingPage returned nil")
 	}
+	if loading.logoutButton == nil {
+		t.Fatal("logoutButton is nil")
+	}
+	if loading.logoutButton.ActionName() != "app.logout" {
+		t.Fatalf("logoutButton action = %q, want %q", loading.logoutButton.ActionName(), "app.logout")
+	}
 	loading.SetText("Reconnecting...")
 	if loading.statusPage.Title() != "Reconnecting..." {
 		t.Fatalf("statusPage.Title() = %q, want %q", loading.statusPage.Title(), "Reconnecting...")
