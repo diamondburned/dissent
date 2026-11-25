@@ -14,10 +14,14 @@ func (w *Window) updateSession() {
 
 	switch status {
 	case session.LoggedOut:
+		w.clearChatPage()
 		w.SwitchToLoginPage()
 		if err := w.session.Err(); err != nil {
 			w.Login.Login.ShowError(err)
+		} else {
+			w.Login.Login.HideError()
 		}
+		w.Login.Login.RefreshEncryptedState()
 
 	case session.Connecting:
 		w.SetTitle("Connecting")
@@ -43,13 +47,23 @@ func (w *Window) setLoading(loading bool) {
 	w.loading.SetCanTarget(loading)
 }
 
+// clearChatPage removes the current ChatPage and resets state bindings when
+// logging out.
+func (w *Window) clearChatPage() {
+	if w.Chat != nil {
+		w.Stack.Remove(w.Chat)
+		w.Chat = nil
+	}
+	w.chatState = nil
+	w.afk.unbindState()
+	w.ctx = w.baseCtx
+}
+
 // initChatPage creates a new ChatPage for the given state, replacing the
 // existing one if the user logged in again.
 func (w *Window) initChatPage(state *gtkcord.State) {
 	if w.Chat != nil {
 		w.Stack.Remove(w.Chat)
-	} else {
-		w.initActions()
 	}
 
 	w.chatState = state
