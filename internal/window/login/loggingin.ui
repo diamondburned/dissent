@@ -13,6 +13,16 @@
         <property name="child">
           <object class="AdwStatusPage" id="statusPage">
             <property name="title" translatable="yes">Connecting...</property>
+            <property name="child">
+              <object class="GtkButton" id="logoutButton">
+                <property name="halign">center</property>
+                <property name="label" translatable="yes">Log Out</property>
+                <property name="action-name">app.logout</property>
+                <style>
+                  <class name="pill"/>
+                </style>
+              </object>
+            </property>
           </object>
         </property>
       </object>

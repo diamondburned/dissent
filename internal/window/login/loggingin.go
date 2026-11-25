@@ -16,7 +16,8 @@ var loggingInUI string
 // trying to log in.
 type LoadingPage struct {
 	*adw.ToolbarView
-	statusPage *adw.StatusPage
+	statusPage   *adw.StatusPage
+	logoutButton *gtk.Button
 }
 
 // NewLoadingPage creates a new logging in loading screen.
@@ -28,8 +29,9 @@ func NewLoadingPage(ctx context.Context) *LoadingPage {
 	statusPage.SetPaintable(adw.NewSpinnerPaintable(statusPage))
 
 	return &LoadingPage{
-		ToolbarView: get("rootContent").(*adw.ToolbarView),
-		statusPage:  statusPage,
+		ToolbarView:  get("rootContent").(*adw.ToolbarView),
+		statusPage:   statusPage,
+		logoutButton: get("logoutButton").(*gtk.Button),
 	}
 }
 

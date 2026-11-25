@@ -106,6 +106,7 @@ func NewSidebar(ctx context.Context) *Sidebar {
 			gtkutil.MenuItem("_Do Not Disturb", "win.set-dnd"),
 			gtkutil.MenuItem("In_visible", "win.set-invisible"),
 		}),
+		gtkutil.MenuItem("Log _Out", "app.logout"),
 		gtkutil.MenuSeparator(""),
 		gtkutil.MenuItem("_Preferences", "app.preferences"),
 		gtkutil.MenuItem("_About", "app.about"),
