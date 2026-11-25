@@ -39,6 +39,10 @@ func init() {
 // Version is connected to about.SetVersion.
 var Version string
 
+// AppID is the GApplication ID. It can be overridden at build time via
+// -ldflags "-X main.AppID=so.libdb.dissent.Devel" for side-by-side dev builds.
+var AppID = "so.libdb.dissent"
+
 func init() { about.SetVersion(Version) }
 
 var _ = cssutil.WriteCSS(`
@@ -85,7 +89,8 @@ var applicationType = coreglib.RegisterSubclass[*Application](
 // NewApplication creates a new Dissent application.
 func NewApplication(ctx context.Context) *Application {
 	a := applicationType.NewWithProperties(map[string]any{
-		"application-id": "so.libdb.dissent",
+		"application-id":     AppID,
+		"resource-base-path": "/so/libdb/dissent",
 		// GTK before 4.22 only tracks screensaver-active, which the away
 		// timeout uses, if the session is registered.
 		"register-session": true,

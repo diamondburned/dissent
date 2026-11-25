@@ -1,0 +1,7 @@
+option(
+  'profile',
+  type: 'combo',
+  choices: ['default', 'development'],
+  value: 'default',
+  description: 'Build profile (use development for side-by-side .Devel app ID)',
+)
